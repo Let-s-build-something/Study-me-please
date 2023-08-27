@@ -1,0 +1,69 @@
+plugins {
+    id 'com.android.library'
+    id 'org.jetbrains.kotlin.android'
+    id 'com.google.dagger.hilt.android'
+    id 'org.jetbrains.kotlin.kapt'
+}
+
+android {
+    namespace 'com.squadris.squadris'
+    compileSdk 34
+
+    defaultConfig {
+        minSdk 26
+        targetSdk 34
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        consumerProguardFiles "consumer-rules.pro"
+    }
+
+    // Allow references to generated code
+    kapt {
+        correctErrorTypes true
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    kotlinOptions {
+        jvmTarget = '17'
+    }
+
+    buildFeatures {
+        compose = true
+    }
+    composeOptions {
+        kotlinCompilerExtensionVersion '1.4.8'
+        kotlinCompilerVersion '1.8.22'
+    }
+}
+
+dependencies {
+    implementation 'androidx.core:core-ktx:1.10.1'
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'com.google.android.material:material:1.9.0'
+
+    //Dagger, Hilt
+    implementation "com.google.dagger:hilt-android:2.46.1"
+    kapt "com.google.dagger:hilt-compiler:2.46.1"
+    kapt("org.jetbrains.kotlinx:kotlinx-metadata-jvm:0.5.0")
+
+    //Jetpack compose
+    implementation "androidx.compose.animation:animation:1.6.0-alpha02"
+    implementation "androidx.compose.foundation:foundation:1.6.0-alpha02"
+    implementation "androidx.compose.material:material:1.6.0-alpha02"
+    implementation "androidx.compose.material3:material3:1.2.0-alpha04"
+    implementation "androidx.compose.runtime:runtime:1.6.0-alpha02"
+    implementation "androidx.compose.ui:ui:1.6.0-alpha02"
+    implementation "com.airbnb.android:lottie-compose:6.0.1"
+    implementation "androidx.constraintlayout:constraintlayout-compose:1.0.1"
+    implementation "androidx.compose.material3:material3-window-size-class:1.1.1"
+    implementation("androidx.multidex:multidex:2.0.1")
+}
