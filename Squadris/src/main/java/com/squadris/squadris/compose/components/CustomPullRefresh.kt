@@ -1,8 +1,6 @@
 package com.squadris.squadris.compose.components
 
 import android.app.Activity
-import androidx.compose.animation.Crossfade
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.ExperimentalMaterialApi

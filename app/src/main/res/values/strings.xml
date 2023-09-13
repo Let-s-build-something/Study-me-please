@@ -9,14 +9,62 @@
     <string name="navigate_back">Back</string>
     <string name="navigate_close">Close</string>
 
-    <string name="collection_detail_edit">Edit</string>
+    <string name="collection_detail_add_question">Sir, I have a question</string>
+    <string name="collection_detail_save">Save my madness</string>
     <string name="collection_detail_name_hint">Name</string>
     <string name="collection_detail_description_hint">Description</string>
     <string name="collection_detail_questions_heading">Questions</string>
+    <string name="collection_detail_new_response">I know, I know! It\'s…</string>
+    <string name="question_answers">Answers</string>
+    <string name="question_edit_field_prompt_hint">Ask away…</string>
+    <string name="question_edit_field_prompt_header">Prompt</string>
+    <string name="question_edit_field_prompt_image">Prompt image</string>
+    <string name="question_edit_field_explanation_image">Explanation image</string>
+    <string name="question_field_explanation_header">Explanation</string>
+    <string name="question_edit_field_hint_explanation">Further explanation for the correct answer(s)</string>
+    <string name="answer_edit_field_hint_content">Answer is - …idk</string>
+    <string name="answer_edit_field_hint_explanation">Explanation of this answer</string>
+    <string name="answer_field_content_header">Answer</string>
+    <string name="answer_field_explanation_header">Explanation</string>
 
-    <string name="add_new_content_description">Add new item</string>
-    <string name="add_new_collection">Create new collection</string>
-    <string name="collection_empty_error">There are no collections yet. You can create one now:).</string>
+    <string name="add_new_collection">I collect questions, since I have no answers. Yet.</string>
+    <string name="collection_empty_error">There are no collections yet. But you can create one now:).</string>
+    <string name="collection_list_delete_item">Delete</string>
+    <string name="collection_delete_dialog_title">Collection deletion</string>
+    <string name="collection_delete_dialog_description">
+        You\'ve spent time on this, are you sure you want permanently delete the selected (%1$d) collections?
+    </string>
+    <string name="question_delete_dialog_title">Question deletion</string>
+    <string name="question_delete_dialog_description">
+        You\'ve spent time on this, are you sure you want permanently delete the selected (%1$d) questions?
+    </string>
+    <string name="answer_delete_dialog_title">Answer deletion</string>
+    <string name="answer_delete_dialog_description">
+        You\'ve spent time on this, are you sure you want permanently delete the selected (%1$d) answers?
+    </string>
+
+    <string name="image_field_url_hint">Url path to your image.</string>
+    <string name="image_field_local_value">Local image</string>
+
+    <string name="button_add_image">Add an image</string>
+    <string name="button_add_prompt_image">Add prompt image</string>
+    <string name="button_add_explanation_image">Add explanation image</string>
+    <string name="button_change_image">Change the image</string>
+    <string name="button_import">Import</string>
+    <string name="button_export">Export</string>
+    <string name="button_scan">Scan</string>
+    <string name="button_start_session">Start session</string>
+    <string name="button_copy">Copy</string>
+    <string name="button_paste">Paste</string>
+    <string name="button_dismiss">Dismiss</string>
+    <string name="button_confirm">Confirm</string>
+    <string name="button_play">Play</string>
+    <string name="button_test_play">Test play</string>
 
     <string name="btn_clear_content_description">Clear</string>
+    <string name="add_new_content_description">Add new item</string>
+    <string name="image_icon_content_description">Icon</string>
+    <string name="close_content_description">Close</string>
+    <string name="play_content_description">Play</string>
+    <string name="edit_content_description">Edit</string>
 </resources>

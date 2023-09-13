@@ -12,18 +12,18 @@ import java.util.UUID
 data class QuestionIO (
 
     /** Question prompt for user */
-    val prompt: String = "",
+    var prompt: String = "",
 
-    /** Text description answer for the prompt */
-    @SerializedName("text_answer")
-    val textAnswer: String = "",
+    /** further explanation of this question */
+    @SerializedName("text_explanation")
+    var textExplanation: String = "",
 
-    /** Image description answer for the prompt */
-    @SerializedName("image_answer_url")
-    val imageAnswerUrl: LargePathAsset? = null,
+    /** image explanation of this question */
+    @SerializedName("image_explanation_url")
+    var imageExplanationUrl: LargePathAsset? = null,
 
     /** List of options that can be answered */
-    val answers: List<QuestionAnswerIO> = listOf(),
+    var answers: MutableList<QuestionAnswerIO> = mutableListOf(),
 
     /** Number of question from workbook */
     @SerializedName("question_number")
@@ -39,11 +39,20 @@ data class QuestionIO (
 
     /** whether this prompt is repeated for the sake of remembering */
     @SerializedName("is_repeated")
+    @Deprecated("Isn't this only a local variable, why are we saving this?")
     var isRepeated: Boolean = false,
 
     /** path to audio file with prompt */
     @SerializedName("audio_prompt_url")
     val audioPromptUrl: LargePathAsset? = null,
+
+    /** path to video file with prompt */
+    @SerializedName("video_prompt_url")
+    val videoPromptUrl: LargePathAsset? = null,
+
+    /** path to image file with prompt */
+    @SerializedName("image_prompt_url")
+    var imagePromptUrl: LargePathAsset? = null,
 
     /** unique identifier */
     @PrimaryKey

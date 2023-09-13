@@ -10,7 +10,7 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.Switch
+import androidx.compose.material3.Switch
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.runtime.Composable
@@ -35,7 +35,9 @@ import study.me.please.base.ProgressBarRefreshIndicator
 @Composable
 fun HomeScreen(
     activity: Activity,
-    viewModel: HomeViewModel = hiltViewModel()
+    viewModel: HomeViewModel = hiltViewModel(),
+    isDarkTheme: Boolean,
+    onThemeChange: (isDarkTheme: Boolean) -> Unit = {}
 ) {
     val banners = viewModel.dataManager.bannersResponse.collectAsState()
     val coroutineScope = rememberCoroutineScope()
@@ -60,7 +62,6 @@ fun HomeScreen(
         banners.value?.bannerSlides?.size ?: 0
     }
     val indicatorOffset = remember { mutableStateOf(0.dp) }
-    val isDarkTheme = viewModel.dataManager.isDarkTheme.collectAsState()
 
     DraggableRefreshIndicator(
         pullRefreshSize = pullRefreshSize,
@@ -95,10 +96,8 @@ fun HomeScreen(
         ) {
             Switch(
                 modifier = Modifier.padding(12.dp),
-                checked = isDarkTheme.value,
-                onCheckedChange = {
-                    viewModel.dataManager.isDarkTheme.value = it
-                }
+                checked = isDarkTheme,
+                onCheckedChange = onThemeChange
             )
             if(banners.value?.bannerSlides?.isNotEmpty() == true) {
                 BannerHorizontalPager(

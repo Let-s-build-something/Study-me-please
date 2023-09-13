@@ -5,6 +5,7 @@ import study.me.please.data.io.LargePathAsset
 import study.me.please.data.io.QuestionIO
 import study.me.please.data.io.QuestionAnswerIO
 import study.me.please.data.io.CollectionIO
+import study.me.please.data.io.SessionIO
 import study.me.please.data.io.UserPromptPreferences
 
 @Database(
@@ -13,15 +14,18 @@ import study.me.please.data.io.UserPromptPreferences
         QuestionIO::class,
         QuestionAnswerIO::class,
         LargePathAsset::class,
-        UserPromptPreferences::class
+        UserPromptPreferences::class,
+        SessionIO::class
     ],
-    version = 2,
+    version = 1,
     exportSchema = false
 )
 @TypeConverters(AppDatabaseConverter::class)
 abstract class AppRoomDatabase: RoomDatabase() {
 
     abstract fun collectionDbDao(): CollectionDao
+
+    abstract fun sessionDbDao(): SessionDao
 
     companion object {
 
@@ -42,5 +46,8 @@ abstract class AppRoomDatabase: RoomDatabase() {
 
         /** Identification of table for [LargePathAsset] */
         const val ROOM_LARGE_PATH_ASSET_TABLE = "ROOM_LARGE_PATH_ASSET_TABLE"
+
+        /** Identification of table for [SessionIO] */
+        const val ROOM_SESSION_TABLE = "ROOM_SESSION_TABLE"
     }
 }

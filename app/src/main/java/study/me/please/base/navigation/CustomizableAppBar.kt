@@ -92,54 +92,7 @@ fun CustomizableAppBar(
     )
 }
 
-/**
- * The default layout of action in top action bar
- * @param isUserSignedIn whether user is currently signed in or not
- */
-@Composable
-fun DefaultAppBarActions(
-    isUserSignedIn: Boolean = false,
-    route: String? = NavigationDestination.HOME.route,
-    actionNavigation: (screen: String) -> Unit = {}
-) {
-    // first action
-    when(route) {
-        // lobby destinations
-        NavigationDestination.HOME.route -> {
-            if(isUserSignedIn) {
-                ActionBarIcon(
-                    text = stringResource(id = R.string.screen_account_title),
-                    imageVector = Icons.Outlined.PersonOutline,
-                    onClick = {
-                        //TODO
-                    }
-                )
-            }else {
-                ActionBarIcon(
-                    text = stringResource(id = R.string.screen_register_title),
-                    imageVector = Icons.Outlined.PersonAddAlt,
-                    onClick = {
-                        //TODO
-                    }
-                )
-            }
-        }
-    }
-    // second action
-    when(route) {
-        NavigationDestination.SESSION_LOBBY.route,
-        NavigationDestination.SESSION.route -> {}
-        else -> {
-            ActionBarIcon(
-                text = stringResource(id = R.string.screen_sessions_title),
-                imageVector = Icons.Outlined.PlayArrow,
-                onClick = {
-                    actionNavigation.invoke(NavigationDestination.COLLECTION.route)
-                }
-            )
-        }
-    }
-}
+
 
 @Preview
 @Composable

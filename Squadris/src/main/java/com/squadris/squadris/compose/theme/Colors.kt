@@ -17,14 +17,21 @@ object Colors {
     val TETRIAL: Color = Color(0xFFF8E3CB)
     val TETRIAL_8: Color = Color(0x14F8E3CB)
     val TETRIAL_16: Color = Color(0x29F8E3CB)
+    val TETRIAL_16_ON_DARK_BACKGROUND: Color = Color(0xFF474440)
+    val TETRIAL_16_ON_DARK_COMPONENT: Color = Color(0xFF635d58)
     val TETRIAL_24: Color = Color(0x3DF8E3CB)
     val TETRIAL_50: Color = Color(0x80F8E3CB)
+    val TETRIAL_LIGHT: Color = Color(0xFFfdf8f3)
     val DARK_GREY: Color = Color(0xFF121212)
     val DARK_GREY_70: Color = Color(0xB3121212)
     val WHITE_24: Color = Color(0x3DFFFFFF)
     val WHITE_60: Color = Color(0x99FFFFFF)
     val BLACK_24: Color = Color(0x3D000000)
+    val RED_ERROR: Color = Color(0xFFFF6060)
+    val GREEN_CORRECT: Color = Color(0xFF22B573)
 
+
+    //specific to loading animations
     val LOADING_ANIMATION_3a3a3a: Color = Color(0xff3a3a3a)
     val LOADING_ANIMATION_45ddd2: Color = Color(0xff45ddd2)
     val LOADING_ANIMATION_755334: Color = Color(0xff755334)

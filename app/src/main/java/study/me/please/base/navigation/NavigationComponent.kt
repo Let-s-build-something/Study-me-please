@@ -11,16 +11,19 @@ import study.me.please.R
 import study.me.please.base.navigation.NavigationComponent.addNavigationArgument
 
 enum class NavigationDestination(val route: String) {
-    HOME("home_screen"),
-    COLLECTION("collection"),
-    SESSION_LOBBY("session_lobby"),
-    SESSION("session"),
+    HOME("screen_home"),
+    COLLECTION("screen_collection"),
+    SESSION_LOBBY("screen_session_lobby"),
+    SESSION(
+        "screen_session"
+            .addNavigationArgument(NavigationComponent.TOOLBAR_TITLE)
+    ),
     /** Screen for creating collection or editing existing collection */
     COLLECTION_DETAIL(
         "screen_create_collection"
-            .addNavigationArgument(NavigationComponent.COLLECTION_DETAIL_UID)
-            .addNavigationArgument(NavigationComponent.COLLECTION_DETAIL_NAME)
-    );
+            .addNavigationArgument(NavigationComponent.COLLECTION_UID)
+            .addNavigationArgument(NavigationComponent.TOOLBAR_TITLE)
+    )
 }
 
 /** Helper object for Jetpack Compose navigation component  */
@@ -28,15 +31,26 @@ object NavigationComponent {
     val START_DESTINATION = NavigationDestination.HOME
 
     /** collection uid for collection detail */
-    const val COLLECTION_DETAIL_UID = "collectionUid"
-    /** name of opened collection */
-    const val COLLECTION_DETAIL_NAME = "collectionName"
+    const val COLLECTION_UID = "collectionUid"
+
+    /** argument identifier for a question */
+    const val QUESTION_UID = "questionUid"
+
+    /** argument identifier for a session */
+    const val SESSION_UID = "sessionUid"
+
+    /** argument identifier for a testing mode flag */
+    const val IS_TESTING_MODE = "isTestingMode"
+
+    /** toolbar title */
+    const val TOOLBAR_TITLE = "toolbarTitle"
 
     /** adds argument by composable navigation syntax */
     fun String.addNavigationArgument(argumentName: String): String {
         return this.plus("?$argumentName={$argumentName}")
     }
 
+    /** Puts an argument to a navigation address */
     fun String.putNavigationArgument(argumentName: String, argumentValue: String): String {
         return this.replace("{$argumentName}", argumentValue)
     }

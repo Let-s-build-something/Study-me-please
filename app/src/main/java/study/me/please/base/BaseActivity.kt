@@ -31,7 +31,6 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
-import study.me.please.breeds.BreedsViewModel
 import study.me.please.data.io.PsychologyTerm
 import study.me.please.data.io.PsychologyTermAnswer
 import study.me.please.data.io.Stopwatch
@@ -68,8 +67,6 @@ class BaseActivity: ComponentActivity(), BackboneChannel {
     private val Color.Companion.background: Color
         get() = DarkGray
 
-    private val viewModel: BreedsViewModel by viewModels()
-
     private val stopWatch = Stopwatch()
 
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
@@ -77,7 +74,7 @@ class BaseActivity: ComponentActivity(), BackboneChannel {
         super.onCreate(savedInstanceState)
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.RESUMED) {
-                viewModel.dataManager.answerLog.collectLatest {
+                /*viewModel.dataManager.answerLog.collectLatest {
                     withContext(Dispatchers.Default) {
                         val correctCount = it.count { it.isCorrect }
                         viewModel.dataManager.successRate.value = (correctCount to it.size) to correctCount
@@ -85,7 +82,7 @@ class BaseActivity: ComponentActivity(), BackboneChannel {
                             .div(it.size.toDouble())
                             .times(100)
                     }
-                }
+                }*/
             }
         }
         setContent {
@@ -135,8 +132,8 @@ class BaseActivity: ComponentActivity(), BackboneChannel {
         val scope = rememberCoroutineScope()
         var term by remember { mutableStateOf<PsychologyTerm?>(null) }
         var shuffledAnswers by remember { mutableStateOf<List<PsychologyTermAnswer>>(listOf()) }
-        val successRate = viewModel.dataManager.successRate.collectAsState()
-        val timeElapsed = viewModel.dataManager.timeElapsed.collectAsState()
+        //val successRate = viewModel.dataManager.successRate.collectAsState()
+        //val timeElapsed = viewModel.dataManager.timeElapsed.collectAsState()
         var btnContinueVisible by remember { mutableStateOf(false) }
         var showDialog by remember { mutableStateOf(false) }
         var descriptionVisible by remember { mutableStateOf(false) }
@@ -144,27 +141,27 @@ class BaseActivity: ComponentActivity(), BackboneChannel {
         var showOptionReasoning by remember { mutableStateOf(false) }
         var correctAnswerColor by remember { mutableStateOf(Color.DarkGray) }
         val getNewPrompt: () -> Unit = {
-            viewModel.dataManager.timeElapsed.update {
+            /*viewModel.dataManager.timeElapsed.update {
                 it.plus(stopWatch.reset())
-            }
+            }*/
             scope.launch {
                 btnContinueVisible = false
                 descriptionVisible = false
                 btnErrorUid = ""
                 showOptionReasoning = false
                 correctAnswerColor = Color.DarkGray
-                term = viewModel.scriptManager.getNewPrompt()
+                //term = viewModel.scriptManager.getNewPrompt()
                 shuffledAnswers = term?.answers?.shuffled().orEmpty()
             }
         }
         val flush: (newList: List<PsychologyTerm>?) -> Unit = {
-            scope.launch {
+            /*scope.launch {
                 viewModel.scriptManager.flush(it)
                 viewModel.dataManager.answerLog.value = listOf()
                 viewModel.dataManager.successRate.value = (0 to 0) to 0.0
                 viewModel.dataManager.timeElapsed.value = 0L
                 getNewPrompt()
-            }
+            }*/
         }
         if(term == null) flush(null)
         if(showDialog) {
@@ -235,14 +232,14 @@ class BaseActivity: ComponentActivity(), BackboneChannel {
                         containerColor = Color.primary
                     ),
                     title = {
-                        Text(
+                        /*Text(
                             text = "${successRate.value.second.toInt()}% success rate (${successRate.value.first.first}/${successRate.value.first.second}), " +
                                 "${timeElapsed.value.div(1000)
                                     .div(kotlin.math.max(1, viewModel.dataManager.answerLog.collectAsState().value.size))}s avg",
                             fontSize = 18.sp,
                             color = Color.DarkGray,
                             lineHeight = 22.sp
-                        )
+                        )*/
                     },
                     actions = {
                         Icon(
@@ -302,7 +299,7 @@ class BaseActivity: ComponentActivity(), BackboneChannel {
                     softWrap = true,
                     lineHeight = 24.sp
                 )
-                Text(
+                /*Text(
                     text = "${viewModel.scriptManager.index.plus(1)} z ${viewModel.scriptManager.size}",
                     fontSize = 22.sp,
                     modifier = Modifier
@@ -313,7 +310,7 @@ class BaseActivity: ComponentActivity(), BackboneChannel {
                     color = Color.DarkGray,
                     softWrap = true,
                     lineHeight = 24.sp
-                )
+                )*/
                 LazyColumn(
                     modifier = Modifier
                         .constrainAs(lazyColumnOptions) {
@@ -357,7 +354,7 @@ class BaseActivity: ComponentActivity(), BackboneChannel {
                         Button(
                             onClick = {
                                 if(btnContinueVisible.not()) {
-                                    if(term?.isRepeated != true) {
+                                    /*if(term?.isRepeated != true) {
                                         viewModel.logNewAnswer(answer, realAnswerIndex == term?.correctAnswer)
                                     }
                                     btnErrorUid = if(realAnswerIndex != term?.correctAnswer) {
@@ -368,7 +365,7 @@ class BaseActivity: ComponentActivity(), BackboneChannel {
                                             viewModel.scriptManager.injectToPosition(it, 999999, true)
                                         }
                                         answer?.uid.orEmpty()
-                                    }else ""
+                                    }else ""*/
                                     showOptionReasoning = true
                                     correctAnswerColor = Color(0xff02ad61)
                                     descriptionVisible = true
@@ -451,8 +448,8 @@ class BaseActivity: ComponentActivity(), BackboneChannel {
                                     shape = MaterialTheme.shapes.large,
                                     onClick = {
                                         term?.let {
-                                            viewModel.scriptManager.injectToPosition(it, 6)
-                                            viewModel.scriptManager.injectToPosition(it, 16)
+                                            //viewModel.scriptManager.injectToPosition(it, 6)
+                                            //viewModel.scriptManager.injectToPosition(it, 16)
                                         }
                                         getNewPrompt()
                                     },
@@ -484,9 +481,5 @@ class BaseActivity: ComponentActivity(), BackboneChannel {
                 }
             }
         }
-    }
-
-    override fun onBackPressedExec() {
-
     }
 }

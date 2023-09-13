@@ -11,11 +11,11 @@ import java.util.UUID
 data class QuestionAnswerIO (
 
     /** Answer text to be displayed */
-    val text: String = "",
+    var text: String = "",
 
     /** What is the reasoniung behind this answer being wrong/correct */
     @SerializedName("explanation_message")
-    val explanationMessage: String = "",
+    var explanationMessage: String = "",
 
     /** unique identifier */
     @PrimaryKey
@@ -23,5 +23,5 @@ data class QuestionAnswerIO (
 
     /** explanation image */
     @SerializedName("image_explanation")
-    val imageExplanation: LargePathAsset = LargePathAsset()
+    var imageExplanation: LargePathAsset? = null
 ): Serializable

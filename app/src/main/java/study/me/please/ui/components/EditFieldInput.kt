@@ -12,10 +12,10 @@ import androidx.compose.material.icons.outlined.Clear
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
@@ -24,6 +24,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.squadris.squadris.compose.theme.AppTheme
+import com.squadris.squadris.compose.theme.Colors
 import com.squadris.squadris.compose.theme.StudyMeAppTheme
 import study.me.please.R
 
@@ -35,6 +36,7 @@ fun EditFieldInput(
     modifier: Modifier = Modifier,
     value: String = "",
     hint: String? = null,
+    isError: Boolean = false,
     clearable: Boolean = false,
     leadingIcon: ImageVector? = null,
     minLines: Int = 1,
@@ -44,16 +46,24 @@ fun EditFieldInput(
     val isFocused = remember { mutableStateOf(false) }
     val shape = RoundedCornerShape(12.dp)
     val text = remember { mutableStateOf(value) }
+    LaunchedEffect(key1 = value) {
+        text.value = value
+    }
     TextField(
         modifier = modifier
             .border(
-                if(isFocused.value) 1.dp else 0.25.dp,
-                if(isFocused.value) AppTheme.colors.secondary else AppTheme.colors.brandMain,
+                if (isFocused.value) 1.dp else 0.25.dp,
+                if (isError) {
+                    Colors.RED_ERROR
+                } else if (isFocused.value) {
+                    AppTheme.colors.secondary
+                } else AppTheme.colors.brandMain,
                 shape
             )
             .onFocusChanged {
                 isFocused.value = it.isFocused
             },
+        isError = isError,
         minLines = minLines,
         maxLines = maxLines,
         value = text.value,
@@ -80,13 +90,14 @@ fun EditFieldInput(
                 )
             }
         },
-        trailingIcon = if(clearable) {
+        trailingIcon = if(clearable && text.value.isNotEmpty()) {
             {
                 MinimalisticIcon(
                     contentDescription = stringResource(id = R.string.btn_clear_content_description),
                     imageVector = Icons.Outlined.Clear
                 ) {
                     text.value = ""
+                    onValueChange("")
                 }
             }
         }else null,

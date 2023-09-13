@@ -11,7 +11,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.squadris.squadris.compose.theme.AppTheme
 
@@ -22,6 +24,8 @@ import com.squadris.squadris.compose.theme.AppTheme
 fun MinimalisticIcon(
     modifier: Modifier = Modifier,
     imageVector: ImageVector,
+    tint: Color = AppTheme.colors.primary,
+    padding: Dp = 0.dp,
     contentDescription: String? = null,
     onClick: (() -> Unit)? = null
 ) {
@@ -39,6 +43,6 @@ fun MinimalisticIcon(
             }else modifier),
         imageVector = imageVector,
         contentDescription = contentDescription,
-        tint = AppTheme.colors.primary
+        tint = tint
     )
 }

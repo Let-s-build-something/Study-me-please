@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
@@ -29,29 +30,37 @@ import study.me.please.base.navigation.CustomizableAppBar
 import study.me.please.base.navigation.DefaultAppBarActions
 import study.me.please.base.navigation.NavigationComponent
 import study.me.please.base.navigation.NavigationDestination
+import study.me.please.hilt.SharedPreferencesModule
 import study.me.please.ui.collection.CollectionScreen
-import study.me.please.ui.collection.detail.CreateCollectionScreen
+import study.me.please.ui.collection.detail.CollectionDetailScreen
 import study.me.please.ui.home.HomeScreen
 import study.me.please.ui.home.HomeViewModel
+import study.me.please.ui.session.SessionScreen
 
 @AndroidEntryPoint
 class MainActivity: ComponentActivity(), BackboneChannel {
 
     private var navController: NavHostController? = null
 
-    private var actions: MutableState<Pair<String, (@Composable RowScope.() -> Unit)>?> = mutableStateOf(null)
+    private var actions: MutableState<Pair<NavigationDestination, (@Composable RowScope.() -> Unit)>?>
+        = mutableStateOf(null)
 
     private val homeViewModel: HomeViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            val isDarkTheme = homeViewModel.dataManager.isDarkTheme.collectAsState()
+            val isSystemInDarkTheme = isSystemInDarkTheme()
+            /** Whether this app is in dark theme */
+            val isDarkTheme = remember { mutableStateOf(
+                homeViewModel.sharedPreferences.getBoolean(
+                    SharedPreferencesModule.SP_IS_DARK_THEME,
+                    isSystemInDarkTheme
+                )
+            ) }
             val localFocusManager = LocalFocusManager.current
 
-            StudyMeAppTheme(
-                isDarkTheme = isDarkTheme.value
-            ) {
+            StudyMeAppTheme(isDarkTheme = isDarkTheme.value) {
                 if(navController == null) navController = rememberNavController()
                 if(actions.value == null) actions = remember { mutableStateOf(null) }
                 val currentDestination = navController?.currentBackStackEntryFlow?.collectAsState(
@@ -59,7 +68,7 @@ class MainActivity: ComponentActivity(), BackboneChannel {
                 )
                 val appBarTitle = remember { mutableStateOf<String?>(null) }
                 if(actions.value != null
-                    && actions.value?.first != currentDestination?.value?.destination?.route
+                    && actions.value?.first?.route != currentDestination?.value?.destination?.route
                 ) {
                     actions.value = null
                 }
@@ -107,7 +116,12 @@ class MainActivity: ComponentActivity(), BackboneChannel {
                             startDestination = NavigationComponent.START_DESTINATION.route
                         ) {
                             composable(NavigationDestination.HOME.route) {
-                                HomeScreen(this@MainActivity)
+                                HomeScreen(
+                                    activity = this@MainActivity,
+                                    isDarkTheme = isDarkTheme.value
+                                ) { newValue ->
+                                    isDarkTheme.value = newValue
+                                }
                             }
                             composable(NavigationDestination.COLLECTION.route) {
                                 CollectionScreen(
@@ -119,23 +133,64 @@ class MainActivity: ComponentActivity(), BackboneChannel {
                                 NavigationDestination.COLLECTION_DETAIL.route,
                                 arguments = listOf(
                                     navArgument(
-                                        NavigationComponent.COLLECTION_DETAIL_UID
+                                        NavigationComponent.COLLECTION_UID
                                     ) {
                                         nullable = true
                                         defaultValue = null
                                     },
                                     navArgument(
-                                        NavigationComponent.COLLECTION_DETAIL_NAME
+                                        NavigationComponent.TOOLBAR_TITLE
                                     ) {}
                                 )
                             ) { backStackEntry ->
                                 appBarTitle.value = backStackEntry.arguments?.getString(
-                                    NavigationComponent.COLLECTION_DETAIL_NAME
+                                    NavigationComponent.TOOLBAR_TITLE
                                 )
-                                CreateCollectionScreen(
+                                CollectionDetailScreen(
+                                    navController = navController,
                                     collectionUid = backStackEntry.arguments?.getString(
-                                        NavigationComponent.COLLECTION_DETAIL_UID
-                                    )
+                                        NavigationComponent.COLLECTION_UID
+                                    ),
+                                    changeActionBar = { newActions ->
+                                        actions.value = NavigationDestination.COLLECTION_DETAIL to newActions
+                                    }
+                                )
+                            }
+                            composable(
+                                NavigationDestination.SESSION.route,
+                                arguments = listOf(
+                                    navArgument(
+                                        NavigationComponent.COLLECTION_UID
+                                    ) {
+                                        nullable = true
+                                        defaultValue = null
+                                    },
+                                    navArgument(
+                                        NavigationComponent.QUESTION_UID
+                                    ) {
+                                        nullable = true
+                                        defaultValue = null
+                                    },
+                                    navArgument(
+                                        NavigationComponent.SESSION_UID
+                                    ) {
+                                        nullable = true
+                                        defaultValue = null
+                                    },
+                                    navArgument(
+                                        NavigationComponent.TOOLBAR_TITLE
+                                    ) {},
+                                    navArgument(
+                                        NavigationComponent.IS_TESTING_MODE
+                                    ) {}
+                                )
+                            ) { backStackEntry ->
+                                appBarTitle.value = backStackEntry.arguments?.getString(
+                                    NavigationComponent.TOOLBAR_TITLE
+                                )
+                                SessionScreen(
+                                    navController = navController,
+                                    remember =
                                 )
                             }
                         }
@@ -143,9 +198,5 @@ class MainActivity: ComponentActivity(), BackboneChannel {
                 }
             }
         }
-    }
-
-    override fun onBackPressedExec() {
-
     }
 }

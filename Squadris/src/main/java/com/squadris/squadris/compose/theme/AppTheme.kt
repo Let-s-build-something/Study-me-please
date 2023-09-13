@@ -12,4 +12,7 @@ object AppTheme {
 
     /** base styles for the main app theme [AppTheme] */
     val styles: ThemeStyle = AppThemeStyle()
+
+    /** base shapes for the main app theme [AppTheme] */
+    val shapes: AppThemeShapes = AppThemeShapes()
 }

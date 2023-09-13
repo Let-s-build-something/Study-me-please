@@ -15,6 +15,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -29,6 +30,8 @@ fun ImageAction(
     modifier: Modifier = Modifier,
     text: String? = null,
     imageVector: ImageVector,
+    containerColor: Color = AppTheme.colors.brandMain,
+    contentColor: Color = AppTheme.colors.tetrial,
     onClick: () -> Unit
 ) {
     Button(
@@ -37,12 +40,12 @@ fun ImageAction(
         onClick = onClick,  
         contentPadding = PaddingValues(
             vertical = 6.dp,
-            horizontal = 10.dp
+            horizontal = 12.dp
         ),
-        shape = RoundedCornerShape(12.dp),
+        shape = AppTheme.shapes.componentShape,
         colors = ButtonColors(
-            containerColor = AppTheme.colors.brandMain,
-            contentColor = AppTheme.colors.tetrial,
+            containerColor = containerColor,
+            contentColor = contentColor,
             disabledContainerColor = AppTheme.colors.disabled,
             disabledContentColor = AppTheme.colors.secondary
         ),

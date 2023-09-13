@@ -1,5 +1,6 @@
 package study.me.please.data.io
 
+import android.net.Uri
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import study.me.please.data.room.AppRoomDatabase
@@ -13,10 +14,10 @@ import java.util.UUID
 data class LargePathAsset(
 
     /** URL path to image location */
-    val urlPath: String? = null,
+    var urlPath: String? = null,
 
     /** local path to an image */
-    val localPath: String? = null,
+    val localUri: Uri? = null,
 
     /** FireBase storage url path to an image */
     val fbStoragePath: String? = null,
@@ -32,9 +33,16 @@ data class LargePathAsset(
 
     /** whether the file is sourced locally */
     val isLocal: Boolean
-        get() = localPath?.isNotEmpty() == true
+        get() = localUri?.path.isNullOrEmpty().not()
+
+    /** whether this object is empty or not */
+    val isEmpty: Boolean
+        get() = urlPath.isNullOrEmpty()
+            && localUri?.path.isNullOrEmpty()
+            && fbStoragePath.isNullOrEmpty()
+            && presetImageUid.isNullOrEmpty()
 
     /** returns url of the file */
     val url: String?
-        get() = if(isLocal) localPath else urlPath ?: fbStoragePath
+        get() = urlPath ?: fbStoragePath
 }

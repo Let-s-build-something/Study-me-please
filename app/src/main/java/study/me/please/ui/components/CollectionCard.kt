@@ -1,11 +1,15 @@
 package study.me.please.ui.components
 
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -13,28 +17,31 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults.cardElevation
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -45,47 +52,12 @@ import androidx.constraintlayout.compose.Dimension
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.squadris.squadris.compose.theme.AppTheme
-import com.squadris.squadris.compose.theme.checkBoxColorsDefault
+import com.squadris.squadris.compose.theme.Colors
 import com.squadris.squadris.utils.DateUtils
+import study.me.please.R
 import study.me.please.data.io.QuestionMode
 import java.util.Calendar
 import java.util.Date
-
-/**
- * Type of modes this card can be in
- * @property DATA_DISPLAY regular information/data displaying card
- * @property OPTIONS_MODE whenever
- */
-enum class CollectionCardMode {
-    DATA_DISPLAY,
-    OPTIONS_MODE,
-    CHECKING
-}
-
-/** remembers the current state */
-@Composable
-fun rememberCollectionCardState(
-    mode: CollectionCardMode = CollectionCardMode.DATA_DISPLAY,
-    isChecked: Boolean = false,
-    onCheckedChange: ((Boolean) -> Unit) = {}
-): CollectionCardState {
-    val scope = rememberCoroutineScope()
-    val state = remember(scope) {
-        CollectionCardState(
-            mode = mode,
-            isChecked = isChecked,
-            onCheckedChange = onCheckedChange
-        )
-    }
-    return state
-}
-
-/**  */
-data class CollectionCardState (
-    var mode: CollectionCardMode,
-    var isChecked: Boolean,
-    val onCheckedChange: ((Boolean) -> Unit)
-)
 
 /** Item displaying collection and shortened information about it */
 @OptIn(ExperimentalFoundationApi::class)
@@ -98,8 +70,9 @@ fun CollectionCard(
     heading: String,
     description: String,
     dateCreated: Date?,
-    state: CollectionCardState,
-    onLongClick: () -> Unit
+    state: InteractiveCardState,
+    onNavigateToDetail: () -> Unit,
+    onNavigateToSession: () -> Unit
 ) {
     val localDensity = LocalDensity.current
     var cardHeight by remember { mutableStateOf(0.dp) }
@@ -108,46 +81,60 @@ fun CollectionCard(
         modifier = modifier
             .fillMaxWidth()
             .wrapContentHeight()
-            .clickable(
-                indication = rememberRipple(bounded = false),
-                interactionSource = remember { MutableInteractionSource() }
-            ) {
-                state.mode = CollectionCardMode.OPTIONS_MODE
-            }
+            .clip(AppTheme.shapes.componentShape)
             .combinedClickable(
                 interactionSource = remember {
                     MutableInteractionSource()
                 },
-                indication = rememberRipple(bounded = true),
+                indication = rememberRipple(
+                    bounded = true
+                ),
                 onClick = {
-                    state.mode = CollectionCardMode.OPTIONS_MODE
+                    if (state.mode.value == InteractiveCardMode.CHECKING) {
+                        state.isChecked.value = state.isChecked.value.not()
+                    } else if (state.mode.value == InteractiveCardMode.DATA_DISPLAY) {
+                        state.mode.value = InteractiveCardMode.OPTIONS
+                    }
                 },
-                onLongClick = onLongClick
+                onLongClick = {
+                    state.isChecked.value = true
+                }
             ),
-        elevation = cardElevation(
-            defaultElevation = 2.dp,
-            pressedElevation = 4.dp,
-            draggedElevation = 12.dp
-        ),
-        shape = RoundedCornerShape(8.dp)
+        elevation = AppTheme.styles.cardClickableElevation,
+        shape = AppTheme.shapes.componentShape,
+        colors = CardDefaults.cardColors(
+            containerColor = AppTheme.colors.onBackgroundComponent,
+            contentColor = AppTheme.colors.onBackgroundComponent
+        )
     ) {
-        if(state.mode == CollectionCardMode.OPTIONS_MODE) {
-            OptionsModeLayout(
-                modifier = Modifier.height(cardHeight)
-            )
-        }else {
-            DataCard(
-                modifier = Modifier.onGloballyPositioned { coordinates ->
-                    cardHeight = with(localDensity) { coordinates.size.height.toDp() }
-                },
-                imageVector = imageVector,
-                iconUrlPath = iconUrlPath,
-                questionMode = questionMode,
-                heading = heading,
-                description = description,
-                dateCreated = dateCreated,
-                state = state
-            )
+        Crossfade(
+            targetState = state.mode.value == InteractiveCardMode.OPTIONS,
+            label = "",
+            animationSpec = tween(durationMillis = 200)
+        ) { isOptions ->
+            if(isOptions) {
+                OptionsModeLayout(
+                    modifier = Modifier.height(cardHeight),
+                    onEditOptionPressed = onNavigateToDetail,
+                    onPlayOptionPressed = onNavigateToSession,
+                    onCancelClick = {
+                        state.mode.value = InteractiveCardMode.DATA_DISPLAY
+                    }
+                )
+            }else {
+                DataCard(
+                    modifier = Modifier.onGloballyPositioned { coordinates ->
+                        cardHeight = with(localDensity) { coordinates.size.height.toDp() }
+                    },
+                    imageVector = imageVector,
+                    iconUrlPath = iconUrlPath,
+                    questionMode = questionMode,
+                    heading = heading,
+                    description = description,
+                    dateCreated = dateCreated,
+                    state = state
+                )
+            }
         }
     }
 }
@@ -161,11 +148,11 @@ private fun DataCard(
     heading: String,
     description: String,
     dateCreated: Date?,
-    state: CollectionCardState
+    state: InteractiveCardState
 ) {
     ConstraintLayout(
         modifier = modifier
-            .padding(vertical = 6.dp, horizontal = 8.dp)
+            .padding(vertical = 8.dp, horizontal = 12.dp)
             .fillMaxWidth()
     ) {
         val (
@@ -178,18 +165,17 @@ private fun DataCard(
             checkBox
         ) = createRefs()
 
-        if(state.mode == CollectionCardMode.CHECKING) {
+        if(state.mode.value == InteractiveCardMode.CHECKING) {
             Checkbox(
                 modifier = Modifier.constrainAs(checkBox) {
                     start.linkTo(parent.start, (-8).dp)
                     top.linkTo(parent.top, (-12).dp)
                 },
-                checked = state.isChecked,
-                onCheckedChange = {
-                    state.isChecked = it
-                    state.onCheckedChange(it)
+                checked = state.isChecked.value,
+                onCheckedChange = { isChecked ->
+                    state.isChecked.value = isChecked
                 },
-                colors = checkBoxColorsDefault
+                colors = AppTheme.styles.checkBoxColorsDefault
             )
         }
         if(questionMode != null) {
@@ -208,7 +194,7 @@ private fun DataCard(
             modifier = Modifier.constrainAs(txtHeading) {
                 top.linkTo(parent.top, 4.dp)
                 start.linkTo(
-                    if(state.mode == CollectionCardMode.CHECKING) {
+                    if(state.mode.value == InteractiveCardMode.CHECKING) {
                         checkBox.end
                     }else parent.start
                 )
@@ -221,9 +207,9 @@ private fun DataCard(
             .size(48.dp)
             .background(
                 color = AppTheme.colors.brandMain,
-                shape = RoundedCornerShape(8.dp)
+                shape = RoundedCornerShape(12.dp)
             )
-            .clip(RoundedCornerShape(8.dp))
+            .clip(RoundedCornerShape(12.dp))
             .constrainAs(imgIcon) {
                 top.linkTo(txtMode.bottom, 2.dp)
                 end.linkTo(parent.end)
@@ -232,7 +218,7 @@ private fun DataCard(
             Icon(
                 modifier = iconModifier,
                 imageVector = imageVector,
-                contentDescription = "icon"
+                contentDescription = stringResource(id = R.string.image_icon_content_description)
             )
         }else {
             AsyncImage(
@@ -240,7 +226,7 @@ private fun DataCard(
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(iconUrlPath)
                     .build(),
-                contentDescription = "icon",
+                contentDescription = stringResource(id = R.string.image_icon_content_description),
                 contentScale = ContentScale.Inside
             )
         }
@@ -284,50 +270,86 @@ private fun DataCard(
 }
 
 @Composable
-private fun OptionsModeLayout(
-    modifier: Modifier = Modifier
+fun OptionsModeLayout(
+    modifier: Modifier = Modifier,
+    onEditOptionPressed: () -> Unit,
+    onPlayOptionPressed: () -> Unit,
+    onCancelClick: () -> Unit
 ) {
     Row(
-        modifier = modifier.fillMaxWidth()
+        modifier = Modifier
+            .background(color = AppTheme.colors.onBackgroundComponent)
+            .fillMaxWidth()
+            .then(modifier),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically
     ) {
+        val itemModifier = Modifier
+            .weight(1f)
+            .fillMaxSize()
+
         Icon(
-            Icons.Default.List,
-            contentDescription = "Filter",
-            tint = Color.DarkGray,
-            modifier = Modifier
-                .weight(1f)
+            modifier = itemModifier
+                .padding(
+                    start = 12.dp,
+                    top = 12.dp,
+                    bottom = 12.dp
+                )
+                .background(
+                    color = Colors.RED_ERROR.copy(alpha = 0.4f),
+                    shape = RoundedCornerShape(
+                        topStart = AppTheme.shapes.componentCornerRadius,
+                        bottomStart = AppTheme.shapes.componentCornerRadius
+                    )
+                )
                 .clickable(
-                    indication = rememberRipple(bounded = false),
+                    indication = rememberRipple(bounded = true),
                     interactionSource = remember { MutableInteractionSource() }
                 ) {
-
+                    onCancelClick()
                 }
+                .padding(16.dp),
+            imageVector = Icons.Outlined.Close,
+            contentDescription = stringResource(id = R.string.close_content_description),
+            tint = Colors.DARK_BLUE_70
         )
         Icon(
-            Icons.Default.List,
-            contentDescription = "Filter",
-            tint = Color.DarkGray,
-            modifier = Modifier
-                .weight(1f)
+            modifier = itemModifier
+                .padding(vertical = 12.dp)
+                .background(
+                    color = AppTheme.colors.tetrial.copy(alpha = 0.4f)
+                )
                 .clickable(
-                    indication = rememberRipple(bounded = false),
+                    indication = rememberRipple(bounded = true),
                     interactionSource = remember { MutableInteractionSource() }
                 ) {
-
+                    onEditOptionPressed()
                 }
+                .padding(16.dp),
+            imageVector = Icons.Outlined.Edit,
+            contentDescription = stringResource(id = R.string.edit_content_description),
+            tint = Colors.DARK_BLUE_70
         )
         Icon(
-            Icons.Default.List,
-            contentDescription = "Filter",
-            tint = Color.DarkGray,
-            modifier = Modifier
-                .weight(1f)
+            modifier = itemModifier
+                .padding(end = 12.dp, top = 12.dp, bottom = 12.dp)
+                .background(
+                    color = Colors.GREEN_CORRECT.copy(alpha = 0.4f),
+                    shape = RoundedCornerShape(
+                        topEnd = AppTheme.shapes.componentCornerRadius,
+                        bottomEnd = AppTheme.shapes.componentCornerRadius
+                    )
+                )
                 .clickable(
-                    indication = rememberRipple(bounded = false),
+                    indication = rememberRipple(bounded = true),
                     interactionSource = remember { MutableInteractionSource() }
                 ) {
-
+                    onPlayOptionPressed()
                 }
+                .padding(16.dp),
+            imageVector = Icons.Outlined.PlayArrow,
+            contentDescription = stringResource(id = R.string.play_content_description),
+            tint = Colors.DARK_BLUE_70
         )
         //TODO buttons icons and transparent color background which looses the
         //TODO transparency after pressing
@@ -343,10 +365,9 @@ private fun Preview() {
         description = "looooooong description of whatever it is that user wants" + " to be seen here. Perhaps even longer than previously thought to be",
         iconUrlPath = "",
         imageVector = null,
-        state = CollectionCardState(
-            mode = CollectionCardMode.OPTIONS_MODE,
-            isChecked = false
-        ) {},
-        dateCreated = Calendar.getInstance(DateUtils.locale).time
-    ) {}
+        dateCreated = Calendar.getInstance(DateUtils.locale).time,
+        onNavigateToSession = {},
+        onNavigateToDetail = {},
+        state = rememberInteractiveCardState()
+    )
 }

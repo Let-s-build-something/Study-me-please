@@ -10,13 +10,17 @@ import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
+import javax.inject.Named
 
 @Module
 @InstallIn(ActivityRetainedComponent::class)
 object RestServicesModule {
 
+    private const val BASE_URL = "baseUrl"
+
     /** Base URL off of which everything gets downloaded from */
     @Provides
+    @Named(BASE_URL)
     fun provideBaseUrl() = "https://www.balldontlie.io/api/"
 
     @ActivityRetainedScoped
@@ -26,7 +30,10 @@ object RestServicesModule {
     /** Retrofit instance for providing API services and converting JSON to Kotlin */
     @ActivityRetainedScoped
     @Provides
-    fun provideRetrofit(httpClient: OkHttpClient, baseUrl: String): Retrofit {
+    fun provideRetrofit(
+        httpClient: OkHttpClient,
+        @Named(BASE_URL) baseUrl: String
+    ): Retrofit {
         return Retrofit.Builder()
             .baseUrl(baseUrl)
             .addConverterFactory(GsonConverterFactory.create())

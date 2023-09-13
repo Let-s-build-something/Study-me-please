@@ -13,10 +13,12 @@
         android:label="@string/app_name"
         android:roundIcon="@drawable/ic_launcher_round"
         android:supportsRtl="true"
+        android:theme="@style/Theme.StudyMePlease"
         tools:targetApi="33">
 
         <activity
             android:name=".base.MainActivity"
+            android:theme="@style/Theme.StudyMePlease"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

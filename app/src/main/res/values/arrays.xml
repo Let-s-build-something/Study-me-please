@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="field_prompt_hint">
+        <item>What\'s the first ball kicked?…</item>
+        <item>How many dogs does ear have?…</item>
+        <item>Seeds in apples?…</item>
+        <item>How come no seeds in wine?…</item>
+        <item>Is wine just alcoholic juice?…</item>
+    </string-array>
+</resources>

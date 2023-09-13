@@ -11,6 +11,4 @@ class HomeDataManager @Inject constructor() {
 
     /** response with list of banner slides */
     var bannersResponse: MutableStateFlow<BannersResponse?> = MutableStateFlow(null)
-
-    var isDarkTheme = MutableStateFlow(false)
 }

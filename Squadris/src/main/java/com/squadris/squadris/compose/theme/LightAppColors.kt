@@ -22,7 +22,7 @@ object LightAppColors: BaseColors {
 
     override val onBackGroundLight: Color = Colors.PRIMARY_8
 
-    override val onBackgroundComponent: Color = Colors.TETRIAL_24
+    override val onBackgroundComponent: Color = Colors.TETRIAL_LIGHT
 
     override val onBackgroundComponentContrast: Color = Colors.TETRIAL_50
 

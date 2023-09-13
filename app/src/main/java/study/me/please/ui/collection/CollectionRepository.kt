@@ -13,17 +13,16 @@ class CollectionRepository @Inject constructor(
 ) {
 
     /** Get list of all breeds */
-    suspend fun getBanners(): BannersResponse? {
-        return withContext(Dispatchers.IO) {
-            //TODO firebase
-            null
-        }
-    }
-
-    /** Get list of all breeds */
     suspend fun getCollections(): List<CollectionIO>? {
         return withContext(Dispatchers.IO) {
             collectionDao.getAllCollections()
+        }
+    }
+
+    /** removes all collections with uid from the provided list [uidList] */
+    suspend fun deleteCollections(uidList: List<String>) {
+        withContext(Dispatchers.IO) {
+            collectionDao.deleteCollections(uidList)
         }
     }
 }
