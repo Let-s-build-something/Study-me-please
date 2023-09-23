@@ -10,13 +10,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Deselect
 import androidx.compose.material.icons.outlined.PlayArrow
+import androidx.compose.material.icons.outlined.SelectAll
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.Text
@@ -47,7 +48,7 @@ import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.squadris.squadris.compose.components.getDefaultPullRefreshSize
-import com.squadris.squadris.compose.theme.AppTheme
+import com.squadris.squadris.compose.theme.LocalTheme
 import com.squadris.squadris.compose.theme.Colors
 import com.squadris.squadris.utils.OnLifecycleEvent
 import kotlinx.coroutines.Dispatchers
@@ -57,7 +58,6 @@ import study.me.please.R
 import study.me.please.base.DraggableRefreshIndicator
 import study.me.please.base.ProgressBarRefreshIndicator
 import study.me.please.base.navigation.NavigationUtils
-import study.me.please.data.io.CollectionIO
 import study.me.please.ui.components.BasicAlertDialog
 import study.me.please.ui.components.ButtonState
 import study.me.please.ui.components.CollectionCard
@@ -70,7 +70,7 @@ import study.me.please.ui.components.rememberInteractiveCardState
 /** Screen with user's collections */
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun CollectionScreen(
+fun CollectionLobbyScreen(
     navController: NavController,
     activity: Activity,
     viewModel: CollectionViewModel = hiltViewModel()
@@ -201,14 +201,31 @@ fun CollectionScreen(
             },
             actions = {
                 ImageAction(
-                    imageVector = Icons.Outlined.Delete,
-                    text = stringResource(id = R.string.collection_list_delete_item),
+                    leadingImageVector = Icons.Outlined.Delete,
+                    text = stringResource(id = R.string.button_delete),
                     containerColor = Colors.RED_ERROR
                 ) {
                     showDeleteDialog.value = true
                 }
                 ImageAction(
-                    imageVector = Icons.Outlined.PlayArrow,
+                    leadingImageVector = Icons.Outlined.SelectAll,
+                    text = stringResource(id = R.string.button_select_all)
+                ) {
+                    coroutineScope.launch(Dispatchers.Default) {
+                        val missingItems = collections.filter {
+                            selectedCollectionUids.contains(it.uid).not()
+                        }.map { it.uid }
+                        selectedCollectionUids.addAll(missingItems)
+                    }
+                }
+                ImageAction(
+                    leadingImageVector = Icons.Outlined.Deselect,
+                    text = stringResource(id = R.string.button_deselect)
+                ) {
+                    selectedCollectionUids.clear()
+                }
+                ImageAction(
+                    leadingImageVector = Icons.Outlined.PlayArrow,
                     text = stringResource(id = R.string.button_start_session)
                 ) {
                     stopChecking()
@@ -229,7 +246,9 @@ fun CollectionScreen(
                                 stopChecking()
                             })
                         },
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    verticalArrangement = Arrangement.spacedBy(
+                        LocalTheme.shapes.betweenItemsSpace
+                    )
                 ) {
                     item {
                         Spacer(modifier = Modifier.height(56.dp))
@@ -248,12 +267,7 @@ fun CollectionScreen(
                                     } else selectedCollectionUids.remove(collection.uid)
                                 }
                                 CollectionCard(
-                                    imageVector = null, //TODO
-                                    iconUrlPath = collection.icon?.url,
-                                    questionMode = collection.defaultPreference.estimatedMode,
-                                    description = collection.description,
-                                    dateCreated = collection.dateCreated,
-                                    heading = collection.name,
+                                    data = collection,
                                     onNavigateToDetail = {
                                         NavigationUtils.navigateToCollectionDetail(
                                             navController = navController,
@@ -311,7 +325,7 @@ private fun EmptyScreen() {
             ),
         text = stringResource(id = R.string.collection_empty_error),
         fontSize = 18.sp,
-        color = AppTheme.colors.secondary,
+        color = LocalTheme.colors.secondary,
         fontWeight = FontWeight.Bold,
         textAlign = TextAlign.Center
     )

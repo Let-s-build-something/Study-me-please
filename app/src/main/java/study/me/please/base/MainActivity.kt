@@ -23,7 +23,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.squadris.squadris.compose.theme.AppTheme
+import com.squadris.squadris.compose.theme.LocalTheme
 import com.squadris.squadris.compose.theme.StudyMeAppTheme
 import dagger.hilt.android.AndroidEntryPoint
 import study.me.please.base.navigation.CustomizableAppBar
@@ -31,11 +31,13 @@ import study.me.please.base.navigation.DefaultAppBarActions
 import study.me.please.base.navigation.NavigationComponent
 import study.me.please.base.navigation.NavigationDestination
 import study.me.please.hilt.SharedPreferencesModule
-import study.me.please.ui.collection.CollectionScreen
+import study.me.please.ui.collection.CollectionLobbyScreen
 import study.me.please.ui.collection.detail.CollectionDetailScreen
+import study.me.please.ui.collection.settings.SettingsScreen
+import study.me.please.ui.collection.settings.SettingsViewModel
 import study.me.please.ui.home.HomeScreen
-import study.me.please.ui.home.HomeViewModel
 import study.me.please.ui.session.SessionScreen
+import study.me.please.ui.session.lobby.SessionLobbyScreen
 
 @AndroidEntryPoint
 class MainActivity: ComponentActivity(), BackboneChannel {
@@ -45,7 +47,7 @@ class MainActivity: ComponentActivity(), BackboneChannel {
     private var actions: MutableState<Pair<NavigationDestination, (@Composable RowScope.() -> Unit)>?>
         = mutableStateOf(null)
 
-    private val homeViewModel: HomeViewModel by viewModels()
+    private val settingsViewModel: SettingsViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -53,7 +55,7 @@ class MainActivity: ComponentActivity(), BackboneChannel {
             val isSystemInDarkTheme = isSystemInDarkTheme()
             /** Whether this app is in dark theme */
             val isDarkTheme = remember { mutableStateOf(
-                homeViewModel.sharedPreferences.getBoolean(
+                settingsViewModel.sharedPreferences.getBoolean(
                     SharedPreferencesModule.SP_IS_DARK_THEME,
                     isSystemInDarkTheme
                 )
@@ -82,17 +84,21 @@ class MainActivity: ComponentActivity(), BackboneChannel {
                         },
                     topBar = {
                         CustomizableAppBar(
-                            modifier = Modifier.background(AppTheme.colors.brandMain),
+                            modifier = Modifier.background(LocalTheme.colors.brandMain),
                             title = currentDestination?.value?.destination?.route?.let { route ->
                                 NavigationComponent.getScreenTitle(route)
                             } ?: appBarTitle.value,
                             navigationIcon = currentDestination?.value?.destination?.route?.let { route ->
                                 NavigationComponent.getScreenNavigationIcon(route)
                             },
-                            actions = actions.value?.second ?: {
-                                DefaultAppBarActions(false) { screen ->
+                            actions = {
+                                DefaultAppBarActions(
+                                    isUserSignedIn = false,
+                                    route = currentDestination?.value?.destination?.route
+                                ) { screen ->
                                     navController?.navigate(screen)
                                 }
+                                actions.value?.second?.invoke(this)
                             },
                             onNavigationIconClick = {
                                 currentDestination?.value?.destination?.route?.let { route ->
@@ -106,7 +112,7 @@ class MainActivity: ComponentActivity(), BackboneChannel {
                             }
                         )
                     },
-                    containerColor = AppTheme.colors.backgroundLight
+                    containerColor = LocalTheme.colors.backgroundLight
                 ) { contentPadding ->
                     navController?.let { navController ->
                         NavHost(
@@ -117,16 +123,55 @@ class MainActivity: ComponentActivity(), BackboneChannel {
                         ) {
                             composable(NavigationDestination.HOME.route) {
                                 HomeScreen(
+                                    navController = navController,
+                                    activity = this@MainActivity
+                                )
+                            }
+                            composable(NavigationDestination.COLLECTION_LOBBY.route) { backStackEntry ->
+                                CollectionLobbyScreen(
                                     activity = this@MainActivity,
-                                    isDarkTheme = isDarkTheme.value
+                                    navController = navController
+                                )
+                                backStackEntry.arguments?.remove(
+                                    NavigationComponent.CREATE_NEW_ITEM
+                                )
+                            }
+                            composable(NavigationDestination.SETTINGS.route) {
+                                SettingsScreen(
+                                    isDarkTheme = isDarkTheme.value,
+                                    viewModel = settingsViewModel
                                 ) { newValue ->
                                     isDarkTheme.value = newValue
                                 }
                             }
-                            composable(NavigationDestination.COLLECTION.route) {
-                                CollectionScreen(
-                                    activity = this@MainActivity,
-                                    navController = navController
+                            composable(
+                                NavigationDestination.SESSION_LOBBY.route,
+                                arguments = listOf(
+                                    navArgument(
+                                        NavigationComponent.CREATE_NEW_ITEM
+                                    ) {},
+                                    navArgument(
+                                        NavigationComponent.COLLECTION_UID
+                                    ) { nullable = true; defaultValue = null },
+                                    navArgument(
+                                        NavigationComponent.SESSION_UID
+                                    ) { nullable = true; defaultValue = null }
+                                )
+                            ) { backStackEntry ->
+                                SessionLobbyScreen(
+                                    navController = navController,
+                                    changeActionBar = { newActions ->
+                                        actions.value = NavigationDestination.SESSION_LOBBY to newActions
+                                    },
+                                    collectionUid = backStackEntry.arguments?.getString(
+                                        NavigationComponent.COLLECTION_UID
+                                    ),
+                                    sessionUid = backStackEntry.arguments?.getString(
+                                        NavigationComponent.SESSION_UID
+                                    ),
+                                    createNewItem = backStackEntry.arguments?.getString(
+                                        NavigationComponent.CREATE_NEW_ITEM
+                                    ).toBoolean()
                                 )
                             }
                             composable(
@@ -161,22 +206,16 @@ class MainActivity: ComponentActivity(), BackboneChannel {
                                 arguments = listOf(
                                     navArgument(
                                         NavigationComponent.COLLECTION_UID
-                                    ) {
-                                        nullable = true
-                                        defaultValue = null
-                                    },
-                                    navArgument(
-                                        NavigationComponent.QUESTION_UID
-                                    ) {
-                                        nullable = true
-                                        defaultValue = null
-                                    },
+                                    ) { nullable = true; defaultValue = null },
                                     navArgument(
                                         NavigationComponent.SESSION_UID
-                                    ) {
-                                        nullable = true
-                                        defaultValue = null
-                                    },
+                                    ) { nullable = true; defaultValue = null },
+                                    navArgument(
+                                        NavigationComponent.QUESTION_UID
+                                    ) { nullable = true; defaultValue = null },
+                                    navArgument(
+                                        NavigationComponent.QUESTION_UIDS
+                                    ) { nullable = true; defaultValue = null },
                                     navArgument(
                                         NavigationComponent.TOOLBAR_TITLE
                                     ) {},
@@ -189,8 +228,24 @@ class MainActivity: ComponentActivity(), BackboneChannel {
                                     NavigationComponent.TOOLBAR_TITLE
                                 )
                                 SessionScreen(
-                                    navController = navController,
-                                    remember =
+                                    isTestingMode = backStackEntry.arguments?.getString(
+                                        NavigationComponent.IS_TESTING_MODE
+                                    ).toBoolean(),
+                                    sessionUid = backStackEntry.arguments?.getString(
+                                        NavigationComponent.SESSION_UID
+                                    ),
+                                    questionUid = backStackEntry.arguments?.getString(
+                                        NavigationComponent.QUESTION_UID
+                                    ),
+                                    questionUids = backStackEntry.arguments?.getString(
+                                        NavigationComponent.QUESTION_UIDS
+                                    )?.split(","),
+                                    collectionUid = backStackEntry.arguments?.getString(
+                                        NavigationComponent.COLLECTION_UID
+                                    ),
+                                    changeActionBar = { newActions ->
+                                        actions.value = NavigationDestination.SESSION to newActions
+                                    }
                                 )
                             }
                         }

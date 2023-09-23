@@ -29,18 +29,12 @@ import androidx.constraintlayout.compose.Dimension
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
-import com.bumptech.glide.integration.compose.GlideImage
 import study.me.please.data.io.PsychologyTerm
 import study.me.please.data.io.PsychologyTermAnswer
 import study.me.please.data.io.Stopwatch
 import study.me.please.data.questions.*
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @AndroidEntryPoint
@@ -113,7 +107,6 @@ class BaseActivity: ComponentActivity(), BackboneChannel {
         18 to (true to LogicHandmade.logicPrompts),
     )
 
-    @OptIn(ExperimentalGlideComposeApi::class)
     @SuppressLint("CoroutineCreationDuringComposition")
     @Composable
     fun GetMainScreen() {
@@ -337,14 +330,14 @@ class BaseActivity: ComponentActivity(), BackboneChannel {
                             )
                         }
                         if(term?.imageAnswerUrl.isNullOrEmpty().not() && descriptionVisible) {
-                            GlideImage(
+                            /*GlideImage(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .wrapContentHeight(),
                                 model = term?.imageAnswerUrl,
                                 contentScale = ContentScale.FillWidth,
                                 contentDescription = term?.textAnswer
-                            )
+                            )*/
                         }
                     }
 
@@ -400,14 +393,14 @@ class BaseActivity: ComponentActivity(), BackboneChannel {
                                 softWrap = true,
                                 lineHeight = 20.sp
                             )
-                            GlideImage(
+                            /*GlideImage(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .wrapContentHeight(),
                                 model = answer.imageExplanationUrl,
                                 contentScale = ContentScale.FillWidth,
                                 contentDescription = answer.explanationMessage
-                            )
+                            )*/
                         }
                     }
                     item {

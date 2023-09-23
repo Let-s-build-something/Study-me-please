@@ -12,7 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.squadris.squadris.compose.theme.AppTheme
+import com.squadris.squadris.compose.theme.LocalTheme
 
 /**
  * Simple bottom sheet layout
@@ -39,16 +39,19 @@ fun SimpleBottomSheet(
         scaffoldState = state,
         sheetPeekHeight = 0.dp,
         contentColor = Color.Transparent,
-        sheetElevation = 24.dp,
+        sheetElevation = LocalTheme.styles.actionElevation,
         backgroundColor = Color.Transparent,
         topBar = topBar,
         sheetContent = sheetContent,
         content = content,
-        sheetBackgroundColor = AppTheme.colors.onBackgroundComponentContrast,
+        sheetBackgroundColor = LocalTheme.colors.onBackgroundComponent,
         sheetContentColor = Color.Transparent,
         drawerScrimColor = Color.Transparent,
         drawerBackgroundColor = Color.Transparent,
         drawerContentColor = Color.Transparent,
-        sheetShape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
+        sheetShape = RoundedCornerShape(
+            topStart = LocalTheme.shapes.componentCornerRadius,
+            topEnd = LocalTheme.shapes.componentCornerRadius
+        )
     )
 }

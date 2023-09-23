@@ -21,17 +21,17 @@ interface CollectionDao {
     @Query("SELECT * FROM ${AppRoomDatabase.ROOM_COLLECTION_TABLE} WHERE uid == :collectionUid LIMIT 1")
     suspend fun getCollectionByUid(collectionUid: String): CollectionIO?
 
+    /** Returns a single collection based on their identification [questionUids] */
+    @Query("SELECT * FROM ${AppRoomDatabase.ROOM_QUESTION_TABLE} WHERE uid in (:questionUids) ORDER BY date_created DESC")
+    suspend fun getQuestionsByUid(questionUids: List<String>): List<QuestionIO>?
+
     /** Inserts or updates a new collection [collection] into the database */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertCollection(collection: CollectionIO)
 
-    /** Inserts or updates a set of collections [collections] */
+    /** Inserts or updates a new question [question] into the database */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertCollections(collections: List<CollectionIO>)
-
-    /** Removes all collections from the database */
-    @Query("DELETE FROM ${AppRoomDatabase.ROOM_COLLECTION_TABLE}")
-    suspend fun deleteAllCollections()
+    suspend fun insertQuestion(question: QuestionIO)
 
     /** Removes collections from the database within given list */
     @Query("DELETE FROM ${AppRoomDatabase.ROOM_COLLECTION_TABLE} WHERE uid IN (:uidList)")
@@ -40,8 +40,4 @@ interface CollectionDao {
     /** Removes questions from the database within given list */
     @Query("DELETE FROM ${AppRoomDatabase.ROOM_QUESTION_TABLE} WHERE uid IN (:uidList)")
     suspend fun deleteQuestions(uidList: List<String>)
-
-    /** Removes answers from the database within given list */
-    @Query("DELETE FROM ${AppRoomDatabase.ROOM_QUESTION_ANSWER_TABLE} WHERE uid IN (:uidList)")
-    suspend fun deleteAnswers(uidList: List<String>)
 }

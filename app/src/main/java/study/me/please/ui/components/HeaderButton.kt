@@ -19,7 +19,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.squadris.squadris.compose.theme.AppTheme
+import com.squadris.squadris.compose.theme.LocalTheme
 import study.me.please.R
 
 /**
@@ -42,15 +42,15 @@ private fun HeaderButton(
             vertical = 6.dp,
             horizontal = 10.dp
         ),
-        shape = AppTheme.shapes.componentShape,
+        shape = LocalTheme.shapes.componentShape,
         colors = ButtonColors(
             containerColor = containerColor,
             contentColor = contentColor,
-            disabledContainerColor = AppTheme.colors.disabled,
-            disabledContentColor = AppTheme.colors.secondary
+            disabledContainerColor = LocalTheme.colors.disabled,
+            disabledContentColor = LocalTheme.colors.secondary
         ),
         elevation = ButtonDefaults.elevatedButtonElevation(
-            defaultElevation = AppTheme.styles.actionElevation
+            defaultElevation = LocalTheme.styles.actionElevation
         )
     ) {
         Icon(
@@ -87,8 +87,8 @@ fun ComponentHeaderButton(
         modifier = modifier,
         text = text,
         onClick = onClick,
-        contentColor = AppTheme.colors.secondary,
-        containerColor = AppTheme.colors.onBackgroundComponent
+        contentColor = LocalTheme.colors.secondary,
+        containerColor = LocalTheme.colors.onBackgroundComponent
     )
 }
 
@@ -108,7 +108,7 @@ fun BrandHeaderButton(
             .padding(bottom = 12.dp, top = 4.dp),
         text = text,
         onClick = onClick,
-        contentColor = AppTheme.colors.tetrial,
-        containerColor = AppTheme.colors.brandMain
+        contentColor = LocalTheme.colors.tetrial,
+        containerColor = LocalTheme.colors.brandMain
     )
 }

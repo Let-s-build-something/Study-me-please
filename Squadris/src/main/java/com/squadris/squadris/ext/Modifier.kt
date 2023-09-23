@@ -20,7 +20,7 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
-import com.squadris.squadris.compose.theme.AppTheme
+import com.squadris.squadris.compose.theme.LocalTheme
 
 /** Pseudo shimmer effect, animating a brush around an element */
 @Composable
@@ -58,8 +58,8 @@ fun Modifier.brandShimmerEffect(
     shape: Shape = RoundedCornerShape(8.dp)
 ): Modifier = composed {
     shimmerEffect(
-        stripeColor = AppTheme.colors.overShimmer,
-        startEndColor = AppTheme.colors.shimmer,
+        stripeColor = LocalTheme.colors.overShimmer,
+        startEndColor = LocalTheme.colors.shimmer,
         shape = shape
     )
 }

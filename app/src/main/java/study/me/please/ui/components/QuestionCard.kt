@@ -21,16 +21,18 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
-import com.squadris.squadris.compose.theme.AppTheme
+import com.squadris.squadris.compose.theme.LocalTheme
 import study.me.please.R
 import study.me.please.data.io.QuestionIO
 
@@ -75,7 +77,7 @@ private fun ContentLayout(
         modifier = modifier
             .fillMaxWidth()
             .wrapContentHeight()
-            .clip(AppTheme.shapes.componentShape)
+            .clip(LocalTheme.shapes.componentShape)
             .combinedClickable(
                 interactionSource = remember {
                     MutableInteractionSource()
@@ -88,11 +90,11 @@ private fun ContentLayout(
                     state.isChecked.value = true
                 }
             ),
-        elevation = AppTheme.styles.cardClickableElevation,
-        shape = AppTheme.shapes.componentShape,
+        elevation = LocalTheme.styles.cardClickableElevation,
+        shape = LocalTheme.shapes.componentShape,
         colors = CardDefaults.cardColors(
-            containerColor = AppTheme.colors.onBackgroundComponentContrast,
-            contentColor = AppTheme.colors.onBackgroundComponentContrast
+            containerColor = LocalTheme.colors.onBackgroundComponentContrast,
+            contentColor = LocalTheme.colors.onBackgroundComponentContrast
         )
     ) {
         Crossfade(
@@ -156,7 +158,7 @@ private fun DataCard(
                 onCheckedChange = { isChecked ->
                     state.isChecked.value = isChecked
                 },
-                colors = AppTheme.styles.checkBoxColorsDefault
+                colors = LocalTheme.styles.checkBoxColorsDefault
             )
         }
         val answerModifier = Modifier
@@ -172,7 +174,7 @@ private fun DataCard(
             }
         val explanationModifier = Modifier
             .constrainAs(txtExplanation) {
-                start.linkTo(parent.start)
+                start.linkTo(txtAnswer.start)
                 end.linkTo(parent.end)
                 top.linkTo(txtAnswer.bottom, 4.dp)
                 width = Dimension.fillToConstraints
@@ -205,13 +207,17 @@ private fun DataCard(
                 text = data.prompt,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Medium,
-                color = AppTheme.colors.secondary
+                color = LocalTheme.colors.secondary,
+                maxLines = 3,
+                overflow = TextOverflow.Ellipsis
             )
             Text(
                 modifier = explanationModifier,
                 text = data.textExplanation,
                 fontSize = 14.sp,
-                color = AppTheme.colors.secondary
+                color = LocalTheme.colors.secondary,
+                maxLines = 5,
+                overflow = TextOverflow.Ellipsis
             )
         }
         EditableImageAsset(

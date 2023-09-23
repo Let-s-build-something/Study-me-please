@@ -3,8 +3,10 @@ package study.me.please.base.navigation
 import androidx.navigation.NavController
 import study.me.please.base.navigation.NavigationComponent.TOOLBAR_TITLE
 import study.me.please.base.navigation.NavigationComponent.COLLECTION_UID
+import study.me.please.base.navigation.NavigationComponent.CREATE_NEW_ITEM
 import study.me.please.base.navigation.NavigationComponent.IS_TESTING_MODE
 import study.me.please.base.navigation.NavigationComponent.QUESTION_UID
+import study.me.please.base.navigation.NavigationComponent.QUESTION_UIDS
 import study.me.please.base.navigation.NavigationComponent.SESSION_UID
 import study.me.please.base.navigation.NavigationComponent.putNavigationArgument
 
@@ -34,6 +36,7 @@ object NavigationUtils {
      * Navigates to session to create a new one or return to already existing
      * @param sessionUid identifier for retrieving existing session. Meaning it's backed in a database
      * @param questionUid identifier for question that will be tested
+     * @param questionUid identifiers for questions that will be tested
      * @param collectionUid identifier for collection that will be tested
      * @param isTesting whether user wants to only test functionality, texts, visibility of elements etc.
      *                  it has more options for testing and focuses on functionality discovery
@@ -43,16 +46,46 @@ object NavigationUtils {
         toolbarTitle: String,
         sessionUid: String? = null,
         questionUid: String? = null,
+        questionUids: List<String>? = null,
         collectionUid: String? = null,
         isTesting: Boolean = false
     ) {
         navController.navigate(
             NavigationDestination.SESSION.route
                 .putNavigationArgument(TOOLBAR_TITLE, toolbarTitle)
+                .putNavigationArgument(COLLECTION_UID, collectionUid)
+                .putNavigationArgument(SESSION_UID, sessionUid)
+                .putNavigationArgument(QUESTION_UID, questionUid)
+                .putNavigationArgument(QUESTION_UIDS, questionUids?.joinToString(","))
+                .putNavigationArgument(IS_TESTING_MODE, isTesting.toString())
+        )
+    }
+
+    /**
+     * Navigates to collection lobby screen
+     */
+    fun navigateToCollectionLobby(
+        navController: NavController,
+    ) {
+        navController.navigate(
+            NavigationDestination.COLLECTION_LOBBY.route
+        )
+    }
+
+    /**
+     * Navigates to session lobby screen
+     */
+    fun navigateToSessionLobby(
+        navController: NavController,
+        collectionUid: String? = null,
+        sessionUid: String? = null,
+        createNewItem: Boolean = false
+    ) {
+        navController.navigate(
+            NavigationDestination.SESSION_LOBBY.route
+                .putNavigationArgument(CREATE_NEW_ITEM, createNewItem.toString())
                 .putNavigationArgument(COLLECTION_UID, collectionUid ?: "")
                 .putNavigationArgument(SESSION_UID, sessionUid ?: "")
-                .putNavigationArgument(QUESTION_UID, questionUid ?: "")
-                .putNavigationArgument(IS_TESTING_MODE, isTesting.toString())
         )
     }
 }

@@ -7,4 +7,27 @@
         <item>How come no seeds in wine?…</item>
         <item>Is wine just alcoholic juice?…</item>
     </string-array>
+    <string-array name="random_name">
+        <item>Monkey</item>
+        <item>Orange</item>
+        <item>Apple</item>
+        <item>Pear</item>
+        <item>Mouse</item>
+        <item>Trolley</item>
+        <item>Carpet</item>
+        <item>Pillow</item>
+        <item>Blanket</item>
+        <item>Dirt</item>
+        <item>Meow</item>
+        <item>Yum</item>
+        <item>Truffle</item>
+        <item>Train</item>
+        <item>Drawing</item>
+        <item>Flight</item>
+        <item>Shadow</item>
+        <item>Wheel</item>
+        <item>Key</item>
+        <item>Table</item>
+        <item>Chair</item>
+    </string-array>
 </resources>

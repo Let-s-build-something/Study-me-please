@@ -5,15 +5,17 @@ import androidx.core.net.toUri
 import androidx.room.ProvidedTypeConverter
 import androidx.room.TypeConverter
 import com.google.gson.Gson
-import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
 import study.me.please.data.io.CollectionIO
+import study.me.please.data.io.ImportedSource
 import study.me.please.data.io.LargePathAsset
 import study.me.please.data.io.QuestionAnswerIO
 import study.me.please.data.io.QuestionIO
-import study.me.please.data.io.UserPromptPreference
-import study.me.please.data.io.UserPromptPreferences
-import java.lang.reflect.Type
+import study.me.please.data.io.SessionAnswerValidation
+import study.me.please.data.io.SessionHistoryItem
+import study.me.please.data.io.preferences.SessionPreference
+import study.me.please.data.io.preferences.SessionPreferencePack
+import study.me.please.ui.session.QuestionModule
 import java.util.Date
 import javax.inject.Inject
 
@@ -69,21 +71,21 @@ class AppDatabaseConverter @Inject constructor(private val gson: Gson) {
         )
     }
 
-    /** Converts [UserPromptPreferences] object to string */
+    /** Converts [SessionPreferencePack] object to string */
     @TypeConverter
-    fun fromUserPromptPreferences(value: UserPromptPreferences): String {
+    fun fromSessionPreferencePack(value: SessionPreferencePack): String {
         return gson.toJson(
             value,
-            TypeToken.getParameterized(UserPromptPreferences::class.java).type
+            TypeToken.getParameterized(SessionPreferencePack::class.java).type
         )
     }
 
-    /** Converts string to [UserPromptPreferences] */
+    /** Converts string to [SessionPreferencePack] */
     @TypeConverter
-    fun toUserPromptPreferences(value: String): UserPromptPreferences {
+    fun toSessionPreferencePack(value: String): SessionPreferencePack {
         return gson.fromJson(
             value,
-            TypeToken.getParameterized(UserPromptPreferences::class.java).type
+            TypeToken.getParameterized(SessionPreferencePack::class.java).type
         )
     }
 
@@ -94,6 +96,104 @@ class AppDatabaseConverter @Inject constructor(private val gson: Gson) {
             gson.toJson(
                 value,
                 TypeToken.getParameterized(LargePathAsset::class.java).type
+            )
+        }
+    }
+
+    /** Converts string to [ImportedSource] */
+    @TypeConverter
+    fun toImportedSource(value: String): ImportedSource {
+        return gson.fromJson(
+            value,
+            TypeToken.getParameterized(ImportedSource::class.java).type
+        )
+    }
+
+    /** Converts [ImportedSource] object to string */
+    @TypeConverter
+    fun fromImportedSource(value: ImportedSource?): String {
+        return if(value == null) "" else {
+            gson.toJson(
+                value,
+                TypeToken.getParameterized(ImportedSource::class.java).type
+            )
+        }
+    }
+
+    /** Converts string to [SessionHistoryItem] */
+    @TypeConverter
+    fun toSessionHistoryItem(value: String): SessionHistoryItem {
+        return gson.fromJson(
+            value,
+            TypeToken.getParameterized(SessionHistoryItem::class.java).type
+        )
+    }
+
+    /** Converts [SessionHistoryItem] object to string */
+    @TypeConverter
+    fun fromSessionHistoryItem(value: SessionHistoryItem?): String {
+        return if(value == null) "" else {
+            gson.toJson(
+                value,
+                TypeToken.getParameterized(SessionHistoryItem::class.java).type
+            )
+        }
+    }
+
+    /** Converts string to [SessionHistoryItem] array */
+    @TypeConverter
+    fun toSessionHistoryItemList(value: String): List<SessionHistoryItem> {
+        return gson.fromJson(
+            value,
+            TypeToken.getParameterized(List::class.java, SessionHistoryItem::class.java).type
+        )
+    }
+
+    /** Converts [SessionHistoryItem] object array to string */
+    @TypeConverter
+    fun fromSessionHistoryItemList(value: List<SessionHistoryItem>): String {
+        return gson.toJson(
+            value,
+            TypeToken.getParameterized(List::class.java, SessionHistoryItem::class.java).type
+        )
+    }
+
+    /** Converts string to [QuestionModule] */
+    @TypeConverter
+    fun toQuestionModule(value: String): QuestionModule {
+        return gson.fromJson(
+            value,
+            TypeToken.getParameterized(QuestionModule::class.java).type
+        )
+    }
+
+    /** Converts [SessionHistoryItem] object to string */
+    @TypeConverter
+    fun fromQuestionModule(value: QuestionModule?): String {
+        return if(value == null) "" else {
+            gson.toJson(
+                value,
+                TypeToken.getParameterized(QuestionModule::class.java).type
+            )
+        }
+    }
+
+    /** Converts string to [SessionAnswerValidation] */
+    @TypeConverter
+    fun toSessionAnswerValidation(value: String): SessionAnswerValidation {
+        return gson.fromJson(
+            value,
+            TypeToken.getParameterized(SessionAnswerValidation::class.java).type
+        )
+    }
+
+    /** Converts [SessionHistoryItem] object to string */
+    @TypeConverter
+    fun fromSessionAnswerValidation(value: SessionAnswerValidation?): String {
+        return if(value == null) "" else {
+            gson.toJson(
+                value,
+                TypeToken.getParameterized(SessionAnswerValidation::class.java).type
             )
         }
     }
@@ -109,25 +209,25 @@ class AppDatabaseConverter @Inject constructor(private val gson: Gson) {
         }
     }
 
-    /** Converts [UserPromptPreference] object to string */
+    /** Converts [SessionPreference] object to string */
     @TypeConverter
-    fun fromUserPromptPreference(value: UserPromptPreference): String {
+    fun fromSessionPreference(value: SessionPreference): String {
         return gson.toJson(
             value,
-            TypeToken.getParameterized(UserPromptPreference::class.java).type
+            TypeToken.getParameterized(SessionPreference::class.java).type
         )
     }
 
-    /** Converts string to [UserPromptPreference] */
+    /** Converts string to [SessionPreference] */
     @TypeConverter
-    fun toUserPromptPreference(value: String): UserPromptPreference {
+    fun toSessionPreference(value: String): SessionPreference {
         return gson.fromJson(
             value,
-            TypeToken.getParameterized(UserPromptPreference::class.java).type
+            TypeToken.getParameterized(SessionPreference::class.java).type
         )
     }
 
-    /** Converts [UserPromptPreference] object to string */
+    /** Converts [SessionPreference] object to string */
     @TypeConverter
     fun fromQuestionIOList(value: List<QuestionIO>): String {
         return gson.toJson(
@@ -136,7 +236,7 @@ class AppDatabaseConverter @Inject constructor(private val gson: Gson) {
         )
     }
 
-    /** Converts string to [UserPromptPreference] */
+    /** Converts string to [SessionPreference] */
     @TypeConverter
     fun toQuestionIOList(value: String): List<QuestionIO> {
         return gson.fromJson(

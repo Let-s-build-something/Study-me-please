@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Clear
 import androidx.compose.material3.Text
@@ -15,7 +14,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
@@ -23,10 +25,27 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.squadris.squadris.compose.theme.AppTheme
+import com.squadris.squadris.compose.theme.LocalTheme
 import com.squadris.squadris.compose.theme.Colors
 import com.squadris.squadris.compose.theme.StudyMeAppTheme
 import study.me.please.R
+
+@Composable
+fun rememberEditFieldInputState(
+    initialValue: String
+): EditFieldInputState {
+    val scope = rememberCoroutineScope()
+    val state = remember(scope) {
+        EditFieldInputState(initialValue = initialValue)
+    }
+    return state
+}
+
+data class EditFieldInputState(
+    val initialValue: String
+) {
+    val currentValue = mutableStateOf(initialValue)
+}
 
 /**
  * Styled [TextField] with ability to remove written text
@@ -38,14 +57,15 @@ fun EditFieldInput(
     hint: String? = null,
     isError: Boolean = false,
     clearable: Boolean = false,
+    focusRequester: FocusRequester? = null,
     leadingIcon: ImageVector? = null,
     minLines: Int = 1,
     maxLines: Int = 1,
+    maxLength: Int? = null,
     onValueChange: (String) -> Unit = {},
 ) {
     val isFocused = remember { mutableStateOf(false) }
-    val shape = RoundedCornerShape(12.dp)
-    val text = remember { mutableStateOf(value) }
+    val text = remember(value) { mutableStateOf(value) }
     LaunchedEffect(key1 = value) {
         text.value = value
     }
@@ -56,23 +76,30 @@ fun EditFieldInput(
                 if (isError) {
                     Colors.RED_ERROR
                 } else if (isFocused.value) {
-                    AppTheme.colors.secondary
-                } else AppTheme.colors.brandMain,
-                shape
+                    LocalTheme.colors.secondary
+                } else LocalTheme.colors.brandMain,
+                LocalTheme.shapes.componentShape
             )
             .onFocusChanged {
                 isFocused.value = it.isFocused
-            },
+            }
+            .then(
+                if (focusRequester != null) {
+                    Modifier.focusRequester(focusRequester)
+                } else Modifier
+            ),
         isError = isError,
         minLines = minLines,
         maxLines = maxLines,
         value = text.value,
         onValueChange = { outputValue ->
-            text.value = outputValue
-            onValueChange(outputValue)
+            if(maxLength == null || outputValue.length <= maxLength) {
+                text.value = outputValue
+                onValueChange(outputValue)
+            }
         },
         textStyle = TextStyle(
-            color = AppTheme.colors.primary,
+            color = LocalTheme.colors.primary,
             fontSize = 16.sp
         ),
         leadingIcon = if(leadingIcon != null) {
@@ -80,12 +107,12 @@ fun EditFieldInput(
                 MinimalisticIcon(imageVector = leadingIcon)
             }
         }else null,
-        colors = AppTheme.styles.textFieldColors,
+        colors = LocalTheme.styles.textFieldColors,
         placeholder = {
             if(hint?.isNotEmpty() == true) {
                 Text(
                     text = hint,
-                    color = AppTheme.colors.brandMain,
+                    color = LocalTheme.colors.brandMain,
                     fontSize = 12.sp
                 )
             }
@@ -101,7 +128,7 @@ fun EditFieldInput(
                 }
             }
         }else null,
-        shape = shape
+        shape = LocalTheme.shapes.componentShape
     )
 }
 
@@ -111,14 +138,14 @@ private fun Preview() {
     StudyMeAppTheme(isDarkTheme = false) {
         Box(
             modifier = Modifier
-                .background(AppTheme.colors.backgroundLight)
+                .background(LocalTheme.colors.backgroundLight)
                 .padding(8.dp)
         ) {
             EditFieldInput(
                 modifier = Modifier
                     .wrapContentHeight()
                     .fillMaxWidth()
-                    .background(AppTheme.colors.onBackgroundComponent),
+                    .background(LocalTheme.colors.onBackgroundComponent),
                 value = "",
                 hint = "hint",
                 onValueChange = {}

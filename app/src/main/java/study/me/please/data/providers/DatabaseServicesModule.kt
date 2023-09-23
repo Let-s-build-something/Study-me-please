@@ -25,6 +25,14 @@ object DatabaseServicesModule {
     @Provides
     fun provideSessionDao(appDatabase: AppRoomDatabase) = appDatabase.sessionDbDao()
 
+    /** Interface for accessing home data in local Room database */
+    @Provides
+    fun provideHomeDao(appDatabase: AppRoomDatabase) = appDatabase.homeDbDao()
+
+    /** Interface for accessing preferences data in local Room database */
+    @Provides
+    fun providePreferencesDao(appDatabase: AppRoomDatabase) = appDatabase.preferencesDbDao()
+
     /** Local main Room database */
     @ActivityRetainedScoped
     @Provides

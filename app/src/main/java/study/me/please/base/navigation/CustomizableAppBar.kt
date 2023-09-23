@@ -8,9 +8,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Home
-import androidx.compose.material.icons.outlined.PersonAddAlt
-import androidx.compose.material.icons.outlined.PersonOutline
-import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -22,13 +19,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.squadris.squadris.compose.theme.AppTheme
-import study.me.please.R
+import com.squadris.squadris.compose.theme.LocalTheme
 
 /**
  * Custom app bar with options of customization
@@ -53,7 +48,7 @@ fun CustomizableAppBar(
                 text = title ?: "",
                 fontWeight = FontWeight.Bold,
                 fontSize = 22.sp,
-                color = AppTheme.colors.tetrial
+                color = LocalTheme.colors.tetrial
             )
         },
         navigationIcon = {
@@ -66,7 +61,7 @@ fun CustomizableAppBar(
                         .clickable(
                             indication = rememberRipple(
                                 bounded = true,
-                                color = AppTheme.colors.contrastActionLight
+                                color = LocalTheme.colors.contrastActionLight
                             ),
                             interactionSource = remember { MutableInteractionSource() }
                         ) {
@@ -75,7 +70,7 @@ fun CustomizableAppBar(
                         .padding(8.dp),
                     imageVector = navigationIcon.first,
                     contentDescription = navigationIcon.second,
-                    tint = AppTheme.colors.tetrial
+                    tint = LocalTheme.colors.tetrial
                 )
             }
         },
@@ -83,11 +78,11 @@ fun CustomizableAppBar(
             actions(this)
         },
         colors = TopAppBarColors(
-            containerColor = AppTheme.colors.brandMain,
-            scrolledContainerColor = AppTheme.colors.brandMain,
-            navigationIconContentColor = AppTheme.colors.tetrial,
-            titleContentColor = AppTheme.colors.tetrial,
-            actionIconContentColor = AppTheme.colors.tetrial
+            containerColor = LocalTheme.colors.brandMain,
+            scrolledContainerColor = LocalTheme.colors.brandMain,
+            navigationIconContentColor = LocalTheme.colors.tetrial,
+            titleContentColor = LocalTheme.colors.tetrial,
+            actionIconContentColor = LocalTheme.colors.tetrial
         )
     )
 }

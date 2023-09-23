@@ -22,6 +22,7 @@ object Colors {
     val TETRIAL_24: Color = Color(0x3DF8E3CB)
     val TETRIAL_50: Color = Color(0x80F8E3CB)
     val TETRIAL_LIGHT: Color = Color(0xFFfdf8f3)
+    val TETRIAL_LIGHT_DARKER: Color = Color(0xFFf8eee1)
     val DARK_GREY: Color = Color(0xFF121212)
     val DARK_GREY_70: Color = Color(0xB3121212)
     val WHITE_24: Color = Color(0x3DFFFFFF)

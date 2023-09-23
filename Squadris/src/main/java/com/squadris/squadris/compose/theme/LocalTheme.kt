@@ -3,16 +3,16 @@ package com.squadris.squadris.compose.theme
 import androidx.compose.runtime.Composable
 
 /** Main theme with current colors and styles */
-object AppTheme {
+object LocalTheme {
 
     /** base set of colors based on configurations */
     val colors: BaseColors
         @Composable
         get() = LocalAppColors.current
 
-    /** base styles for the main app theme [AppTheme] */
+    /** base styles for the main app theme [LocalTheme] */
     val styles: ThemeStyle = AppThemeStyle()
 
-    /** base shapes for the main app theme [AppTheme] */
+    /** base shapes for the main app theme [LocalTheme] */
     val shapes: AppThemeShapes = AppThemeShapes()
 }

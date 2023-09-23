@@ -1,10 +1,14 @@
 package study.me.please.data.io
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
+import androidx.room.Ignore
 import androidx.room.PrimaryKey
 import com.google.gson.annotations.SerializedName
+import com.squadris.squadris.utils.DateUtils
 import study.me.please.data.room.AppRoomDatabase
 import java.io.Serializable
+import java.util.Date
 import java.util.UUID
 
 /** question prompt */
@@ -33,15 +37,6 @@ data class QuestionIO (
     @SerializedName("category_name")
     val categoryName: String = "",
 
-    /** List of uids of correct answers */
-    @SerializedName("correct_answers_uid")
-    val correctAnswersUid: List<String> = listOf(),
-
-    /** whether this prompt is repeated for the sake of remembering */
-    @SerializedName("is_repeated")
-    @Deprecated("Isn't this only a local variable, why are we saving this?")
-    var isRepeated: Boolean = false,
-
     /** path to audio file with prompt */
     @SerializedName("audio_prompt_url")
     val audioPromptUrl: LargePathAsset? = null,
@@ -59,5 +54,19 @@ data class QuestionIO (
     val uid: String = UUID.randomUUID().toString(),
 
     /** type of this question */
-    val type: QuestionPromptType = QuestionPromptType.TEXT_QUESTION
-): Serializable
+    val type: QuestionPromptType = QuestionPromptType.TEXT_QUESTION,
+
+    /** source of importation if any */
+    val importedSource: ImportedSource = ImportedSource(),
+
+    /** date of creation of this data object */
+    @SerializedName("date_created")
+    @ColumnInfo("date_created")
+    val dateCreated: Date = DateUtils.now.time
+): Serializable {
+
+    /** whether this data set is empty or not */
+    @get:Ignore
+    val isEmpty: Boolean
+        get() = prompt.isEmpty() || answers.isEmpty()
+}

@@ -15,7 +15,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.squadris.squadris.compose.theme.AppTheme
+import com.squadris.squadris.compose.theme.LocalTheme
 
 /**
  * Clickable basic Icon with vector image with minimalistic size
@@ -24,15 +24,13 @@ import com.squadris.squadris.compose.theme.AppTheme
 fun MinimalisticIcon(
     modifier: Modifier = Modifier,
     imageVector: ImageVector,
-    tint: Color = AppTheme.colors.primary,
-    padding: Dp = 0.dp,
+    tint: Color = LocalTheme.colors.primary,
     contentDescription: String? = null,
     onClick: (() -> Unit)? = null
 ) {
     Icon(
         modifier = Modifier
             .size(34.dp)
-            .padding(8.dp)
             .clip(CircleShape)
             .then(if(onClick != null) {
                 modifier.clickable(
@@ -40,7 +38,8 @@ fun MinimalisticIcon(
                     interactionSource = remember { MutableInteractionSource() },
                     onClick = onClick
                 )
-            }else modifier),
+            }else modifier)
+            .padding(5.dp),
         imageVector = imageVector,
         contentDescription = contentDescription,
         tint = tint

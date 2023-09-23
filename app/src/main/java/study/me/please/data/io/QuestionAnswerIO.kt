@@ -23,5 +23,9 @@ data class QuestionAnswerIO (
 
     /** explanation image */
     @SerializedName("image_explanation")
-    var imageExplanation: LargePathAsset? = null
+    var imageExplanation: LargePathAsset? = null,
+
+    /** whether this answer is the correct one to a parent prompt */
+    @SerializedName("is_correct")
+    var isCorrect: Boolean = false
 ): Serializable

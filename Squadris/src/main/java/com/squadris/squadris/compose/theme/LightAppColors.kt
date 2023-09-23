@@ -24,7 +24,7 @@ object LightAppColors: BaseColors {
 
     override val onBackgroundComponent: Color = Colors.TETRIAL_LIGHT
 
-    override val onBackgroundComponentContrast: Color = Colors.TETRIAL_50
+    override val onBackgroundComponentContrast: Color = Colors.TETRIAL_LIGHT_DARKER
 
     override val shimmer: Color = Colors.TETRIAL_16
     override val overShimmer: Color = Colors.TETRIAL_24

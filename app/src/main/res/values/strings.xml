@@ -2,12 +2,17 @@
     <string name="app_name">Study me, please</string>
     <string name="home_screen_title">Home</string>
     <string name="screen_sessions_title">Sessions</string>
-    <string name="screen_collection_title">Collection</string>
+    <string name="screen_collection_title">Collections</string>
     <string name="screen_register_title">I\'m new</string>
+    <string name="screen_settings_title">Changing room</string>
     <string name="screen_account_title">My business</string>
+    <string name="screen_session_lobby_title">My sessions</string>
     <string name="screen_collection_detail_new">New collection</string>
     <string name="navigate_back">Back</string>
     <string name="navigate_close">Close</string>
+
+    <string name="home_screen_collections_empty_action">Let\'s start collecting</string>
+    <string name="home_screen_sessions_empty_action">Time to practice</string>
 
     <string name="collection_detail_add_question">Sir, I have a question</string>
     <string name="collection_detail_save">Save my madness</string>
@@ -26,10 +31,17 @@
     <string name="answer_edit_field_hint_explanation">Explanation of this answer</string>
     <string name="answer_field_content_header">Answer</string>
     <string name="answer_field_explanation_header">Explanation</string>
+    <string name="answer_is_correct_ticked">Correct answer</string>
+    <string name="answer_is_correct_not_ticked">Wrong answer</string>
+
+    <string name="session_lobby_screen_empty_text">No knowledge growth…yet!:(</string>
+    <string name="session_lobby_screen_delete_title">Session deletion</string>
+    <string name="session_lobby_screen_delete_text">
+        You\'ve spent time on this, are you sure you want permanently delete the selected (%1$d) sessions?
+    </string>
 
     <string name="add_new_collection">I collect questions, since I have no answers. Yet.</string>
-    <string name="collection_empty_error">There are no collections yet. But you can create one now:).</string>
-    <string name="collection_list_delete_item">Delete</string>
+    <string name="collection_empty_error">There are no collections…yet! But you can start right now:).</string>
     <string name="collection_delete_dialog_title">Collection deletion</string>
     <string name="collection_delete_dialog_description">
         You\'ve spent time on this, are you sure you want permanently delete the selected (%1$d) collections?
@@ -43,9 +55,37 @@
         You\'ve spent time on this, are you sure you want permanently delete the selected (%1$d) answers?
     </string>
 
-    <string name="image_field_url_hint">Url path to your image.</string>
-    <string name="image_field_local_value">Local image</string>
+    <string name="screen_settings_text_theme">Dark and darker</string>
 
+    <string name="preference_chooser_preferences_show">Edit preference</string>
+    <string name="preference_chooser_preferences_hide">Close preference</string>
+    <string name="preference_chooser_field_name_hint">Preference name</string>
+    <string name="preference_chooser_preferences_header">Your preferences</string>
+    <string name="preference_chooser_studying_header">Studying</string>
+    <string name="preference_chooser_practicing_header">Practicing</string>
+    <string name="preference_chooser_examination_header">Examination</string>
+    <string name="preference_chooser_add_new">Create</string>
+    <string name="preference_wait_for_correct_answer_desc">
+        Validate all answers until correct answer chosen
+    </string>
+    <string name="preference_validate_manually_desc">
+        Manual validation, after right answers have been chosen
+    </string>
+    <string name="preference_repeat_on_mistake_desc">
+        Whether question should be repeated after making a mistake
+    </string>
+
+    <!--- =================================== COMPONENTS ======================================= -->
+    <string name="image_field_url_hint">Url path to your image.</string>
+    <string name="image_field_url_error_formats">
+        An error occurred. Supported formats are: PNG, JPG, WebP, GIF, BMP, HEIF, AVIF and SVG.
+        (Your URL address has to have appendix such as ".png", ".jpg")
+    </string>
+    <string name="image_field_local_value">Local image</string>
+    <string name="session_card_x_questions">%1$d questions</string>
+
+
+    <!--- =================================== BUTTONS ========================================== -->
     <string name="button_add_image">Add an image</string>
     <string name="button_add_prompt_image">Add prompt image</string>
     <string name="button_add_explanation_image">Add explanation image</string>
@@ -60,7 +100,16 @@
     <string name="button_confirm">Confirm</string>
     <string name="button_play">Play</string>
     <string name="button_test_play">Test play</string>
+    <string name="button_preferences">Preferences</string>
+    <string name="button_continue">Continue</string>
+    <string name="button_validate">Validate</string>
+    <string name="button_repeat">Repeat</string>
+    <string name="button_delete">Delete</string>
+    <string name="button_select_all">Select all</string>
+    <string name="button_deselect">Deselect all</string>
 
+
+    <!--- ============================= CONTENT DESCRIPTION ==================================== -->
     <string name="btn_clear_content_description">Clear</string>
     <string name="add_new_content_description">Add new item</string>
     <string name="image_icon_content_description">Icon</string>

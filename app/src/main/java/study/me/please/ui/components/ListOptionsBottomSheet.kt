@@ -26,13 +26,14 @@ fun ListOptionsBottomSheet(
     onDismissRequest: () -> Unit = {},
     topBar: (@Composable () -> Unit)? = null,
     actions: @Composable () -> Unit = {},
+    sheetContentModifier: Modifier = Modifier,
     state: BottomSheetScaffoldState = rememberBottomSheetScaffoldState(),
     content: @Composable (paddingValues: PaddingValues) -> Unit = {}
 ) {
     SimpleBottomSheet(
         sheetContent = {
             Row(
-                modifier = Modifier
+                modifier = sheetContentModifier
                     .padding(16.dp)
                     .fillMaxWidth()
                     .wrapContentHeight(),

@@ -5,6 +5,7 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.google.gson.annotations.SerializedName
 import com.squadris.squadris.utils.DateUtils
+import study.me.please.data.io.preferences.SessionPreferencePack
 import study.me.please.data.room.AppRoomDatabase
 import java.io.Serializable
 import java.util.Date
@@ -14,12 +15,12 @@ import java.util.UUID
 @Entity(tableName = AppRoomDatabase.ROOM_COLLECTION_TABLE)
 data class CollectionIO(
 
-    /** list of all questions */
-    var questions: MutableList<QuestionIO> = mutableListOf(),
+    /** list of all questions contained in this collection */
+    var questionUids: MutableList<String> = mutableListOf(),
 
     /** What preferences are set to a session by default, only in session with one collection */
     @SerializedName("default_preference")
-    val defaultPreference: UserPromptPreferences = UserPromptPreferences(),
+    val defaultPreference: SessionPreferencePack = SessionPreferencePack(),
 
     /** short name of the collection */
     var name: String = "",
@@ -50,14 +51,15 @@ data class CollectionIO(
 
     /** Checks whether object contains any non-default data */
     val isNotEmpty: Boolean
-        get() = dateCreated != null
+        get() = (dateCreated != null
             || name.isNotEmpty()
             || description.isNotEmpty()
-            || questions.isNotEmpty()
+            || questionUids.isNotEmpty())
+            && questionUids.isNotEmpty()
 
     override fun toString(): String {
         return "{" +
-            "questions: $questions" +
+            "questionUids: $questionUids" +
             "defaultPreference: $defaultPreference" +
             "name: $name" +
             "description: $description" +

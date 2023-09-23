@@ -1,5 +1,6 @@
 package study.me.please.ui.components
 
+import android.os.Build.VERSION.SDK_INT
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -8,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableFloatStateOf
@@ -20,10 +22,15 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.compose.AsyncImagePainter
+import coil.decode.GifDecoder
+import coil.decode.ImageDecoderDecoder
+import coil.decode.SvgDecoder
 import coil.request.ImageRequest
-import com.squadris.squadris.compose.theme.AppTheme
+import com.squadris.squadris.compose.theme.Colors
+import com.squadris.squadris.compose.theme.LocalTheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import study.me.please.R
@@ -72,9 +79,9 @@ fun EditableImageAsset(
                         .padding(bottom = 16.dp)
                         .size(32.dp)
                         .animateContentSize(),
-                    trackColor = AppTheme.colors.secondary,
+                    trackColor = LocalTheme.colors.secondary,
                     strokeWidth = 2.dp,
-                    color = AppTheme.colors.brandMain,
+                    color = LocalTheme.colors.brandMain,
                     progress = currentProgress.floatValue
                 )
             }
@@ -89,6 +96,15 @@ fun EditableImageAsset(
                     }else {
                         ImageRequest.Builder(LocalContext.current)
                             .data(asset.url)
+                            .decoderFactory(
+                                if(asset.url?.endsWith(".svg") == true) {
+                                    SvgDecoder.Factory()
+                                }else if (SDK_INT >= 28) {
+                                    ImageDecoderDecoder.Factory()
+                                } else {
+                                    GifDecoder.Factory()
+                                }
+                            )
                             .crossfade(true)
                             .build()
                     },
@@ -118,6 +134,17 @@ fun EditableImageAsset(
                 ) { output ->
                     onUrlChange(output)
                     isFieldError.value = false
+                }
+                if(isFieldError.value) {
+                    Text(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .wrapContentHeight()
+                            .padding(top = 2.dp, start = 8.dp, end = 8.dp, bottom = 8.dp),
+                        text = stringResource(id = R.string.image_field_url_error_formats),
+                        fontSize = 14.sp,
+                        color = Colors.RED_ERROR
+                    )
                 }
             }
         }

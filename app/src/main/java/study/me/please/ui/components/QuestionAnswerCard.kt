@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Image
@@ -20,6 +21,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -30,13 +32,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import coil.compose.AsyncImagePainter
-import com.squadris.squadris.compose.theme.AppTheme
+import com.squadris.squadris.compose.theme.LocalTheme
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -96,7 +99,7 @@ private fun ContentLayout(
         modifier = modifier
             .fillMaxWidth()
             .wrapContentHeight()
-            .clip(AppTheme.shapes.componentShape)
+            .clip(LocalTheme.shapes.componentShape)
             .combinedClickable(
                 interactionSource = remember {
                     MutableInteractionSource()
@@ -107,11 +110,11 @@ private fun ContentLayout(
                 onClick = onClick,
                 onLongClick = onLongClick
             ),
-        elevation = AppTheme.styles.cardClickableElevation,
-        shape = AppTheme.shapes.componentShape,
+        elevation = LocalTheme.styles.cardClickableElevation,
+        shape = LocalTheme.shapes.componentShape,
         colors = CardDefaults.cardColors(
-            containerColor = AppTheme.colors.onBackgroundComponent,
-            contentColor = AppTheme.colors.onBackgroundComponent
+            containerColor = LocalTheme.colors.onBackgroundComponentContrast,
+            contentColor = LocalTheme.colors.onBackgroundComponentContrast
         )
     ) {
         DataCard(
@@ -132,7 +135,11 @@ private fun DataCard(
     requestDataSave: () -> Unit,
     data: QuestionAnswerIO
 ) {
+    val isCorrect = remember { mutableStateOf(data.isCorrect) }
     val imageAsset = remember { mutableStateOf(data.imageExplanation) }
+    LaunchedEffect(data) {
+        isCorrect.value = data.isCorrect
+    }
 
     ConstraintLayout(
         modifier = modifier
@@ -146,7 +153,9 @@ private fun DataCard(
             txtExplanation,
             txtExplanationHeader,
             imgExplanation,
-            btnAddImage
+            btnAddImage,
+            txtIsCorrect,
+            checkBoxIsCorrect
         ) = createRefs()
 
         if(state.mode.value == InteractiveCardMode.CHECKING) {
@@ -159,7 +168,7 @@ private fun DataCard(
                 onCheckedChange = { isChecked ->
                     state.isChecked.value = isChecked
                 },
-                colors = AppTheme.styles.checkBoxColorsDefault
+                colors = LocalTheme.styles.checkBoxColorsDefault
             )
         }
         val rightIconActionModifier = Modifier
@@ -195,17 +204,17 @@ private fun DataCard(
                 },
             text = stringResource(id = R.string.answer_field_content_header),
             fontSize = 12.sp,
-            color = AppTheme.colors.secondary
+            color = LocalTheme.colors.secondary
         )
         Text(
             modifier = Modifier
                 .constrainAs(txtExplanationHeader) {
-                    start.linkTo(parent.start)
+                    start.linkTo(txtAnswerHeader.start)
                     top.linkTo(txtAnswer.bottom, 4.dp)
                 },
             text = stringResource(id = R.string.answer_field_explanation_header),
             fontSize = 12.sp,
-            color = AppTheme.colors.secondary
+            color = LocalTheme.colors.secondary
         )
 
         val inputScope = rememberCoroutineScope()
@@ -240,7 +249,9 @@ private fun DataCard(
                 Text(
                     text = data.text,
                     fontSize = 18.sp,
-                    color = AppTheme.colors.primary
+                    color = LocalTheme.colors.primary,
+                    maxLines = 3,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
         }
@@ -249,7 +260,12 @@ private fun DataCard(
             modifier = Modifier
                 .animateContentSize()
                 .constrainAs(txtExplanation) {
-                    linkTo(txtAnswerHeader.start, imgRightAction.start)
+                    linkTo(
+                        txtAnswerHeader.start,
+                        if (state.mode.value == InteractiveCardMode.EDIT) {
+                            imgRightAction.start
+                        } else txtIsCorrect.start
+                    )
                     top.linkTo(txtExplanationHeader.bottom, 2.dp)
                     width = Dimension.fillToConstraints
                 },
@@ -275,24 +291,34 @@ private fun DataCard(
                 Text(
                     text = data.explanationMessage,
                     fontSize = 16.sp,
-                    color = AppTheme.colors.secondary
+                    color = LocalTheme.colors.secondary,
+                    maxLines = 5,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
         }
-        var currentUrl = ""
         EditableImageAsset(
             modifier = Modifier
                 .animateContentSize()
                 .wrapContentHeight()
                 .constrainAs(imgExplanation) {
-                    linkTo(parent.start, imgRightAction.start)
+                    linkTo(parent.start, parent.end)
                     top.linkTo(txtExplanation.bottom, 6.dp)
                     width = Dimension.fillToConstraints
                 },
             asset = imageAsset.value,
             isInEditMode = state.mode.value == InteractiveCardMode.EDIT,
             onUrlChange = { output ->
-                currentUrl = output
+                inputScope.coroutineContext.cancelChildren()
+                inputScope.launch {
+                    delay(INPUT_DELAYED_RESPONSE_MILLIS)
+                    imageAsset.value = LargePathAsset(
+                        urlPath = output
+                    )
+                }
+                if(output.isEmpty()) {
+                    requestDataSave()
+                }
             },
             onLoadState = { loadState ->
                 if(loadState is AsyncImagePainter.State.Success) {
@@ -301,7 +327,7 @@ private fun DataCard(
                 }
             }
         )
-        if(state.mode.value == InteractiveCardMode.EDIT) {
+        if(state.mode.value == InteractiveCardMode.EDIT && imageAsset.value == null) {
             ImageAction(
                 modifier = Modifier
                     .animateContentSize()
@@ -309,16 +335,32 @@ private fun DataCard(
                         linkTo(parent.start, parent.end)
                         top.linkTo(imgExplanation.bottom, 4.dp)
                     },
-                imageVector = Icons.Outlined.Image,
-                text = stringResource(id = if(imageAsset.value == null) {
-                    R.string.button_add_image
-                }else R.string.button_change_image)
+                leadingImageVector = Icons.Outlined.Image,
+                text = stringResource(id = R.string.button_add_image)
             ) {
-                imageAsset.value = if(imageAsset.value == null) {
-                    LargePathAsset()
-                }else LargePathAsset(urlPath = currentUrl)
+                imageAsset.value = LargePathAsset()
             }
         }
+        OutlinedButton(
+            modifier = Modifier.constrainAs(checkBoxIsCorrect) {
+                end.linkTo(parent.end, -(8.dp))
+                top.linkTo(imgExplanation.bottom, 6.dp)
+            },
+            isActivated = isCorrect.value,
+            onClick = {
+                data.isCorrect = isCorrect.value.not()
+                isCorrect.value = isCorrect.value.not()
+                requestDataSave()
+            },
+            text = stringResource(
+                id = if(isCorrect.value) {
+                    R.string.answer_is_correct_ticked
+                }else R.string.answer_is_correct_not_ticked
+            ),
+            trailingIcon = if(isCorrect.value) {
+                Icons.Outlined.Check
+            }else Icons.Outlined.Close
+        )
     }
 }
 

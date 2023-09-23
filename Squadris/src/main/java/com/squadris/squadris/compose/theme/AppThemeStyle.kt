@@ -3,6 +3,8 @@ package com.squadris.squadris.compose.theme
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CardElevation
 import androidx.compose.material3.CheckboxColors
+import androidx.compose.material3.SwitchColors
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.TextFieldColors
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
@@ -10,21 +12,21 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
-/** Styles specific to main app theme [AppTheme] */
+/** Styles specific to main app theme [LocalTheme] */
 class AppThemeStyle: ThemeStyle {
     override val textFieldColors: TextFieldColors
         @Composable get() {
             return TextFieldDefaults.colors(
-                focusedContainerColor = AppTheme.colors.onBackgroundComponentContrast,
-                unfocusedContainerColor = AppTheme.colors.onBackgroundComponentContrast,
+                focusedContainerColor = LocalTheme.colors.onBackgroundComponentContrast,
+                unfocusedContainerColor = LocalTheme.colors.onBackgroundComponentContrast,
                 unfocusedIndicatorColor = Color.Transparent,
                 focusedIndicatorColor = Color.Transparent,
-                disabledTextColor = AppTheme.colors.disabled,
-                focusedTextColor = AppTheme.colors.primary,
-                unfocusedTextColor = AppTheme.colors.secondary,
-                cursorColor = AppTheme.colors.secondary,
+                disabledTextColor = LocalTheme.colors.disabled,
+                focusedTextColor = LocalTheme.colors.primary,
+                unfocusedTextColor = LocalTheme.colors.secondary,
+                cursorColor = LocalTheme.colors.secondary,
                 disabledIndicatorColor = Color.Transparent,
-                errorContainerColor = AppTheme.colors.onBackgroundComponentContrast,
+                errorContainerColor = LocalTheme.colors.onBackgroundComponentContrast,
                 errorIndicatorColor = Color.Transparent,
                 errorTextColor = Colors.RED_ERROR,
                 errorTrailingIconColor = Colors.RED_ERROR
@@ -33,19 +35,29 @@ class AppThemeStyle: ThemeStyle {
 
     override val checkBoxColorsDefault: CheckboxColors
         @Composable get() = CheckboxColors(
-            checkedCheckmarkColor = AppTheme.colors.primary,
-            uncheckedCheckmarkColor = AppTheme.colors.secondary,
+            checkedCheckmarkColor = LocalTheme.colors.primary,
+            uncheckedCheckmarkColor = LocalTheme.colors.secondary,
             checkedBoxColor = Color.Transparent,
             uncheckedBoxColor = Color.Transparent,
-            checkedBorderColor = AppTheme.colors.brandMain,
-            uncheckedBorderColor = AppTheme.colors.brandMain,
+            checkedBorderColor = LocalTheme.colors.brandMain,
+            uncheckedBorderColor = LocalTheme.colors.brandMain,
             disabledUncheckedBoxColor = Color.Transparent,
             disabledCheckedBoxColor = Color.Transparent,
-            disabledBorderColor = AppTheme.colors.disabled,
-            disabledIndeterminateBorderColor = AppTheme.colors.disabled,
+            disabledBorderColor = LocalTheme.colors.disabled,
+            disabledIndeterminateBorderColor = LocalTheme.colors.disabled,
             disabledIndeterminateBoxColor = Color.Transparent,
-            disabledUncheckedBorderColor = AppTheme.colors.brandMain
+            disabledUncheckedBorderColor = LocalTheme.colors.disabled
         )
+
+    override val switchColorsDefault: SwitchColors
+        @Composable get() = SwitchDefaults.colors(
+            checkedTrackColor = LocalTheme.colors.brandMain,
+            checkedThumbColor = LocalTheme.colors.tetrial,
+            uncheckedBorderColor = LocalTheme.colors.secondary,
+            uncheckedThumbColor = LocalTheme.colors.secondary,
+            uncheckedTrackColor = LocalTheme.colors.onBackgroundComponent
+        )
+
     override val componentElevation: Dp = 6.dp
     override val actionElevation: Dp = 8.dp
     override val minimumElevation: Dp = 2.dp

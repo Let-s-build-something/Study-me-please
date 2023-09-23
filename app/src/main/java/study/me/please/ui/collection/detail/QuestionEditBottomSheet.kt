@@ -1,7 +1,6 @@
 package study.me.please.ui.collection.detail
 
 import android.annotation.SuppressLint
-import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.horizontalScroll
@@ -9,8 +8,13 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -20,10 +24,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.ContentPaste
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Deselect
 import androidx.compose.material.icons.outlined.Image
 import androidx.compose.material.icons.outlined.PlayArrow
+import androidx.compose.material.icons.outlined.SelectAll
 import androidx.compose.material.rememberBottomSheetScaffoldState
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
@@ -34,13 +39,12 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImagePainter
-import com.squadris.squadris.compose.theme.AppTheme
 import com.squadris.squadris.compose.theme.Colors
+import com.squadris.squadris.compose.theme.LocalTheme
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -57,6 +61,7 @@ import study.me.please.ui.components.ImageAction
 import study.me.please.ui.components.InteractiveCardMode
 import study.me.please.ui.components.QuestionAnswerCard
 import study.me.please.ui.components.SimpleBottomSheet
+import study.me.please.ui.components.TextHeader
 import study.me.please.ui.components.rememberInteractiveCardState
 
 const val INPUT_DELAYED_RESPONSE_MILLIS = 500L
@@ -64,7 +69,9 @@ const val INPUT_DELAYED_RESPONSE_MILLIS = 500L
 /**  */
 data class QuestionSheetState(
     val promptImageUrl: MutableState<LargePathAsset?> = mutableStateOf(null),
-    val explanationImageUrl: MutableState<LargePathAsset?> = mutableStateOf(null)
+    val explanationImageUrl: MutableState<LargePathAsset?> = mutableStateOf(null),
+    val prompt: MutableState<String> = mutableStateOf(""),
+    val explanation: MutableState<String> = mutableStateOf("")
 )
 
 /** Bottom sheet layout for editing a question */
@@ -81,16 +88,8 @@ fun QuestionEditBottomSheetContent(
     content: @Composable (paddingValues: PaddingValues) -> Unit = {},
     onDismissRequest: () -> Unit = {}
 ) {
-    val questionSheetState = remember {
-        QuestionSheetState(
-            promptImageUrl = mutableStateOf(
-                questionIO.imagePromptUrl
-            ),
-            explanationImageUrl = mutableStateOf(
-                questionIO.imageExplanationUrl
-            )
-        )
-    }
+    val questionSheetState = remember { QuestionSheetState() }
+    val coroutineScope = rememberCoroutineScope()
     val inputScope = rememberCoroutineScope()
     val showDeleteDialog = remember { mutableStateOf(false) }
     val answers = remember {
@@ -152,47 +151,28 @@ fun QuestionEditBottomSheetContent(
                     .padding(
                         start = 8.dp,
                         end = 8.dp,
-                        top = 8.dp,
-                        bottom = 32.dp
+                        top = 8.dp
                     )
+                    .windowInsetsPadding(WindowInsets.systemBars)
+                    .windowInsetsPadding(WindowInsets.ime)
             ) {
-                // options row
-                if(selectedAnswerUids.size > 0) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .horizontalScroll(rememberScrollState())
-                            .padding(horizontal = 8.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        OptionsLayout(
-                            onCopyRequest = {
-                                onCopyRequest(selectedAnswerUids)
-                            },
-                            onPasteRequest = {
-
-                            },
-                            onDeleteRequest = {
-                                showDeleteDialog.value = true
-                            },
-                            onTestPlay = {
-                                onQuestionTestPlay(questionIO)
-                            },
-                            isEditMode = selectedAnswerUids.size > 0,
-                            hasPasteOption = false //TODO
-                        )
+                ImageAction(
+                    leadingImageVector = Icons.Outlined.PlayArrow,
+                    text = stringResource(id = R.string.button_test_play),
+                    onClick = {
+                        onQuestionTestPlay(questionIO)
                     }
-                }
-
+                )
                 // prompt
                 TextHeader(text = stringResource(id = R.string.question_edit_field_prompt_header))
                 EditFieldInput(
                     modifier = itemModifier,
-                    value = questionIO.prompt,
+                    value = questionSheetState.prompt.value,
                     hint = stringArrayResource(id = R.array.field_prompt_hint).random(),
                     minLines = 2,
                     maxLines = 2
                 ) { output ->
+                    questionSheetState.prompt.value = output
                     questionIO.apply {
                         prompt = output
                     }
@@ -231,12 +211,14 @@ fun QuestionEditBottomSheetContent(
                         .fillMaxWidth()
                         .horizontalScroll(rememberScrollState())
                         .padding(8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(
+                        LocalTheme.shapes.betweenItemsSpace
+                    )
                 ) {
                     if(questionSheetState.promptImageUrl.value == null) {
                         ImageAction(
                             modifier = Modifier,
-                            imageVector = Icons.Outlined.Image,
+                            leadingImageVector = Icons.Outlined.Image,
                             text = stringResource(id = R.string.button_add_prompt_image)
                         ) {
                             questionSheetState.promptImageUrl.value = LargePathAsset()
@@ -244,16 +226,16 @@ fun QuestionEditBottomSheetContent(
                     }
                 }
 
-
                 // explanation
                 TextHeader(text = stringResource(id = R.string.question_field_explanation_header))
                 EditFieldInput(
                     modifier = itemModifier,
-                    value = questionIO.textExplanation,
+                    value = questionSheetState.explanation.value,
                     hint = stringResource(id = R.string.question_edit_field_hint_explanation),
-                    minLines = 3,
-                    maxLines = 3
+                    minLines = 5,
+                    maxLines = 5
                 ) { output ->
+                    questionSheetState.explanation.value = output
                     questionIO.apply {
                         textExplanation = output
                     }
@@ -263,7 +245,7 @@ fun QuestionEditBottomSheetContent(
                         requestDataSave()
                     }
                 }
-                if(questionSheetState.promptImageUrl.value != null) {
+                if(questionSheetState.explanationImageUrl.value != null) {
                     TextHeader(text = stringResource(id = R.string.question_edit_field_explanation_image))
                     EditableImageAsset(
                         modifier = itemModifier
@@ -292,12 +274,14 @@ fun QuestionEditBottomSheetContent(
                         .fillMaxWidth()
                         .horizontalScroll(rememberScrollState())
                         .padding(8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(
+                        LocalTheme.shapes.betweenItemsSpace
+                    )
                 ) {
                     if(questionSheetState.explanationImageUrl.value == null) {
                         ImageAction(
                             modifier = Modifier,
-                            imageVector = Icons.Outlined.Image,
+                            leadingImageVector = Icons.Outlined.Image,
                             text = stringResource(id = R.string.button_add_explanation_image)
                         ) {
                             questionSheetState.explanationImageUrl.value = LargePathAsset()
@@ -305,6 +289,43 @@ fun QuestionEditBottomSheetContent(
                     }
                 }
 
+                // options row
+                if(selectedAnswerUids.size > 0) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState())
+                            .padding(horizontal = 8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(
+                            LocalTheme.shapes.betweenItemsSpace
+                        )
+                    ) {
+                        OptionsLayout(
+                            onCopyRequest = {
+                                onCopyRequest(selectedAnswerUids)
+                            },
+                            onPasteRequest = {
+
+                            },
+                            onDeleteRequest = {
+                                showDeleteDialog.value = true
+                            },
+                            onSelectAll = {
+                                coroutineScope.launch(Dispatchers.Default) {
+                                    val missingItems = answers.filter {
+                                        selectedAnswerUids.contains(it?.uid).not()
+                                    }.mapNotNull { it?.uid }
+                                    selectedAnswerUids.addAll(missingItems)
+                                }
+                            },
+                            onDeselectAll = {
+                                selectedAnswerUids.clear()
+                            },
+                            isEditMode = selectedAnswerUids.size > 0,
+                            hasPasteOption = false //TODO
+                        )
+                    }
+                }
                 answers.forEachIndexed { index, answer ->
                     (interactiveStates.getOrNull(index) ?: rememberInteractiveCardState()).let { state ->
                         LaunchedEffect(key1 = state.isChecked.value) {
@@ -330,6 +351,7 @@ fun QuestionEditBottomSheetContent(
                     modifier = Modifier.padding(bottom = 16.dp),
                     text = stringResource(id = R.string.collection_detail_new_response)
                 ) {
+                    stopChecking()
                     answers.add(
                         QuestionAnswerIO()
                     )
@@ -345,6 +367,14 @@ fun QuestionEditBottomSheetContent(
         content = content,
     )
 
+    LaunchedEffect(questionIO) {
+        questionSheetState.promptImageUrl.value = questionIO.imagePromptUrl
+        questionSheetState.explanationImageUrl.value = questionIO.imageExplanationUrl
+        questionSheetState.prompt.value = questionIO.prompt
+        questionSheetState.explanation.value = questionIO.textExplanation
+        answers.clear()
+        answers.addAll(questionIO.answers.toTypedArray())
+    }
     // clean-up if needed
     LaunchedEffect(questionSheetState.promptImageUrl.value) {
         if(questionSheetState.promptImageUrl.value?.isEmpty == true) {
@@ -365,6 +395,7 @@ fun QuestionEditBottomSheetContent(
                 questionIO.answers = new.filterNotNull().toMutableList()
             }
             requestDataSave()
+            interactiveStates.lastOrNull()?.mode?.value = InteractiveCardMode.EDIT
         }else {
             answers.let { new ->
                 questionIO.answers = new.filterNotNull().toMutableList()
@@ -381,26 +412,6 @@ fun QuestionEditBottomSheetContent(
             selectedAnswerUids.clear()
         }
     }
-    LaunchedEffect(questionIO) {
-        questionSheetState.promptImageUrl.value = questionIO.imagePromptUrl
-        questionSheetState.explanationImageUrl.value = questionIO.imageExplanationUrl
-        answers.clear()
-        answers.addAll(questionIO.answers.toTypedArray())
-    }
-}
-
-@Composable
-private fun TextHeader(text: String) {
-    Text(
-        modifier = Modifier
-            .wrapContentHeight()
-            .fillMaxWidth()
-            .padding(top = 8.dp, start = 8.dp, bottom = 2.dp),
-        text = text,
-        fontSize = 16.sp,
-        color = AppTheme.colors.secondary,
-        fontWeight = FontWeight.Bold
-    )
 }
 
 @Composable
@@ -408,35 +419,41 @@ private fun OptionsLayout(
     onDeleteRequest: () -> Unit = {},
     onCopyRequest: () -> Unit = {},
     onPasteRequest: () -> Unit = {},
-    onTestPlay: () -> Unit = {},
+    onSelectAll: () -> Unit = {},
+    onDeselectAll: () -> Unit = {},
     isEditMode: Boolean = false,
     hasPasteOption: Boolean = false
 ) {
     if(isEditMode) {
         ImageAction(
-            imageVector = Icons.Outlined.Delete,
-            text = stringResource(id = R.string.collection_list_delete_item),
+            leadingImageVector = Icons.Outlined.Delete,
+            text = stringResource(id = R.string.button_delete),
             containerColor = Colors.RED_ERROR,
             onClick = onDeleteRequest
         )
         ImageAction(
-            imageVector = Icons.Outlined.ContentCopy,
+            leadingImageVector = Icons.Outlined.SelectAll,
+            text = stringResource(id = R.string.button_select_all),
+            onClick = onSelectAll
+        )
+        ImageAction(
+            leadingImageVector = Icons.Outlined.Deselect,
+            text = stringResource(id = R.string.button_deselect),
+            onClick = onDeselectAll
+        )
+        ImageAction(
+            leadingImageVector = Icons.Outlined.ContentCopy,
             text = stringResource(id = R.string.button_copy),
             onClick = onCopyRequest
         )
     }
     if(hasPasteOption) {
         ImageAction(
-            imageVector = Icons.Outlined.ContentPaste,
+            leadingImageVector = Icons.Outlined.ContentPaste,
             text = stringResource(id = R.string.button_paste),
             onClick = onPasteRequest
         )
     }
-    ImageAction(
-        imageVector = Icons.Outlined.PlayArrow,
-        text = stringResource(id = R.string.button_test_play),
-        onClick = onTestPlay
-    )
 }
 
 @SuppressLint("UnrememberedMutableState")

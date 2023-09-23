@@ -1,22 +1,34 @@
 package study.me.please.base.navigation
 
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.outlined.ArrowBackIosNew
+import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import study.me.please.R
 import study.me.please.base.navigation.NavigationComponent.addNavigationArgument
+import study.me.please.base.navigation.NavigationComponent.putNavigationArgument
 
 enum class NavigationDestination(val route: String) {
     HOME("screen_home"),
-    COLLECTION("screen_collection"),
-    SESSION_LOBBY("screen_session_lobby"),
+    SETTINGS("screen_settings"),
+    COLLECTION_LOBBY("screen_collection_lobby"),
+    SESSION_LOBBY(
+        "screen_session_lobby"
+            .addNavigationArgument(NavigationComponent.CREATE_NEW_ITEM)
+            .addNavigationArgument(NavigationComponent.COLLECTION_UID)
+            .addNavigationArgument(NavigationComponent.SESSION_UID)
+    ),
     SESSION(
         "screen_session"
             .addNavigationArgument(NavigationComponent.TOOLBAR_TITLE)
+            .addNavigationArgument(NavigationComponent.COLLECTION_UID)
+            .addNavigationArgument(NavigationComponent.SESSION_UID)
+            .addNavigationArgument(NavigationComponent.QUESTION_UID)
+            .addNavigationArgument(NavigationComponent.QUESTION_UIDS)
+            .addNavigationArgument(NavigationComponent.IS_TESTING_MODE)
     ),
     /** Screen for creating collection or editing existing collection */
     COLLECTION_DETAIL(
@@ -36,6 +48,9 @@ object NavigationComponent {
     /** argument identifier for a question */
     const val QUESTION_UID = "questionUid"
 
+    /** argument identifiers for multiple questions */
+    const val QUESTION_UIDS = "questionUids"
+
     /** argument identifier for a session */
     const val SESSION_UID = "sessionUid"
 
@@ -45,22 +60,31 @@ object NavigationComponent {
     /** toolbar title */
     const val TOOLBAR_TITLE = "toolbarTitle"
 
+    /** whether new item should be create the moment screen opens */
+    const val CREATE_NEW_ITEM = "createNewItem"
+
     /** adds argument by composable navigation syntax */
     fun String.addNavigationArgument(argumentName: String): String {
         return this.plus("?$argumentName={$argumentName}")
     }
 
     /** Puts an argument to a navigation address */
-    fun String.putNavigationArgument(argumentName: String, argumentValue: String): String {
-        return this.replace("{$argumentName}", argumentValue)
+    fun String.putNavigationArgument(argumentName: String, argumentValue: String?): String {
+        return if(argumentValue == null) this else this.replace("{$argumentName}", argumentValue)
     }
 
     @Composable
     fun getScreenTitle(route: String): String? {
         return when(route) {
             NavigationDestination.HOME.route -> stringResource(id = R.string.home_screen_title)
-            NavigationDestination.COLLECTION.route -> stringResource(
+            NavigationDestination.COLLECTION_LOBBY.route -> stringResource(
                 id = R.string.screen_collection_title
+            )
+            NavigationDestination.SESSION_LOBBY.route -> stringResource(
+                id = R.string.screen_session_lobby_title
+            )
+            NavigationDestination.SETTINGS.route -> stringResource(
+                id = R.string.screen_settings_title
             )
             else -> null
         }
@@ -79,11 +103,10 @@ object NavigationComponent {
                 id = R.string.home_screen_title
             )
             NavigationDestination.COLLECTION_DETAIL.route,
-            NavigationDestination.SESSION_LOBBY.route,
-            NavigationDestination.SESSION.route -> Icons.Default.Close to stringResource(
+            NavigationDestination.SESSION.route -> Icons.Outlined.Close to stringResource(
                 id = R.string.navigate_close
             )
-            else -> Icons.Default.ArrowBack to stringResource(
+            else -> Icons.Outlined.ArrowBackIosNew to stringResource(
                 id = R.string.navigate_back
             )
         }

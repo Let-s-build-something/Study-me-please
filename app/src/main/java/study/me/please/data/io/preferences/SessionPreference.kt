@@ -1,11 +1,11 @@
-package study.me.please.data.io
+package study.me.please.data.io.preferences
 
-import androidx.room.Entity
 import com.google.gson.annotations.SerializedName
-import study.me.please.data.room.AppRoomDatabase
+import study.me.please.data.io.QuestionMode
+import study.me.please.data.io.QuestionPromptType
 
 /** Prompt preference for specific behaviour */
-data class UserPromptPreference (
+data class SessionPreference (
 
     /**
      * whether feature is on
@@ -24,5 +24,5 @@ data class UserPromptPreference (
      * If null, it is not specific to any
      */
     @SerializedName("recommended_mode")
-    val recommendedMode: QuestionMode? = null,
+    val recommendedMode: QuestionMode
 )
