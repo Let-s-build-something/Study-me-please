@@ -64,7 +64,7 @@ fun EditFieldInput(
     maxLength: Int? = null,
     onValueChange: (String) -> Unit = {},
 ) {
-    val isFocused = remember { mutableStateOf(false) }
+    val isFocused = remember(value) { mutableStateOf(false) }
     val text = remember(value) { mutableStateOf(value) }
     LaunchedEffect(key1 = value) {
         text.value = value
@@ -91,6 +91,7 @@ fun EditFieldInput(
         isError = isError,
         minLines = minLines,
         maxLines = maxLines,
+        singleLine = maxLines == 1,
         value = text.value,
         onValueChange = { outputValue ->
             if(maxLength == null || outputValue.length <= maxLength) {

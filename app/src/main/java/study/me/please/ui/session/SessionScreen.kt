@@ -113,7 +113,7 @@ fun SessionScreen(
                 }
             }
             LaunchedEffect(session.value) {
-                session.value?.preferences?.let { newPreference ->
+                session.value?.preferencePack?.let { newPreference ->
                     state.sessionPreferencePack.value = newPreference
                 }
             }
@@ -140,7 +140,6 @@ fun SessionScreen(
                             .padding(8.dp)
                             .padding(bottom = 32.dp),
                         onDeleteRequest = {
-                            preferencePacks.value
                             viewModel.requestPreferencePackDelete(it?.uid)
                         },
                         requestPreferenceSave = {

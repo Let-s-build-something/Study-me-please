@@ -33,7 +33,7 @@ data class SessionScreenState(
     )
 
     /** List of all current validations */
-    val validations = mutableSetOf<SessionAnswerValidation>()
+    val validations = mutableStateListOf<SessionAnswerValidation>()
 
     /** Sync current data with state model */
     fun initialize() {
@@ -50,7 +50,7 @@ data class SessionScreenState(
     suspend fun stepForward(forceRepeat: Boolean = false) {
         module.stepForward(
             timeElapsed = 0L,//TODO
-            responseList = validations,
+            responseList = validations.toSet(),
             forceRepeat = forceRepeat,
             // we can't repeat history item, only recent questions
             currentQuestion = currentItem.value.question

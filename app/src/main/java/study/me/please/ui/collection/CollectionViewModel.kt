@@ -8,6 +8,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import study.me.please.base.BaseViewModel
+import study.me.please.data.io.CollectionIO
+import study.me.please.data.io.SessionIO
 import javax.inject.Inject
 
 /** ViewModel containing behavior for refreshing data */
@@ -28,15 +30,14 @@ interface RefreshableViewModel {
     suspend fun CoroutineScope.setRefreshing(refreshing: Boolean) {
         if(refreshing) {
             lastRefreshTimeMillis = DateUtils.now.timeInMillis
-        }
-        if(refreshing.not()) {
+            isRefreshing.value = true
+        }else {
             delay(kotlin.math.max(
                 DateUtils.now.timeInMillis.minus(lastRefreshTimeMillis),
                 MINIMUM_REFRESH_DELAY
             ))
             isRefreshing.value = false
         }
-        isRefreshing.value = refreshing
     }
 }
 
@@ -61,10 +62,26 @@ class CollectionViewModel @Inject constructor(
         }
     }
 
+    /** Requests all collections */
+    fun requestSessions() {
+        viewModelScope.launch {
+            repository.getSessions()?.let { sessions ->
+                dataManager.sessions.value = sessions
+            }
+        }
+    }
+
     /** Requests for a removal of collections */
     fun requestCollectionDeletion(uidList: Set<String>) {
         viewModelScope.launch {
             repository.deleteCollections(uidList.toList())
+        }
+    }
+
+    /** Requests a save for sessions */
+    fun requestSessionsSave(sessions: List<SessionIO>) {
+        viewModelScope.launch {
+            repository.saveSessions(sessions)
         }
     }
 }

@@ -15,11 +15,13 @@ enum class NavigationDestination(val route: String) {
     HOME("screen_home"),
     SETTINGS("screen_settings"),
     COLLECTION_LOBBY("screen_collection_lobby"),
-    SESSION_LOBBY(
-        "screen_session_lobby"
-            .addNavigationArgument(NavigationComponent.CREATE_NEW_ITEM)
-            .addNavigationArgument(NavigationComponent.COLLECTION_UID)
+    SESSION_LOBBY("screen_session_lobby"),
+    SESSION_DETAIL(
+        "screen_session_detail"
+            .addNavigationArgument(NavigationComponent.COLLECTION_UID_LIST)
+            .addNavigationArgument(NavigationComponent.QUESTION_UID_LIST)
             .addNavigationArgument(NavigationComponent.SESSION_UID)
+            .addNavigationArgument(NavigationComponent.TOOLBAR_TITLE)
     ),
     SESSION(
         "screen_session"
@@ -42,8 +44,14 @@ enum class NavigationDestination(val route: String) {
 object NavigationComponent {
     val START_DESTINATION = NavigationDestination.HOME
 
-    /** collection uid for collection detail */
+    /** collection identifier */
     const val COLLECTION_UID = "collectionUid"
+
+    /** question identifier list split by a comma */
+    const val QUESTION_UID_LIST = "questionUidList"
+
+    /** collection identifier list split by a comma */
+    const val COLLECTION_UID_LIST = "collectionUidList"
 
     /** argument identifier for a question */
     const val QUESTION_UID = "questionUid"

@@ -2,18 +2,24 @@ package study.me.please.ui.collection.detail
 
 import android.annotation.SuppressLint
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
@@ -41,6 +47,7 @@ import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import coil.compose.AsyncImagePainter
 import com.squadris.squadris.compose.theme.Colors
 import com.squadris.squadris.compose.theme.LocalTheme
@@ -89,7 +96,6 @@ fun QuestionEditBottomSheetContent(
     onDismissRequest: () -> Unit = {}
 ) {
     val questionSheetState = remember { QuestionSheetState() }
-    val coroutineScope = rememberCoroutineScope()
     val inputScope = rememberCoroutineScope()
     val showDeleteDialog = remember { mutableStateOf(false) }
     val answers = remember {
@@ -311,11 +317,8 @@ fun QuestionEditBottomSheetContent(
                                 showDeleteDialog.value = true
                             },
                             onSelectAll = {
-                                coroutineScope.launch(Dispatchers.Default) {
-                                    val missingItems = answers.filter {
-                                        selectedAnswerUids.contains(it?.uid).not()
-                                    }.mapNotNull { it?.uid }
-                                    selectedAnswerUids.addAll(missingItems)
+                                interactiveStates.forEach {
+                                    it.isChecked.value = true
                                 }
                             },
                             onDeselectAll = {
@@ -415,37 +418,77 @@ fun QuestionEditBottomSheetContent(
 }
 
 @Composable
-private fun OptionsLayout(
+fun OptionsLayout(
+    modifier: Modifier = Modifier,
     onDeleteRequest: () -> Unit = {},
     onCopyRequest: () -> Unit = {},
     onPasteRequest: () -> Unit = {},
+    selectAllVisible: Boolean = true,
     onSelectAll: () -> Unit = {},
+    deselectAllVisible: Boolean = true,
     onDeselectAll: () -> Unit = {},
     isEditMode: Boolean = false,
     hasPasteOption: Boolean = false
 ) {
-    if(isEditMode) {
-        ImageAction(
-            leadingImageVector = Icons.Outlined.Delete,
-            text = stringResource(id = R.string.button_delete),
-            containerColor = Colors.RED_ERROR,
-            onClick = onDeleteRequest
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .wrapContentHeight()
+            .horizontalScroll(rememberScrollState())
+            .zIndex(-1f),
+        horizontalArrangement = Arrangement.spacedBy(
+            LocalTheme.shapes.betweenItemsSpace
         )
-        ImageAction(
-            leadingImageVector = Icons.Outlined.SelectAll,
-            text = stringResource(id = R.string.button_select_all),
-            onClick = onSelectAll
-        )
-        ImageAction(
-            leadingImageVector = Icons.Outlined.Deselect,
-            text = stringResource(id = R.string.button_deselect),
-            onClick = onDeselectAll
-        )
-        ImageAction(
-            leadingImageVector = Icons.Outlined.ContentCopy,
-            text = stringResource(id = R.string.button_copy),
-            onClick = onCopyRequest
-        )
+    ) {
+        Spacer(modifier = Modifier.width(LocalTheme.shapes.betweenItemsSpace))
+        AnimatedVisibility(
+            modifier = Modifier.zIndex(-1f),
+            visible = isEditMode,
+            enter = slideInVertically(
+                initialOffsetY = { it.times(-2) },
+                animationSpec = tween(400)
+            ),
+            exit = slideOutVertically(
+                targetOffsetY = { it.times(-2) },
+                animationSpec = tween(400)
+            )
+        ) {
+            Row(
+                modifier = modifier
+                    .fillMaxWidth()
+                    .animateContentSize()
+                    .wrapContentHeight(),
+                horizontalArrangement = Arrangement.spacedBy(
+                    LocalTheme.shapes.betweenItemsSpace
+                )
+            ) {
+                ImageAction(
+                    leadingImageVector = Icons.Outlined.Delete,
+                    text = stringResource(id = R.string.button_delete),
+                    containerColor = Colors.RED_ERROR,
+                    onClick = onDeleteRequest
+                )
+                if(selectAllVisible) {
+                    ImageAction(
+                        leadingImageVector = Icons.Outlined.SelectAll,
+                        text = stringResource(id = R.string.button_select_all),
+                        onClick = onSelectAll
+                    )
+                }
+                if(deselectAllVisible) {
+                    ImageAction(
+                        leadingImageVector = Icons.Outlined.Deselect,
+                        text = stringResource(id = R.string.button_deselect),
+                        onClick = onDeselectAll
+                    )
+                }
+                ImageAction(
+                    leadingImageVector = Icons.Outlined.ContentCopy,
+                    text = stringResource(id = R.string.button_copy),
+                    onClick = onCopyRequest
+                )
+            }
+        }
     }
     if(hasPasteOption) {
         ImageAction(
@@ -454,6 +497,7 @@ private fun OptionsLayout(
             onClick = onPasteRequest
         )
     }
+    Spacer(modifier = Modifier.width(LocalTheme.shapes.betweenItemsSpace))
 }
 
 @SuppressLint("UnrememberedMutableState")

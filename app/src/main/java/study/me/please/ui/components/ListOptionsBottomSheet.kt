@@ -1,11 +1,16 @@
 package study.me.please.ui.components
 
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Arrangement.Absolute.SpaceAround
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.BottomSheetScaffoldState
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.rememberBottomSheetScaffoldState
@@ -13,6 +18,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.squadris.squadris.compose.theme.LocalTheme
 
 /**
  * Bottom sheet layout for editing a question
@@ -34,12 +40,17 @@ fun ListOptionsBottomSheet(
         sheetContent = {
             Row(
                 modifier = sheetContentModifier
-                    .padding(16.dp)
+                    .horizontalScroll(rememberScrollState())
                     .fillMaxWidth()
-                    .wrapContentHeight(),
-                horizontalArrangement = SpaceAround
+                    .wrapContentHeight()
+                    .padding(horizontal = 8.dp, vertical = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(
+                    LocalTheme.shapes.betweenItemsSpace
+                )
             ) {
+                Spacer(modifier = Modifier.width(LocalTheme.shapes.betweenItemsSpace))
                 actions()
+                Spacer(modifier = Modifier.width(LocalTheme.shapes.betweenItemsSpace))
             }
         },
         modifier = modifier,

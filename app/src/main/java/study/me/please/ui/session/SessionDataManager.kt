@@ -23,7 +23,7 @@ class SessionDataManager @Inject constructor() {
     val preferencePack: MutableStateFlow<SessionPreferencePack?> = MutableStateFlow(null)
 
     /** all existing preferences to choose from if in testing mode */
-    val preferencePacks: MutableStateFlow<List<SessionPreferencePack>?> = MutableStateFlow(null)
+    val preferencePacks: MutableStateFlow<MutableList<SessionPreferencePack>?> = MutableStateFlow(null)
 
     /** full list of questions for the session screen */
     val questions: MutableStateFlow<List<QuestionIO>?> = MutableStateFlow(null)

@@ -3,11 +3,14 @@ package study.me.please.base.navigation
 import androidx.navigation.NavController
 import study.me.please.base.navigation.NavigationComponent.TOOLBAR_TITLE
 import study.me.please.base.navigation.NavigationComponent.COLLECTION_UID
+import study.me.please.base.navigation.NavigationComponent.COLLECTION_UID_LIST
 import study.me.please.base.navigation.NavigationComponent.CREATE_NEW_ITEM
 import study.me.please.base.navigation.NavigationComponent.IS_TESTING_MODE
 import study.me.please.base.navigation.NavigationComponent.QUESTION_UID
 import study.me.please.base.navigation.NavigationComponent.QUESTION_UIDS
+import study.me.please.base.navigation.NavigationComponent.QUESTION_UID_LIST
 import study.me.please.base.navigation.NavigationComponent.SESSION_UID
+import study.me.please.base.navigation.NavigationComponent.addNavigationArgument
 import study.me.please.base.navigation.NavigationComponent.putNavigationArgument
 
 /**
@@ -28,7 +31,30 @@ object NavigationUtils {
         navController.navigate(
             NavigationDestination.COLLECTION_DETAIL.route
                 .putNavigationArgument(TOOLBAR_TITLE, toolbarTitle)
-                .putNavigationArgument(COLLECTION_UID, collectionUid ?: "")
+                .putNavigationArgument(COLLECTION_UID, collectionUid)
+        )
+    }
+
+    /**
+     * Navigates to a specific collection
+     * @param toolbarTitle title for toolbar
+     * @param sessionUid identifier for retrieving data for displayed session
+     * @param collectionUidList list of collection identifiers that should assemble a new collection
+     * @param collectionUidList list of question identifiers that should assemble a new collection
+     */
+    fun navigateToSessionDetail(
+        navController: NavController,
+        toolbarTitle: String,
+        sessionUid: String? = null,
+        collectionUidList: List<String>? = null,
+        questionUidList: List<String>? = null
+    ) {
+        navController.navigate(
+            NavigationDestination.SESSION_DETAIL.route
+                .putNavigationArgument(COLLECTION_UID_LIST, collectionUidList?.joinToString(","))
+                .putNavigationArgument(QUESTION_UID_LIST, questionUidList?.joinToString(","))
+                .putNavigationArgument(SESSION_UID, sessionUid)
+                .putNavigationArgument(TOOLBAR_TITLE, toolbarTitle)
         )
     }
 
@@ -75,17 +101,7 @@ object NavigationUtils {
     /**
      * Navigates to session lobby screen
      */
-    fun navigateToSessionLobby(
-        navController: NavController,
-        collectionUid: String? = null,
-        sessionUid: String? = null,
-        createNewItem: Boolean = false
-    ) {
-        navController.navigate(
-            NavigationDestination.SESSION_LOBBY.route
-                .putNavigationArgument(CREATE_NEW_ITEM, createNewItem.toString())
-                .putNavigationArgument(COLLECTION_UID, collectionUid ?: "")
-                .putNavigationArgument(SESSION_UID, sessionUid ?: "")
-        )
+    fun navigateToSessionLobby(navController: NavController) {
+        navController.navigate(NavigationDestination.SESSION_LOBBY.route)
     }
 }

@@ -2,6 +2,7 @@ package study.me.please.data.io
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
+import androidx.room.Ignore
 import androidx.room.PrimaryKey
 import com.google.gson.annotations.SerializedName
 import com.squadris.squadris.utils.DateUtils
@@ -14,9 +15,6 @@ import java.util.UUID
 /** Collection of questions */
 @Entity(tableName = AppRoomDatabase.ROOM_COLLECTION_TABLE)
 data class CollectionIO(
-
-    /** list of all questions contained in this collection */
-    var questionUids: MutableList<String> = mutableListOf(),
 
     /** What preferences are set to a session by default, only in session with one collection */
     @SerializedName("default_preference")
@@ -45,21 +43,24 @@ data class CollectionIO(
     @PrimaryKey
     val uid: String = UUID.randomUUID().toString(),
 
-    //TODO
-    val tasks: List<String> = listOf()
+    /** list of all question identifiers contained in this collection */
+    var questionUidList: MutableSet<String> = mutableSetOf()
 ): Serializable {
+
+    /** local temporary save of downloaded questions */
+    @Ignore
+    var questions: List<QuestionIO> = listOf()
 
     /** Checks whether object contains any non-default data */
     val isNotEmpty: Boolean
         get() = (dateCreated != null
             || name.isNotEmpty()
             || description.isNotEmpty()
-            || questionUids.isNotEmpty())
-            && questionUids.isNotEmpty()
+            || questionUidList.isNotEmpty())
 
     override fun toString(): String {
         return "{" +
-            "questionUids: $questionUids" +
+            "questionUids: $questionUidList" +
             "defaultPreference: $defaultPreference" +
             "name: $name" +
             "description: $description" +
@@ -67,7 +68,6 @@ data class CollectionIO(
             "dateCreated: $dateCreated" +
             "dateModified: $dateModified," +
             "uid: $uid," +
-            "task: $tasks" +
             "}"
     }
 }

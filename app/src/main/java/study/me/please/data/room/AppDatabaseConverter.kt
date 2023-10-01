@@ -160,16 +160,18 @@ class AppDatabaseConverter @Inject constructor(private val gson: Gson) {
 
     /** Converts string to [QuestionModule] */
     @TypeConverter
-    fun toQuestionModule(value: String): QuestionModule {
-        return gson.fromJson(
-            value,
-            TypeToken.getParameterized(QuestionModule::class.java).type
-        )
+    fun toQuestionModule(value: String?): QuestionModule? {
+        return if(value == null) null else {
+            gson.fromJson(
+                value,
+                TypeToken.getParameterized(QuestionModule::class.java).type
+            )
+        }
     }
 
     /** Converts [SessionHistoryItem] object to string */
     @TypeConverter
-    fun fromQuestionModule(value: QuestionModule?): String {
+    fun fromQuestionModule(value: QuestionModule?): String? {
         return if(value == null) "" else {
             gson.toJson(
                 value,
@@ -227,6 +229,24 @@ class AppDatabaseConverter @Inject constructor(private val gson: Gson) {
         )
     }
 
+    /** Converts string set to string */
+    @TypeConverter
+    fun fromStringSet(value: Set<String>): String {
+        return gson.toJson(
+            value,
+            TypeToken.getParameterized(Set::class.java, String::class.java).type
+        )
+    }
+
+    /** Converts string to [SessionPreference] */
+    @TypeConverter
+    fun toStringSet(value: String): Set<String> {
+        return gson.fromJson(
+            value,
+            TypeToken.getParameterized(Set::class.java, String::class.java).type
+        )
+    }
+
     /** Converts [SessionPreference] object to string */
     @TypeConverter
     fun fromQuestionIOList(value: List<QuestionIO>): String {
@@ -242,6 +262,24 @@ class AppDatabaseConverter @Inject constructor(private val gson: Gson) {
         return gson.fromJson(
             value,
             TypeToken.getParameterized(List::class.java, QuestionIO::class.java).type
+        )
+    }
+
+    /** Converts list of [CollectionIO] object to string */
+    @TypeConverter
+    fun fromCollectionIOList(value: Set<CollectionIO>?): String? {
+        return if(value == null) null else gson.toJson(
+            value,
+            TypeToken.getParameterized(Set::class.java, CollectionIO::class.java).type
+        )
+    }
+
+    /** Converts string to [CollectionIO] */
+    @TypeConverter
+    fun toCollectionIOList(value: String?): Set<CollectionIO>? {
+        return if(value == null) null else gson.fromJson(
+            value,
+            TypeToken.getParameterized(Set::class.java, CollectionIO::class.java).type
         )
     }
 

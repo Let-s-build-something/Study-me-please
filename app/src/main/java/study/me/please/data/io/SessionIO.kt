@@ -27,7 +27,7 @@ data class SessionIO(
     val uid: String = UUID.randomUUID().toString(),
 
     /** preferences specific to this session */
-    var preferences: SessionPreferencePack = SessionPreferencePack(),
+    var preferencePack: SessionPreferencePack? = null,
 
     /** saved question module for control and history of questioning */
     @SerializedName("question_module")
@@ -38,18 +38,21 @@ data class SessionIO(
     @ColumnInfo(name = "last_played")
     val lastPlayed: Date = DateUtils.now.time,
 
-    /** identifiers of collections in this session */
-    val collectionUids: MutableList<String> = mutableListOf(),
-
-    /** identifiers of questions in this session */
-    val questionUids: MutableList<String> = mutableListOf()
-): Serializable {
+    /** all current collections in this session */
+    val collectionUidList: MutableSet<String> = mutableSetOf(),
 
     /** all current questions in this session */
-    @Ignore
-    var allQuestionUids: List<String> = listOf()
+    val questionUidList: MutableSet<String> = mutableSetOf(),
 
-    /** all current collections in this session */
+    /** number of questions in this session */
+    var questionCount: Int = 0
+): Serializable {
+
+    /** local temporary save of downloaded collections */
     @Ignore
     var collections: List<CollectionIO> = listOf()
+
+    /** local temporary save of downloaded questions */
+    @Ignore
+    var questions: List<QuestionIO> = listOf()
 }

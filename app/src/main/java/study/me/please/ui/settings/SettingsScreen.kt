@@ -1,4 +1,4 @@
-package study.me.please.ui.collection.settings
+package study.me.please.ui.settings
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding

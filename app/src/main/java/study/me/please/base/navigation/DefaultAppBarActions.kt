@@ -69,6 +69,7 @@ fun DefaultAppBarActions(
         NavigationDestination.HOME.route,
         NavigationDestination.SETTINGS.route,
         NavigationDestination.COLLECTION_DETAIL.route,
+        NavigationDestination.SESSION_DETAIL.route,
         NavigationDestination.SESSION.route -> {}
         else -> {
             ActionBarIcon(
@@ -116,5 +117,22 @@ fun SessionLobbyBarActions(
         text = stringResource(id = R.string.button_preferences),
         imageVector = Icons.Outlined.AutoFixHigh,
         onClick = onChangePreferences
+    )
+}
+
+@Composable
+fun SessionDetailBarActions(
+    onChangePreferences: () -> Unit = {},
+    onPlay: () -> Unit = {},
+) {
+    ActionBarIcon(
+        text = stringResource(id = R.string.button_preferences),
+        imageVector = Icons.Outlined.AutoFixHigh,
+        onClick = onChangePreferences
+    )
+    ActionBarIcon(
+        text = stringResource(id = R.string.button_play),
+        imageVector = Icons.Outlined.PlayArrow,
+        onClick = onPlay
     )
 }

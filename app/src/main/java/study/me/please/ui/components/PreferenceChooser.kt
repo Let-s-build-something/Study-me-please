@@ -63,15 +63,18 @@ import study.me.please.data.io.preferences.SessionPreferencePack
 @Composable
 fun PreferenceChooser(
     modifier: Modifier = Modifier,
-    preferencePacks: List<SessionPreferencePack>?,
+    preferencePacks: MutableList<SessionPreferencePack>?,
     requestPreferenceSave: (SessionPreferencePack?) -> Unit,
-    onPreferencePackChosen: (SessionPreferencePack) -> Unit,
+    onDeleteRequest: (SessionPreferencePack?) -> Unit,
+    onPreferencePackChosen: (SessionPreferencePack) -> Unit = {},
     defaultPreferencePack: SessionPreferencePack? = null,
     mustHaveSelection: Boolean = true,
-    onDeleteRequest: (SessionPreferencePack?) -> Unit
+    expandedByDefault: Boolean = true,
 ) {
-    val preferencesShown = remember { mutableStateOf(true) }
-    val selectedPreferencePack = remember { mutableStateOf(defaultPreferencePack) }
+    val preferencesShown = remember(defaultPreferencePack) {
+        mutableStateOf((mustHaveSelection || defaultPreferencePack != null) && expandedByDefault)
+    }
+    val selectedPreferencePack = remember(defaultPreferencePack) { mutableStateOf(defaultPreferencePack) }
     val preferences = remember(preferencePacks) {
         mutableStateListOf(*preferencePacks.orEmpty().toTypedArray())
     }
@@ -81,13 +84,28 @@ fun PreferenceChooser(
         animationSpec = tween(600)
     )
     val localFocusManager = LocalFocusManager.current
-    val isSwitchOneChecked = remember(selectedPreferencePack.value) {
+    val isSwitchOneChecked = remember(
+        selectedPreferencePack.value,
+        defaultPreferencePack,
+        preferencePacks,
+        selectedPreferencePack
+    ) {
         mutableStateOf(selectedPreferencePack.value?.waitForCorrectAnswer?.value)
     }
-    val isSwitchTwoChecked = remember(selectedPreferencePack.value) {
+    val isSwitchTwoChecked = remember(
+        selectedPreferencePack.value,
+        defaultPreferencePack,
+        preferencePacks,
+        selectedPreferencePack
+    ) {
         mutableStateOf(selectedPreferencePack.value?.manualValidation?.value)
     }
-    val isSwitchThreeChecked = remember(selectedPreferencePack.value) {
+    val isSwitchThreeChecked = remember(
+        selectedPreferencePack.value,
+        defaultPreferencePack,
+        preferencePacks,
+        selectedPreferencePack
+    ) {
         mutableStateOf(selectedPreferencePack.value?.repeatOnMistake?.value)
     }
 
@@ -107,11 +125,13 @@ fun PreferenceChooser(
                 onPreferencePackChosen(preference)
             }
             localFocusManager.clearFocus()
-            preferencesShown.value = selectedPreferencePack.value != null
+            if(expandedByDefault) {
+                preferencesShown.value = selectedPreferencePack.value != null
+            }
         }
         val randomName = stringArrayResource(id = R.array.random_name).random()
         LaunchedEffect(preferences) {
-            if(preferences.isEmpty()) {
+            if(preferences.isEmpty() && preferencePacks.isEmpty() && mustHaveSelection) {
                 val newPrefPack = SessionPreferencePack(
                     name = randomName
                 )
@@ -167,6 +187,19 @@ fun PreferenceChooser(
                 horizontalArrangement = Arrangement.spacedBy(4.dp),
                 contentPadding = PaddingValues(4.dp)
             ) {
+                item {
+                    val randomPackName = stringArrayResource(id = R.array.random_name).random()
+                    ActionBarIcon(
+                        text = stringResource(id = R.string.preference_chooser_add_new),
+                        imageVector = Icons.Outlined.Add
+                    ) {
+                        val newPack = SessionPreferencePack(
+                            name = randomPackName
+                        )
+                        preferences.add(newPack)
+                        selectedPreferencePack.value = newPack
+                    }
+                }
                 itemsIndexed(
                     preferences,
                     key = { _, item -> item.uid }
@@ -191,24 +224,9 @@ fun PreferenceChooser(
                         text = preferencePack.name,
                         imageVector = modeIcon.value
                     ) {
-                        selectedPreferencePack.value = if(mustHaveSelection
+                        selectedPreferencePack.value = if(mustHaveSelection.not()
                             && selectedPreferencePack.value?.uid == preferencePack.uid
-                        ) {
-                            null
-                        }else preferencePack
-                    }
-                }
-                item {
-                    val randomPackName = stringArrayResource(id = R.array.random_name).random()
-                    ActionBarIcon(
-                        text = stringResource(id = R.string.preference_chooser_add_new),
-                        imageVector = Icons.Outlined.Add
-                    ) {
-                        val newPack = SessionPreferencePack(
-                            name = randomPackName
-                        )
-                        preferences.add(newPack)
-                        selectedPreferencePack.value = newPack
+                        ) null else preferencePack
                     }
                 }
             }
@@ -294,11 +312,10 @@ fun PreferenceChooser(
                                         val oldIndex = preferences.indexOfFirst { it.uid == selectedPreferencePack.value?.uid }
                                         onDeleteRequest(selectedPreferencePack.value)
                                         preferences.removeAll { it.uid == selectedPreferencePack.value?.uid }
+                                        preferencePacks.removeAll { it.uid == selectedPreferencePack.value?.uid }
 
-                                        if(mustHaveSelection) {
-                                            selectedPreferencePack.value = preferences.getOrNull(oldIndex)
-                                                ?: preferences.getOrNull(oldIndex - 1)
-                                        }
+                                        selectedPreferencePack.value = preferences.getOrNull(oldIndex)
+                                            ?: preferences.getOrNull(oldIndex - 1)
                                     }
                                 }
                             }
@@ -417,7 +434,7 @@ private fun Preview() {
                 color = LocalTheme.colors.onBackgroundComponent,
                 shape = RoundedCornerShape(8.dp)
             ),
-        preferencePacks = listOf(),
+        preferencePacks = mutableListOf(),
         requestPreferenceSave = { _ -> },
         onDeleteRequest = { _ -> },
         onPreferencePackChosen = {}

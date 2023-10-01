@@ -44,7 +44,7 @@ fun OutlinedButton(
     trailingIcon: ImageVector? = null,
     activeColor: Color = LocalTheme.colors.primary,
     inactiveColor: Color = LocalTheme.colors.secondary,
-    onClick: () -> Unit = {}
+    onClick: () -> Unit
 ) {
     val color = if (isActivated && enabled) activeColor else inactiveColor
     Row(
@@ -104,7 +104,8 @@ private fun Preview() {
         OutlinedButton(
             text = if(activated) "Activated" else "Inactivated",
             isActivated = activated,
-            trailingIcon = if(activated) Icons.Outlined.Check else Icons.Outlined.Close
+            trailingIcon = if(activated) Icons.Outlined.Check else Icons.Outlined.Close,
+            onClick = {}
         )
     }
 }

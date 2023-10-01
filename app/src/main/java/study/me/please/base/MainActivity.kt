@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -33,10 +34,11 @@ import study.me.please.base.navigation.NavigationDestination
 import study.me.please.hilt.SharedPreferencesModule
 import study.me.please.ui.collection.CollectionLobbyScreen
 import study.me.please.ui.collection.detail.CollectionDetailScreen
-import study.me.please.ui.collection.settings.SettingsScreen
-import study.me.please.ui.collection.settings.SettingsViewModel
+import study.me.please.ui.settings.SettingsScreen
+import study.me.please.ui.settings.SettingsViewModel
 import study.me.please.ui.home.HomeScreen
 import study.me.please.ui.session.SessionScreen
+import study.me.please.ui.session.detail.SessionDetailScreen
 import study.me.please.ui.session.lobby.SessionLobbyScreen
 
 @AndroidEntryPoint
@@ -144,34 +146,51 @@ class MainActivity: ComponentActivity(), BackboneChannel {
                                     isDarkTheme.value = newValue
                                 }
                             }
-                            composable(
-                                NavigationDestination.SESSION_LOBBY.route,
-                                arguments = listOf(
-                                    navArgument(
-                                        NavigationComponent.CREATE_NEW_ITEM
-                                    ) {},
-                                    navArgument(
-                                        NavigationComponent.COLLECTION_UID
-                                    ) { nullable = true; defaultValue = null },
-                                    navArgument(
-                                        NavigationComponent.SESSION_UID
-                                    ) { nullable = true; defaultValue = null }
-                                )
-                            ) { backStackEntry ->
+                            composable(NavigationDestination.SESSION_LOBBY.route) { backStackEntry ->
                                 SessionLobbyScreen(
-                                    navController = navController,
                                     changeActionBar = { newActions ->
                                         actions.value = NavigationDestination.SESSION_LOBBY to newActions
                                     },
-                                    collectionUid = backStackEntry.arguments?.getString(
-                                        NavigationComponent.COLLECTION_UID
-                                    ),
+                                    createNewItem = backStackEntry.arguments?.getString(
+                                        NavigationComponent.CREATE_NEW_ITEM
+                                    ).toBoolean(),
+                                    navController = navController
+                                )
+                            }
+                            composable(
+                                NavigationDestination.SESSION_DETAIL.route,
+                                arguments = listOf(
+                                    navArgument(
+                                        NavigationComponent.COLLECTION_UID_LIST
+                                    ) { nullable = true; defaultValue = null },
+                                    navArgument(
+                                        NavigationComponent.QUESTION_UID_LIST
+                                    ) { nullable = true; defaultValue = null },
+                                    navArgument(
+                                        NavigationComponent.SESSION_UID
+                                    ) { nullable = true; defaultValue = null },
+                                    navArgument(
+                                        NavigationComponent.TOOLBAR_TITLE
+                                    ) {}
+                                )
+                            ) { backStackEntry ->
+                                appBarTitle.value = backStackEntry.arguments?.getString(
+                                    NavigationComponent.TOOLBAR_TITLE
+                                )
+                                SessionDetailScreen(
+                                    navController = navController,
+                                    collectionUidList = backStackEntry.arguments?.getString(
+                                        NavigationComponent.COLLECTION_UID_LIST
+                                    )?.split(","),
+                                    questionUidList = backStackEntry.arguments?.getString(
+                                        NavigationComponent.QUESTION_UID_LIST
+                                    )?.split(","),
                                     sessionUid = backStackEntry.arguments?.getString(
                                         NavigationComponent.SESSION_UID
                                     ),
-                                    createNewItem = backStackEntry.arguments?.getString(
-                                        NavigationComponent.CREATE_NEW_ITEM
-                                    ).toBoolean()
+                                    changeActionBar = { newActions ->
+                                        actions.value = NavigationDestination.SESSION_DETAIL to newActions
+                                    }
                                 )
                             }
                             composable(

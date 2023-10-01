@@ -26,6 +26,7 @@ import study.me.please.ui.session.QuestionModule
 abstract class AppRoomDatabase: RoomDatabase() {
 
     abstract fun collectionDbDao(): CollectionDao
+    abstract fun questionDbDao(): QuestionDao
     abstract fun sessionDbDao(): SessionDao
     abstract fun homeDbDao(): HomeDao
     abstract fun preferencesDbDao(): PreferencesDao

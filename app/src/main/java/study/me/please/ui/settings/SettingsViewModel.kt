@@ -1,4 +1,4 @@
-package study.me.please.ui.collection.settings
+package study.me.please.ui.settings
 
 import android.content.SharedPreferences
 import androidx.core.content.edit

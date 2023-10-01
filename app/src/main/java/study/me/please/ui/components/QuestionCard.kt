@@ -21,7 +21,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
@@ -42,8 +41,8 @@ fun QuestionCard(
     modifier: Modifier = Modifier,
     state: InteractiveCardState = rememberInteractiveCardState(),
     data: QuestionIO?,
-    requestDataSave: () -> Unit,
-    onNavigateToSession: (questionIO: QuestionIO) -> Unit,
+    requestDataSave: () -> Unit = {},
+    onNavigateToSession: (questionIO: QuestionIO) -> Unit = {},
     onClick: () -> Unit
 ) {
     if(data != null) {

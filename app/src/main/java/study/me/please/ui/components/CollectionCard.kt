@@ -1,8 +1,6 @@
 package study.me.please.ui.components
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.Crossfade
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -17,6 +15,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
@@ -27,7 +26,6 @@ import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -38,31 +36,23 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.max
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
-import coil.compose.AsyncImage
-import coil.request.ImageRequest
 import com.squadris.squadris.compose.theme.LocalTheme
 import com.squadris.squadris.compose.theme.Colors
-import com.squadris.squadris.utils.DateUtils
 import study.me.please.R
 import study.me.please.data.io.CollectionIO
-import study.me.please.data.io.QuestionMode
-import java.util.Calendar
-import java.util.Date
 
 /** Item displaying collection and shortened information about it */
 @OptIn(ExperimentalFoundationApi::class)
@@ -72,7 +62,9 @@ fun CollectionCard(
     data: CollectionIO? = null,
     state: InteractiveCardState,
     skipOptions: Boolean = false,
-    onNavigateToDetail: () -> Unit,
+    maxNameLength: Int? = null,
+    clipToName: Boolean = false,
+    onNavigateToDetail: () -> Unit = {},
     onNavigateToSession: () -> Unit = {}
 ) {
     //TODO shimmer effect
@@ -88,28 +80,26 @@ fun CollectionCard(
 
             Card(
                 modifier = modifier
-                    .fillMaxWidth()
                     .wrapContentHeight()
                     .clip(LocalTheme.shapes.componentShape)
                     .combinedClickable(
                         interactionSource = remember {
                             MutableInteractionSource()
                         },
-                        indication = rememberRipple(
-                            bounded = true
-                        ),
+                        indication = rememberRipple(bounded = true),
                         onClick = {
                             if (state.mode.value == InteractiveCardMode.CHECKING) {
                                 state.isChecked.value = state.isChecked.value.not()
                             } else if (state.mode.value == InteractiveCardMode.DATA_DISPLAY) {
-                                if(skipOptions) {
+                                if (skipOptions) {
                                     onNavigateToDetail()
-                                }else state.mode.value = InteractiveCardMode.OPTIONS
+                                } else state.mode.value = InteractiveCardMode.OPTIONS
                             }
                         },
                         onLongClick = {
                             state.isChecked.value = true
-                        }
+                        },
+                        enabled = state.isEnabled.value
                     ),
                 elevation = LocalTheme.styles.cardClickableElevation,
                 shape = LocalTheme.shapes.componentShape,
@@ -135,7 +125,13 @@ fun CollectionCard(
                         DataCard(
                             modifier = Modifier.onGloballyPositioned { coordinates ->
                                 cardHeight = with(localDensity) { coordinates.size.height.toDp() }
-                            },
+                            }.then(
+                                if(maxNameLength != null) {
+                                    Modifier.wrapContentWidth()
+                                }else Modifier.fillMaxWidth()
+                            ),
+                            maxNameLength = maxNameLength,
+                            clipToName = clipToName,
                             data = data,
                             state = state
                         )
@@ -153,21 +149,20 @@ private fun ShimmerLayout() {
 
 @Composable
 private fun DataCard(
-    modifier: Modifier = Modifier,
+    modifier: Modifier,
+    maxNameLength: Int?,
+    clipToName: Boolean,
     data: CollectionIO,
     state: InteractiveCardState
 ) {
     ConstraintLayout(
         modifier = modifier
             .padding(vertical = 8.dp, horizontal = 12.dp)
-            .fillMaxWidth()
     ) {
         val (
             txtHeading,
             txtDescription,
             imgIcon,
-            txtDateCreated,
-            txtMode,
             checkBox
         ) = createRefs()
 
@@ -177,6 +172,7 @@ private fun DataCard(
                     start.linkTo(parent.start, (-8).dp)
                     top.linkTo(parent.top, (-12).dp)
                 },
+                enabled = state.isEnabled.value,
                 checked = state.isChecked.value,
                 onCheckedChange = { isChecked ->
                     state.isChecked.value = isChecked
@@ -184,20 +180,6 @@ private fun DataCard(
                 colors = LocalTheme.styles.checkBoxColorsDefault
             )
         }
-        Text(
-            text = data.name,
-            modifier = Modifier.constrainAs(txtHeading) {
-                top.linkTo(parent.top, 4.dp)
-                start.linkTo(
-                    if(state.mode.value == InteractiveCardMode.CHECKING) {
-                        checkBox.end
-                    }else parent.start
-                )
-            },
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Medium,
-            color = LocalTheme.colors.primary
-        )
         Image(
             modifier = Modifier
                 .size(LocalTheme.shapes.iconSizeMedium)
@@ -207,21 +189,34 @@ private fun DataCard(
                 )
                 .clip(LocalTheme.shapes.circularActionShape)
                 .constrainAs(imgIcon) {
-                    top.linkTo(parent.top, 4.dp)
+                    top.linkTo(parent.top)
                     end.linkTo(parent.end)
                 },
-            imageVector = Icons.Outlined.Memory,
+            imageVector = data.defaultPreference.estimatedMode.icon,
             contentDescription = null,
             colorFilter = ColorFilter.tint(color = LocalTheme.colors.tetrial)
         )
         Text(
-            text = data.defaultPreference.estimatedMode.toString(),
-            modifier = Modifier.constrainAs(txtMode) {
-                top.linkTo(txtMode.bottom, 2.dp)
-                end.linkTo(parent.end)
+            text = if(maxNameLength != null && maxNameLength < data.name.length) {
+                data.name.substring(0, maxNameLength).plus("...")
+            }else data.name,
+            modifier = Modifier.constrainAs(txtHeading) {
+                top.linkTo(parent.top, 4.dp)
+                linkTo(
+                    if(state.mode.value == InteractiveCardMode.CHECKING) {
+                        checkBox.end
+                    }else parent.start,
+                    imgIcon.start,
+                    endMargin = 6.dp
+                )
+                if(clipToName.not()) {
+                    width = Dimension.fillToConstraints
+                }
             },
-            fontSize = 10.sp,
-            color = LocalTheme.colors.secondary
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Medium,
+            color = LocalTheme.colors.primary,
+            textAlign = TextAlign.Start
         )
         Text(
             text = data.description,
@@ -229,7 +224,9 @@ private fun DataCard(
                 .constrainAs(txtDescription) {
                     top.linkTo(txtHeading.bottom, 4.dp)
                     start.linkTo(txtHeading.start)
-                    end.linkTo(imgIcon.start, 6.dp)
+                    if(clipToName) {
+                        end.linkTo(txtHeading.end)
+                    }else end.linkTo(imgIcon.start, 6.dp)
                     width = Dimension.fillToConstraints
                 },
             fontSize = 12.sp,
@@ -237,18 +234,6 @@ private fun DataCard(
             minLines = 2,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis
-        )
-        Text(
-            text = DateUtils.formatDateAs(
-                date = data.dateCreated,
-                pattern = "d. MMM yyyy"
-            ),
-            modifier = Modifier.constrainAs(txtDateCreated) {
-                top.linkTo(imgIcon.bottom, 4.dp)
-                end.linkTo(parent.end)
-            },
-            fontSize = 12.sp,
-            color = LocalTheme.colors.secondary
         )
     }
 }
@@ -292,7 +277,7 @@ fun OptionsModeLayout(
                 ) {
                     onCancelClick()
                 }
-                .padding(16.dp),
+                .padding(4.dp),
             imageVector = Icons.Outlined.Close,
             contentDescription = stringResource(id = R.string.close_content_description),
             tint = Colors.DARK_BLUE_70
@@ -309,7 +294,7 @@ fun OptionsModeLayout(
                 ) {
                     onEditOptionPressed()
                 }
-                .padding(16.dp),
+                .padding(4.dp),
             imageVector = Icons.Outlined.Edit,
             contentDescription = stringResource(id = R.string.edit_content_description),
             tint = Colors.DARK_BLUE_70
@@ -330,7 +315,7 @@ fun OptionsModeLayout(
                 ) {
                     onPlayOptionPressed()
                 }
-                .padding(16.dp),
+                .padding(4.dp),
             imageVector = Icons.Outlined.PlayArrow,
             contentDescription = stringResource(id = R.string.play_content_description),
             tint = Colors.DARK_BLUE_70

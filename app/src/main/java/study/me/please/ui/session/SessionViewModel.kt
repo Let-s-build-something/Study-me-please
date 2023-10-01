@@ -1,10 +1,9 @@
 package study.me.please.ui.session
 
+import android.util.Log
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import study.me.please.base.BaseViewModel
 import study.me.please.data.io.QuestionIO
 import study.me.please.data.io.preferences.SessionPreferencePack
@@ -25,11 +24,13 @@ class SessionViewModel @Inject constructor(
         sessionUid: String?,
         preferencePackUid: String?
     ) {
+        Log.d("session_screen", "requestStateData, collectionUid: $collectionUid, questionUid: $questionUid," +
+            " questionUids: $questionUids, sessionUid: $sessionUid, preferencePackUid: $preferencePackUid")
         viewModelScope.launch {
             val questions = mutableListOf<QuestionIO>()
             repository.getCollectionByUid(collectionUid)?.let { collectionDetail ->
                 dataManager.collection.value = collectionDetail
-                repository.getQuestionsByUid(collectionDetail.questionUids)?.let { questionsOut ->
+                repository.getQuestionsByUid(collectionDetail.questionUidList.toList())?.let { questionsOut ->
                     questions.addAll(questionsOut)
                 }
             }
@@ -45,14 +46,15 @@ class SessionViewModel @Inject constructor(
             // session has both collections and questions
             // so we first retrieve collections to get all the necessary uids to get all questions needed
             repository.getSessionByUid(sessionUid)?.let { session ->
+                Log.d("session_screen", "requestStateData, session: $session")
                 dataManager.session.value = session
-                repository.getCollectionsByUids(session.collectionUids)?.let { collections ->
-                    withContext(Dispatchers.Default) {
-                        repository.getQuestionsByUid(
-                            session.questionUids.plus(collections.map { it.questionUids }.flatten())
-                        )?.let { questionsOut ->
-                            questions.addAll(questionsOut)
-                        }
+                dataManager.preferencePack.value = session.preferencePack
+                repository.getQuestionsByUid(session.questionUidList.toList())?.let { questionsOut ->
+                    questions.addAll(questionsOut)
+                }
+                repository.getCollectionsByUidList(session.collectionUidList.toList())?.forEach { collection ->
+                    repository.getQuestionsByUid(collection.questionUidList.toList())?.let { questionsOut ->
+                        questions.addAll(questionsOut)
                     }
                 }
             }
@@ -61,7 +63,7 @@ class SessionViewModel @Inject constructor(
             }
             if(isTestingMode) {
                 repository.getAllPreferences()?.let { preferencePacks ->
-                    dataManager.preferencePacks.value = preferencePacks
+                    dataManager.preferencePacks.value = preferencePacks.toMutableList()
                 }
             }
             // in case there is no preference pack, happens only while testing modules
@@ -74,6 +76,7 @@ class SessionViewModel @Inject constructor(
                 dataManager.preferencePack.value = dataManager.preferencePacks.value
                     ?.firstOrNull() ?: SessionPreferencePack()
             }
+            Log.d("session_screen", "requestStateData, final questions: $questions")
             dataManager.questions.value = questions
         }
     }
@@ -106,7 +109,7 @@ class SessionViewModel @Inject constructor(
                         this.questionModule = newModule
                     }
                     preferencePack?.let { newPreference ->
-                        this.preferences = newPreference
+                        this.preferencePack = newPreference
                     }
                 })
             }

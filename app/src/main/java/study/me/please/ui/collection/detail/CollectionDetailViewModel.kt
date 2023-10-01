@@ -1,6 +1,5 @@
 package study.me.please.ui.collection.detail
 
-import android.util.Log
 import androidx.lifecycle.viewModelScope
 import com.squadris.squadris.utils.DateUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -9,6 +8,7 @@ import kotlinx.coroutines.launch
 import study.me.please.base.BaseViewModel
 import study.me.please.data.io.CollectionIO
 import study.me.please.data.io.QuestionIO
+import study.me.please.data.io.SessionIO
 import javax.inject.Inject
 
 @HiltViewModel
@@ -21,17 +21,9 @@ class CollectionDetailViewModel @Inject constructor(
     fun requestCollectionByUid(collectionUid: String) {
         viewModelScope.launch {
             repository.getCollectionByUid(collectionUid)?.let { collectionDetail ->
-                dataManager.collectionDetail.value = collectionDetail
-            }
-        }
-    }
-
-    /** Requests an array of questiong for a specific collection by identifiers */
-    fun requestQuestionsByUid(questionUids: List<String>) {
-        dataManager.questions.value = null
-        viewModelScope.launch {
-            repository.getQuestionsByUid(questionUids)?.let { questions ->
-                dataManager.questions.value = questions.toMutableList()
+                dataManager.collectionDetail.value = collectionDetail.apply {
+                    questions = repository.getQuestionsByUid(this.questionUidList.toList()).orEmpty()
+                }
             }
         }
     }
@@ -75,6 +67,22 @@ class CollectionDetailViewModel @Inject constructor(
                     }
                 }
             )
+        }
+    }
+
+    /** Requests all collections */
+    fun requestSessions() {
+        viewModelScope.launch {
+            repository.getSessions()?.let { sessions ->
+                dataManager.sessions.value = sessions
+            }
+        }
+    }
+
+    /** Requests a save for sessions */
+    fun requestSessionsSave(sessions: List<SessionIO>) {
+        viewModelScope.launch {
+            repository.saveSessions(sessions)
         }
     }
 }

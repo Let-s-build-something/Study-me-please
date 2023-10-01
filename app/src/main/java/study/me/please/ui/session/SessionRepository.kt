@@ -6,13 +6,17 @@ import study.me.please.data.io.CollectionIO
 import study.me.please.data.io.QuestionIO
 import study.me.please.data.io.SessionIO
 import study.me.please.data.io.preferences.SessionPreferencePack
+import study.me.please.data.room.CollectionDao
 import study.me.please.data.room.PreferencesDao
+import study.me.please.data.room.QuestionDao
 import study.me.please.data.room.SessionDao
 import javax.inject.Inject
 
 /** Proxy for calling network end points */
 class SessionRepository @Inject constructor(
     private val sessionDao: SessionDao,
+    private val collectionDao: CollectionDao,
+    private val questionDao: QuestionDao,
     private val preferencesDao: PreferencesDao
 ) {
 
@@ -22,18 +26,18 @@ class SessionRepository @Inject constructor(
             if(collectionUid == null) {
                 null
             }else {
-                sessionDao.getCollectionByUid(collectionUid)
+                collectionDao.getCollectionByUid(collectionUid)
             }
         }
     }
 
-    /** Returns collections by their uids - [collectionUids] */
-    suspend fun getCollectionsByUids(collectionUids: List<String>): List<CollectionIO>? {
+    /** Returns a list of collections by their uid - [uidList] */
+    suspend fun getCollectionsByUidList(uidList: List<String>?): List<CollectionIO>? {
         return withContext(Dispatchers.IO) {
-            if(collectionUids.isEmpty()) {
-                listOf()
+            if(uidList == null) {
+                null
             }else {
-                sessionDao.getCollectionsByUid(collectionUids)
+                collectionDao.getCollectionsByUid(uidList)
             }
         }
     }
@@ -44,7 +48,7 @@ class SessionRepository @Inject constructor(
             if(questionUid == null) {
                 null
             }else {
-                sessionDao.getQuestionByUid(questionUid)
+                questionDao.getQuestionByUid(questionUid)
             }
         }
     }
@@ -52,7 +56,7 @@ class SessionRepository @Inject constructor(
     /** Returns an array of questiong by their uid - [questionUids] */
     suspend fun getQuestionsByUid(questionUids: List<String>): List<QuestionIO>? {
         return withContext(Dispatchers.IO) {
-            sessionDao.getQuestionsByUid(questionUids)
+            questionDao.getQuestionsByUid(questionUids)
         }
     }
 
@@ -62,7 +66,7 @@ class SessionRepository @Inject constructor(
             if(uid == null) {
                 null
             }else {
-                sessionDao.getPreferencePackByUid(uid)
+                preferencesDao.getPreferencePackByUid(uid)
             }
         }
     }
@@ -92,18 +96,17 @@ class SessionRepository @Inject constructor(
         }
     }
 
-    /** Saves a session */
-    suspend fun saveSession(session: SessionIO) {
-        return withContext(Dispatchers.IO) {
-            sessionDao.insertSession(session)
-        }
-    }
-
     /** deletes a preference pack */
     suspend fun deletePreferencePack(uid: String) {
         return withContext(Dispatchers.IO) {
             preferencesDao.deletePreferencePack(uid)
-            getAllPreferences()
+        }
+    }
+
+    /** Saves a session */
+    suspend fun saveSession(session: SessionIO) {
+        return withContext(Dispatchers.IO) {
+            sessionDao.insertSession(session)
         }
     }
 }

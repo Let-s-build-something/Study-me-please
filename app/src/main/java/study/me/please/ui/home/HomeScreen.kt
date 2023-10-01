@@ -4,10 +4,12 @@ import android.app.Activity
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredWidth
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
@@ -39,6 +41,7 @@ import androidx.navigation.NavController
 import com.squadris.squadris.compose.components.getDefaultPullRefreshSize
 import com.squadris.squadris.compose.theme.LocalTheme
 import com.squadris.squadris.utils.OnLifecycleEvent
+import okhttp3.internal.notify
 import study.me.please.R
 import study.me.please.base.DraggableRefreshIndicator
 import study.me.please.base.ProgressBarRefreshIndicator
@@ -49,7 +52,9 @@ import study.me.please.ui.components.CollectionCard
 import study.me.please.ui.components.ImageAction
 import study.me.please.ui.components.InteractiveCardState
 import study.me.please.ui.components.OutlinedButton
+import study.me.please.ui.components.SessionCard
 import study.me.please.ui.components.rememberInteractiveCardState
+import java.util.UUID
 
 /** Main screen, visible first when user opens the app */
 @OptIn(ExperimentalMaterialApi::class)
@@ -73,7 +78,10 @@ fun HomeScreen(
     )
     val indicatorOffset = remember { mutableStateOf(0.dp) }
     val configuration = LocalConfiguration.current
-    val interactiveStates = collections.value?.map {
+    val interactiveCollectionStates = collections.value?.map {
+        rememberInteractiveCardState()
+    }
+    val interactiveSessionStates = sessions.value?.map {
         rememberInteractiveCardState()
     }
 
@@ -92,7 +100,7 @@ fun HomeScreen(
     }
     ConstraintLayout(
         modifier = Modifier
-            .pullRefresh(pullRefreshState)
+            .pullRefresh(pullRefreshState, enabled = isRefreshing.value.not())
             .fillMaxSize()
             .graphicsLayer {
                 translationY = indicatorOffset.value.toPx()
@@ -117,7 +125,7 @@ fun HomeScreen(
             )
         ) {
             CollectionsRow(
-                interactiveStates = interactiveStates,
+                interactiveStates = interactiveCollectionStates,
                 configuration = configuration,
                 collections = collections.value,
                 onNavigationToDetail = { collection ->
@@ -137,19 +145,33 @@ fun HomeScreen(
                         NavigationUtils.navigateToCollectionLobby(navController = navController)
                     }
                 },
-                onNavigationToSession = { sessionUid ->
-                    NavigationUtils.navigateToSessionLobby(
+                onNavigationToSession = { collection ->
+                    NavigationUtils.navigateToSession(
                         navController = navController,
-                        sessionUid = sessionUid
+                        collectionUid = collection.uid,
+                        toolbarTitle = collection.name
                     )
                 }
             )
             SessionsRow(
-                sessions = sessions,
-                onNavigationToLobby = { createNewItem ->
-                    NavigationUtils.navigateToSessionLobby(
+                interactiveStates = interactiveSessionStates,
+                sessions = sessions.value,
+                configuration = configuration,
+                onNavigationToLobby = {
+                    NavigationUtils.navigateToSessionLobby(navController = navController)
+                },
+                onNavigationToSession = { session ->
+                    NavigationUtils.navigateToSession(
                         navController = navController,
-                        createNewItem = createNewItem
+                        sessionUid = session.uid,
+                        toolbarTitle = session.name
+                    )
+                },
+                onNavigationToDetail = { session ->
+                    NavigationUtils.navigateToSessionDetail(
+                        navController = navController,
+                        sessionUid = session.uid,
+                        toolbarTitle = session.name
                     )
                 }
             )
@@ -164,13 +186,14 @@ private fun CollectionsRow(
     collections: List<CollectionIO>?,
     configuration: Configuration,
     onNavigationToLobby: (createNewItem: Boolean) -> Unit,
-    onNavigationToSession: (sessionUid: String) -> Unit,
+    onNavigationToSession: (collection: CollectionIO) -> Unit,
     onNavigationToDetail: (collection: CollectionIO) -> Unit
 ) {
     OutlinedButton(
         modifier = Modifier
             .padding(top = 16.dp, start = 4.dp),
         text = stringResource(id = R.string.screen_collection_title),
+        activeColor = LocalTheme.colors.secondary,
         onClick = {
             onNavigationToLobby(false)
         }
@@ -186,27 +209,30 @@ private fun CollectionsRow(
         LazyRow(
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
+            item {
+                Spacer(modifier = Modifier.width(6.dp))
+            }
             itemsIndexed(
-                collections ?: arrayOfNulls<CollectionIO?>(5).toList()
+                collections ?: arrayOfNulls<CollectionIO?>(5).toList(),
+                key = { _, collection -> collection?.uid ?: UUID.randomUUID().toString() }
             ) { index, collection ->
                 (interactiveStates?.getOrNull(index))?.let { state ->
                     CollectionCard(
                         modifier = Modifier
-                            .requiredWidth(configuration.screenWidthDp.div(2).dp)
-                            .padding(
-                                start = if (index == 0) 6.dp else 0.dp,
-                                end = if (index == collections?.lastIndex) 6.dp else 0.dp
-                            ),
+                            .requiredWidth(configuration.screenWidthDp.div(2).dp),
                         data = collection,
                         onNavigateToDetail = {
                             collection?.let(onNavigationToDetail)
                         },
                         onNavigateToSession = {
-                            collection?.uid?.let(onNavigationToSession)
+                            collection?.let(onNavigationToSession)
                         },
                         state = state
                     )
                 }
+            }
+            item {
+                Spacer(modifier = Modifier.width(6.dp))
             }
         }
     }
@@ -214,23 +240,28 @@ private fun CollectionsRow(
 
 @Composable
 private fun SessionsRow(
-    sessions: State<List<SessionIO>?>,
-    onNavigationToLobby: (createNewItem: Boolean) -> Unit
+    interactiveStates: List<InteractiveCardState>?,
+    sessions: List<SessionIO>?,
+    configuration: Configuration,
+    onNavigationToLobby: () -> Unit,
+    onNavigationToSession: (session: SessionIO) -> Unit,
+    onNavigationToDetail: (session: SessionIO) -> Unit
 ) {
     OutlinedButton(
         modifier = Modifier
             .padding(top = 16.dp, start = 4.dp),
         text = stringResource(id = R.string.screen_session_lobby_title),
+        activeColor = LocalTheme.colors.secondary,
         onClick = {
-            onNavigationToLobby(false)
+            onNavigationToLobby()
         }
     )
-    if(sessions.value?.isEmpty() == true) {
+    if(sessions?.isEmpty() == true) {
         EmptyElement(
             emptyText = stringResource(id = R.string.session_lobby_screen_empty_text),
             actionText = stringResource(id = R.string.home_screen_sessions_empty_action)
         ) {
-            onNavigationToLobby(true)
+            onNavigationToLobby()
         }
     }else {
         LazyRow(
@@ -238,11 +269,30 @@ private fun SessionsRow(
                 LocalTheme.shapes.betweenItemsSpace
             )
         ) {
+            item {
+                Spacer(modifier = Modifier.width(6.dp))
+            }
             itemsIndexed(
-                sessions.value ?: arrayOfNulls<CollectionIO>(5).map { SessionIO() },
-                key = { _, item -> item.uid }
+                sessions ?: arrayOfNulls<SessionIO?>(5).toList(),
+                key = { _, session -> session?.uid ?: UUID.randomUUID().toString() }
             ) { index, session ->
-
+                (interactiveStates?.getOrNull(index))?.let { state ->
+                    SessionCard(
+                        modifier = Modifier
+                            .requiredWidth(configuration.screenWidthDp.div(2).dp),
+                        session = session,
+                        state = state,
+                        onEditOptionPressed = {
+                            session?.let(onNavigationToDetail)
+                        },
+                        onPlayOptionPressed = {
+                            session?.let(onNavigationToSession)
+                        }
+                    )
+                }
+            }
+            item {
+                Spacer(modifier = Modifier.width(6.dp))
             }
         }
     }

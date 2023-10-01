@@ -19,6 +19,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Deselect
 import androidx.compose.material.icons.outlined.DocumentScanner
@@ -27,6 +28,7 @@ import androidx.compose.material.icons.outlined.FileUpload
 import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material.icons.outlined.SelectAll
 import androidx.compose.material.rememberBottomSheetScaffoldState
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -50,10 +52,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
 import androidx.navigation.NavController
 import com.squadris.squadris.compose.theme.LocalTheme
 import com.squadris.squadris.compose.theme.Colors
 import com.squadris.squadris.ext.brandShimmerEffect
+import com.squadris.squadris.utils.OnLifecycleEvent
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.delay
@@ -63,6 +67,7 @@ import study.me.please.base.navigation.CollectionDetailAppBarActions
 import study.me.please.base.navigation.NavigationUtils
 import study.me.please.data.io.CollectionIO
 import study.me.please.data.io.QuestionIO
+import study.me.please.ui.components.AddToSessionCollectionSheet
 import study.me.please.ui.components.BasicAlertDialog
 import study.me.please.ui.components.BrandHeaderButton
 import study.me.please.ui.components.ButtonState
@@ -89,8 +94,12 @@ fun CollectionDetailScreen(
     val coroutineScope = rememberCoroutineScope()
     val collectionDetailFlow = viewModel.dataManager.collectionDetail.collectAsState()
 
-    if(collectionUid.isNullOrEmpty().not()) {
-        viewModel.requestCollectionByUid(collectionUid ?: "")
+    OnLifecycleEvent { event ->
+        if(event == Lifecycle.Event.ON_RESUME) {
+            if(collectionUid.isNullOrEmpty().not()) {
+                viewModel.requestCollectionByUid(collectionUid ?: "")
+            }
+        }
     }
 
     if(collectionUid.isNullOrEmpty().not() && collectionDetailFlow.value.dateCreated == null) {
@@ -100,9 +109,10 @@ fun CollectionDetailScreen(
         LaunchedEffect(collectionDetailFlow.value) {
             changeActionBar {
                 CollectionDetailAppBarActions {
-                    NavigationUtils.navigateToSessionLobby(
+                    NavigationUtils.navigateToSessionDetail(
                         navController,
-                        collectionUid = collectionDetailFlow.value.uid
+                        collectionUidList = listOf(collectionDetailFlow.value.uid),
+                        toolbarTitle = collectionDetailFlow.value.name
                     )
                 }
             }
@@ -122,10 +132,6 @@ fun CollectionDetailScreen(
                     coroutineScope.launch {
                         delay(REQUEST_DATA_SAVE_DELAY)
                         viewModel.requestQuestionSave(question)
-                        if(collectionDetail.questionUids.contains(question.uid).not()) {
-                            collectionDetail.questionUids.add(question.uid)
-                            viewModel.requestCollectionSave(collectionDetail)
-                        }
                     }
                 }
             },
@@ -150,7 +156,7 @@ fun CollectionDetailScreen(
 }
 
 /** Layout for main content - showing actual information */
-@OptIn(ExperimentalMaterialApi::class)
+@OptIn(ExperimentalMaterialApi::class, ExperimentalMaterial3Api::class)
 @Composable
 private fun ContentLayout(
     collectionDetail: CollectionIO,
@@ -160,23 +166,21 @@ private fun ContentLayout(
     navigateToSession: (questionUids: List<String>) -> Unit,
     requestQuestionSave: (question: QuestionIO) -> Unit
 ) {
-    LaunchedEffect(collectionDetail) {
-        if(collectionDetail.uid.isNotEmpty()) {
-            viewModel.requestQuestionsByUid(collectionDetail.questionUids)
-        }
-    }
-    val questionInEdit: MutableState<QuestionIO> = remember {
+    val questionInEdit: MutableState<QuestionIO> = remember(collectionDetail) {
         mutableStateOf(QuestionIO(uid = ""))
     }
     val localFocusManager = LocalFocusManager.current
 
+    val sessions = viewModel.dataManager.sessions.collectAsState()
     val questionSheetState = rememberBottomSheetScaffoldState()
     val optionsSheetState = rememberBottomSheetScaffoldState()
     val coroutineScope = rememberCoroutineScope()
-    val showDeleteDialog = remember { mutableStateOf(false) }
-    val selectedQuestionUids = remember { mutableStateListOf<String>() }
-    val questionsFlow = viewModel.dataManager.questions.collectAsState()
-    val questions = remember { mutableStateListOf<QuestionIO>() }
+    val showAddToSheet = remember { mutableStateOf(false) }
+    val showDeleteDialog = remember(collectionDetail) { mutableStateOf(false) }
+    val selectedQuestionUids = remember(collectionDetail) { mutableStateListOf<String>() }
+    val questions = remember(collectionDetail.questions) { mutableStateListOf(
+        *collectionDetail.questions.toTypedArray()
+    ) }
     val interactiveStates = questions.map { rememberInteractiveCardState() }
     val stopChecking = {
         interactiveStates.forEach {
@@ -206,14 +210,12 @@ private fun ContentLayout(
         }
     }
     LaunchedEffect(key1 = questions.size) {
-        viewModel.dataManager.questions.value?.apply {
-            clear()
-            addAll(questions)
+        coroutineScope.launch(Dispatchers.Default) {
+            collectionDetail.questionUidList.apply {
+                addAll(questions.map { it.uid })
+            }
+            requestCollectionSave()
         }
-    }
-    LaunchedEffect(questionsFlow.value) {
-        questions.clear()
-        questions.addAll(questionsFlow.value.orEmpty().toTypedArray())
     }
 
     if(selectedQuestionUids.size > 0) {
@@ -226,6 +228,27 @@ private fun ContentLayout(
         .padding(horizontal = 4.dp, vertical = 4.dp)
         .wrapContentHeight()
         .fillMaxWidth()
+
+    if(showAddToSheet.value) {
+        AddToSessionCollectionSheet(
+            tabs = mutableListOf(
+                stringResource(id = R.string.screen_sessions_title)
+            ),
+            sessions = sessions.value,
+            isShimmering = sessions.value == null,
+            selectedCollections = selectedQuestionUids,
+            onConfirmation = { sessionList, _ ->
+                if(sessionList.isNullOrEmpty().not()) {
+                    viewModel.requestSessionsSave(sessionList.orEmpty())
+                }
+                stopChecking()
+                showAddToSheet.value = false
+            },
+            onDismissRequest = {
+                showAddToSheet.value = false
+            }
+        )
+    }
 
     if(showDeleteDialog.value) {
         BasicAlertDialog(
@@ -268,6 +291,7 @@ private fun ContentLayout(
             )
         },
         onQuestionTestPlay = onNavigateToQuestionTest,
+        state = questionSheetState,
         content = {
             ListOptionsBottomSheet(
                 modifier = Modifier
@@ -295,9 +319,8 @@ private fun ContentLayout(
                         leadingImageVector = Icons.Outlined.SelectAll,
                         text = stringResource(id = R.string.button_select_all)
                     ) {
-                        coroutineScope.launch(Dispatchers.Default) {
-                            val missingItems = questions.filter { selectedQuestionUids.contains(it.uid).not() }.map { it.uid }
-                            selectedQuestionUids.addAll(missingItems)
+                        interactiveStates.forEach {
+                            it.isChecked.value = true
                         }
                     }
                     ImageAction(
@@ -307,10 +330,17 @@ private fun ContentLayout(
                         selectedQuestionUids.clear()
                     }
                     ImageAction(
+                        leadingImageVector = Icons.Outlined.Add,
+                        text = stringResource(id = R.string.button_add_to)
+                    ) {
+                        viewModel.requestSessions()
+                        showAddToSheet.value = true
+                    }
+                    ImageAction(
                         leadingImageVector = Icons.Outlined.PlayArrow,
                         text = stringResource(id = R.string.button_start_session)
                     ) {
-                        navigateToSession(selectedQuestionUids)
+                        navigateToSession(selectedQuestionUids.toList())
                         stopChecking()
                     }
                 },
@@ -446,8 +476,7 @@ private fun ContentLayout(
                     }
                 }
             }
-        },
-        state = questionSheetState
+        }
     )
 }
 

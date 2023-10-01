@@ -34,6 +34,7 @@
     <string name="answer_is_correct_ticked">Correct answer</string>
     <string name="answer_is_correct_not_ticked">Wrong answer</string>
 
+    <string name="session_detail_default_toolbar">New session</string>
     <string name="session_lobby_screen_empty_text">No knowledge growth…yet!:(</string>
     <string name="session_lobby_screen_delete_title">Session deletion</string>
     <string name="session_lobby_screen_delete_text">
@@ -86,6 +87,8 @@
 
 
     <!--- =================================== BUTTONS ========================================== -->
+    <string name="button_add">Add</string>
+    <string name="button_add_to">Add to</string>
     <string name="button_add_image">Add an image</string>
     <string name="button_add_prompt_image">Add prompt image</string>
     <string name="button_add_explanation_image">Add explanation image</string>
@@ -107,6 +110,7 @@
     <string name="button_delete">Delete</string>
     <string name="button_select_all">Select all</string>
     <string name="button_deselect">Deselect all</string>
+    <string name="button_cancel">Cancel</string>
 
 
     <!--- ============================= CONTENT DESCRIPTION ==================================== -->

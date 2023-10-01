@@ -7,5 +7,6 @@ import androidx.compose.runtime.mutableStateOf
 data class InteractiveCardState (
     var mode: MutableState<InteractiveCardMode> = mutableStateOf(InteractiveCardMode.DATA_DISPLAY),
     var isChecked: MutableState<Boolean> = mutableStateOf(false),
+    var isEnabled: MutableState<Boolean> = mutableStateOf(true),
     val onCheckedChange: ((Boolean) -> Unit) = {}
 )
