@@ -19,7 +19,9 @@
     <string name="collection_detail_name_hint">Name</string>
     <string name="collection_detail_description_hint">Description</string>
     <string name="collection_detail_questions_heading">Questions</string>
-    <string name="collection_detail_new_response">I know, I know! It\'s…</string>
+    <string name="collection_detail_new_response">Custom</string>
+    <string name="collection_detail_old_response">Random</string>
+    <string name="collection_detail_no_old_response">There are no other answers in this collection.</string>
     <string name="question_answers">Answers</string>
     <string name="question_edit_field_prompt_hint">Ask away…</string>
     <string name="question_edit_field_prompt_header">Prompt</string>

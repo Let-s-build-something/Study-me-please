@@ -3,9 +3,15 @@
     <string-array name="field_prompt_hint">
         <item>What\'s the first ball kicked?…</item>
         <item>How many dogs does ear have?…</item>
-        <item>Seeds in apples?…</item>
-        <item>How come no seeds in wine?…</item>
+        <item>How many seeds are there in apples?…</item>
+        <item>How come there are no seeds in wine?…</item>
         <item>Is wine just alcoholic juice?…</item>
+        <item>Would you mind closing the door?…</item>
+        <item>Aren\'t you afraid?…</item>
+        <item>Will you hold my hand?…</item>
+        <item>What is kilometer in miles?…</item>
+        <item>What is kilogram in pounds?…</item>
+        <item>How much does the universe expand each second?…</item>
     </string-array>
     <string-array name="random_name">
         <item>Monkey</item>

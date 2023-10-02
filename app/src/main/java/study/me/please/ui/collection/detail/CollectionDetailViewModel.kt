@@ -6,6 +6,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import study.me.please.base.BaseViewModel
+import study.me.please.base.GeneralClipBoard
 import study.me.please.data.io.CollectionIO
 import study.me.please.data.io.QuestionIO
 import study.me.please.data.io.SessionIO
@@ -14,7 +15,8 @@ import javax.inject.Inject
 @HiltViewModel
 class CollectionDetailViewModel @Inject constructor(
     private val repository: CollectionDetailRepository,
-    val dataManager: CollectionDetailDataManager
+    val dataManager: CollectionDetailDataManager,
+    val clipBoard: GeneralClipBoard
 ): BaseViewModel() {
 
     /** Requests for a specific collection by an ID */

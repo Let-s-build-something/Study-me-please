@@ -139,11 +139,11 @@ private fun ContentLayout(
             .animateContentSize()
             .padding(vertical = 8.dp, horizontal = 12.dp)
     ) {
-        val (checkBox, imgMode, txtName, txtQuestionCount, txtCollections) = createRefs()
+        val (checkBox, imgMode, txtName, txtQuestionCount) = createRefs()
         AnimatedVisibility(
             modifier = Modifier.constrainAs(checkBox) {
-                start.linkTo(parent.start, (-8).dp)
-                top.linkTo(parent.top, (-12).dp)
+                start.linkTo(parent.start)
+                top.linkTo(parent.top)
             },
             visible = state.mode.value == InteractiveCardMode.CHECKING
         ) {

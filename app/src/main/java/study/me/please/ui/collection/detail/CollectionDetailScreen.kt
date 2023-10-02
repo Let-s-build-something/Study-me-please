@@ -62,6 +62,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import study.me.please.R
 import study.me.please.base.navigation.CollectionDetailAppBarActions
 import study.me.please.base.navigation.NavigationUtils
@@ -77,8 +78,9 @@ import study.me.please.ui.components.InteractiveCardMode
 import study.me.please.ui.components.ListOptionsBottomSheet
 import study.me.please.ui.components.QuestionCard
 import study.me.please.ui.components.rememberInteractiveCardState
+import java.util.UUID
 
-const val REQUEST_DATA_SAVE_DELAY = 1000L
+const val REQUEST_DATA_SAVE_DELAY = 500L
 
 /**
  * Screen for creating a new collection
@@ -292,6 +294,24 @@ private fun ContentLayout(
         },
         onQuestionTestPlay = onNavigateToQuestionTest,
         state = questionSheetState,
+        clipBoard = viewModel.clipBoard,
+        addExistingAnswer = {
+            withContext(Dispatchers.Default) {
+                questions.filter { it.uid != questionInEdit.value.uid }
+                    .flatMap { question -> question.answers.map { answer ->
+                      answer.copy().also {
+                          it.explanationMessage = "${question.prompt}\n\n${it.explanationMessage}"
+                      }
+                    } }
+                    .filter { newAnswer ->
+                        questionInEdit.value.answers.any { oldAnswer ->
+                            oldAnswer.text == newAnswer.text
+                        }.not()
+                    }
+                    .randomOrNull()
+                    ?.copy(uid = UUID.randomUUID().toString())
+            }
+        },
         content = {
             ListOptionsBottomSheet(
                 modifier = Modifier
@@ -488,11 +508,11 @@ private fun ShimmerLayout() {
         modifier = Modifier
             .fillMaxWidth()
             .verticalScroll(rememberScrollState())
+            .padding(start = 4.dp, end = 4.dp, top = 8.dp, bottom = 32.dp)
             .background(
                 LocalTheme.colors.onBackgroundComponent,
                 shape = LocalTheme.shapes.componentShape
             )
-            .padding(start = 4.dp, end = 4.dp, top = 8.dp, bottom = 32.dp)
     ) {
         Box(
             modifier = Modifier

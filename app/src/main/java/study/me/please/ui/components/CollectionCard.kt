@@ -188,6 +188,7 @@ private fun DataCard(
                     shape = LocalTheme.shapes.circularActionShape
                 )
                 .clip(LocalTheme.shapes.circularActionShape)
+                .padding(8.dp)
                 .constrainAs(imgIcon) {
                     top.linkTo(parent.top)
                     end.linkTo(parent.end)

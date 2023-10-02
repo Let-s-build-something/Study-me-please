@@ -1,4 +1,4 @@
-package study.me.please.data.providers
+package study.me.please.hilt
 
 import android.content.Context
 import androidx.room.Room
