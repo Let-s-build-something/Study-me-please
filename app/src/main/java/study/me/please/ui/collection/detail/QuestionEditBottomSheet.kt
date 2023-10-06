@@ -162,7 +162,6 @@ fun QuestionEditBottomSheetContent(
                 .wrapContentHeight()
                 .fillMaxWidth()
 
-            val contentScrollState = rememberScrollState()
             val coroutineScope = rememberCoroutineScope()
             val localDensity = LocalDensity.current
             var stickyHeaderHeight by remember { mutableStateOf(0.dp) }
@@ -172,6 +171,7 @@ fun QuestionEditBottomSheetContent(
                 modifier = Modifier
                     .wrapContentHeight()
                     .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
                     .padding(
                         start = 8.dp,
                         end = 8.dp,
@@ -180,14 +180,13 @@ fun QuestionEditBottomSheetContent(
                     .animateContentSize()
                     .systemBarsPadding()
             ) {
-                val (stickyHeader, scrollableContent) = createRefs()
+                val (stickyHeader, headerContent, questionsContent) = createRefs()
 
                 Column(
                     modifier = Modifier
                         .wrapContentHeight()
                         .fillMaxWidth()
-                        .verticalScroll(contentScrollState)
-                        .constrainAs(scrollableContent) {
+                        .constrainAs(headerContent) {
                             top.linkTo(parent.top)
                             linkTo(parent.start, parent.end)
                             width = Dimension.fillToConstraints
@@ -325,12 +324,35 @@ fun QuestionEditBottomSheetContent(
                             }
                         }
                     }
+                }
+                Column(
+                  modifier = Modifier
+                      .constrainAs(questionsContent) {
+                          linkTo(parent.start, parent.end)
+                          top.linkTo(headerContent.bottom)
+                          width = Dimension.fillToConstraints
+                      }
+                ) {
+                    Spacer(
+                        modifier = Modifier
+                            .height(stickyHeaderHeight + 16.dp)
+                            .systemBarsPadding()
+                    )
                     answers.forEachIndexed { index, answer ->
                         (interactiveStates.getOrNull(index) ?: rememberInteractiveCardState()).let { state ->
                             LaunchedEffect(key1 = state.isChecked.value) {
                                 if(state.isChecked.value) {
                                     selectedAnswerUids.add(answer?.uid ?: "")
                                 }else selectedAnswerUids.remove(answer?.uid)
+                            }
+                            LaunchedEffect(state.mode.value == InteractiveCardMode.EDIT) {
+                                if(state.mode.value == InteractiveCardMode.EDIT) {
+                                    interactiveStates.forEachIndexed { stateIndex, state ->
+                                        if(index != stateIndex) {
+                                            state.mode.value = InteractiveCardMode.DATA_DISPLAY
+                                        }
+                                    }
+                                }
                             }
                             QuestionAnswerCard(
                                 modifier = Modifier
@@ -346,11 +368,6 @@ fun QuestionEditBottomSheetContent(
                             )
                         }
                     }
-                    Spacer(
-                        modifier = Modifier
-                            .height(stickyHeaderHeight + 16.dp)
-                            .systemBarsPadding()
-                    )
                 }
                 Column(
                     modifier = Modifier
@@ -361,7 +378,7 @@ fun QuestionEditBottomSheetContent(
                                 with(localDensity) { coordinates.size.height.toDp() }
                         }
                         .constrainAs(stickyHeader) {
-                            bottom.linkTo(parent.bottom, 8.dp)
+                            top.linkTo(headerContent.bottom, 8.dp)
                             linkTo(parent.start, parent.end)
                         }
                 ) {
@@ -408,12 +425,11 @@ fun QuestionEditBottomSheetContent(
                             modifier = Modifier.weight(1f),
                             text = stringResource(id = R.string.collection_detail_new_response)
                         ) {
-                            stopChecking()
-                            answers.add(
-                                QuestionAnswerIO()
-                            )
-                            coroutineScope.launch {
-                                contentScrollState.scrollTo(answers.size)
+                            if(answers.firstOrNull()?.isEmpty != true) {
+                                stopChecking()
+                                answers.add(0, QuestionAnswerIO())
+                            }else {
+                                interactiveStates.firstOrNull()?.mode?.value = InteractiveCardMode.EDIT
                             }
                         }
                         BrandHeaderButton(
@@ -488,7 +504,7 @@ fun QuestionEditBottomSheetContent(
                 questionIO.answers = new.filterNotNull().toMutableList()
             }
             requestDataSave()
-            interactiveStates.lastOrNull()?.mode?.value = InteractiveCardMode.EDIT
+            interactiveStates.firstOrNull()?.mode?.value = InteractiveCardMode.EDIT
         }else {
             answers.let { new ->
                 questionIO.answers = new.filterNotNull().toMutableList()

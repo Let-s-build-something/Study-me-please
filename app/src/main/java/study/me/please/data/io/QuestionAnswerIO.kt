@@ -28,4 +28,11 @@ data class QuestionAnswerIO (
     /** whether this answer is the correct one to a parent prompt */
     @SerializedName("is_correct")
     var isCorrect: Boolean = false
-): Serializable
+): Serializable {
+
+    /** whether this object has no important data */
+    val isEmpty: Boolean
+        get() = text.isEmpty()
+            && explanationMessage.isEmpty()
+            && imageExplanation?.isEmpty != false
+}
