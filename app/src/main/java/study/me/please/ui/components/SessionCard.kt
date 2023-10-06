@@ -54,8 +54,7 @@ fun SessionCard(
     session: SessionIO?,
     state: InteractiveCardState,
     onEditOptionPressed: () -> Unit = {},
-    onPlayOptionPressed: () -> Unit = {},
-    onLongClick: () -> Unit = {}
+    onPlayOptionPressed: () -> Unit = {}
 ) {
     AnimatedContent(
         targetState = session == null,
@@ -85,9 +84,7 @@ fun SessionCard(
                             }
                         },
                         onLongClick = {
-                            state.mode.value = InteractiveCardMode.CHECKING
                             state.isChecked.value = true
-                            onLongClick()
                         },
                         enabled = state.isEnabled.value
                     ),

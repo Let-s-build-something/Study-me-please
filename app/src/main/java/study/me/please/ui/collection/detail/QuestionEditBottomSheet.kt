@@ -372,6 +372,7 @@ fun QuestionEditBottomSheetContent(
                                 clipBoard.answers.copyItems(
                                     answers.filter { selectedAnswerUids.contains(it?.uid) }.filterNotNull()
                                 )
+                                stopChecking()
                             }
                         },
                         onPasteRequest = {

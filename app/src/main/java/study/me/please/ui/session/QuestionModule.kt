@@ -31,7 +31,6 @@ data class QuestionModule(
         set(value) {
             field = value
             if(value.isNotEmpty()) {
-                Log.d("question_module", "init, questionStack: ${questionsStack.size}")
                 // TODO if we want to support browsing through history, this has to change
                 if(questionsStack.isEmpty()) {
                     questionsStack.addAll(questions.shuffled())

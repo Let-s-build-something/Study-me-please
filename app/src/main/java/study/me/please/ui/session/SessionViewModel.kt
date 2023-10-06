@@ -24,8 +24,6 @@ class SessionViewModel @Inject constructor(
         sessionUid: String?,
         preferencePackUid: String?
     ) {
-        Log.d("session_screen", "requestStateData, collectionUid: $collectionUid, questionUid: $questionUid," +
-            " questionUids: $questionUids, sessionUid: $sessionUid, preferencePackUid: $preferencePackUid")
         viewModelScope.launch {
             val questions = mutableListOf<QuestionIO>()
             repository.getCollectionByUid(collectionUid)?.let { collectionDetail ->
@@ -46,7 +44,6 @@ class SessionViewModel @Inject constructor(
             // session has both collections and questions
             // so we first retrieve collections to get all the necessary uids to get all questions needed
             repository.getSessionByUid(sessionUid)?.let { session ->
-                Log.d("session_screen", "requestStateData, session: $session")
                 dataManager.session.value = session
                 dataManager.preferencePack.value = session.preferencePack
                 repository.getQuestionsByUid(session.questionUidList.toList())?.let { questionsOut ->
@@ -76,7 +73,6 @@ class SessionViewModel @Inject constructor(
                 dataManager.preferencePack.value = dataManager.preferencePacks.value
                     ?.firstOrNull() ?: SessionPreferencePack()
             }
-            Log.d("session_screen", "requestStateData, final questions: $questions")
             dataManager.questions.value = questions
         }
     }

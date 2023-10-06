@@ -66,7 +66,7 @@ import study.me.please.ui.components.rememberInteractiveCardState
 /** communication bridge for controlling session lobby screen */
 interface SessionLobbyListener {
     fun onCreateNewItem()
-    fun onCheckingStarted(sessionUid: String)
+    fun onCheckingStarted()
 }
 
 /**
@@ -114,7 +114,7 @@ fun SessionLobbyScreen(
                 sessions.value.add(0, newSession)
                 stopChecking()
             }
-            override fun onCheckingStarted(sessionUid: String) {
+            override fun onCheckingStarted() {
                 interactiveStates.forEach {
                     it.mode.value = InteractiveCardMode.CHECKING
                 }
@@ -134,9 +134,7 @@ fun SessionLobbyScreen(
     LaunchedEffect(key1 = selectedSessionUids.size) {
         coroutineScope.launch {
             if(selectedSessionUids.size > 0) {
-                interactiveStates.forEach {
-                    it.mode.value = InteractiveCardMode.CHECKING
-                }
+                listener.onCheckingStarted()
                 optionsSheetState.bottomSheetState.expand()
                 localFocusManager.clearFocus()
             }else stopChecking()
@@ -297,9 +295,6 @@ fun SessionLobbyScreen(
                                         sessionUid = session.uid,
                                         toolbarTitle = session.name
                                     )
-                                },
-                                onLongClick = {
-                                    listener.onCheckingStarted(session.uid)
                                 },
                                 state = state
                             )

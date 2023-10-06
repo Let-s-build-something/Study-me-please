@@ -225,6 +225,11 @@ private fun ContentLayout(
             stopChecking()
         }
     }
+    if(questionInEdit.value.uid.isNotEmpty()) {
+        BackHandler {
+            questionInEdit.value = QuestionIO(uid = "")
+        }
+    }
 
     val itemModifier = Modifier
         .padding(horizontal = 4.dp, vertical = 4.dp)

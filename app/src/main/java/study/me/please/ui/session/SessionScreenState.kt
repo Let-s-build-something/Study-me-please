@@ -89,8 +89,10 @@ data class SessionScreenState(
                 && sessionPreferencePack.value.waitForCorrectAnswer.value.not()
             ) {
                 mode.value = SessionScreenMode.LOCKED
+                injectCorrectValidations()
             }else if(validations.filter { it.isCorrect }.size == currentItem.value.correctAnswers.size) {
                 mode.value = SessionScreenMode.LOCKED
+                injectCorrectValidations()
             }
             if(mode.value == SessionScreenMode.LOCKED
                 && validations.any { it.isCorrect.not() }
@@ -100,6 +102,21 @@ data class SessionScreenState(
                     module.injectQuestion(
                         question = question,
                         isMistake = true
+                    )
+                }
+            }
+        }
+    }
+
+    private suspend fun injectCorrectValidations() {
+        withContext(Dispatchers.Default) {
+            currentItem.value.question?.answers?.forEach { answer ->
+                if(validations.any { it.uid == answer.uid }.not() && answer.isCorrect) {
+                    validations.add(
+                        SessionAnswerValidation(
+                            uid = answer.uid,
+                            isCorrect = true
+                        )
                     )
                 }
             }

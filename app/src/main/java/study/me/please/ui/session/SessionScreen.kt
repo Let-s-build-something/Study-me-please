@@ -1,6 +1,7 @@
 package study.me.please.ui.session
 
 import android.annotation.SuppressLint
+import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -23,6 +24,7 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -175,7 +177,14 @@ private fun PromptLayout(
     sessionItem: SessionQuestion,
     state: SessionScreenState
 ) {
-    val question = sessionItem.question ?: sessionItem.historyItem?.questionIO
+    val question = remember(sessionItem) {
+        sessionItem.question ?: sessionItem.historyItem?.questionIO
+    }
+    val answers = remember(question, sessionItem) {
+        derivedStateOf {
+            question?.answers?.shuffled()
+        }
+    }
     val selectedAnswers = remember(sessionItem) { mutableStateListOf<QuestionAnswerIO>() }
 
     ConstraintLayout(
@@ -236,11 +245,13 @@ private fun PromptLayout(
                 }
             }
             items(
-                question?.answers.orEmpty(),
+                answers.value.orEmpty(),
                 key = { it.uid }
             ) { answer ->
                 val validation = (sessionItem.historyItem?.answers ?: state.validations).find { it.uid == answer.uid }
                 val showResult = validation != null
+
+                Log.d("session_screen", "answer: ${answer.text},  showResult: $showResult, validation: $validation")
                 OutlinedButton(
                     modifier = if(showResult) {
                         Modifier

@@ -66,7 +66,8 @@ sealed class ClipBoard<T: Any>(protected val list: SnapshotStateList<T> = mutabl
                 list.addAll(
                     items.map {
                         it.copy(
-                            uid = UUID.randomUUID().toString()
+                            uid = UUID.randomUUID().toString(),
+                            isCorrect = false
                         )
                     }
                 )
