@@ -43,7 +43,7 @@ fun ImageAction(
             horizontal = 12.dp
         ),
         shape = LocalTheme.shapes.componentShape,
-        colors = ButtonColors(
+        colors = ButtonDefaults.buttonColors(
             containerColor = containerColor,
             contentColor = contentColor,
             disabledContainerColor = LocalTheme.colors.disabled,

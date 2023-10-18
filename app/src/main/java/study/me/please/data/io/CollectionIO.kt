@@ -44,12 +44,11 @@ data class CollectionIO(
     val uid: String = UUID.randomUUID().toString(),
 
     /** list of all question identifiers contained in this collection */
-    var questionUidList: MutableSet<String> = mutableSetOf()
-): Serializable {
+    var questionUidList: MutableSet<String> = mutableSetOf(),
 
-    /** local temporary save of downloaded questions */
-    @Ignore
-    var questions: List<QuestionIO> = listOf()
+    /** list of all fact identifiers related to this collection */
+    val factUidList: MutableSet<String> = mutableSetOf()
+): Serializable {
 
     /** Checks whether object contains any non-default data */
     val isNotEmpty: Boolean

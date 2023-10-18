@@ -12,7 +12,7 @@ interface QuestionDao {
 
     /** Returns a single question based on their identification [questionUid] */
     @Query("SELECT * FROM ${AppRoomDatabase.ROOM_QUESTION_TABLE} WHERE uid == :questionUid LIMIT 1")
-    suspend fun `getQuestionByUid`(questionUid: String): QuestionIO?
+    suspend fun getQuestionByUid(questionUid: String): QuestionIO?
 
     /** Returns a single collection based on their identification [questionUids] */
     @Query("SELECT * FROM ${AppRoomDatabase.ROOM_QUESTION_TABLE} WHERE uid in (:questionUids) ORDER BY date_created DESC")

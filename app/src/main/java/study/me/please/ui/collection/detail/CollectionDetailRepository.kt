@@ -3,9 +3,11 @@ package study.me.please.ui.collection.detail
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import study.me.please.data.io.CollectionIO
+import study.me.please.data.io.FactIO
 import study.me.please.data.io.QuestionIO
 import study.me.please.data.io.SessionIO
 import study.me.please.data.room.CollectionDao
+import study.me.please.data.room.FactDao
 import study.me.please.data.room.QuestionDao
 import study.me.please.data.room.SessionDao
 import javax.inject.Inject
@@ -14,7 +16,8 @@ import javax.inject.Inject
 class CollectionDetailRepository @Inject constructor(
     private val collectionDao: CollectionDao,
     private val sessionDao: SessionDao,
-    private val questionDao: QuestionDao
+    private val questionDao: QuestionDao,
+    private val factDao: FactDao
 ) {
 
     /** Returns a collection by its uid - [collectionUid] */
@@ -63,6 +66,29 @@ class CollectionDetailRepository @Inject constructor(
     suspend fun saveSessions(sessions: List<SessionIO>) {
         withContext(Dispatchers.IO) {
             sessionDao.insertSessions(sessions)
+        }
+    }
+
+    //========= FACTS ===========
+
+    /** Returns a list of facts by their identifiers - [factsUidList] */
+    suspend fun getFactsByUid(factsUidList: List<String>): List<FactIO>? {
+        return withContext(Dispatchers.IO) {
+            factDao.getFactsByUid(factsUidList)
+        }
+    }
+
+    /** removes all facts with uid from the provided list [uidList] */
+    suspend fun deleteFacts(uidList: List<String>) {
+        withContext(Dispatchers.IO) {
+            factDao.deleteFacts(uidList)
+        }
+    }
+
+    /** saves a fact */
+    suspend fun saveFact(fact: FactIO) {
+        return withContext(Dispatchers.IO) {
+            factDao.insertFact(fact)
         }
     }
 }

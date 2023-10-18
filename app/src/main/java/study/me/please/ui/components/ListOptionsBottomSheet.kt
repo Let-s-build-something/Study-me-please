@@ -2,7 +2,6 @@ package study.me.please.ui.components
 
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Arrangement.Absolute.SpaceAround
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -11,9 +10,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.material.BottomSheetScaffoldState
-import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.rememberBottomSheetScaffoldState
+import androidx.compose.material3.BottomSheetScaffoldState
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.rememberBottomSheetScaffoldState
+import androidx.compose.material3.rememberStandardBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -24,7 +24,7 @@ import com.squadris.squadris.compose.theme.LocalTheme
  * Bottom sheet layout for editing a question
  * material3 library crashes due to internal issue - TODO make a switch the moment it works
  */
-@OptIn(ExperimentalMaterialApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Preview
 @Composable
 fun ListOptionsBottomSheet(
@@ -33,7 +33,9 @@ fun ListOptionsBottomSheet(
     topBar: (@Composable () -> Unit)? = null,
     actions: @Composable () -> Unit = {},
     sheetContentModifier: Modifier = Modifier,
-    state: BottomSheetScaffoldState = rememberBottomSheetScaffoldState(),
+    state: BottomSheetScaffoldState = rememberBottomSheetScaffoldState(
+        bottomSheetState = rememberStandardBottomSheetState(skipHiddenState = false)
+    ),
     content: @Composable (paddingValues: PaddingValues) -> Unit = {}
 ) {
     SimpleBottomSheet(

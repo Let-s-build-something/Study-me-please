@@ -47,6 +47,7 @@ import study.me.please.R
 import study.me.please.data.io.LargePathAsset
 import study.me.please.data.io.QuestionAnswerIO
 import study.me.please.ui.collection.detail.INPUT_DELAYED_RESPONSE_MILLIS
+import study.me.please.ui.components.tab_switch.DEFAULT_ANIMATION_LENGTH_SHORT
 
 /** Card with the option of editing data inside */
 @Composable
@@ -228,7 +229,7 @@ private fun DataCard(
                     width = Dimension.fillToConstraints
                 },
             label = "",
-            animationSpec = tween(durationMillis = 300)
+            animationSpec = tween(durationMillis = DEFAULT_ANIMATION_LENGTH_SHORT)
         ) { inEditMode ->
             if(inEditMode) {
                 EditFieldInput(
@@ -270,7 +271,7 @@ private fun DataCard(
                     width = Dimension.fillToConstraints
                 },
             label = "",
-            animationSpec = tween(durationMillis = 300)
+            animationSpec = tween(durationMillis = DEFAULT_ANIMATION_LENGTH_SHORT)
         ) { inEditMode ->
             if(inEditMode) {
                 EditFieldInput(

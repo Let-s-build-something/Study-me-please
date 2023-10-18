@@ -6,6 +6,7 @@ import androidx.compose.runtime.snapshots.SnapshotStateList
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import study.me.please.data.io.CollectionIO
+import study.me.please.data.io.FactIO
 import study.me.please.data.io.QuestionAnswerIO
 import study.me.please.data.io.QuestionIO
 import java.util.UUID
@@ -68,6 +69,20 @@ sealed class ClipBoard<T: Any>(protected val list: SnapshotStateList<T> = mutabl
                         it.copy(
                             uid = UUID.randomUUID().toString(),
                             isCorrect = false
+                        )
+                    }
+                )
+            }
+        }
+    }
+
+    class FactClipBoard: ClipBoard<FactIO>() {
+        override suspend fun copyItems(items: List<FactIO>) {
+            withContext(Dispatchers.Default) {
+                list.addAll(
+                    items.map {
+                        it.copy(
+                            uid = UUID.randomUUID().toString()
                         )
                     }
                 )

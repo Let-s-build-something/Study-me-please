@@ -36,14 +36,13 @@ private fun HeaderButton(
 ) {
     Button(
         onClick = onClick,
-        modifier = modifier
-            .fillMaxWidth(),
+        modifier = modifier,
         contentPadding = PaddingValues(
             vertical = 6.dp,
             horizontal = 10.dp
         ),
-        shape = LocalTheme.shapes.componentShape,
-        colors = ButtonColors(
+        shape = LocalTheme.shapes.circularActionShape,
+        colors = ButtonDefaults.buttonColors(
             containerColor = containerColor,
             contentColor = contentColor,
             disabledContainerColor = LocalTheme.colors.disabled,
@@ -62,7 +61,8 @@ private fun HeaderButton(
         )
         if(text.isNotEmpty()) {
             Text(
-                modifier = Modifier,
+                modifier = Modifier
+                    .padding(end = 4.dp),
                 text = text,
                 fontSize = 16.sp,
                 color = contentColor,

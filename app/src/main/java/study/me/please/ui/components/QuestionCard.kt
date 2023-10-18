@@ -34,6 +34,7 @@ import androidx.constraintlayout.compose.Dimension
 import com.squadris.squadris.compose.theme.LocalTheme
 import study.me.please.R
 import study.me.please.data.io.QuestionIO
+import study.me.please.ui.components.tab_switch.DEFAULT_ANIMATION_LENGTH_SHORT
 
 /** Card with the option of editing data inside */
 @Composable
@@ -52,7 +53,11 @@ fun QuestionCard(
             state = state,
             onNavigateToSession = onNavigateToSession,
             requestDataSave = requestDataSave,
-            onClick = onClick
+            onClick = {
+                if(state.mode.value == InteractiveCardMode.CHECKING) {
+                    state.isChecked.value = state.isChecked.value.not()
+                }else onClick()
+            }
         )
     }else {
         ShimmerLayout()
@@ -99,7 +104,7 @@ private fun ContentLayout(
         Crossfade(
             targetState = state.mode.value == InteractiveCardMode.OPTIONS,
             label = "",
-            animationSpec = tween(durationMillis = 200)
+            animationSpec = tween(durationMillis = DEFAULT_ANIMATION_LENGTH_SHORT)
         ) { isOptions ->
             if (isOptions) {
                 OptionsModeLayout(

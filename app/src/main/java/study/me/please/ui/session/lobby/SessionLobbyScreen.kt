@@ -18,9 +18,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Deselect
 import androidx.compose.material.icons.outlined.SelectAll
-import androidx.compose.material.rememberBottomSheetScaffoldState
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material3.rememberStandardBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -72,7 +73,7 @@ interface SessionLobbyListener {
 /**
  * Session lobby screen for management of sessions
  */
-@OptIn(ExperimentalMaterialApi::class, ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SessionLobbyScreen(
     navController: NavController,
@@ -80,7 +81,9 @@ fun SessionLobbyScreen(
     viewModel: SessionLobbyViewModel = hiltViewModel(),
     changeActionBar: (actions: @Composable RowScope.() -> Unit) -> Unit
 ) {
-    val optionsSheetState = rememberBottomSheetScaffoldState()
+    val optionsSheetState = rememberBottomSheetScaffoldState(
+        bottomSheetState = rememberStandardBottomSheetState(skipHiddenState = false)
+    )
     val preferencesSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val showPreferenceModal = remember { mutableStateOf(false) }
     val selectedSessionUids = remember { mutableStateListOf<String>() }
@@ -103,7 +106,7 @@ fun SessionLobbyScreen(
             it.mode.value = InteractiveCardMode.DATA_DISPLAY
         }
         coroutineScope.launch {
-            optionsSheetState.bottomSheetState.collapse()
+            optionsSheetState.bottomSheetState.hide()
         }
         selectedSessionUids.clear()
     }
@@ -321,17 +324,20 @@ fun EditableListShimmerLayout() {
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
+        Spacer(modifier = Modifier.height(LocalTheme.shapes.betweenItemsSpace))
+        repeat(3) {
+            Box(
+                modifier = Modifier
+                    .height(70.dp)
+                    .padding(start = 4.dp, end = 4.dp)
+                    .fillMaxWidth()
+                    .brandShimmerEffect(LocalTheme.shapes.componentShape)
+            )
+            Spacer(modifier = Modifier.height(LocalTheme.shapes.betweenItemsSpace))
+        }
         Box(
             modifier = Modifier
                 .height(55.dp)
-                .padding(top = 8.dp, start = 4.dp, end = 4.dp)
-                .fillMaxWidth()
-                .brandShimmerEffect(LocalTheme.shapes.componentShape)
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        Box(
-            modifier = Modifier
-                .height(65.dp)
                 .padding(start = 4.dp, end = 4.dp)
                 .fillMaxWidth()
                 .brandShimmerEffect(LocalTheme.shapes.componentShape)

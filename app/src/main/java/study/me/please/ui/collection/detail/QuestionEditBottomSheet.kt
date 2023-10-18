@@ -7,12 +7,12 @@ import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -23,9 +23,7 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.BottomSheetScaffoldState
 import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.Snackbar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.ContentPaste
@@ -34,8 +32,11 @@ import androidx.compose.material.icons.outlined.Deselect
 import androidx.compose.material.icons.outlined.Image
 import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material.icons.outlined.SelectAll
-import androidx.compose.material.rememberBottomSheetScaffoldState
+import androidx.compose.material3.BottomSheetScaffoldState
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberBottomSheetScaffoldState
+import androidx.compose.material3.rememberStandardBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
@@ -51,7 +52,6 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -82,6 +82,8 @@ import study.me.please.ui.components.QuestionAnswerCard
 import study.me.please.ui.components.SimpleBottomSheet
 import study.me.please.ui.components.TextHeader
 import study.me.please.ui.components.rememberInteractiveCardState
+import study.me.please.ui.components.tab_switch.DEFAULT_ANIMATION_LENGTH_LONG
+import study.me.please.ui.components.tab_switch.DEFAULT_ANIMATION_LENGTH_SHORT
 
 const val INPUT_DELAYED_RESPONSE_MILLIS = 500L
 
@@ -94,7 +96,7 @@ data class QuestionSheetState(
 )
 
 /** Bottom sheet layout for editing a question */
-@OptIn(ExperimentalMaterialApi::class)
+@OptIn(ExperimentalMaterialApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun QuestionEditBottomSheetContent(
     modifier: Modifier = Modifier,
@@ -103,7 +105,9 @@ fun QuestionEditBottomSheetContent(
     clipBoard: GeneralClipBoard,
     onQuestionTestPlay: (question: QuestionIO) -> Unit,
     onDeleteRequest: (selectedAnswerUids: List<String>) -> Unit = {},
-    state: BottomSheetScaffoldState = rememberBottomSheetScaffoldState(),
+    state: BottomSheetScaffoldState = rememberBottomSheetScaffoldState(
+        bottomSheetState = rememberStandardBottomSheetState(skipHiddenState = false)
+    ),
     content: @Composable (paddingValues: PaddingValues) -> Unit = {},
     addExistingAnswer: suspend () -> QuestionAnswerIO?,
     onDismissRequest: () -> Unit = {}
@@ -171,7 +175,6 @@ fun QuestionEditBottomSheetContent(
                 modifier = Modifier
                     .wrapContentHeight()
                     .fillMaxWidth()
-                    .verticalScroll(rememberScrollState())
                     .padding(
                         start = 8.dp,
                         end = 8.dp,
@@ -180,17 +183,16 @@ fun QuestionEditBottomSheetContent(
                     .animateContentSize()
                     .systemBarsPadding()
             ) {
-                val (stickyHeader, headerContent, questionsContent) = createRefs()
+                val (stickyHeader, questionsContent) = createRefs()
 
                 Column(
-                    modifier = Modifier
-                        .wrapContentHeight()
-                        .fillMaxWidth()
-                        .constrainAs(headerContent) {
-                            top.linkTo(parent.top)
-                            linkTo(parent.start, parent.end)
-                            width = Dimension.fillToConstraints
-                        }
+                  modifier = Modifier
+                      .verticalScroll(rememberScrollState())
+                      .constrainAs(questionsContent) {
+                          linkTo(parent.start, parent.end)
+                          top.linkTo(parent.top)
+                          width = Dimension.fillToConstraints
+                      }
                 ) {
                     ImageAction(
                         leadingImageVector = Icons.Outlined.PlayArrow,
@@ -324,20 +326,7 @@ fun QuestionEditBottomSheetContent(
                             }
                         }
                     }
-                }
-                Column(
-                  modifier = Modifier
-                      .constrainAs(questionsContent) {
-                          linkTo(parent.start, parent.end)
-                          top.linkTo(headerContent.bottom)
-                          width = Dimension.fillToConstraints
-                      }
-                ) {
-                    Spacer(
-                        modifier = Modifier
-                            .height(stickyHeaderHeight + 16.dp)
-                            .systemBarsPadding()
-                    )
+
                     answers.forEachIndexed { index, answer ->
                         (interactiveStates.getOrNull(index) ?: rememberInteractiveCardState()).let { state ->
                             LaunchedEffect(key1 = state.isChecked.value) {
@@ -368,17 +357,21 @@ fun QuestionEditBottomSheetContent(
                             )
                         }
                     }
+                    Spacer(
+                        modifier = Modifier
+                            .height(stickyHeaderHeight + 16.dp)
+                            .systemBarsPadding()
+                    )
                 }
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .wrapContentHeight()
                         .onGloballyPositioned { coordinates ->
-                            stickyHeaderHeight =
-                                with(localDensity) { coordinates.size.height.toDp() }
+                            stickyHeaderHeight = with(localDensity) { coordinates.size.height.toDp() }
                         }
                         .constrainAs(stickyHeader) {
-                            top.linkTo(headerContent.bottom, 8.dp)
+                            bottom.linkTo(parent.bottom, 8.dp)
                             linkTo(parent.start, parent.end)
                         }
                 ) {
@@ -393,7 +386,7 @@ fun QuestionEditBottomSheetContent(
                             }
                         },
                         onPasteRequest = {
-                            answers.addAll(clipBoard.answers.paste())
+                            answers.addAll(0, clipBoard.answers.paste())
                             requestDataSave()
                             stopChecking()
                         },
@@ -411,7 +404,9 @@ fun QuestionEditBottomSheetContent(
                         isEditMode = selectedAnswerUids.size > 0,
                         hasPasteOption = clipBoard.answers.isEmpty.value.not(),
                         animateTopDown = false
-                    )
+                    ) {
+
+                    }
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -433,7 +428,7 @@ fun QuestionEditBottomSheetContent(
                             }
                         }
                         BrandHeaderButton(
-                            modifier = Modifier.weight(1f),
+                            modifier = Modifier.weight(0.5f),
                             text = stringResource(id = R.string.collection_detail_old_response)
                         ) {
                             stopChecking()
@@ -504,6 +499,7 @@ fun QuestionEditBottomSheetContent(
                 questionIO.answers = new.filterNotNull().toMutableList()
             }
             requestDataSave()
+            stopChecking()
             interactiveStates.firstOrNull()?.mode?.value = InteractiveCardMode.EDIT
         }else {
             answers.let { new ->
@@ -535,7 +531,8 @@ fun OptionsLayout(
     onDeselectAll: () -> Unit = {},
     isEditMode: Boolean = false,
     hasPasteOption: Boolean = false,
-    animateTopDown: Boolean = true
+    animateTopDown: Boolean = true,
+    content: @Composable RowScope.() -> Unit = {}
 ) {
     Row(
         modifier = modifier
@@ -550,14 +547,32 @@ fun OptionsLayout(
         Spacer(modifier = Modifier.width(LocalTheme.shapes.betweenItemsSpace))
         AnimatedVisibility(
             modifier = Modifier.zIndex(-1f),
-            visible = isEditMode,
+            visible = hasPasteOption,
             enter = slideInVertically(
                 initialOffsetY = { it.times(if(animateTopDown) -2 else 2) },
-                animationSpec = tween(400)
+                animationSpec = tween(DEFAULT_ANIMATION_LENGTH_SHORT)
             ),
             exit = slideOutVertically(
                 targetOffsetY = { it.times(if(animateTopDown) -2 else 2) },
-                animationSpec = tween(400)
+                animationSpec = tween(DEFAULT_ANIMATION_LENGTH_SHORT)
+            )
+        ) {
+            ImageAction(
+                leadingImageVector = Icons.Outlined.ContentPaste,
+                text = stringResource(id = R.string.button_paste),
+                onClick = onPasteRequest
+            )
+        }
+        AnimatedVisibility(
+            modifier = Modifier.zIndex(-1f),
+            visible = isEditMode,
+            enter = slideInVertically(
+                initialOffsetY = { it.times(if(animateTopDown) -2 else 2) },
+                animationSpec = tween(DEFAULT_ANIMATION_LENGTH_SHORT)
+            ),
+            exit = slideOutVertically(
+                targetOffsetY = { it.times(if(animateTopDown) -2 else 2) },
+                animationSpec = tween(DEFAULT_ANIMATION_LENGTH_SHORT)
             )
         ) {
             Row(
@@ -569,10 +584,9 @@ fun OptionsLayout(
                 )
             ) {
                 ImageAction(
-                    leadingImageVector = Icons.Outlined.Delete,
-                    text = stringResource(id = R.string.button_delete),
-                    containerColor = Colors.RED_ERROR,
-                    onClick = onDeleteRequest
+                    leadingImageVector = Icons.Outlined.ContentCopy,
+                    text = stringResource(id = R.string.button_copy),
+                    onClick = onCopyRequest
                 )
                 if(selectAllVisible) {
                     ImageAction(
@@ -589,36 +603,20 @@ fun OptionsLayout(
                     )
                 }
                 ImageAction(
-                    leadingImageVector = Icons.Outlined.ContentCopy,
-                    text = stringResource(id = R.string.button_copy),
-                    onClick = onCopyRequest
+                    leadingImageVector = Icons.Outlined.Delete,
+                    text = stringResource(id = R.string.button_delete),
+                    containerColor = Colors.RED_ERROR,
+                    onClick = onDeleteRequest
                 )
             }
         }
-        AnimatedVisibility(
-            modifier = Modifier.zIndex(-1f),
-            visible = hasPasteOption,
-            enter = slideInVertically(
-                initialOffsetY = { it.times(if(animateTopDown) -2 else 2) },
-                animationSpec = tween(400)
-            ),
-            exit = slideOutVertically(
-                targetOffsetY = { it.times(if(animateTopDown) -2 else 2) },
-                animationSpec = tween(400)
-            )
-        ) {
-            ImageAction(
-                leadingImageVector = Icons.Outlined.ContentPaste,
-                text = stringResource(id = R.string.button_paste),
-                onClick = onPasteRequest
-            )
-        }
+        content(this)
         Spacer(modifier = Modifier.width(LocalTheme.shapes.betweenItemsSpace))
     }
 }
 
 @SuppressLint("UnrememberedMutableState")
-@OptIn(ExperimentalMaterialApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Preview
 @Composable
 private fun Preview() {

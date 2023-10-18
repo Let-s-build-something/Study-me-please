@@ -1,5 +1,6 @@
 package study.me.please.ui.components
 
+import androidx.compose.foundation.Indication
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.padding
@@ -25,6 +26,7 @@ fun MinimalisticIcon(
     modifier: Modifier = Modifier,
     imageVector: ImageVector,
     tint: Color = LocalTheme.colors.primary,
+    indication: Indication? = rememberRipple(bounded = false),
     contentDescription: String? = null,
     onClick: (() -> Unit)? = null
 ) {
@@ -34,7 +36,7 @@ fun MinimalisticIcon(
             .clip(CircleShape)
             .then(if(onClick != null) {
                 modifier.clickable(
-                    indication = rememberRipple(bounded = false),
+                    indication = indication,
                     interactionSource = remember { MutableInteractionSource() },
                     onClick = onClick
                 )

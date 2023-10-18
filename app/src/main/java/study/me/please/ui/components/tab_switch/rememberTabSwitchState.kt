@@ -4,6 +4,7 @@ import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -16,7 +17,7 @@ import androidx.compose.runtime.rememberCoroutineScope
  */
 @Composable
 fun rememberTabSwitchState(
-    selectedTabIndex: MutableState<Int> = mutableStateOf(0),
+    selectedTabIndex: MutableState<Int> = mutableIntStateOf(0),
     onSelectionChange: (index: Int) -> Unit = { index ->
         selectedTabIndex.value = index
     },

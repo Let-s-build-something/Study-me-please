@@ -1,8 +1,8 @@
 package study.me.please.ui.collection.detail
 
-import androidx.activity.compose.BackHandler
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -10,77 +10,69 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Add
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.Deselect
 import androidx.compose.material.icons.outlined.DocumentScanner
 import androidx.compose.material.icons.outlined.FileDownload
 import androidx.compose.material.icons.outlined.FileUpload
-import androidx.compose.material.icons.outlined.PlayArrow
-import androidx.compose.material.icons.outlined.SelectAll
-import androidx.compose.material.rememberBottomSheetScaffoldState
+import androidx.compose.material3.BottomAppBar
+import androidx.compose.material3.BottomAppBarDefaults.exitAlwaysScrollBehavior
+import androidx.compose.material3.BottomAppBarScrollBehavior
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Text
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.navigation.NavController
+import com.squadris.squadris.compose.components.CollapsingLayout
 import com.squadris.squadris.compose.theme.LocalTheme
-import com.squadris.squadris.compose.theme.Colors
 import com.squadris.squadris.ext.brandShimmerEffect
 import com.squadris.squadris.utils.OnLifecycleEvent
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import study.me.please.R
 import study.me.please.base.navigation.CollectionDetailAppBarActions
 import study.me.please.base.navigation.NavigationUtils
 import study.me.please.data.io.CollectionIO
+import study.me.please.data.io.FactIO
 import study.me.please.data.io.QuestionIO
-import study.me.please.ui.components.AddToSessionCollectionSheet
-import study.me.please.ui.components.BasicAlertDialog
-import study.me.please.ui.components.BrandHeaderButton
-import study.me.please.ui.components.ButtonState
 import study.me.please.ui.components.EditFieldInput
 import study.me.please.ui.components.ImageAction
-import study.me.please.ui.components.InteractiveCardMode
-import study.me.please.ui.components.ListOptionsBottomSheet
-import study.me.please.ui.components.QuestionCard
-import study.me.please.ui.components.rememberInteractiveCardState
-import java.util.UUID
+import study.me.please.ui.components.tab_switch.DEFAULT_ANIMATION_LENGTH_SHORT
+import study.me.please.ui.components.tab_switch.MultiChoiceSwitch
+import study.me.please.ui.components.tab_switch.rememberTabSwitchState
 
 const val REQUEST_DATA_SAVE_DELAY = 500L
+
+private const val PAGE_INDEX_QUESTIONS = 0
+private const val PAGE_INDEX_FACTS = 1
 
 /**
  * Screen for creating a new collection
@@ -94,7 +86,7 @@ fun CollectionDetailScreen(
     viewModel: CollectionDetailViewModel = hiltViewModel()
 ) {
     val coroutineScope = rememberCoroutineScope()
-    val collectionDetailFlow = viewModel.dataManager.collectionDetail.collectAsState()
+    val collectionDetailFlow = viewModel.collectionDetail.collectAsState()
 
     OnLifecycleEvent { event ->
         if(event == Lifecycle.Event.ON_RESUME) {
@@ -137,6 +129,13 @@ fun CollectionDetailScreen(
                     }
                 }
             },
+            requestFactSave = { fact ->
+                coroutineScope.coroutineContext.cancelChildren()
+                coroutineScope.launch {
+                    delay(REQUEST_DATA_SAVE_DELAY)
+                    viewModel.requestFactSave(fact)
+                }
+            },
             onNavigateToQuestionTest = { question ->
                 NavigationUtils.navigateToSession(
                     navController = navController,
@@ -158,7 +157,7 @@ fun CollectionDetailScreen(
 }
 
 /** Layout for main content - showing actual information */
-@OptIn(ExperimentalMaterialApi::class, ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 private fun ContentLayout(
     collectionDetail: CollectionIO,
@@ -166,68 +165,31 @@ private fun ContentLayout(
     viewModel: CollectionDetailViewModel,
     requestCollectionSave: () -> Unit,
     navigateToSession: (questionUids: List<String>) -> Unit,
-    requestQuestionSave: (question: QuestionIO) -> Unit
+    requestQuestionSave: (question: QuestionIO) -> Unit,
+    requestFactSave: (fact: FactIO) -> Unit
 ) {
-    val questionInEdit: MutableState<QuestionIO> = remember(collectionDetail) {
-        mutableStateOf(QuestionIO(uid = ""))
-    }
-    val localFocusManager = LocalFocusManager.current
-
-    val sessions = viewModel.dataManager.sessions.collectAsState()
-    val questionSheetState = rememberBottomSheetScaffoldState()
-    val optionsSheetState = rememberBottomSheetScaffoldState()
     val coroutineScope = rememberCoroutineScope()
-    val showAddToSheet = remember { mutableStateOf(false) }
-    val showDeleteDialog = remember(collectionDetail) { mutableStateOf(false) }
-    val selectedQuestionUids = remember(collectionDetail) { mutableStateListOf<String>() }
-    val questions = remember(collectionDetail.questions) { mutableStateListOf(
-        *collectionDetail.questions.toTypedArray()
-    ) }
-    val interactiveStates = questions.map { rememberInteractiveCardState() }
-    val stopChecking = {
-        interactiveStates.forEach {
-            it.isChecked.value = false
-            it.mode.value = InteractiveCardMode.DATA_DISPLAY
-        }
-        selectedQuestionUids.clear()
-        coroutineScope.launch {
-            optionsSheetState.bottomSheetState.collapse()
-        }
-    }
-    LaunchedEffect(questionInEdit.value) {
-        if(questionInEdit.value.uid.isNotEmpty()) {
-            localFocusManager.clearFocus()
-            questionSheetState.bottomSheetState.expand()
-        }else questionSheetState.bottomSheetState.collapse()
-    }
-    LaunchedEffect(key1 = selectedQuestionUids.size) {
-        coroutineScope.launch {
-            if(selectedQuestionUids.size > 0) {
-                interactiveStates.forEach {
-                    it.mode.value = InteractiveCardMode.CHECKING
-                }
-                optionsSheetState.bottomSheetState.expand()
-                localFocusManager.clearFocus()
-            }else stopChecking()
-        }
-    }
-    LaunchedEffect(key1 = questions.size) {
-        coroutineScope.launch(Dispatchers.Default) {
-            collectionDetail.questionUidList.apply {
-                addAll(questions.map { it.uid })
+    val contentPagerState = rememberPagerState { 2 }
+    val contentSwitchState = rememberTabSwitchState(
+        tabs = mutableListOf(
+            stringResource(id = R.string.collection_detail_page_questions),
+            stringResource(id = R.string.collection_detail_page_facts)
+        ),
+        selectedTabIndex = remember(collectionDetail) {
+            mutableIntStateOf(contentPagerState.currentPage)
+        },
+        onSelectionChange = { page ->
+            coroutineScope.launch {
+                contentPagerState.animateScrollToPage(
+                    page,
+                    animationSpec = tween(DEFAULT_ANIMATION_LENGTH_SHORT)
+                )
             }
-            requestCollectionSave()
         }
-    }
-
-    if(selectedQuestionUids.size > 0) {
-        BackHandler {
-            stopChecking()
-        }
-    }
-    if(questionInEdit.value.uid.isNotEmpty()) {
-        BackHandler {
-            questionInEdit.value = QuestionIO(uid = "")
+    )
+    LaunchedEffect(contentPagerState) {
+        snapshotFlow { contentPagerState.currentPage }.collect { page ->
+            contentSwitchState.selectedTabIndex.value = page
         }
     }
 
@@ -236,273 +198,125 @@ private fun ContentLayout(
         .wrapContentHeight()
         .fillMaxWidth()
 
-    if(showAddToSheet.value) {
-        AddToSessionCollectionSheet(
-            tabs = mutableListOf(
-                stringResource(id = R.string.screen_sessions_title)
-            ),
-            sessions = sessions.value,
-            isShimmering = sessions.value == null,
-            selectedCollections = selectedQuestionUids,
-            onConfirmation = { sessionList, _ ->
-                if(sessionList.isNullOrEmpty().not()) {
-                    viewModel.requestSessionsSave(sessionList.orEmpty())
-                }
-                stopChecking()
-                showAddToSheet.value = false
-            },
-            onDismissRequest = {
-                showAddToSheet.value = false
-            }
-        )
-    }
-
-    if(showDeleteDialog.value) {
-        BasicAlertDialog(
-            dialogTitle = stringResource(id = R.string.question_delete_dialog_title),
-            dialogText = stringResource(
-                id = R.string.question_delete_dialog_description,
-                selectedQuestionUids.size
-            ),
-            icon = Icons.Outlined.Delete,
-            confirmButtonState = ButtonState(
-                text = stringResource(id = R.string.button_confirm)
-            ) {
-                coroutineScope.launch(Dispatchers.Default) {
-                    questions.removeAll { selectedQuestionUids.contains(it.uid) }
-                    viewModel.requestQuestionsDeletion(uidList = selectedQuestionUids.toSet())
-                    stopChecking()
-                    showDeleteDialog.value = false
-                }
-            },
-            dismissButtonState = ButtonState(
-                text = stringResource(id = R.string.button_dismiss)
-            ) { showDeleteDialog.value = false }
-        )
-    }
-    val localDensity = LocalDensity.current
-    var optionsSheet by remember { mutableStateOf(0.dp) }
-
-    QuestionEditBottomSheetContent(
-        questionIO = questionInEdit.value,
-        onDismissRequest = {
-            questionInEdit.value = QuestionIO(uid = "")
-        },
-        requestDataSave = {
-            requestQuestionSave(questionInEdit.value)
-        },
-        onDeleteRequest = { uids ->
-            viewModel.requestAnswersDeletion(
-                uidList = uids.toSet(),
-                question = questionInEdit.value
+    CollapsingLayout(
+        modifier = Modifier
+            .padding(top = 4.dp)
+            .shadow(
+                elevation = LocalTheme.styles.componentElevation,
+                shape = LocalTheme.shapes.componentShape,
+                clip = true
             )
-        },
-        onQuestionTestPlay = onNavigateToQuestionTest,
-        state = questionSheetState,
-        clipBoard = viewModel.clipBoard,
-        addExistingAnswer = {
-            withContext(Dispatchers.Default) {
-                questions.filter { it.uid != questionInEdit.value.uid }
-                    .flatMap { question -> question.answers.map { answer ->
-                      answer.copy().also {
-                          it.explanationMessage = "${question.prompt}\n\n${it.explanationMessage}"
-                      }
-                    } }
-                    .filter { newAnswer ->
-                        questionInEdit.value.answers.any { oldAnswer ->
-                            oldAnswer.text == newAnswer.text
-                        }.not()
-                    }
-                    .randomOrNull()
-                    ?.copy(uid = UUID.randomUUID().toString())
-            }
-        },
-        content = {
-            ListOptionsBottomSheet(
+            .background(
+                color = LocalTheme.colors.onBackgroundComponent,
+                shape = LocalTheme.shapes.componentShape
+            )
+            .wrapContentHeight()
+            .padding(horizontal = 12.dp),
+        collapsingToolbar = @Composable {
+            Column(
                 modifier = Modifier
-                    .pointerInput(Unit) {
-                        detectTapGestures(onTap = {
-                            localFocusManager.clearFocus()
-                        })
-                    }
-                    .fillMaxSize(),
-                onDismissRequest = {
-                    stopChecking()
-                },
-                sheetContentModifier = Modifier.onGloballyPositioned { coordinates ->
-                    optionsSheet = with(localDensity) { coordinates.size.height.toDp() }
-                },
-                actions = {
-                    ImageAction(
-                        leadingImageVector = Icons.Outlined.Delete,
-                        text = stringResource(id = R.string.button_delete),
-                        containerColor = Colors.RED_ERROR
-                    ) {
-                        showDeleteDialog.value = true
-                    }
-                    ImageAction(
-                        leadingImageVector = Icons.Outlined.SelectAll,
-                        text = stringResource(id = R.string.button_select_all)
-                    ) {
-                        interactiveStates.forEach {
-                            it.isChecked.value = true
-                        }
-                    }
-                    ImageAction(
-                        leadingImageVector = Icons.Outlined.Deselect,
-                        text = stringResource(id = R.string.button_deselect)
-                    ) {
-                        selectedQuestionUids.clear()
-                    }
-                    ImageAction(
-                        leadingImageVector = Icons.Outlined.Add,
-                        text = stringResource(id = R.string.button_add_to)
-                    ) {
-                        viewModel.requestSessions()
-                        showAddToSheet.value = true
-                    }
-                    ImageAction(
-                        leadingImageVector = Icons.Outlined.PlayArrow,
-                        text = stringResource(id = R.string.button_start_session)
-                    ) {
-                        navigateToSession(selectedQuestionUids.toList())
-                        stopChecking()
-                    }
-                },
-                state = optionsSheetState
-            ) { paddingValues ->
-                Column(
+                    .fillMaxWidth()
+            ) {
+                Row(
                     modifier = Modifier
-                        .padding(
-                            top = 4.dp,
-                            start = 4.dp,
-                            end = 4.dp,
-                            bottom = if (optionsSheetState.bottomSheetState.isExpanded) {
-                                optionsSheet
-                            } else 0.dp
-                        )
-                        .shadow(
-                            elevation = LocalTheme.styles.componentElevation,
-                            shape = LocalTheme.shapes.componentShape,
-                            clip = true
-                        )
-                        .background(
-                            color = LocalTheme.colors.onBackgroundComponent,
-                            shape = LocalTheme.shapes.componentShape
-                        )
                         .fillMaxWidth()
-                        .wrapContentHeight()
-                        .padding(paddingValues)
-                        .padding(horizontal = 12.dp)
-                        .verticalScroll(rememberScrollState())
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .horizontalScroll(rememberScrollState())
-                            .padding(start = 6.dp, top = 6.dp, end = 6.dp),
-                        horizontalArrangement = Arrangement.spacedBy(
-                            LocalTheme.shapes.betweenItemsSpace
-                        )
-                    ) {
-                        ImageAction(
-                            modifier = Modifier,
-                            leadingImageVector = Icons.Outlined.FileDownload,
-                            text = stringResource(id = R.string.button_import)
-                        ) {
-
-                        }
-                        ImageAction(
-                            modifier = Modifier,
-                            leadingImageVector = Icons.Outlined.FileUpload,
-                            text = stringResource(id = R.string.button_import)
-                        ) {
-
-                        }
-                        ImageAction(
-                            modifier = Modifier,
-                            leadingImageVector = Icons.Outlined.DocumentScanner,
-                            text = stringResource(id = R.string.button_scan)
-                        ) {
-
-                        }
-                    }
-
-                    EditFieldInput(
-                        modifier = itemModifier,
-                        value = collectionDetail.name,
-                        hint = stringResource(id = R.string.collection_detail_name_hint),
-                        maxLines = 1,
-                        minLines = 1
-                    ) { output ->
-                        collectionDetail.apply {
-                            name = output
-                        }
-                        requestCollectionSave()
-                    }
-                    EditFieldInput(
-                        modifier = itemModifier,
-                        value = collectionDetail.description,
-                        hint = stringResource(id = R.string.collection_detail_description_hint),
-                        minLines = 8,
-                        maxLines = 8
-                    ) { output ->
-                        collectionDetail.apply {
-                            description = output
-                        }
-                        requestCollectionSave()
-                    }
-
-                    Text(
-                        modifier = itemModifier
-                            .padding(top = 6.dp),
-                        text = stringResource(id = R.string.collection_detail_questions_heading),
-                        color = LocalTheme.colors.secondary,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold
+                        .horizontalScroll(rememberScrollState())
+                        .padding(start = 6.dp, top = 6.dp, end = 6.dp),
+                    horizontalArrangement = Arrangement.spacedBy(
+                        LocalTheme.shapes.betweenItemsSpace
                     )
-                    BrandHeaderButton(
-                        modifier = itemModifier,
-                        text = stringResource(id = R.string.collection_detail_add_question)
+                ) {
+                    ImageAction(
+                        modifier = Modifier,
+                        leadingImageVector = Icons.Outlined.FileDownload,
+                        text = stringResource(id = R.string.button_import)
                     ) {
-                        stopChecking()
-                        collectionDetail.apply {
-                            questions.add(
-                                index = 0,
-                                QuestionIO().also { newQuestion ->
-                                    questionInEdit.value = newQuestion
-                                }
-                            )
-                        }
+
                     }
-                    questions.forEachIndexed { index, question ->
-                        (interactiveStates.getOrNull(index) ?: rememberInteractiveCardState()).let { state ->
-                            LaunchedEffect(state.isChecked.value) {
-                                if(state.isChecked.value) {
-                                    selectedQuestionUids.add(question.uid)
-                                }else selectedQuestionUids.remove(question.uid)
-                            }
-                            QuestionCard(
-                                modifier = itemModifier
-                                    .padding(bottom = if(index == questions.lastIndex) 48.dp else 0.dp),
-                                data = question,
-                                requestDataSave = {
-                                    requestQuestionSave(question)
-                                },
-                                onNavigateToSession = onNavigateToQuestionTest,
-                                state = state,
-                                onClick = {
-                                    if(state.mode.value == InteractiveCardMode.CHECKING) {
-                                        state.isChecked.value = state.isChecked.value.not()
-                                    }else questionInEdit.value = question
-                                }
-                            )
-                        }
+                    ImageAction(
+                        modifier = Modifier,
+                        leadingImageVector = Icons.Outlined.FileUpload,
+                        text = stringResource(id = R.string.button_export)
+                    ) {
+
                     }
+                    ImageAction(
+                        modifier = Modifier,
+                        leadingImageVector = Icons.Outlined.DocumentScanner,
+                        text = stringResource(id = R.string.button_scan)
+                    ) {
+
+                    }
+                }
+
+                EditFieldInput(
+                    modifier = itemModifier,
+                    value = collectionDetail.name,
+                    hint = stringResource(id = R.string.collection_detail_name_hint),
+                    maxLines = 1,
+                    minLines = 1
+                ) { output ->
+                    collectionDetail.apply {
+                        name = output
+                    }
+                    requestCollectionSave()
+                }
+                EditFieldInput(
+                    modifier = itemModifier,
+                    value = collectionDetail.description,
+                    hint = stringResource(id = R.string.collection_detail_description_hint),
+                    minLines = 8,
+                    maxLines = 8
+                ) { output ->
+                    collectionDetail.apply {
+                        description = output
+                    }
+                    requestCollectionSave()
+                }
+
+                Box(
+                    modifier = Modifier
+                        .padding(top = LocalTheme.shapes.betweenItemsSpace)
+                        .fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    MultiChoiceSwitch(
+                        modifier = Modifier
+                            .wrapContentHeight()
+                            .fillMaxWidth(0.75f),
+                        state = contentSwitchState
+                    )
                 }
             }
         }
-    )
+    ) {
+        HorizontalPager(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 8.dp),
+            state = contentPagerState,
+            beyondBoundsPageCount = 2,
+            key = { it }
+        ) { index ->
+            if(index == PAGE_INDEX_QUESTIONS) {
+                QuestionsList(
+                    collectionDetail = collectionDetail,
+                    onNavigateToQuestionTest = onNavigateToQuestionTest,
+                    viewModel = viewModel,
+                    requestCollectionSave = requestCollectionSave,
+                    navigateToSession = navigateToSession,
+                    requestQuestionSave = requestQuestionSave
+                )
+            }else if(index == PAGE_INDEX_FACTS) {
+                FactsList(
+                    viewModel = viewModel,
+                    collectionDetail = collectionDetail,
+                    requestCollectionSave = requestCollectionSave,
+                    requestFactSave = requestFactSave
+                )
+            }
+        }
+    }
 }
 
 /** Layout for loading - shimmer effect */
@@ -521,22 +335,15 @@ private fun ShimmerLayout() {
     ) {
         Box(
             modifier = Modifier
-                .height(60.dp)
-                .padding(top = 16.dp, start = 4.dp, end = 4.dp)
+                .height(70.dp)
+                .padding(top = 16.dp, start = 12.dp, end = 12.dp)
                 .fillMaxWidth()
                 .brandShimmerEffect(LocalTheme.shapes.componentShape)
         )
         Box(
             modifier = Modifier
-                .height(100.dp)
-                .padding(top = 8.dp, start = 4.dp, end = 4.dp)
-                .fillMaxWidth()
-                .brandShimmerEffect(LocalTheme.shapes.componentShape)
-        )
-        Box(
-            modifier = Modifier
-                .height(55.dp)
-                .padding(top = 24.dp, start = 4.dp, end = 4.dp)
+                .height(160.dp)
+                .padding(top = 8.dp, start = 12.dp, end = 12.dp)
                 .fillMaxWidth()
                 .brandShimmerEffect(LocalTheme.shapes.componentShape)
         )
@@ -544,11 +351,12 @@ private fun ShimmerLayout() {
         repeat(5) {
             Box(
                 modifier = Modifier
-                    .height(40.dp)
-                    .padding(top = 8.dp, start = 4.dp, end = 4.dp)
+                    .height(70.dp)
+                    .padding(top = 8.dp, start = 12.dp, end = 12.dp)
                     .fillMaxWidth()
                     .brandShimmerEffect(LocalTheme.shapes.componentShape)
             )
         }
+        Spacer(modifier = Modifier.height(32.dp))
     }
 }

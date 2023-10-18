@@ -240,8 +240,8 @@ class AppDatabaseConverter @Inject constructor(private val gson: Gson) {
 
     /** Converts string to [SessionPreference] */
     @TypeConverter
-    fun toStringSet(value: String): Set<String> {
-        return gson.fromJson(
+    fun toStringSet(value: String?): Set<String> {
+        return if(value.isNullOrEmpty()) setOf() else gson.fromJson(
             value,
             TypeToken.getParameterized(Set::class.java, String::class.java).type
         )

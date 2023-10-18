@@ -14,6 +14,8 @@
     <string name="home_screen_collections_empty_action">Let\'s start collecting</string>
     <string name="home_screen_sessions_empty_action">Time to practice</string>
 
+    <string name="collection_detail_page_questions">Questions</string>
+    <string name="collection_detail_page_facts">Facts</string>
     <string name="collection_detail_add_question">Sir, I have a question</string>
     <string name="collection_detail_save">Save my madness</string>
     <string name="collection_detail_name_hint">Name</string>
@@ -35,6 +37,43 @@
     <string name="answer_field_explanation_header">Explanation</string>
     <string name="answer_is_correct_ticked">Correct answer</string>
     <string name="answer_is_correct_not_ticked">Wrong answer</string>
+
+    <string name="facts_list_add_new">Add a new fact</string>
+    <string name="facts_list_generate_questions">Generate questions</string>
+    <string name="facts_field_short_information_header">Short key information</string>
+    <string name="facts_field_long_information_header">Long key information</string>
+    <string name="facts_field_tags_header">Codes</string>
+    <string name="facts_field_tags_explanation">Codes are a way of categorizing your facts and connecting them between each-other</string>
+    <string name="facts_field_short_information_hint">Image this is one of the answers</string>
+    <string name="facts_field_long_information_hint">Imagine this is a question</string>
+
+    <string name="facts_type_fact">Information</string>
+    <string name="facts_type_person">Person</string>
+    <string name="facts_type_date">Date</string>
+    <string name="facts_type_quote">Quote</string>
+    <!-- short information -->
+    <string name="facts_type_long_fact_header">Information explanation</string>
+    <string name="facts_type_long_fact_hint">How would you explain the information?</string>
+    <string name="facts_type_long_person_header">Information about the person</string>
+    <string name="facts_type_long_person_hint">What is some important information about the person?</string>
+    <string name="facts_type_long_date_header">Date explanation</string>
+    <string name="facts_type_long_date_hint">What happened on that date or what is it related to?</string>
+    <string name="facts_type_long_quote_header">Quote explanation</string>
+    <string name="facts_type_long_quote_hint">Who/what is the quote related to?</string>
+    <!-- long information -->
+    <string name="facts_type_short_fact_header">What is the fact?</string>
+    <string name="facts_type_short_fact_hint">Social facilitation</string>
+    <string name="facts_type_short_person_header">Who is the person?</string>
+    <string name="facts_type_short_person_hint">Keanu Reeves</string>
+    <string name="facts_type_short_date_header">What is the date?</string>
+    <string name="facts_type_short_date_hint">Nov 17, 1989 - Dec 29, 1989</string>
+    <string name="facts_type_short_quote_header">What is the quote?</string>
+    <string name="facts_type_short_quote_hint">Don\'t rely on your ability to predict, trust in your ability to damage control</string>
+
+    <string name="fact_delete_dialog_title">Fact deletion</string>
+    <string name="fact_delete_dialog_description">
+        You\'ve spent time on this, are you sure you want permanently delete the selected (%1$d) facts?
+    </string>
 
     <string name="session_detail_default_toolbar">New session</string>
     <string name="session_lobby_screen_empty_text">No knowledge growth…yet!:(</string>
@@ -92,8 +131,8 @@
     <string name="button_add">Add</string>
     <string name="button_add_to">Add to</string>
     <string name="button_add_image">Add an image</string>
-    <string name="button_add_prompt_image">Add prompt image</string>
-    <string name="button_add_explanation_image">Add explanation image</string>
+    <string name="button_add_prompt_image">Add a prompt image</string>
+    <string name="button_add_explanation_image">Add an explanation image</string>
     <string name="button_change_image">Change the image</string>
     <string name="button_import">Import</string>
     <string name="button_export">Export</string>
