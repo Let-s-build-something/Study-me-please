@@ -3,12 +3,15 @@ package study.me.please.ui.session
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
+import com.squadris.squadris.utils.DateUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.withContext
 import study.me.please.data.io.QuestionAnswerIO
 import study.me.please.data.io.SessionAnswerValidation
+import study.me.please.data.io.SessionHistoryItem
 import study.me.please.data.io.preferences.SessionPreferencePack
+import java.util.Calendar
 
 /** Saved state of screen for playing questions */
 data class SessionScreenState(
@@ -19,7 +22,10 @@ data class SessionScreenState(
     val isTest: Boolean = false,
 
     /** Preferences for behavior in validating and other options */
-    val sessionPreferencePack: MutableState<SessionPreferencePack>
+    val sessionPreferencePack: MutableState<SessionPreferencePack>,
+
+    /** called whenever there is a request for data save */
+    val requestSave: () -> Unit
 ) {
     /** current screen mode */
     val mode: MutableState<SessionScreenMode> = mutableStateOf(SessionScreenMode.REGULAR)
@@ -42,6 +48,7 @@ data class SessionScreenState(
         ) {
             module.getCurrentStep()?.let { question ->
                 currentItem.value = question
+                timeOfStart = DateUtils.now
             }
         }
     }
@@ -49,8 +56,6 @@ data class SessionScreenState(
     /** steps forward in questions or history */
     suspend fun stepForward(forceRepeat: Boolean = false) {
         module.stepForward(
-            timeElapsed = 0L,//TODO
-            responseList = validations.toSet(),
             forceRepeat = forceRepeat,
             // we can't repeat history item, only recent questions
             currentQuestion = currentItem.value.question
@@ -58,6 +63,8 @@ data class SessionScreenState(
             validations.clear()
             mode.value = if(newItem.isHistory) SessionScreenMode.HISTORY else SessionScreenMode.REGULAR
             currentItem.value = newItem
+            requestSave()
+            timeOfStart = DateUtils.now
         }
     }
 
@@ -70,8 +77,11 @@ data class SessionScreenState(
             if(newItem.isHistory) {
                 validations.addAll(newItem.historyItem?.answers.orEmpty())
             }
+            requestSave()
         }
     }
+
+    private var timeOfStart: Calendar? = null
 
     /** Validates answer */
     suspend fun validateAnswer(answer: QuestionAnswerIO) {
@@ -94,6 +104,7 @@ data class SessionScreenState(
                 mode.value = SessionScreenMode.LOCKED
                 injectCorrectValidations()
             }
+            // end of session
             if(mode.value == SessionScreenMode.LOCKED
                 && validations.any { it.isCorrect.not() }
                 && sessionPreferencePack.value.repeatOnMistake.value
@@ -104,6 +115,25 @@ data class SessionScreenState(
                         isMistake = true
                     )
                 }
+            }
+            if(mode.value == SessionScreenMode.LOCKED) {
+                // if we are not in history
+                //TODO needs testing
+                if(module.currentHistoryIndex >= module.history.size.minus(1)) {
+                    module.questionsStack.getOrNull(module.currentQuestionIndex)?.let { question ->
+                        module.history.add(
+                            SessionHistoryItem(
+                                questionIO = question,
+                                index = module.currentQuestionIndex,
+                                answers = validations.toSet().toList(),
+                                timeToAnswer = DateUtils.now.timeInMillis,
+                                timeOfStart = timeOfStart?.timeInMillis
+                            )
+                        )
+                    }
+                    module.currentHistoryIndex = module.history.size.minus(1)
+                }
+                requestSave()
             }
         }
     }

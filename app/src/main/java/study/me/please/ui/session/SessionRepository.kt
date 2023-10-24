@@ -9,7 +9,9 @@ import study.me.please.data.io.preferences.SessionPreferencePack
 import study.me.please.data.room.CollectionDao
 import study.me.please.data.room.PreferencesDao
 import study.me.please.data.room.QuestionDao
+import study.me.please.data.room.QuestionModuleDao
 import study.me.please.data.room.SessionDao
+import study.me.please.ui.components.preference_chooser.PreferencePackRepository
 import javax.inject.Inject
 
 /** Proxy for calling network end points */
@@ -17,8 +19,9 @@ class SessionRepository @Inject constructor(
     private val sessionDao: SessionDao,
     private val collectionDao: CollectionDao,
     private val questionDao: QuestionDao,
-    private val preferencesDao: PreferencesDao
-) {
+    private val questionModuleDao: QuestionModuleDao,
+    override val preferencesDao: PreferencesDao
+): PreferencePackRepository {
 
     /** Returns a collection by its uid - [collectionUid] */
     suspend fun getCollectionByUid(collectionUid: String?): CollectionIO? {
@@ -71,13 +74,6 @@ class SessionRepository @Inject constructor(
         }
     }
 
-    /** Returns all user preferences */
-    suspend fun getAllPreferences(): List<SessionPreferencePack>? {
-        return withContext(Dispatchers.IO) {
-            preferencesDao.getAllPreferences()
-        }
-    }
-
     /** Returns a session by its uid - [sessionUid] */
     suspend fun getSessionByUid(sessionUid: String?): SessionIO? {
         return withContext(Dispatchers.IO) {
@@ -89,24 +85,17 @@ class SessionRepository @Inject constructor(
         }
     }
 
-    /** Saves a preference pack */
-    suspend fun savePreferencePack(preferencePack: SessionPreferencePack) {
-        return withContext(Dispatchers.IO) {
-            preferencesDao.insertPreferencePack(preferencePack)
-        }
-    }
-
-    /** deletes a preference pack */
-    suspend fun deletePreferencePack(uid: String) {
-        return withContext(Dispatchers.IO) {
-            preferencesDao.deletePreferencePack(uid)
-        }
-    }
-
     /** Saves a session */
     suspend fun saveSession(session: SessionIO) {
         return withContext(Dispatchers.IO) {
             sessionDao.insertSession(session)
+        }
+    }
+
+    /** saves a question module */
+    suspend fun saveQuestionModule(questionModule: QuestionModule) {
+        withContext(Dispatchers.IO) {
+            questionModuleDao.insertQuestionModule(questionModule)
         }
     }
 }

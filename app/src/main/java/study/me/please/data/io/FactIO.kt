@@ -1,11 +1,13 @@
 package study.me.please.data.io
 
+import android.content.Context
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Ignore
 import androidx.room.PrimaryKey
 import com.google.gson.annotations.SerializedName
 import com.squadris.squadris.utils.DateUtils
+import study.me.please.R
 import study.me.please.data.room.AppRoomDatabase
 import java.io.Serializable
 import java.util.Date
@@ -65,4 +67,55 @@ data class FactIO(
     @get:Ignore
     val imageExplanationText: String
         get() = "$shortKeyInformation\n$longInformation"
+
+    /** returns formulated prompt based on type and long information */
+    fun getLongPrompt(context: Context) = context.getString(
+        when(type) {
+            FactType.FACT -> R.string.facts_type_long_fact_prompt
+            FactType.PERSON -> R.string.facts_type_long_person_prompt
+            FactType.DATE -> R.string.facts_type_long_date_prompt
+            FactType.QUOTE -> R.string.facts_type_long_quote_prompt
+        },
+        longInformation
+    )
+
+    /** returns formulated prompt based on type and short information */
+    fun getShortPrompt(context: Context) = context.getString(
+        when(type) {
+            FactType.FACT -> R.string.facts_type_short_fact_prompt
+            FactType.PERSON -> R.string.facts_type_short_person_prompt
+            FactType.DATE -> R.string.facts_type_short_date_prompt
+            FactType.QUOTE -> R.string.facts_type_short_quote_prompt
+        },
+        shortKeyInformation
+    )
+
+    /** returns formulated prompt for image based on type */
+    fun getImagePrompt(context: Context) = context.getString(
+        when(type) {
+            FactType.FACT -> R.string.facts_type_image_fact_prompt
+            FactType.PERSON -> R.string.facts_type_image_person_prompt
+            FactType.DATE -> R.string.facts_type_image_date_prompt
+            FactType.QUOTE -> R.string.facts_type_image_quote_prompt
+        }
+    )
+
+    /** returns formulated generic prompt and long information */
+    fun getGenericLongPrompt(context: Context) = context.getString(
+        R.string.facts_information_generic_prompt,
+        context.getString(type.getLongHeaderStringRes()).lowercase(),
+        longInformation
+    )
+
+    /** returns formulated generic prompt and short information */
+    fun getGenericShortPrompt(context: Context) = context.getString(
+        R.string.facts_information_generic_prompt,
+        context.getString(type.getStringRes()).lowercase(),
+        shortKeyInformation
+    )
+
+    /** returns formulated generic prompt and short information */
+    fun getGenericImagePrompt(context: Context) = context.getString(
+        R.string.facts_type_image_quote_prompt
+    )
 }

@@ -38,6 +38,9 @@
     <string name="answer_is_correct_ticked">Correct answer</string>
     <string name="answer_is_correct_not_ticked">Wrong answer</string>
 
+    <string name="questions_list_chip_has_image">has image</string>
+    <string name="questions_list_chip_is_invalid">is invalid</string>
+
     <string name="facts_list_add_new">Add a new fact</string>
     <string name="facts_list_generate_questions">Generate questions</string>
     <string name="facts_field_short_information_header">Short key information</string>
@@ -55,13 +58,13 @@
     <string name="facts_type_long_fact_header">Information explanation</string>
     <string name="facts_type_long_fact_hint">How would you explain the information?</string>
     <string name="facts_type_long_person_header">Information about the person</string>
-    <string name="facts_type_long_person_hint">What is some important information about the person?</string>
+    <string name="facts_type_long_person_hint">What information is relevant about the person?</string>
     <string name="facts_type_long_date_header">Date explanation</string>
     <string name="facts_type_long_date_hint">What happened on that date or what is it related to?</string>
     <string name="facts_type_long_quote_header">Quote explanation</string>
     <string name="facts_type_long_quote_hint">Who/what is the quote related to?</string>
     <!-- long information -->
-    <string name="facts_type_short_fact_header">What is the fact?</string>
+    <string name="facts_type_short_fact_header">What is the information?</string>
     <string name="facts_type_short_fact_hint">Social facilitation</string>
     <string name="facts_type_short_person_header">Who is the person?</string>
     <string name="facts_type_short_person_hint">Keanu Reeves</string>
@@ -69,6 +72,23 @@
     <string name="facts_type_short_date_hint">Nov 17, 1989 - Dec 29, 1989</string>
     <string name="facts_type_short_quote_header">What is the quote?</string>
     <string name="facts_type_short_quote_hint">Don\'t rely on your ability to predict, trust in your ability to damage control</string>
+    <!-- prompts -->
+    <string name="facts_information_generic_prompt">To who/what is the following %1$s related to?\n%2$s</string>
+    <!-- short prompts -->
+    <string name="facts_type_short_fact_prompt">How would you explain %1$s?</string>
+    <string name="facts_type_short_person_prompt">What information is relevant about %1$s?</string>
+    <string name="facts_type_short_date_prompt">What happened on %1$s or what is it related to?</string>
+    <string name="facts_type_short_quote_prompt">Who/what is the quote "%1$s" related to?</string>
+    <!-- long prompts -->
+    <string name="facts_type_long_fact_prompt">What is the explanation "%1$s" related to?</string>
+    <string name="facts_type_long_person_prompt">Who could be best described by "%1$s"?</string>
+    <string name="facts_type_long_date_prompt">To what date is following information "%1$s" related to?</string>
+    <string name="facts_type_long_quote_prompt">What quote is relevant to %1$s?</string>
+    <!-- image prompts -->
+    <string name="facts_type_image_fact_prompt">To what information is following image related to?</string>
+    <string name="facts_type_image_person_prompt">To who is following image related to?</string>
+    <string name="facts_type_image_date_prompt">To what date is following image related to?</string>
+    <string name="facts_type_image_quote_prompt">To who/what is following image related to?</string>
 
     <string name="fact_delete_dialog_title">Fact deletion</string>
     <string name="fact_delete_dialog_description">
@@ -126,6 +146,23 @@
     <string name="image_field_local_value">Local image</string>
     <string name="session_card_x_questions">%1$d questions</string>
 
+    <!--- == STATISTICS == -->
+    <string name="statistics_time_spent_total">You\'ve spent %1$sanswering %2$d questions.</string>
+    <string name="statistics_time_spent_average">On average, you answer within %1$s</string>
+    <string name="statistics_success_rate">Grade: %1$s (%2$s\%%)</string>
+    <string name="statistics_ratio_time_success">Time/success ratio: %1$s</string>
+    <string name="statistics_questions_count">%1$s question answered.</string>
+    <string name="statistics_questions_count_multiple">%1$s questions answered.</string>
+    <string name="statistics_graph_response_time_header">Response time</string>
+    <string name="statistics_graph_success_ratio_header">Success ratio</string>
+
+    <string name="grade_a1">A+</string>
+    <string name="grade_a2">A</string>
+    <string name="grade_b1">B+</string>
+    <string name="grade_b2">B</string>
+    <string name="grade_c1">C+</string>
+    <string name="grade_c2">C</string>
+    <string name="grade_d">D</string>
 
     <!--- =================================== BUTTONS ========================================== -->
     <string name="button_add">Add</string>
@@ -143,6 +180,7 @@
     <string name="button_dismiss">Dismiss</string>
     <string name="button_confirm">Confirm</string>
     <string name="button_play">Play</string>
+    <string name="button_statistics">Statistics</string>
     <string name="button_test_play">Test play</string>
     <string name="button_preferences">Preferences</string>
     <string name="button_continue">Continue</string>

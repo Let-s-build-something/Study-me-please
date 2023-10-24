@@ -7,6 +7,7 @@ import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.BottomSheetScaffoldState
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.SheetValue
 import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.material3.rememberStandardBottomSheetState
 import androidx.compose.runtime.Composable
@@ -21,7 +22,7 @@ import com.squadris.squadris.compose.theme.LocalTheme
  * Simple bottom sheet layout
  * material3 library crashes due to internal issue - TODO make a switch the moment it works
  */
-@OptIn(ExperimentalMaterialApi::class, ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Preview
 @Composable
 fun SimpleBottomSheet(
@@ -30,7 +31,9 @@ fun SimpleBottomSheet(
     topBar: (@Composable () -> Unit)? = null,
     sheetContent: @Composable ColumnScope.() -> Unit = {},
     state: BottomSheetScaffoldState = rememberBottomSheetScaffoldState(
-        bottomSheetState = rememberStandardBottomSheetState(skipHiddenState = false)
+        bottomSheetState = rememberStandardBottomSheetState(
+            skipHiddenState = false, initialValue = SheetValue.Hidden
+        )
     ),
     content: @Composable (paddingValues: PaddingValues) -> Unit = {}
 ) {

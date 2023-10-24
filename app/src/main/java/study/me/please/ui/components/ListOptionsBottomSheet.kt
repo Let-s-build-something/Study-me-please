@@ -27,6 +27,7 @@ import com.squadris.squadris.compose.theme.LocalTheme
 @OptIn(ExperimentalMaterial3Api::class)
 @Preview
 @Composable
+@Deprecated("Replace with [OptionsLayout]")
 fun ListOptionsBottomSheet(
     modifier: Modifier = Modifier,
     onDismissRequest: () -> Unit = {},

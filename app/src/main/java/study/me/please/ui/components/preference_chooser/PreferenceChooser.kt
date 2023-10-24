@@ -1,9 +1,11 @@
-package study.me.please.ui.components
+package study.me.please.ui.components.preference_chooser
 
+import android.util.Log
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -30,7 +32,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -48,42 +49,53 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
+import com.squadris.squadris.compose.components.DEFAULT_ANIMATION_LENGTH_LONG
+import com.squadris.squadris.compose.components.DEFAULT_ANIMATION_LENGTH_SHORT
+import com.squadris.squadris.compose.components.EditFieldInput
+import com.squadris.squadris.compose.components.MinimalisticIcon
 import com.squadris.squadris.compose.theme.Colors
 import com.squadris.squadris.compose.theme.LocalTheme
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancelChildren
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import study.me.please.R
 import study.me.please.base.navigation.ActionBarIcon
 import study.me.please.data.io.QuestionMode
 import study.me.please.data.io.preferences.SessionPreferencePack
+import study.me.please.ui.collection.detail.REQUEST_DATA_SAVE_DELAY
+import study.me.please.ui.components.ImageAction
+import study.me.please.ui.components.SwitchText
+import study.me.please.ui.components.TextHeader
 
 /**
  * Component for choosing and editing [SessionPreferencePack]
  */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun PreferenceChooser(
     modifier: Modifier = Modifier,
-    preferencePacks: MutableList<SessionPreferencePack>?,
-    requestPreferenceSave: (SessionPreferencePack?) -> Unit,
-    onDeleteRequest: (SessionPreferencePack?) -> Unit,
-    onPreferencePackChosen: (SessionPreferencePack) -> Unit = {},
+    preferencePacks: List<SessionPreferencePack>?,
+    controller: PreferenceChooserController,
     defaultPreferencePack: SessionPreferencePack? = null,
     mustHaveSelection: Boolean = true,
     expandedByDefault: Boolean = true,
 ) {
-    val preferencesShown = remember(defaultPreferencePack) {
+    val preferencesShown = remember {
         mutableStateOf((mustHaveSelection || defaultPreferencePack != null) && expandedByDefault)
     }
     val selectedPreferencePack = remember(defaultPreferencePack) { mutableStateOf(defaultPreferencePack) }
-    val preferences = remember(preferencePacks) {
-        mutableStateListOf(*preferencePacks.orEmpty().toTypedArray())
-    }
+
     val expandRotationState by animateFloatAsState(
         targetValue = if(preferencesShown.value) 180f else 0f,
         label = "",
-        animationSpec = tween(600)
+        animationSpec = tween(DEFAULT_ANIMATION_LENGTH_LONG)
     )
+
     val localFocusManager = LocalFocusManager.current
+    val coroutineScope = rememberCoroutineScope()
+    val inputScope = rememberCoroutineScope()
+
     val isSwitchOneChecked = remember(
         selectedPreferencePack.value,
         defaultPreferencePack,
@@ -109,37 +121,30 @@ fun PreferenceChooser(
         mutableStateOf(selectedPreferencePack.value?.repeatOnMistake?.value)
     }
 
-
     if(preferencePacks == null) {
         ShimmerLayout()
     }else {
-        val coroutineScope = rememberCoroutineScope()
-        LaunchedEffect(isSwitchOneChecked.value,
+        LaunchedEffect(
+            isSwitchOneChecked.value,
             isSwitchTwoChecked.value,
             isSwitchThreeChecked.value
         ) {
-            requestPreferenceSave(selectedPreferencePack.value)
+            selectedPreferencePack.value?.let { controller.savePreference(it) }
         }
+        val randomName = stringArrayResource(id = R.array.random_name).random()
         LaunchedEffect(selectedPreferencePack.value) {
-            selectedPreferencePack.value?.let { preference ->
-                onPreferencePackChosen(preference)
-            }
+            selectedPreferencePack.value?.let { controller.choosePreference(it) }
             localFocusManager.clearFocus()
             if(expandedByDefault) {
                 preferencesShown.value = selectedPreferencePack.value != null
             }
-        }
-        val randomName = stringArrayResource(id = R.array.random_name).random()
-        LaunchedEffect(preferences) {
-            if(preferences.isEmpty() && preferencePacks.isEmpty() && mustHaveSelection) {
-                val newPrefPack = SessionPreferencePack(
-                    name = randomName
-                )
-                preferences.add(newPrefPack)
-                selectedPreferencePack.value = newPrefPack
-            }
             if(mustHaveSelection && selectedPreferencePack.value == null) {
-                selectedPreferencePack.value = preferences.firstOrNull()
+                selectedPreferencePack.value = preferencePacks.firstOrNull()
+            }
+        }
+        LaunchedEffect(preferencePacks) {
+            if(preferencePacks.isEmpty() && mustHaveSelection) {
+                selectedPreferencePack.value = controller.addPreferencePack(randomName)
             }
         }
         ConstraintLayout(
@@ -152,11 +157,11 @@ fun PreferenceChooser(
                 .fillMaxWidth()
                 .animateContentSize(
                     animationSpec = tween(
-                        durationMillis = 600,
+                        durationMillis = DEFAULT_ANIMATION_LENGTH_LONG,
                         easing = LinearOutSlowInEasing
                     )
                 )
-                .padding(start = 8.dp, end = 8.dp, top = 4.dp, bottom = 4.dp),
+                .padding(top = 4.dp, bottom = 4.dp),
         ) {
             val (txtPreferencesHeader,
                 rowPreferences,
@@ -180,6 +185,7 @@ fun PreferenceChooser(
                         linkTo(parent.start, parent.end)
                         width = Dimension.fillToConstraints
                     }
+                    .clip(LocalTheme.shapes.componentShape)
                     .background(
                         color = LocalTheme.colors.brandMain,
                         shape = LocalTheme.shapes.componentShape
@@ -193,34 +199,37 @@ fun PreferenceChooser(
                         text = stringResource(id = R.string.preference_chooser_add_new),
                         imageVector = Icons.Outlined.Add
                     ) {
-                        val newPack = SessionPreferencePack(
-                            name = randomPackName
-                        )
-                        preferences.add(newPack)
-                        selectedPreferencePack.value = newPack
+                        selectedPreferencePack.value = controller.addPreferencePack(randomPackName)
                     }
                 }
                 itemsIndexed(
-                    preferences,
+                    preferencePacks,
                     key = { _, item -> item.uid }
                 ) { _, preferencePack ->
                     val modeIcon = remember { mutableStateOf(preferencePack.estimatedMode.icon) }
                     // whenever we change setting, the mode changes
-                    LaunchedEffect(isSwitchOneChecked.value,
+                    LaunchedEffect(
+                        isSwitchOneChecked.value,
                         isSwitchTwoChecked.value,
                         isSwitchThreeChecked.value
                     ) {
                         modeIcon.value = preferencePack.estimatedMode.icon
                     }
                     ActionBarIcon(
-                        modifier = if(selectedPreferencePack.value?.uid == preferencePack.uid) {
+                        modifier = (if(selectedPreferencePack.value?.uid == preferencePack.uid) {
                             Modifier
                                 .border(
                                     width = 1.dp,
                                     color = LocalTheme.colors.tetrial,
-                                    shape =  LocalTheme.shapes.circularActionShape
+                                    shape =  LocalTheme.shapes.rectangularActionShape
                                 )
-                        } else Modifier,
+                        } else Modifier)
+                            .animateItemPlacement(
+                                tween(
+                                    durationMillis = DEFAULT_ANIMATION_LENGTH_SHORT,
+                                    easing = LinearOutSlowInEasing
+                                )
+                            ),
                         text = preferencePack.name,
                         imageVector = modeIcon.value
                     ) {
@@ -302,20 +311,23 @@ fun PreferenceChooser(
                                     clearable = true
                                 ) { output ->
                                     preferencePack.name = output
-                                    requestPreferenceSave(selectedPreferencePack.value)
+                                    inputScope.coroutineContext.cancelChildren()
+                                    inputScope.launch {
+                                        delay(REQUEST_DATA_SAVE_DELAY)
+                                        selectedPreferencePack.value?.let { controller.savePreference(it) }
+                                    }
                                 }
                                 ImageAction(
                                     leadingImageVector = Icons.Outlined.Delete,
                                     containerColor = Colors.RED_ERROR
                                 ) {
                                     coroutineScope.launch(Dispatchers.Default) {
-                                        val oldIndex = preferences.indexOfFirst { it.uid == selectedPreferencePack.value?.uid }
-                                        onDeleteRequest(selectedPreferencePack.value)
-                                        preferences.removeAll { it.uid == selectedPreferencePack.value?.uid }
-                                        preferencePacks.removeAll { it.uid == selectedPreferencePack.value?.uid }
-
-                                        selectedPreferencePack.value = preferences.getOrNull(oldIndex)
-                                            ?: preferences.getOrNull(oldIndex - 1)
+                                        val oldIndex = preferencePacks.indexOfFirst { it.uid == selectedPreferencePack.value?.uid }
+                                        selectedPreferencePack.value?.let { controller.deletePreference(it.uid) }
+                                        selectedPreferencePack.value = (preferencePacks.getOrNull(oldIndex -1)
+                                            ?: preferencePacks.getOrNull(oldIndex + 1) ?: preferencePacks.firstOrNull())?.also {
+                                            controller.choosePreference(it)
+                                        }
                                     }
                                 }
                             }
@@ -422,7 +434,9 @@ fun PreferenceChooser(
 
 @Composable
 private fun ShimmerLayout() {
+    Row {
 
+    }
 }
 
 @Preview
@@ -435,8 +449,16 @@ private fun Preview() {
                 shape = RoundedCornerShape(8.dp)
             ),
         preferencePacks = mutableListOf(),
-        requestPreferenceSave = { _ -> },
-        onDeleteRequest = { _ -> },
-        onPreferencePackChosen = {}
+        controller = object: PreferenceChooserController {
+            override fun addPreferencePack(name: String): SessionPreferencePack {
+                return SessionPreferencePack()
+            }
+            override fun savePreference(preference: SessionPreferencePack) {
+            }
+            override fun deletePreference(preferenceUid: String) {
+            }
+            override fun choosePreference(preference: SessionPreferencePack) {
+            }
+        }
     )
 }

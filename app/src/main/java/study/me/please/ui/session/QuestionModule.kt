@@ -1,14 +1,13 @@
 package study.me.please.ui.session
 
-import android.util.Log
 import androidx.room.Entity
 import androidx.room.Ignore
 import androidx.room.PrimaryKey
 import com.google.gson.annotations.SerializedName
+import com.squadris.squadris.utils.DateUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import study.me.please.data.io.QuestionIO
-import study.me.please.data.io.SessionAnswerValidation
 import study.me.please.data.io.SessionHistoryItem
 import study.me.please.data.room.AppRoomDatabase
 import java.util.UUID
@@ -25,6 +24,10 @@ data class QuestionModule(
     /** history for displaying users' answers */
     val history: MutableList<SessionHistoryItem> = mutableListOf()
 ) {
+
+    /** foreign key for a [SessionIO] item that holds this module */
+    var sessionUid: String? = null
+
     /** lazy loaded, local saving of questions for this module */
     @Ignore
     var questions: List<QuestionIO> = listOf()
@@ -53,8 +56,6 @@ data class QuestionModule(
     @Ignore
     suspend fun stepForward(
         currentQuestion: QuestionIO?,
-        responseList: Set<SessionAnswerValidation>,
-        timeElapsed: Long,
         forceRepeat: Boolean = false
     ): SessionQuestion? {
         if(questions.isEmpty()) return null
@@ -67,30 +68,23 @@ data class QuestionModule(
 
         // browsing history
         return withContext(Dispatchers.Default) {
-            if(currentHistoryIndex.plus(1) < history.size) {
+            // plus 1 because it's an index
+            if(currentHistoryIndex < history.size.minus(1) && history.isNotEmpty()) {
                 history.getOrNull(++currentHistoryIndex)?.let { question ->
                     SessionQuestion(
                         isHistory = true,
                         historyItem = question,
-                        correctAnswers = question.answers.filter { it.isCorrect }.map { it.uid }
+                        correctAnswers = listOf(*question.answers.toTypedArray()).filter { it.isCorrect }
+                            .map { it.uid }
                     )
                 }
             }else {
-                questionsStack.getOrNull(currentQuestionIndex)?.let { question ->
-                    history.add(SessionHistoryItem(
-                        questionIO = question,
-                        index = currentQuestionIndex,
-                        answers = responseList.toList(),
-                        timeElapsed = timeElapsed,
-                    ))
-                    currentHistoryIndex = history.size.minus(1)
-                }
+                history.lastOrNull()?.timeToContinue = DateUtils.now.timeInMillis
                 if(currentQuestionIndex >= questionsStack.size.minus(1)) {
                     // adding one right after this, can't start with 0
                     currentQuestionIndex = -1
                     questionsStack.clear()
                     questionsStack.addAll(questions.shuffled())
-
                 }
                 questionsStack.getOrNull(++currentQuestionIndex)?.let { question ->
                     SessionQuestion(
@@ -104,15 +98,17 @@ data class QuestionModule(
     }
 
     /** retrieves current step position without changing any data */
+    @Ignore
     fun getCurrentStep(): SessionQuestion? {
         if(questions.isEmpty()) return null
         // browsing history
-        return if(currentHistoryIndex < history.size) {
+        return if(currentHistoryIndex < history.size.minus(1)) {
             history.getOrNull(currentHistoryIndex)?.let { question ->
                 SessionQuestion(
                     isHistory = true,
                     historyItem = question,
-                    correctAnswers = question.answers.filter { it.isCorrect }.map { it.uid }
+                    correctAnswers = listOf(*question.answers.toTypedArray()).filter { it.isCorrect }
+                        .map { it.uid }
                 )
             }
         }else {

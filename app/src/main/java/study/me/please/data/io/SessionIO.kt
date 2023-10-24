@@ -1,12 +1,11 @@
 package study.me.please.data.io
 
 import androidx.room.ColumnInfo
+import androidx.room.Embedded
 import androidx.room.Entity
-import androidx.room.Ignore
 import androidx.room.PrimaryKey
 import com.google.gson.annotations.SerializedName
 import com.squadris.squadris.utils.DateUtils
-import study.me.please.data.io.preferences.SessionPreferencePack
 import study.me.please.data.room.AppRoomDatabase
 import study.me.please.ui.session.QuestionModule
 import java.io.Serializable
@@ -26,11 +25,15 @@ data class SessionIO(
     @PrimaryKey
     val uid: String = UUID.randomUUID().toString(),
 
-    /** preferences specific to this session */
-    var preferencePack: SessionPreferencePack? = null,
+    /** preference specific to this session */
+    var preferencePackUid: String = "",
+
+    /** last value of estimated value from Preferencepack */
+    var estimatedMode: QuestionMode? = null,
 
     /** saved question module for control and history of questioning */
     @SerializedName("question_module")
+    @Embedded(prefix = "q_module_")
     var questionModule: QuestionModule? = null,
 
     /** What was the last time this session was played */
@@ -46,13 +49,4 @@ data class SessionIO(
 
     /** number of questions in this session */
     var questionCount: Int = 0
-): Serializable {
-
-    /** local temporary save of downloaded collections */
-    @Ignore
-    var collections: List<CollectionIO> = listOf()
-
-    /** local temporary save of downloaded questions */
-    @Ignore
-    var questions: List<QuestionIO> = listOf()
-}
+): Serializable

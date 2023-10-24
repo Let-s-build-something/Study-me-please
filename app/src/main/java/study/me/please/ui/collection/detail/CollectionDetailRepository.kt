@@ -1,11 +1,13 @@
 package study.me.please.ui.collection.detail
 
+import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import study.me.please.data.io.CollectionIO
 import study.me.please.data.io.FactIO
 import study.me.please.data.io.QuestionIO
 import study.me.please.data.io.SessionIO
+import study.me.please.data.io.clip_board.CollectionExport
 import study.me.please.data.room.CollectionDao
 import study.me.please.data.room.FactDao
 import study.me.please.data.room.QuestionDao
@@ -17,7 +19,8 @@ class CollectionDetailRepository @Inject constructor(
     private val collectionDao: CollectionDao,
     private val sessionDao: SessionDao,
     private val questionDao: QuestionDao,
-    private val factDao: FactDao
+    private val factDao: FactDao,
+    private val gson: Gson
 ) {
 
     /** Returns a collection by its uid - [collectionUid] */
@@ -89,6 +92,16 @@ class CollectionDetailRepository @Inject constructor(
     suspend fun saveFact(fact: FactIO) {
         return withContext(Dispatchers.IO) {
             factDao.insertFact(fact)
+        }
+    }
+
+    /** Exports data class */
+    suspend fun exportCollection(
+        export: CollectionExport,
+        onSuccess: (json: String) -> Unit
+    ) {
+        return withContext(Dispatchers.IO) {
+            onSuccess(gson.toJson(export))
         }
     }
 }

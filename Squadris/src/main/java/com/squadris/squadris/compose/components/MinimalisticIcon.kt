@@ -1,4 +1,4 @@
-package study.me.please.ui.components
+package com.squadris.squadris.compose.components
 
 import androidx.compose.foundation.Indication
 import androidx.compose.foundation.clickable
@@ -14,7 +14,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.squadris.squadris.compose.theme.LocalTheme
 

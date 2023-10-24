@@ -1,8 +1,9 @@
-package study.me.please.ui.components
+package com.squadris.squadris.compose.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
@@ -10,6 +11,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Clear
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
@@ -19,16 +21,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.squadris.squadris.compose.theme.LocalTheme
 import com.squadris.squadris.compose.theme.Colors
+import com.squadris.squadris.compose.theme.LocalTheme
 import com.squadris.squadris.compose.theme.StudyMeAppTheme
-import study.me.please.R
 
 @Composable
 fun rememberEditFieldInputState(
@@ -61,6 +62,12 @@ fun EditFieldInput(
     leadingIcon: ImageVector? = null,
     minLines: Int = 1,
     maxLines: Int = 1,
+    paddingValues: PaddingValues = TextFieldDefaults.contentPaddingWithoutLabel(),
+    textStyle: TextStyle = TextStyle(
+        color = LocalTheme.colors.primary,
+        fontSize = 16.sp
+    ),
+    shape: Shape = LocalTheme.shapes.componentShape,
     maxLength: Int? = null,
     onValueChange: (String) -> Unit = {},
 ) {
@@ -69,7 +76,7 @@ fun EditFieldInput(
     LaunchedEffect(key1 = value) {
         text.value = value
     }
-    TextField(
+    CustomTextField(
         modifier = modifier
             .border(
                 if (isFocused.value) 1.dp else 0.25.dp,
@@ -78,7 +85,7 @@ fun EditFieldInput(
                 } else if (isFocused.value) {
                     LocalTheme.colors.secondary
                 } else LocalTheme.colors.brandMain,
-                LocalTheme.shapes.componentShape
+                shape
             )
             .onFocusChanged {
                 isFocused.value = it.isFocused
@@ -91,6 +98,7 @@ fun EditFieldInput(
         isError = isError,
         minLines = minLines,
         maxLines = maxLines,
+        paddingValues = paddingValues,
         singleLine = maxLines == 1,
         value = text.value,
         onValueChange = { outputValue ->
@@ -99,10 +107,7 @@ fun EditFieldInput(
                 onValueChange(outputValue)
             }
         },
-        textStyle = TextStyle(
-            color = LocalTheme.colors.primary,
-            fontSize = 16.sp
-        ),
+        textStyle = textStyle,
         leadingIcon = if(leadingIcon != null) {
             {
                 MinimalisticIcon(imageVector = leadingIcon)
@@ -114,14 +119,14 @@ fun EditFieldInput(
                 Text(
                     text = hint,
                     color = LocalTheme.colors.brandMain,
-                    fontSize = 12.sp
+                    fontSize = 16.sp
                 )
             }
         },
         trailingIcon = if(clearable && text.value.isNotEmpty()) {
             {
                 MinimalisticIcon(
-                    contentDescription = stringResource(id = R.string.btn_clear_content_description),
+                    contentDescription = "Clear",
                     imageVector = Icons.Outlined.Clear
                 ) {
                     text.value = ""
@@ -129,7 +134,7 @@ fun EditFieldInput(
                 }
             }
         }else null,
-        shape = LocalTheme.shapes.componentShape
+        shape = shape
     )
 }
 

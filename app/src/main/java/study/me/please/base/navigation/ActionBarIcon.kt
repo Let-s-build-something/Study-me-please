@@ -42,7 +42,7 @@ fun ActionBarIcon(
             .then(modifier)
             .widthIn(32.dp, 110.dp)
             .wrapContentHeight()
-            .clip(LocalTheme.shapes.circularActionShape)
+            .clip(LocalTheme.shapes.rectangularActionShape)
             .clickable(
                 indication = rememberRipple(
                     bounded = true,

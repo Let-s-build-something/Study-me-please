@@ -21,7 +21,6 @@ import androidx.compose.material.icons.automirrored.outlined.ArrowForwardIos
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -41,7 +40,6 @@ import androidx.navigation.NavController
 import com.squadris.squadris.compose.components.getDefaultPullRefreshSize
 import com.squadris.squadris.compose.theme.LocalTheme
 import com.squadris.squadris.utils.OnLifecycleEvent
-import okhttp3.internal.notify
 import study.me.please.R
 import study.me.please.base.DraggableRefreshIndicator
 import study.me.please.base.ProgressBarRefreshIndicator
@@ -52,7 +50,7 @@ import study.me.please.ui.components.CollectionCard
 import study.me.please.ui.components.ImageAction
 import study.me.please.ui.components.InteractiveCardState
 import study.me.please.ui.components.OutlinedButton
-import study.me.please.ui.components.SessionCard
+import study.me.please.ui.components.session.SessionCard
 import study.me.please.ui.components.rememberInteractiveCardState
 import java.util.UUID
 

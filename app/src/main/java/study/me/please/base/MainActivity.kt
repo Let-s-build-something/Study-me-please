@@ -266,6 +266,8 @@ class MainActivity: ComponentActivity(), BackboneChannel {
                                         actions.value = NavigationDestination.SESSION to newActions
                                     }
                                 )
+                                backStackEntry.arguments?.remove(NavigationComponent.QUESTION_UIDS)
+                                backStackEntry.arguments?.remove(NavigationComponent.COLLECTION_UID)
                             }
                         }
                     }

@@ -25,8 +25,4 @@ interface PreferencesDao {
     /** Removes preference pack from the database based on its primary key [uid] */
     @Query("DELETE FROM ${AppRoomDatabase.ROOM_SESSION_PREFERENCE_PACK_TABLE} WHERE uid == :uid")
     suspend fun deletePreferencePack(uid: String)
-
-    /** Removes sessions from the database based on their primary key [uids] */
-    @Query("DELETE FROM ${AppRoomDatabase.ROOM_SESSION_TABLE} WHERE uid in (:uids)")
-    suspend fun deleteSessions(uids: Set<String>)
 }

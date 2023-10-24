@@ -5,6 +5,7 @@ import study.me.please.data.io.CollectionIO
 import study.me.please.data.io.FactIO
 import study.me.please.data.io.QuestionIO
 import study.me.please.data.io.SessionIO
+import java.util.UUID
 import javax.inject.Inject
 
 /** Data storage */
@@ -28,6 +29,7 @@ enum class ErrorType {
 }
 
 data class QuestionGenerationResponse(
+    val uid: String = UUID.randomUUID().toString(),
     val errorType: ErrorType? = null,
     val isSuccessful: Boolean? = null,
     val questionsGenerated: Int? = null

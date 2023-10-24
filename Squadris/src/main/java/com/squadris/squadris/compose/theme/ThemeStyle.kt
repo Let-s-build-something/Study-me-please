@@ -2,10 +2,16 @@ package com.squadris.squadris.compose.theme
 
 import androidx.compose.material3.CardElevation
 import androidx.compose.material3.CheckboxColors
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.SelectableChipBorder
+import androidx.compose.material3.SelectableChipColors
 import androidx.compose.material3.SwitchColors
 import androidx.compose.material3.TextFieldColors
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 
 /** Variables with default styles */
 interface ThemeStyle {
@@ -28,4 +34,12 @@ interface ThemeStyle {
 
     @get:Composable
     val cardClickableElevation: CardElevation
+
+    @OptIn(ExperimentalMaterial3Api::class)
+    @get:Composable
+    val chipBorderDefault: SelectableChipBorder
+
+    @OptIn(ExperimentalMaterial3Api::class)
+    @get:Composable
+    val chipColorsDefault: SelectableChipColors
 }

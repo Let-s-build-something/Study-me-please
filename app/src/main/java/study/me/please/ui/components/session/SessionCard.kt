@@ -1,6 +1,7 @@
-package study.me.please.ui.components
+package study.me.please.ui.components.session
 
 import android.annotation.SuppressLint
+import android.util.Log
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
@@ -40,9 +41,11 @@ import androidx.constraintlayout.compose.Dimension
 import com.squadris.squadris.compose.theme.LocalTheme
 import com.squadris.squadris.ext.brandShimmerEffect
 import study.me.please.R
-import study.me.please.data.io.CollectionIO
 import study.me.please.data.io.QuestionMode
 import study.me.please.data.io.SessionIO
+import study.me.please.ui.components.InteractiveCardMode
+import study.me.please.ui.components.InteractiveCardState
+import study.me.please.ui.components.OptionsModeLayout
 
 /**
  * Card displaying a session
@@ -139,8 +142,8 @@ private fun ContentLayout(
         val (checkBox, imgMode, txtName, txtQuestionCount) = createRefs()
         AnimatedVisibility(
             modifier = Modifier.constrainAs(checkBox) {
-                start.linkTo(parent.start)
-                top.linkTo(parent.top)
+                start.linkTo(parent.start, (-8).dp)
+                top.linkTo(parent.top, (-12).dp)
             },
             visible = state.mode.value == InteractiveCardMode.CHECKING
         ) {
@@ -169,8 +172,8 @@ private fun ContentLayout(
                     )
                     top.linkTo(parent.top)
                 },
-            imageVector = (session.preferencePack?.estimatedMode ?: QuestionMode.LEARNING).icon,
-            contentDescription = (session.preferencePack?.estimatedMode ?: QuestionMode.LEARNING).icon.name,
+            imageVector = (session.estimatedMode ?: QuestionMode.LEARNING).icon,
+            contentDescription = (session.estimatedMode ?: QuestionMode.LEARNING).icon.name,
             colorFilter = ColorFilter.tint(color = LocalTheme.colors.tetrial)
         )
         Text(

@@ -4,12 +4,14 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.FiniteAnimationSpec
+import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -35,13 +37,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import com.squadris.squadris.compose.components.DEFAULT_ANIMATION_LENGTH_SHORT
 import com.squadris.squadris.compose.theme.LocalTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import study.me.please.R
 import study.me.please.data.io.CollectionIO
-import study.me.please.data.io.QuestionIO
 import study.me.please.data.io.SessionIO
+import study.me.please.ui.components.session.SessionCard
 import study.me.please.ui.components.tab_switch.OutlinedTabSwitch
 import study.me.please.ui.components.tab_switch.TabSwitchState
 import study.me.please.ui.components.tab_switch.rememberTabSwitchState
@@ -52,7 +55,7 @@ const val COLLECTIONS_TAB_INDEX = 1
 /**
  * Base sheet for adding item to either session or collection
  */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun AddToSessionCollectionSheet(
     modifier: Modifier = Modifier,
@@ -185,6 +188,13 @@ fun AddToSessionCollectionSheet(
                                                     }else selectedSessionUidList.remove(session.uid)
                                                 }
                                                 SessionCard(
+                                                    modifier = Modifier
+                                                        .animateItemPlacement(
+                                                            tween(
+                                                                durationMillis = DEFAULT_ANIMATION_LENGTH_SHORT,
+                                                                easing = LinearOutSlowInEasing
+                                                            )
+                                                        ),
                                                     session = session,
                                                     state = state
                                                 )
@@ -228,6 +238,13 @@ fun AddToSessionCollectionSheet(
                                                     }else selectedCollectionUidList.remove(collection.uid)
                                                 }
                                                 CollectionCard(
+                                                    modifier = Modifier
+                                                        .animateItemPlacement(
+                                                            tween(
+                                                                durationMillis = DEFAULT_ANIMATION_LENGTH_SHORT,
+                                                                easing = LinearOutSlowInEasing
+                                                            )
+                                                        ),
                                                     data = collection,
                                                     state = state,
                                                     skipOptions = true

@@ -1,6 +1,7 @@
 package study.me.please.base.navigation
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Assessment
 import androidx.compose.material.icons.outlined.AutoFixHigh
 import androidx.compose.material.icons.outlined.Inventory2
 import androidx.compose.material.icons.outlined.PersonAddAlt
@@ -96,20 +97,6 @@ fun CollectionDetailAppBarActions(
 }
 
 @Composable
-fun SessionAppBarActions(
-    isTest: Boolean,
-    onChangePreferences: () -> Unit = {}
-) {
-    if(isTest) {
-        ActionBarIcon(
-            text = stringResource(id = R.string.button_preferences),
-            imageVector = Icons.Outlined.AutoFixHigh,
-            onClick = onChangePreferences
-        )
-    }
-}
-
-@Composable
 fun SessionLobbyBarActions(
     onChangePreferences: () -> Unit = {}
 ) {
@@ -134,5 +121,25 @@ fun SessionDetailBarActions(
         text = stringResource(id = R.string.button_play),
         imageVector = Icons.Outlined.PlayArrow,
         onClick = onPlay
+    )
+}
+
+@Composable
+fun SessionAppBarActions(
+    isTest: Boolean,
+    onChangePreferences: () -> Unit = {},
+    onStatisticsOpen: () -> Unit = {},
+) {
+    if(isTest) {
+        ActionBarIcon(
+            text = stringResource(id = R.string.button_preferences),
+            imageVector = Icons.Outlined.AutoFixHigh,
+            onClick = onChangePreferences
+        )
+    }
+    ActionBarIcon(
+        text = stringResource(id = R.string.button_statistics),
+        imageVector = Icons.Outlined.Assessment,
+        onClick = onStatisticsOpen
     )
 }

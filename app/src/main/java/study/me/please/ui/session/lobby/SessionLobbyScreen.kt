@@ -1,5 +1,8 @@
 package study.me.please.ui.session.lobby
 
+import androidx.compose.animation.core.LinearOutSlowInEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -13,7 +16,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Deselect
@@ -25,7 +27,6 @@ import androidx.compose.material3.rememberStandardBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -42,26 +43,27 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.navigation.NavController
+import com.squadris.squadris.compose.components.DEFAULT_ANIMATION_LENGTH_SHORT
 import com.squadris.squadris.compose.theme.Colors
 import com.squadris.squadris.compose.theme.LocalTheme
 import com.squadris.squadris.ext.brandShimmerEffect
 import com.squadris.squadris.utils.OnLifecycleEvent
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import study.me.please.R
 import study.me.please.base.navigation.NavigationUtils
 import study.me.please.base.navigation.SessionLobbyBarActions
-import study.me.please.data.io.SessionIO
+import study.me.please.data.io.preferences.SessionPreferencePack
 import study.me.please.ui.components.BasicAlertDialog
 import study.me.please.ui.components.ButtonState
 import study.me.please.ui.components.ComponentHeaderButton
 import study.me.please.ui.components.ImageAction
 import study.me.please.ui.components.InteractiveCardMode
 import study.me.please.ui.components.ListOptionsBottomSheet
-import study.me.please.ui.components.PreferenceChooser
-import study.me.please.ui.components.SessionCard
+import study.me.please.ui.components.preference_chooser.PreferenceChooser
+import study.me.please.ui.components.session.SessionCard
 import study.me.please.ui.components.SimpleModalBottomSheet
+import study.me.please.ui.components.preference_chooser.PreferenceChooserController
 import study.me.please.ui.components.rememberInteractiveCardState
 
 /** communication bridge for controlling session lobby screen */
@@ -69,11 +71,12 @@ interface SessionLobbyListener {
     fun onCreateNewItem()
     fun onCheckingStarted()
 }
-
+//TODO SessionLobbyListener needs to be redone into a controller and big refactor needed,
+//TODO with OptionsLayout and some animations
 /**
  * Session lobby screen for management of sessions
  */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun SessionLobbyScreen(
     navController: NavController,
@@ -81,6 +84,7 @@ fun SessionLobbyScreen(
     viewModel: SessionLobbyViewModel = hiltViewModel(),
     changeActionBar: (actions: @Composable RowScope.() -> Unit) -> Unit
 ) {
+    val sessions = viewModel.sessions.collectAsState()
     val optionsSheetState = rememberBottomSheetScaffoldState(
         bottomSheetState = rememberStandardBottomSheetState(skipHiddenState = false)
     )
@@ -92,16 +96,13 @@ fun SessionLobbyScreen(
     val coroutineScope = rememberCoroutineScope()
 
     val newItem = remember(createNewItem) { mutableStateOf(createNewItem) }
-    val preferencePacks = viewModel.dataManager.preferencePacks.collectAsState()
-    val sessionsFlow = viewModel.dataManager.sessions.collectAsState()
-    val sessions = remember {
-        derivedStateOf { mutableStateListOf(*sessionsFlow.value.orEmpty().toTypedArray()) }
-    }
-    val interactiveStates = sessions.value.map {
+    val preferencePacks = viewModel.preferencePacks.collectAsState()
+    val sessionsFlow = viewModel.sessions.collectAsState()
+    val interactiveStates = sessions.value?.map {
         rememberInteractiveCardState()
     }
     val stopChecking = {
-        interactiveStates.forEach {
+        interactiveStates?.forEach {
             it.isChecked.value = false
             it.mode.value = InteractiveCardMode.DATA_DISPLAY
         }
@@ -113,12 +114,11 @@ fun SessionLobbyScreen(
     val listener = remember(viewModel) {
         object: SessionLobbyListener {
             override fun onCreateNewItem() {
-                val newSession = SessionIO()
-                sessions.value.add(0, newSession)
+                viewModel.addNewSession()
                 stopChecking()
             }
             override fun onCheckingStarted() {
-                interactiveStates.forEach {
+                interactiveStates?.forEach {
                     it.mode.value = InteractiveCardMode.CHECKING
                 }
             }
@@ -134,10 +134,15 @@ fun SessionLobbyScreen(
         )
     }
 
+    LaunchedEffect(Unit) {
+        viewModel.requestPreferencePacks()
+    }
     LaunchedEffect(key1 = selectedSessionUids.size) {
         coroutineScope.launch {
             if(selectedSessionUids.size > 0) {
-                listener.onCheckingStarted()
+                interactiveStates?.forEach {
+                    it.mode.value = InteractiveCardMode.CHECKING
+                }
                 optionsSheetState.bottomSheetState.expand()
                 localFocusManager.clearFocus()
             }else stopChecking()
@@ -174,11 +179,18 @@ fun SessionLobbyScreen(
                 modifier = Modifier
                     .padding(8.dp)
                     .padding(bottom = 32.dp),
-                onDeleteRequest = { preferencePack ->
-                    viewModel.requestPreferencePackDelete(preferencePack?.uid)
-                },
-                requestPreferenceSave = { preferencePack ->
-                    viewModel.requestPreferencePackSave(preferencePack)
+                controller = object: PreferenceChooserController {
+                    override fun addPreferencePack(name: String): SessionPreferencePack {
+                        return viewModel.addNewPreferencePack(name = name)
+                    }
+                    override fun savePreference(preference: SessionPreferencePack) {
+                        viewModel.requestPreferencePackSave(preference)
+                    }
+                    override fun deletePreference(preferenceUid: String) {
+                        viewModel.requestPreferencePackDelete(preferenceUid)
+                    }
+                    override fun choosePreference(preference: SessionPreferencePack) {
+                    }
                 },
                 defaultPreferencePack = preferencePacks.value?.firstOrNull(),
                 mustHaveSelection = false,
@@ -199,12 +211,6 @@ fun SessionLobbyScreen(
                 text = stringResource(id = R.string.button_confirm)
             ) {
                 coroutineScope.launch(Dispatchers.Default) {
-                    sessions.value.removeAll { selectedSessionUids.contains(it.uid) }
-                    viewModel.dataManager.sessions.update { list ->
-                        list?.toMutableList()?.apply {
-                            removeAll { selectedSessionUids.contains(it.uid) }
-                        }
-                    }
                     viewModel.requestSessionsDeletion(uids = selectedSessionUids.toSet())
                     stopChecking()
                     showDeleteDialog.value = false
@@ -246,7 +252,7 @@ fun SessionLobbyScreen(
                     leadingImageVector = Icons.Outlined.SelectAll,
                     text = stringResource(id = R.string.button_select_all)
                 ) {
-                    interactiveStates.forEach {
+                    interactiveStates?.forEach {
                         it.isChecked.value = true
                     }
                 }
@@ -280,17 +286,24 @@ fun SessionLobbyScreen(
                         Spacer(modifier = Modifier.height(56.dp))
                     }
                     itemsIndexed(
-                        sessions.value,
+                        sessions.value.orEmpty(),
                         key = { _, item -> item.uid }
                     ) { index, session ->
-                        interactiveStates.getOrNull(index)?.let { state ->
+                        interactiveStates?.getOrNull(index)?.let { state ->
                             LaunchedEffect(state.isChecked.value) {
                                 if(state.isChecked.value) {
                                     selectedSessionUids.add(session.uid)
                                 }else selectedSessionUids.remove(session.uid)
                             }
                             SessionCard(
-                                modifier = Modifier.fillMaxWidth(),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .animateItemPlacement(
+                                        tween(
+                                            durationMillis = DEFAULT_ANIMATION_LENGTH_SHORT,
+                                            easing = LinearOutSlowInEasing
+                                        )
+                                    ),
                                 session = session,
                                 onEditOptionPressed = {
                                     NavigationUtils.navigateToSessionDetail(

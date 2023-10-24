@@ -1,6 +1,7 @@
 package study.me.please.ui.collection.detail
 
 import android.annotation.SuppressLint
+import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
@@ -34,6 +35,7 @@ import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material.icons.outlined.SelectAll
 import androidx.compose.material3.BottomSheetScaffoldState
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.material3.rememberStandardBottomSheetState
@@ -60,6 +62,7 @@ import androidx.compose.ui.zIndex
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import coil.compose.AsyncImagePainter
+import com.squadris.squadris.compose.components.DEFAULT_ANIMATION_LENGTH_SHORT
 import com.squadris.squadris.compose.theme.Colors
 import com.squadris.squadris.compose.theme.LocalTheme
 import kotlinx.coroutines.Dispatchers
@@ -74,7 +77,7 @@ import study.me.please.data.io.QuestionIO
 import study.me.please.ui.components.BasicAlertDialog
 import study.me.please.ui.components.BrandHeaderButton
 import study.me.please.ui.components.ButtonState
-import study.me.please.ui.components.EditFieldInput
+import com.squadris.squadris.compose.components.EditFieldInput
 import study.me.please.ui.components.EditableImageAsset
 import study.me.please.ui.components.ImageAction
 import study.me.please.ui.components.InteractiveCardMode
@@ -82,8 +85,6 @@ import study.me.please.ui.components.QuestionAnswerCard
 import study.me.please.ui.components.SimpleBottomSheet
 import study.me.please.ui.components.TextHeader
 import study.me.please.ui.components.rememberInteractiveCardState
-import study.me.please.ui.components.tab_switch.DEFAULT_ANIMATION_LENGTH_LONG
-import study.me.please.ui.components.tab_switch.DEFAULT_ANIMATION_LENGTH_SHORT
 
 const val INPUT_DELAYED_RESPONSE_MILLIS = 500L
 
@@ -96,7 +97,7 @@ data class QuestionSheetState(
 )
 
 /** Bottom sheet layout for editing a question */
-@OptIn(ExperimentalMaterialApi::class, ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun QuestionEditBottomSheetContent(
     modifier: Modifier = Modifier,
@@ -105,11 +106,12 @@ fun QuestionEditBottomSheetContent(
     clipBoard: GeneralClipBoard,
     onQuestionTestPlay: (question: QuestionIO) -> Unit,
     onDeleteRequest: (selectedAnswerUids: List<String>) -> Unit = {},
-    state: BottomSheetScaffoldState = rememberBottomSheetScaffoldState(
-        bottomSheetState = rememberStandardBottomSheetState(skipHiddenState = false)
+    sheetState: BottomSheetScaffoldState = rememberBottomSheetScaffoldState(
+        bottomSheetState = rememberStandardBottomSheetState(
+            skipHiddenState = false, initialValue = SheetValue.Hidden
+        )
     ),
     content: @Composable (paddingValues: PaddingValues) -> Unit = {},
-    addExistingAnswer: suspend () -> QuestionAnswerIO?,
     onDismissRequest: () -> Unit = {}
 ) {
     val questionSheetState = remember { QuestionSheetState() }
@@ -368,7 +370,8 @@ fun QuestionEditBottomSheetContent(
                         .fillMaxWidth()
                         .wrapContentHeight()
                         .onGloballyPositioned { coordinates ->
-                            stickyHeaderHeight = with(localDensity) { coordinates.size.height.toDp() }
+                            stickyHeaderHeight =
+                                with(localDensity) { coordinates.size.height.toDp() }
                         }
                         .constrainAs(stickyHeader) {
                             bottom.linkTo(parent.bottom, 8.dp)
@@ -427,7 +430,7 @@ fun QuestionEditBottomSheetContent(
                                 interactiveStates.firstOrNull()?.mode?.value = InteractiveCardMode.EDIT
                             }
                         }
-                        BrandHeaderButton(
+                        /*BrandHeaderButton(
                             modifier = Modifier.weight(0.5f),
                             text = stringResource(id = R.string.collection_detail_old_response)
                         ) {
@@ -439,7 +442,7 @@ fun QuestionEditBottomSheetContent(
                                     }else showNoAnswerSnackbar.value = true
                                 }
                             }
-                        }
+                        }*/
                     }
                 }
             }
@@ -467,8 +470,8 @@ fun QuestionEditBottomSheetContent(
             stopChecking()
             onDismissRequest()
         },
-        state = state,
-        content = content,
+        state = sheetState,
+        content = content
     )
 
     LaunchedEffect(questionIO) {
@@ -490,6 +493,12 @@ fun QuestionEditBottomSheetContent(
         if(questionSheetState.explanationImageUrl.value?.isEmpty == true) {
             questionIO.imageExplanationUrl = null
             requestDataSave()
+        }
+    }
+    LaunchedEffect(key1 = sheetState.bottomSheetState.currentValue) {
+        // for some reason, it doesn't go to hidden, but PartiallyExpanded after collapse
+        if(sheetState.bottomSheetState.currentValue == SheetValue.PartiallyExpanded) {
+            onDismissRequest()
         }
     }
     LaunchedEffect(answers.size) {
@@ -544,7 +553,6 @@ fun OptionsLayout(
             LocalTheme.shapes.betweenItemsSpace
         )
     ) {
-        Spacer(modifier = Modifier.width(LocalTheme.shapes.betweenItemsSpace))
         AnimatedVisibility(
             modifier = Modifier.zIndex(-1f),
             visible = hasPasteOption,
@@ -626,7 +634,6 @@ private fun Preview() {
         onQuestionTestPlay = {
 
         },
-        clipBoard = GeneralClipBoard(),
-        addExistingAnswer = { null }
+        clipBoard = GeneralClipBoard()
     )
 }

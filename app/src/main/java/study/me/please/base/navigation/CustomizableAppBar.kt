@@ -5,7 +5,6 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.ripple.rememberRipple
@@ -13,7 +12,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarColors
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -58,7 +56,7 @@ fun CustomizableAppBar(
                     modifier = Modifier
                         .padding(4.dp)
                         .size(48.dp)
-                        .clip(RoundedCornerShape(8.dp))
+                        .clip(LocalTheme.shapes.rectangularActionShape)
                         .clickable(
                             indication = rememberRipple(
                                 bounded = true,

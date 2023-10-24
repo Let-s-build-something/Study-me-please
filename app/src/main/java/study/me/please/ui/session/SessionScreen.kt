@@ -1,10 +1,11 @@
 package study.me.please.ui.session
 
 import android.annotation.SuppressLint
-import android.util.Log
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -40,8 +41,10 @@ import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
 import com.squadris.squadris.compose.theme.Colors
 import com.squadris.squadris.compose.theme.LocalTheme
+import com.squadris.squadris.utils.OnLifecycleEvent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import study.me.please.R
@@ -53,8 +56,10 @@ import study.me.please.data.io.preferences.SessionPreferencePack
 import study.me.please.ui.components.EditableImageAsset
 import study.me.please.ui.components.ImageAction
 import study.me.please.ui.components.OutlinedButton
-import study.me.please.ui.components.PreferenceChooser
 import study.me.please.ui.components.SimpleModalBottomSheet
+import study.me.please.ui.components.preference_chooser.PreferenceChooser
+import study.me.please.ui.components.preference_chooser.PreferenceChooserController
+import study.me.please.ui.components.session.StatisticsTable
 
 /**
  * Screen for displaying and answering questions within pre-defined session
@@ -78,56 +83,70 @@ fun SessionScreen(
     changeActionBar: (actions: @Composable RowScope.() -> Unit) -> Unit,
     viewModel: SessionViewModel = hiltViewModel()
 ) {
-    val coroutineScope = rememberCoroutineScope()
-    viewModel.requestStateData(
-        isTestingMode = isTestingMode,
-        sessionUid = sessionUid,
-        collectionUid = collectionUid,
-        questionUid = questionUid,
-        questionUids = questionUids,
-        preferencePackUid = preferencePackUid
-    )
-    val session = viewModel.dataManager.session.collectAsState()
-    val questions = viewModel.dataManager.questions.collectAsState()
-    val preferencePacks = viewModel.dataManager.preferencePacks.collectAsState()
-    val preferencePack = viewModel.dataManager.preferencePack.collectAsState()
+    val session = viewModel.session.collectAsState()
+    val questions = viewModel.questions.collectAsState()
+    val preferencePacks = viewModel.preferencePacks.collectAsState()
+    val preferencePack = viewModel.preferencePack.collectAsState()
 
-    if(questions.value.isNullOrEmpty().not() && preferencePack.value != null) {
-        preferencePack.value?.let { preferences ->
-            val showPreferenceModal = remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
+    val showStatistics = remember { mutableStateOf(false) }
+    val showPreferenceModal = remember { mutableStateOf(false) }
+
+    OnLifecycleEvent { event ->
+        if(event == Lifecycle.Event.ON_RESUME) {
             changeActionBar {
                 SessionAppBarActions(
                     isTest = isTestingMode,
                     onChangePreferences = {
                         showPreferenceModal.value = true
+                    },
+                    onStatisticsOpen = {
+                        showStatistics.value = showStatistics.value.not()
                     }
                 )
             }
-            val state = rememberSessionScreenState(
+        }
+    }
+    LaunchedEffect(Unit) {
+        viewModel.requestStateData(
+            isTestingMode = isTestingMode,
+            sessionUid = sessionUid,
+            collectionUid = collectionUid,
+            questionUid = questionUid,
+            questionUids = questionUids,
+            preferencePackUid = preferencePackUid
+        )
+    }
+
+    if(questions.value.isNullOrEmpty().not() && preferencePack.value != null) {
+        preferencePack.value?.let { preference ->
+            val sessionState = rememberSessionScreenState(
                 session.value?.questionModule ?: QuestionModule(),
                 isTest = isTestingMode,
-                sessionPreferencePack = mutableStateOf(preferences)
+                sessionPreferencePack = mutableStateOf(preference),
+                requestSave = { module ->
+                    viewModel.requestQuestionModuleSave(module)
+                }
             )
             val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-            LaunchedEffect(preferencePack.value) {
+
+            /*LaunchedEffect(preferencePack.value) {
                 preferencePack.value?.let { newPreference ->
-                    state.sessionPreferencePack.value = newPreference
+                    sessionState.sessionPreferencePack.value = newPreference
                 }
-            }
-            LaunchedEffect(session.value) {
-                session.value?.preferencePack?.let { newPreference ->
-                    state.sessionPreferencePack.value = newPreference
-                }
-            }
+            }*/
             LaunchedEffect(showPreferenceModal.value) {
                 if(showPreferenceModal.value) {
                     sheetState.expand()
                 }else sheetState.hide()
             }
-            val sessionItem = state.currentItem.collectAsState()
+            val sessionItem = sessionState.currentItem.collectAsState()
             LaunchedEffect(questions.value) {
-                state.module.questions = questions.value.orEmpty()
-                state.initialize()
+                sessionState.module.questions = questions.value.orEmpty()
+                sessionState.initialize()
+            }
+            LaunchedEffect(sessionState.currentItem.value) {
+                showStatistics.value = false
             }
 
             if(showPreferenceModal.value) {
@@ -141,30 +160,47 @@ fun SessionScreen(
                         modifier = Modifier
                             .padding(8.dp)
                             .padding(bottom = 32.dp),
-                        onDeleteRequest = {
-                            viewModel.requestPreferencePackDelete(it?.uid)
+                        controller = object: PreferenceChooserController {
+                            override fun addPreferencePack(name: String): SessionPreferencePack {
+                                return viewModel.addNewPreferencePack(name = name)
+                            }
+                            override fun savePreference(preference: SessionPreferencePack) {
+                                viewModel.requestPreferencePackSave(preference)
+                            }
+                            override fun deletePreference(preferenceUid: String) {
+                                viewModel.requestPreferencePackDelete(preferenceUid)
+                            }
+                            override fun choosePreference(preference: SessionPreferencePack) {
+                                sessionState.sessionPreferencePack.value = preference
+                                viewModel.requestSessionSave(preferencePack = preference)
+                            }
                         },
-                        requestPreferenceSave = {
-                            viewModel.requestPreferencePackSave(it)
-                        },
-                        defaultPreferencePack = state.sessionPreferencePack.value,
-                        onPreferencePackChosen = { preferencePack ->
-                            state.sessionPreferencePack.value = preferencePack
-                            viewModel.requestSessionSave(preferencePack = preferencePack)
-                        },
+                        defaultPreferencePack = sessionState.sessionPreferencePack.value,
                         preferencePacks = preferencePacks.value
                     )
                 }
             }
-            PromptLayout(
-                sessionItem = sessionItem.value,
-                state = state,
-                coroutineScope = coroutineScope
-            )
             BackHandler {
                 coroutineScope.launch {
-                    state.stepBackward()
+                    sessionState.stepBackward()
                 }
+            }
+
+            Column {
+                AnimatedVisibility(visible = showStatistics.value) {
+                    StatisticsTable(
+                        modifier = Modifier
+                            .padding(16.dp)
+                            .fillMaxWidth(),
+                        questionModule = sessionState.module
+                    )
+                }
+                Spacer(modifier = Modifier.height(LocalTheme.shapes.betweenItemsSpace))
+                PromptLayout(
+                    sessionItem = sessionItem.value,
+                    state = sessionState,
+                    coroutineScope = coroutineScope
+                )
             }
         }
     }
@@ -193,6 +229,8 @@ private fun PromptLayout(
             .padding(start = 24.dp, end = 24.dp)
     ) {
         val (columnContent, btnContinue, btnContinueRepeat) = createRefs()
+
+        val isLocked = state.mode.value == SessionScreenMode.LOCKED || sessionItem.isHistory
         LazyColumn(
             modifier = Modifier
                 .constrainAs(columnContent) {
@@ -226,7 +264,7 @@ private fun PromptLayout(
                         .padding(8.dp),
                     asset = question?.imagePromptUrl
                 )
-                if(state.mode.value == SessionScreenMode.LOCKED) {
+                if(isLocked) {
                     if(question?.textExplanation.isNullOrEmpty().not()) {
                         Text(
                             text = question?.textExplanation ?: "",
@@ -245,13 +283,12 @@ private fun PromptLayout(
                 }
             }
             items(
-                answers.value.orEmpty(),
+                (if(sessionItem.isHistory) question?.answers else answers.value).orEmpty(),
                 key = { it.uid }
             ) { answer ->
                 val validation = (sessionItem.historyItem?.answers ?: state.validations).find { it.uid == answer.uid }
                 val showResult = validation != null
 
-                Log.d("session_screen", "answer: ${answer.text},  showResult: $showResult, validation: $validation")
                 OutlinedButton(
                     modifier = if(showResult) {
                         Modifier
@@ -271,7 +308,8 @@ private fun PromptLayout(
                         }else Icons.Outlined.Close
                     }else if(selectedAnswers.contains(answer)) Icons.Outlined.Check else null,
                     // we don't want to validate again, it's pointless
-                    enabled = state.mode.value == SessionScreenMode.REGULAR || validation != null,
+                    enabled = (state.mode.value == SessionScreenMode.REGULAR || validation != null)
+                            && sessionItem.isHistory.not(),
                     onClick = {
                         if(state.sessionPreferencePack.value.manualValidation.value) {
                             if(selectedAnswers.contains(answer)) {
@@ -286,7 +324,7 @@ private fun PromptLayout(
                     activeColor = if(showResult) Color.White else LocalTheme.colors.primary,
                     inactiveColor = if(showResult) Color.White else LocalTheme.colors.secondary
                 )
-                if(state.mode.value == SessionScreenMode.LOCKED) {
+                if(isLocked) {
                     if(answer.explanationMessage.isNotEmpty()) {
                         Text(
                             modifier = Modifier
@@ -313,7 +351,7 @@ private fun PromptLayout(
         }
 
         if(state.validations.any { it.isCorrect.not() }.not()
-            && state.mode.value == SessionScreenMode.LOCKED
+            && isLocked
             && state.sessionPreferencePack.value.repeatOnMistake.value
         ) {
             ImageAction(
@@ -334,8 +372,7 @@ private fun PromptLayout(
                 }
             }
         }
-        if(state.mode.value == SessionScreenMode.LOCKED
-            || (state.sessionPreferencePack.value.manualValidation.value
+        if(isLocked || (state.sessionPreferencePack.value.manualValidation.value
                 && selectedAnswers.isNotEmpty())
         ) {
             ImageAction(
@@ -401,7 +438,8 @@ private fun PromptPreview() {
             ),
             state = SessionScreenState(
                 QuestionModule(),
-                sessionPreferencePack = mutableStateOf(SessionPreferencePack())
+                sessionPreferencePack = mutableStateOf(SessionPreferencePack()),
+                requestSave = {}
             ).apply {
                 mode.value = SessionScreenMode.LOCKED
             },

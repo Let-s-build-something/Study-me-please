@@ -9,6 +9,9 @@ interface ThemeShapes {
     /** shape for circular action */
     val circularActionShape: Shape
 
+    /** shape for rectangular action */
+    val rectangularActionShape: Shape
+
     /** shape for a component */
     val componentShape: Shape
 
@@ -26,4 +29,7 @@ interface ThemeShapes {
 
     /** default size of a large icon */
     val iconSizeLarge: Dp
+
+    /** shape of a chip component */
+    val chipShape: Shape
 }

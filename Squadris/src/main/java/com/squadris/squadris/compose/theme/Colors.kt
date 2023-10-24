@@ -28,8 +28,10 @@ object Colors {
     val WHITE_24: Color = Color(0x3DFFFFFF)
     val WHITE_60: Color = Color(0x99FFFFFF)
     val BLACK_24: Color = Color(0x3D000000)
-    val RED_ERROR: Color = Color(0xFFFF6060)
     val GREEN_CORRECT: Color = Color(0xFF22B573)
+    val YELLOW: Color = Color(0xFFFFC107)
+    val ORANGE: Color = Color(0xFFFF5722)
+    val RED_ERROR: Color = Color(0xFFFF6060)
 
 
     //specific to loading animations

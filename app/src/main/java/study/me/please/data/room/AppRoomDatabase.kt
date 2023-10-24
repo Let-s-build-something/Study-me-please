@@ -33,6 +33,7 @@ abstract class AppRoomDatabase: RoomDatabase() {
     abstract fun collectionDbDao(): CollectionDao
     abstract fun questionDbDao(): QuestionDao
     abstract fun sessionDbDao(): SessionDao
+    abstract fun questionModuleDbDao(): QuestionModuleDao
     abstract fun homeDbDao(): HomeDao
     abstract fun preferencesDbDao(): PreferencesDao
 

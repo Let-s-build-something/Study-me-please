@@ -1,5 +1,7 @@
 package study.me.please.ui.collection.detail
 
+import android.content.ClipData
+import android.content.Context
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -22,35 +24,29 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.DocumentScanner
 import androidx.compose.material.icons.outlined.FileDownload
 import androidx.compose.material.icons.outlined.FileUpload
-import androidx.compose.material3.BottomAppBar
-import androidx.compose.material3.BottomAppBarDefaults.exitAlwaysScrollBehavior
-import androidx.compose.material3.BottomAppBarScrollBehavior
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
-import androidx.compose.ui.input.nestedscroll.NestedScrollSource
-import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.ClipboardManager
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat.getSystemService
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.navigation.NavController
 import com.squadris.squadris.compose.components.CollapsingLayout
+import com.squadris.squadris.compose.components.DEFAULT_ANIMATION_LENGTH_SHORT
 import com.squadris.squadris.compose.theme.LocalTheme
 import com.squadris.squadris.ext.brandShimmerEffect
 import com.squadris.squadris.utils.OnLifecycleEvent
@@ -63,16 +59,17 @@ import study.me.please.base.navigation.NavigationUtils
 import study.me.please.data.io.CollectionIO
 import study.me.please.data.io.FactIO
 import study.me.please.data.io.QuestionIO
-import study.me.please.ui.components.EditFieldInput
+import com.squadris.squadris.compose.components.EditFieldInput
+import study.me.please.ui.collection.detail.facts.FactsList
+import study.me.please.ui.collection.detail.questions.QuestionsList
 import study.me.please.ui.components.ImageAction
-import study.me.please.ui.components.tab_switch.DEFAULT_ANIMATION_LENGTH_SHORT
 import study.me.please.ui.components.tab_switch.MultiChoiceSwitch
 import study.me.please.ui.components.tab_switch.rememberTabSwitchState
 
 const val REQUEST_DATA_SAVE_DELAY = 500L
 
-private const val PAGE_INDEX_QUESTIONS = 0
-private const val PAGE_INDEX_FACTS = 1
+const val PAGE_INDEX_QUESTIONS = 0
+const val PAGE_INDEX_FACTS = 1
 
 /**
  * Screen for creating a new collection
@@ -157,7 +154,7 @@ fun CollectionDetailScreen(
 }
 
 /** Layout for main content - showing actual information */
-@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun ContentLayout(
     collectionDetail: CollectionIO,
@@ -210,13 +207,14 @@ private fun ContentLayout(
                 color = LocalTheme.colors.onBackgroundComponent,
                 shape = LocalTheme.shapes.componentShape
             )
-            .wrapContentHeight()
-            .padding(horizontal = 12.dp),
+            .wrapContentHeight(),
         collapsingToolbar = @Composable {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .padding(horizontal = 12.dp)
             ) {
+                val clipboardManager: ClipboardManager = LocalClipboardManager.current
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -238,7 +236,9 @@ private fun ContentLayout(
                         leadingImageVector = Icons.Outlined.FileUpload,
                         text = stringResource(id = R.string.button_export)
                     ) {
-
+                        viewModel.getExportString { json ->
+                            clipboardManager.setText(AnnotatedString(json))
+                        }
                     }
                     ImageAction(
                         modifier = Modifier,
@@ -300,10 +300,8 @@ private fun ContentLayout(
         ) { index ->
             if(index == PAGE_INDEX_QUESTIONS) {
                 QuestionsList(
-                    collectionDetail = collectionDetail,
                     onNavigateToQuestionTest = onNavigateToQuestionTest,
                     viewModel = viewModel,
-                    requestCollectionSave = requestCollectionSave,
                     navigateToSession = navigateToSession,
                     requestQuestionSave = requestQuestionSave
                 )
@@ -312,7 +310,12 @@ private fun ContentLayout(
                     viewModel = viewModel,
                     collectionDetail = collectionDetail,
                     requestCollectionSave = requestCollectionSave,
-                    requestFactSave = requestFactSave
+                    requestFactSave = requestFactSave,
+                    onPageChange = {
+                        coroutineScope.launch {
+                            contentPagerState.scrollToPage(0)
+                        }
+                    }
                 )
             }
         }

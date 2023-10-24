@@ -1,12 +1,15 @@
 package study.me.please.ui.collection.detail
 
+import android.content.Context
 import android.util.Log
 import androidx.lifecycle.viewModelScope
 import com.squadris.squadris.utils.DateUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -20,6 +23,9 @@ import study.me.please.data.io.ImportedSource
 import study.me.please.data.io.QuestionAnswerIO
 import study.me.please.data.io.QuestionIO
 import study.me.please.data.io.SessionIO
+import study.me.please.data.io.clip_board.CollectionExport
+import study.me.please.ui.collection.detail.facts.FactsFilter
+import study.me.please.ui.collection.detail.questions.QuestionsFilter
 import javax.inject.Inject
 
 @HiltViewModel
@@ -46,11 +52,33 @@ class CollectionDetailViewModel @Inject constructor(
     /** list of all sessions saved locally */
     var sessions = dataManager.sessions.asStateFlow()
 
+    /** filter for questions */
+    val questionsFilter: MutableStateFlow<QuestionsFilter> = MutableStateFlow(QuestionsFilter())
+
     /** local temporary save of downloaded questions */
-    var collectionQuestions = dataManager.collectionQuestions.asStateFlow()
+    var collectionQuestions = dataManager.collectionQuestions.combine(questionsFilter) { collections, filter ->
+        collections.filter { question ->
+            (filter.text.isEmpty() || (question.prompt.contains(filter.text) || question.textExplanation.contains(filter.text)))
+                    && (filter.isInvalid.not() || (question.answers.any { it.isCorrect }.not() || question.prompt.isEmpty()))
+                    && (filter.hasImage.not() || (question.imagePromptUrl?.isEmpty == false
+                    || question.imageExplanationUrl?.isEmpty == false
+                    || question.answers.any { answer -> answer.imageExplanation?.isEmpty == false }))
+        }
+    }
+
+    /** filter for facts */
+    val factsFilter: MutableStateFlow<FactsFilter> = MutableStateFlow(FactsFilter())
 
     /** local temporary save of downloaded facts */
-    var collectionFacts = dataManager.collectionFacts.asStateFlow()
+    var collectionFacts = dataManager.collectionFacts.combine(factsFilter) { collections, filters ->
+        collections.filter { fact ->
+            (filters.types.isEmpty() || filters.types.contains(fact.type))
+                    && (filters.textFilter.isEmpty()
+                        || (fact.shortKeyInformation.contains(filters.textFilter)
+                            || fact.longInformation.contains(filters.textFilter))
+                    )
+        }
+    }
 
     /** Requests for a specific collection by an ID */
     fun requestCollectionByUid(collectionUid: String) {
@@ -64,6 +92,7 @@ class CollectionDetailViewModel @Inject constructor(
     }
 
     /** Requests for a collection data save */
+    @Deprecated("collectionIO argument shouldn't be used, as it's always the same - once it's changed locally - not a good approach")
     fun requestCollectionSave(collectionIO: CollectionIO) {
         viewModelScope.launch(Dispatchers.Default) {
             if(collectionIO.isNotEmpty) {
@@ -85,6 +114,7 @@ class CollectionDetailViewModel @Inject constructor(
 
     /** Generates questions from facts */
     fun requestQuestionGeneration(
+        context: Context,
         selectedFactUids: List<String>,
         facts: List<FactIO>
     ) {
@@ -101,7 +131,7 @@ class CollectionDetailViewModel @Inject constructor(
                 )
             }
 
-            val existingQuestions = collectionQuestions.value.map { it.importedSource.sourceUid }
+            val existingQuestions = dataManager.collectionQuestions.value.map { it.importedSource.sourceUid }
             val newQuestions = mutableListOf<QuestionIO>()
             val factsToGenerate = facts.filter {
                 selectedFactUids.contains(it.uid)
@@ -117,22 +147,25 @@ class CollectionDetailViewModel @Inject constructor(
                     if(factsToShuffle.size >= QUESTION_GENERATION_MINIMUM_FACTS) {
                         generateQuestions(
                             factsToShuffle = factsToShuffle,
-                            factsToGenerate = factsToGenerateTyped
+                            factsToGenerate = factsToGenerateTyped,
+                            context = context
                         ).let { res ->
                             // if logic wasn't able to generate anything, pass on the facts that failed
                             if(res.isNotEmpty()) {
-                                newQuestions.addAll(res)
-                            }else leftOverFacts.addAll(factsToGenerateTyped)
+                                newQuestions.addAll(0, res)
+                            }else leftOverFacts.addAll(0, factsToGenerateTyped)
                         }
                     }else {
-                        leftOverFacts.addAll(factsToGenerateTyped)
+                        leftOverFacts.addAll(0, factsToGenerateTyped)
                     }
                 }
             }
-            newQuestions.addAll(
+            newQuestions.addAll(0,
                 generateQuestions(
                     factsToGenerate = leftOverFacts,
-                    factsToShuffle = facts
+                    factsToShuffle = facts,
+                    context = context,
+                    isLeftOvers = true
                 )
             )
             questionGenerationResponse.emit(
@@ -161,6 +194,8 @@ class CollectionDetailViewModel @Inject constructor(
     }
 
     private suspend fun generateQuestions(
+        context: Context,
+        isLeftOvers: Boolean = false,
         factsToGenerate: List<FactIO>,
         factsToShuffle: List<FactIO>
     ): List<QuestionIO> {
@@ -173,17 +208,19 @@ class CollectionDetailViewModel @Inject constructor(
                         .filter { it.uid != coreFact.uid && it.longInformation.isNotEmpty() }
                     // do we have enough answers to generate question?
                     if(usableFacts.size >= QUESTION_GENERATION_MINIMUM_FACTS.minus(1)) {
-                        questions.add(
+                        questions.add(0,
                             QuestionIO(
                                 importedSource = ImportedSource(ImportSourceType.FACT, sourceUid = coreFact.uid),
-                                prompt = coreFact.shortKeyInformation,
+                                prompt = if(isLeftOvers) {
+                                    coreFact.getGenericShortPrompt(context)
+                                } else coreFact.getShortPrompt(context),
                                 textExplanation = coreFact.longInformation,
                                 imageExplanationUrl = coreFact.promptImage,
                                 answers = usableFacts
                                     .shuffled()
                                     .take(usableFacts.size.coerceIn(
                                         QUESTION_GENERATION_MINIMUM_FACTS.minus(1),
-                                        QUESTION_GENERATION_MAXIMUM_ANSWERS,
+                                        QUESTION_GENERATION_MAXIMUM_ANSWERS.minus(1),
                                     ))
                                     .map {
                                         QuestionAnswerIO(
@@ -192,6 +229,14 @@ class CollectionDetailViewModel @Inject constructor(
                                             imageExplanation = it.promptImage
                                         )
                                     }
+                                    .plus(
+                                        QuestionAnswerIO(
+                                            text = coreFact.longInformation,
+                                            explanationMessage = coreFact.shortKeyInformation,
+                                            imageExplanation = coreFact.promptImage,
+                                            isCorrect = true
+                                        )
+                                    )
                                     .toMutableList()
                             )
                         )
@@ -204,16 +249,18 @@ class CollectionDetailViewModel @Inject constructor(
                         .filter { it.uid != coreFact.uid && it.shortKeyInformation.isNotEmpty() }
                     // do we have enough answers to generate question?
                     if(usableFacts.size >= QUESTION_GENERATION_MINIMUM_FACTS.minus(1)) {
-                        questions.add(
+                        questions.add(0,
                             QuestionIO(
                                 importedSource = ImportedSource(ImportSourceType.FACT, sourceUid = coreFact.uid),
-                                prompt = coreFact.longInformation,
+                                prompt = if(isLeftOvers) {
+                                    coreFact.getGenericLongPrompt(context)
+                                }else coreFact.getLongPrompt(context),
                                 imageExplanationUrl = coreFact.promptImage,
                                 answers = usableFacts
                                     .shuffled()
                                     .take(usableFacts.size.coerceIn(
                                         QUESTION_GENERATION_MINIMUM_FACTS.minus(1),
-                                        QUESTION_GENERATION_MAXIMUM_ANSWERS,
+                                        QUESTION_GENERATION_MAXIMUM_ANSWERS.minus(1),
                                     ))
                                     .map {
                                         QuestionAnswerIO(
@@ -222,6 +269,14 @@ class CollectionDetailViewModel @Inject constructor(
                                             imageExplanation = it.promptImage
                                         )
                                     }
+                                    .plus(
+                                        QuestionAnswerIO(
+                                            text = coreFact.shortKeyInformation,
+                                            explanationMessage = coreFact.longInformation,
+                                            imageExplanation = coreFact.promptImage,
+                                            isCorrect = true
+                                        )
+                                    )
                                     .toMutableList()
                             )
                         )
@@ -233,16 +288,19 @@ class CollectionDetailViewModel @Inject constructor(
                     val usableFactsShort = factsToShuffle
                         .filter { it.uid != coreFact.uid && it.shortKeyInformation.isNotEmpty() }
                     if(usableFactsShort.size >= QUESTION_GENERATION_MINIMUM_FACTS.minus(1)) {
-                        questions.add(
+                        questions.add(0,
                             QuestionIO(
                                 importedSource = ImportedSource(ImportSourceType.FACT, sourceUid = coreFact.uid),
+                                prompt = if(isLeftOvers) {
+                                    coreFact.getGenericImagePrompt(context)
+                                } else coreFact.getImagePrompt(context),
                                 imagePromptUrl = coreFact.promptImage,
                                 textExplanation = coreFact.imageExplanationText,
                                 answers = usableFactsShort
                                     .shuffled()
                                     .take(usableFactsShort.size.coerceIn(
                                         QUESTION_GENERATION_MINIMUM_FACTS.minus(1),
-                                        QUESTION_GENERATION_MAXIMUM_ANSWERS,
+                                        QUESTION_GENERATION_MAXIMUM_ANSWERS.minus(1),
                                     ))
                                     .map {
                                         QuestionAnswerIO(
@@ -250,6 +308,13 @@ class CollectionDetailViewModel @Inject constructor(
                                             explanationMessage = it.longInformation
                                         )
                                     }
+                                    .plus(
+                                        QuestionAnswerIO(
+                                            text = coreFact.shortKeyInformation,
+                                            explanationMessage = coreFact.longInformation,
+                                            isCorrect = true
+                                        )
+                                    )
                                     .toMutableList()
                             )
                         )
@@ -257,16 +322,19 @@ class CollectionDetailViewModel @Inject constructor(
                     val usableFactsLong = factsToShuffle
                         .filter { it.uid != coreFact.uid && it.shortKeyInformation.isNotEmpty() }
                     if(usableFactsLong.size >= QUESTION_GENERATION_MINIMUM_FACTS.minus(1)) {
-                        questions.add(
+                        questions.add(0,
                             QuestionIO(
                                 importedSource = ImportedSource(ImportSourceType.FACT, sourceUid = coreFact.uid),
+                                prompt = if(isLeftOvers) {
+                                    coreFact.getGenericImagePrompt(context)
+                                } else coreFact.getImagePrompt(context),
                                 imagePromptUrl = coreFact.promptImage,
                                 textExplanation = coreFact.imageExplanationText,
                                 answers = usableFactsLong
                                     .shuffled()
                                     .take(usableFactsLong.size.coerceIn(
                                         QUESTION_GENERATION_MINIMUM_FACTS.minus(1),
-                                        QUESTION_GENERATION_MAXIMUM_ANSWERS,
+                                        QUESTION_GENERATION_MAXIMUM_ANSWERS.minus(1),
                                     ))
                                     .map {
                                         QuestionAnswerIO(
@@ -274,6 +342,13 @@ class CollectionDetailViewModel @Inject constructor(
                                             explanationMessage = it.shortKeyInformation
                                         )
                                     }
+                                    .plus(
+                                        QuestionAnswerIO(
+                                            text = coreFact.longInformation,
+                                            explanationMessage = coreFact.shortKeyInformation,
+                                            isCorrect = true
+                                        )
+                                    )
                                     .toMutableList()
                             )
                         )
@@ -292,7 +367,7 @@ class CollectionDetailViewModel @Inject constructor(
     }
 
     /** Requests for a question data save */
-    fun requestQuestionsSave(questions: List<QuestionIO>) {
+    private fun requestQuestionsSave(questions: List<QuestionIO>) {
         viewModelScope.launch(Dispatchers.Default) {
             questions.forEach { question ->
                 repository.saveQuestion(question)
@@ -304,6 +379,11 @@ class CollectionDetailViewModel @Inject constructor(
     fun requestQuestionsDeletion(uidList: Set<String>) {
         viewModelScope.launch {
             repository.deleteQuestions(uidList.toList())
+            dataManager.collectionQuestions.update { questions ->
+                questions.toMutableList().apply {
+                    removeAll { uidList.contains(it.uid) }
+                }
+            }
         }
     }
 
@@ -322,9 +402,76 @@ class CollectionDetailViewModel @Inject constructor(
         }
     }
 
+    /** Adds a new fact */
+    fun addNewFact(isEmpty: Boolean = false) {
+        viewModelScope.launch {
+            val newFact = if(isEmpty && factsFilter.value.isEmpty().not()) {
+                FactIO(
+                    shortKeyInformation = factsFilter.value.textFilter,
+                    type = factsFilter.value.types.firstOrNull() ?: FactType.FACT
+                )
+            }else FactIO()
+            dataManager.collectionFacts.update {
+                it.toMutableList().apply { add(0, newFact) }
+            }
+        }
+    }
+
+    /** Adds a new question */
+    fun addNewQuestion(): QuestionIO {
+        val newQuestion = QuestionIO()
+        dataManager.collectionQuestions.update {
+            it.toMutableList().apply {
+                add(0, newQuestion)
+            }
+        }
+        viewModelScope.launch {
+            requestCollectionSave(dataManager.collectionDetail.value.apply {
+                questionUidList.add(newQuestion.uid)
+            })
+        }
+        return newQuestion
+    }
+
+    /** Pastes current clipboard */
+    fun pasteFactsClipBoard() {
+        viewModelScope.launch {
+            val clipBoard = clipBoard.facts.paste()
+            clipBoard.forEach {
+                requestFactSave(it)
+            }
+            dataManager.collectionFacts.update {
+                it.toMutableList().apply { addAll(0, clipBoard) }
+            }
+            requestCollectionSave(dataManager.collectionDetail.value.apply {
+                questionUidList.addAll(clipBoard.map { it.uid })
+            })
+        }
+    }
+
+    /** Pastes current clipboard */
+    fun pasteQuestionsClipBoard() {
+        viewModelScope.launch {
+            val clipBoard = clipBoard.questions.paste()
+            clipBoard.forEach {
+                requestQuestionSave(it)
+            }
+            dataManager.collectionQuestions.update {
+                it.toMutableList().apply { addAll(0, clipBoard) }
+            }
+        }
+    }
+
     /** Requests for a removal of facts */
     fun requestFactsDeletion(uidList: Set<String>) {
         viewModelScope.launch {
+            withContext(Dispatchers.Default) {
+                dataManager.collectionFacts.update { facts ->
+                    facts.toMutableList().apply {
+                        removeAll { uidList.contains(it.uid) }
+                    }
+                }
+            }
             repository.deleteFacts(uidList.toList())
         }
     }
@@ -358,6 +505,20 @@ class CollectionDetailViewModel @Inject constructor(
     fun requestSessionsSave(sessions: List<SessionIO>) {
         viewModelScope.launch {
             repository.saveSessions(sessions)
+        }
+    }
+
+    /** Returns a json string in [onSuccess] for quick clipboard export */
+    fun getExportString(onSuccess: (json: String) -> Unit) {
+        viewModelScope.launch {
+            repository.exportCollection(
+                CollectionExport(
+                    collection = collectionDetail.value,
+                    questions = dataManager.collectionQuestions.value,
+                    facts = dataManager.collectionFacts.value,
+                ),
+                onSuccess = onSuccess
+            )
         }
     }
 }

@@ -1,6 +1,7 @@
 package study.me.please.data.io
 
 import androidx.room.PrimaryKey
+import java.util.Date
 import java.util.UUID
 
 /** history item for statistics or browsing history */
@@ -16,7 +17,13 @@ data class SessionHistoryItem(
     val answers: List<SessionAnswerValidation>,
 
     /** What time it took for the user to answer this question */
-    val timeElapsed: Long,
+    val timeToAnswer: Long,
+
+    /** start of this question */
+    val timeOfStart: Long? = null,
+
+    /** What time it took for the user to continue in questioning */
+    var timeToContinue: Long? = null,
 
     /** identifier */
     @PrimaryKey

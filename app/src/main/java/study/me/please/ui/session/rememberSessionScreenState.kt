@@ -8,19 +8,24 @@ import study.me.please.data.io.preferences.SessionPreferencePack
 
 /**
  * remembers state of session screen and controls it
+ * @param requestSave called whenever there is a request for data save
  */
 @Composable
 fun rememberSessionScreenState(
     module: QuestionModule,
     isTest: Boolean,
-    sessionPreferencePack: MutableState<SessionPreferencePack>
+    sessionPreferencePack: MutableState<SessionPreferencePack>,
+    requestSave: (QuestionModule) -> Unit
 ): SessionScreenState {
     val scope = rememberCoroutineScope()
     val state = remember(scope) {
         SessionScreenState(
             module = module,
             isTest = isTest,
-            sessionPreferencePack = sessionPreferencePack
+            sessionPreferencePack = sessionPreferencePack,
+            requestSave = {
+                requestSave(module)
+            }
         )
     }
     return state

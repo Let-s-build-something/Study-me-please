@@ -3,17 +3,47 @@ package study.me.please.ui.session
 import android.util.Log
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import study.me.please.base.BaseViewModel
+import study.me.please.data.io.CollectionIO
 import study.me.please.data.io.QuestionIO
+import study.me.please.data.io.SessionIO
 import study.me.please.data.io.preferences.SessionPreferencePack
+import study.me.please.ui.components.preference_chooser.PreferencePackDataManager
+import study.me.please.ui.components.preference_chooser.PreferencePackRepository
+import study.me.please.ui.components.preference_chooser.PreferencePackViewModel
 import javax.inject.Inject
 
 @HiltViewModel
 class SessionViewModel @Inject constructor(
     private val repository: SessionRepository,
-    val dataManager: SessionDataManager
-): BaseViewModel() {
+    private val dataManager: SessionDataManager
+): BaseViewModel(), PreferencePackViewModel {
+
+    override val coroutineScope: CoroutineScope = viewModelScope
+
+    override val preferencePackDataManager: PreferencePackDataManager = dataManager
+
+    override val preferencePackRepository: PreferencePackRepository = repository
+
+    /** all existing preferences to choose from if in testing mode */
+    override val preferencePacks: StateFlow<List<SessionPreferencePack>?> = dataManager.preferencePacks.asStateFlow()
+
+    /** Received collection from database */
+    val collection: StateFlow<CollectionIO?> = dataManager.collection.asStateFlow()
+
+    /** Received session from database */
+    val session: StateFlow<SessionIO?> = dataManager.session.asStateFlow()
+
+    /** Received session preferences from database */
+    val preferencePack: StateFlow<SessionPreferencePack?> = dataManager.preferencePack.asStateFlow()
+
+    /** full list of questions for the session screen */
+    val questions: StateFlow<List<QuestionIO>?> = dataManager.questions.asStateFlow()
 
     /** Requests for all information needed to start or return back to a session */
     fun requestStateData(
@@ -33,7 +63,6 @@ class SessionViewModel @Inject constructor(
                 }
             }
             repository.getQuestionByUid(questionUid)?.let { question ->
-                dataManager.question.value = question
                 questions.add(question)
             }
             if(questionUids.isNullOrEmpty().not()) {
@@ -45,7 +74,8 @@ class SessionViewModel @Inject constructor(
             // so we first retrieve collections to get all the necessary uids to get all questions needed
             repository.getSessionByUid(sessionUid)?.let { session ->
                 dataManager.session.value = session
-                dataManager.preferencePack.value = session.preferencePack
+                dataManager.preferencePack.value = repository.getPreferencePackByUid(session.preferencePackUid)
+                    ?: SessionPreferencePack()
                 repository.getQuestionsByUid(session.questionUidList.toList())?.let { questionsOut ->
                     questions.addAll(questionsOut)
                 }
@@ -59,14 +89,14 @@ class SessionViewModel @Inject constructor(
                 dataManager.preferencePack.value = preferencePack
             }
             if(isTestingMode) {
-                repository.getAllPreferences()?.let { preferencePacks ->
+                repository.getPreferencePacks().let { preferencePacks ->
                     dataManager.preferencePacks.value = preferencePacks.toMutableList()
                 }
             }
             // in case there is no preference pack, happens only while testing modules
             if(dataManager.session.value == null
-                && dataManager.preferencePack.value == null
-                && dataManager.preferencePacks.value?.isEmpty() == true
+                && (dataManager.preferencePack.value == null
+                || dataManager.preferencePacks.value?.isEmpty() == true)
             ) {
                 dataManager.preferencePack.value = SessionPreferencePack()
             }else if(dataManager.preferencePacks.value?.isNotEmpty() == true) {
@@ -74,22 +104,6 @@ class SessionViewModel @Inject constructor(
                     ?.firstOrNull() ?: SessionPreferencePack()
             }
             dataManager.questions.value = questions
-        }
-    }
-
-    /** requests a save of preference pack */
-    fun requestPreferencePackSave(preferencePack: SessionPreferencePack?) {
-        if(preferencePack == null) return
-        viewModelScope.launch {
-            repository.savePreferencePack(preferencePack)
-        }
-    }
-
-    /** requests a save of preference pack */
-    fun requestPreferencePackDelete(uid: String?) {
-        if(uid == null) return
-        viewModelScope.launch {
-            repository.deletePreferencePack(uid)
         }
     }
 
@@ -105,10 +119,24 @@ class SessionViewModel @Inject constructor(
                         this.questionModule = newModule
                     }
                     preferencePack?.let { newPreference ->
-                        this.preferencePack = newPreference
+                        this.preferencePackUid = newPreference.uid
                     }
                 })
             }
+        }
+    }
+
+    /** saves current session */
+    fun requestQuestionModuleSave(questionModule: QuestionModule) {
+        viewModelScope.launch {
+            dataManager.session.value?.let { session ->
+                repository.saveSession(session.apply {
+                    this.questionModule = questionModule
+                })
+            }
+            repository.saveQuestionModule(questionModule.apply {
+                sessionUid = dataManager.session.value?.uid
+            })
         }
     }
 }

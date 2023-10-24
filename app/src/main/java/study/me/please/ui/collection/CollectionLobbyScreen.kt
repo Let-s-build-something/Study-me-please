@@ -3,6 +3,8 @@ package study.me.please.ui.collection
 import android.app.Activity
 import android.util.Log
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.core.LinearOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -57,6 +59,7 @@ import androidx.navigation.NavController
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.rememberLottieComposition
+import com.squadris.squadris.compose.components.DEFAULT_ANIMATION_LENGTH_SHORT
 import com.squadris.squadris.compose.components.getDefaultPullRefreshSize
 import com.squadris.squadris.compose.theme.LocalTheme
 import com.squadris.squadris.compose.theme.Colors
@@ -313,6 +316,13 @@ fun CollectionLobbyScreen(
                                     } else selectedCollectionUids.remove(collection.uid)
                                 }
                                 CollectionCard(
+                                    modifier = Modifier
+                                        .animateItemPlacement(
+                                            tween(
+                                                durationMillis = DEFAULT_ANIMATION_LENGTH_SHORT,
+                                                easing = LinearOutSlowInEasing
+                                            )
+                                        ),
                                     data = collection,
                                     onNavigateToDetail = {
                                         NavigationUtils.navigateToCollectionDetail(

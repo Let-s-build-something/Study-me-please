@@ -25,4 +25,8 @@ interface SessionDao {
     /** Inserts or updates sessions [sessions] into the database */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertSessions(sessions: List<SessionIO>)
+
+    /** Removes sessions from the database based on their primary key [uids] */
+    @Query("DELETE FROM ${AppRoomDatabase.ROOM_SESSION_TABLE} WHERE uid in (:uids)")
+    suspend fun deleteSessions(uids: Set<String>)
 }

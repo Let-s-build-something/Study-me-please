@@ -39,6 +39,9 @@ import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import coil.compose.AsyncImagePainter
+import com.squadris.squadris.compose.components.DEFAULT_ANIMATION_LENGTH_SHORT
+import com.squadris.squadris.compose.components.EditFieldInput
+import com.squadris.squadris.compose.components.MinimalisticIcon
 import com.squadris.squadris.compose.theme.LocalTheme
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.delay
@@ -47,7 +50,6 @@ import study.me.please.R
 import study.me.please.data.io.LargePathAsset
 import study.me.please.data.io.QuestionAnswerIO
 import study.me.please.ui.collection.detail.INPUT_DELAYED_RESPONSE_MILLIS
-import study.me.please.ui.components.tab_switch.DEFAULT_ANIMATION_LENGTH_SHORT
 
 /** Card with the option of editing data inside */
 @Composable

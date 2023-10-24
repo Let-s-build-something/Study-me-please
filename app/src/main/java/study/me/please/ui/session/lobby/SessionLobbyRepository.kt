@@ -3,16 +3,16 @@ package study.me.please.ui.session.lobby
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import study.me.please.data.io.SessionIO
-import study.me.please.data.io.preferences.SessionPreferencePack
 import study.me.please.data.room.PreferencesDao
 import study.me.please.data.room.SessionDao
+import study.me.please.ui.components.preference_chooser.PreferencePackRepository
 import javax.inject.Inject
 
 /** Proxy for calling network end points */
 class SessionLobbyRepository @Inject constructor(
     private val sessionDao: SessionDao,
-    private val preferencesDao: PreferencesDao
-) {
+    override val preferencesDao: PreferencesDao
+): PreferencePackRepository {
 
     /** returns all sessions and calculates the amount of questions in each */
     suspend fun getAllSessions(): List<SessionIO>? {
@@ -36,31 +36,10 @@ class SessionLobbyRepository @Inject constructor(
         }
     }
 
-    /** Saves a preference pack */
-    suspend fun savePreferencePack(preferencePack: SessionPreferencePack) {
-        return withContext(Dispatchers.IO) {
-            preferencesDao.insertPreferencePack(preferencePack)
-        }
-    }
-
-    /** Returns all user preferences */
-    suspend fun getAllPreferences(): List<SessionPreferencePack>? {
-        return withContext(Dispatchers.IO) {
-            preferencesDao.getAllPreferences()
-        }
-    }
-
-    /** deletes a preference pack */
-    suspend fun deletePreferencePack(uid: String) {
-        return withContext(Dispatchers.IO) {
-            preferencesDao.deletePreferencePack(uid)
-        }
-    }
-
     /** deletes sessions based on their uid [uids] */
     suspend fun deleteSessions(uids: Set<String>) {
         return withContext(Dispatchers.IO) {
-            preferencesDao.deleteSessions(uids)
+            sessionDao.deleteSessions(uids)
         }
     }
 }

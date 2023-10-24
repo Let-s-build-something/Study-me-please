@@ -29,6 +29,10 @@ object DatabaseServicesModule {
     @Provides
     fun provideSessionDao(appDatabase: AppRoomDatabase) = appDatabase.sessionDbDao()
 
+    /** Interface for accessing sessions in local Room database */
+    @Provides
+    fun provideQuestionModuleDao(appDatabase: AppRoomDatabase) = appDatabase.questionModuleDbDao()
+
     /** Interface for accessing home data in local Room database */
     @Provides
     fun provideHomeDao(appDatabase: AppRoomDatabase) = appDatabase.homeDbDao()

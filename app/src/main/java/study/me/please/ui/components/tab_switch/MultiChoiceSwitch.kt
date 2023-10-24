@@ -37,12 +37,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
+import com.squadris.squadris.compose.components.DEFAULT_ANIMATION_LENGTH_LONG
+import com.squadris.squadris.compose.components.DEFAULT_ANIMATION_LENGTH_SHORT
 import com.squadris.squadris.compose.theme.Colors
 import com.squadris.squadris.compose.theme.LocalTheme
 import com.squadris.squadris.compose.theme.StudyMeAppTheme
-
-const val DEFAULT_ANIMATION_LENGTH_SHORT = 300
-const val DEFAULT_ANIMATION_LENGTH_LONG = 600
 
 @Composable
 fun MultiChoiceSwitch(

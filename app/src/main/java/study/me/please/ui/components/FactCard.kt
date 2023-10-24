@@ -1,7 +1,6 @@
 package study.me.please.ui.components
 
 import android.annotation.SuppressLint
-import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateContentSize
@@ -11,10 +10,8 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Edit
@@ -40,6 +37,9 @@ import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import coil.compose.AsyncImagePainter
+import com.squadris.squadris.compose.components.DEFAULT_ANIMATION_LENGTH_SHORT
+import com.squadris.squadris.compose.components.EditFieldInput
+import com.squadris.squadris.compose.components.MinimalisticIcon
 import com.squadris.squadris.compose.theme.LocalTheme
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.delay
@@ -49,7 +49,6 @@ import study.me.please.data.io.FactIO
 import study.me.please.data.io.FactType
 import study.me.please.data.io.LargePathAsset
 import study.me.please.ui.collection.detail.INPUT_DELAYED_RESPONSE_MILLIS
-import study.me.please.ui.components.tab_switch.DEFAULT_ANIMATION_LENGTH_SHORT
 import study.me.please.ui.components.tab_switch.MultiChoiceSwitch
 import study.me.please.ui.components.tab_switch.rememberTabSwitchState
 

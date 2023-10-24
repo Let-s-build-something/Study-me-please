@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "e6dc29cfa099caf411860ef93f83307d",
+    "identityHash": "a40e68ac34706282158acf08281e6c74",
     "entities": [
       {
         "tableName": "ROOM_COLLECTION_TABLE",
@@ -304,7 +304,7 @@
       },
       {
         "tableName": "ROOM_SESSION_TABLE",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`name` TEXT NOT NULL, `uid` TEXT NOT NULL, `preferencePack` TEXT, `questionModule` TEXT, `last_played` TEXT NOT NULL, `collectionUidList` TEXT NOT NULL, `questionUidList` TEXT NOT NULL, `questionCount` INTEGER NOT NULL, PRIMARY KEY(`uid`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`name` TEXT NOT NULL, `uid` TEXT NOT NULL, `preferencePackUid` TEXT NOT NULL, `estimatedMode` TEXT, `last_played` TEXT NOT NULL, `collectionUidList` TEXT NOT NULL, `questionUidList` TEXT NOT NULL, `questionCount` INTEGER NOT NULL, `q_module_uid` TEXT, `q_module_history` TEXT, `q_module_sessionUid` TEXT, `q_module_questionsStack` TEXT, `q_module_currentQuestionIndex` INTEGER, `q_module_currentHistoryIndex` INTEGER, PRIMARY KEY(`uid`))",
         "fields": [
           {
             "fieldPath": "name",
@@ -319,14 +319,14 @@
             "notNull": true
           },
           {
-            "fieldPath": "preferencePack",
-            "columnName": "preferencePack",
+            "fieldPath": "preferencePackUid",
+            "columnName": "preferencePackUid",
             "affinity": "TEXT",
-            "notNull": false
+            "notNull": true
           },
           {
-            "fieldPath": "questionModule",
-            "columnName": "questionModule",
+            "fieldPath": "estimatedMode",
+            "columnName": "estimatedMode",
             "affinity": "TEXT",
             "notNull": false
           },
@@ -353,6 +353,42 @@
             "columnName": "questionCount",
             "affinity": "INTEGER",
             "notNull": true
+          },
+          {
+            "fieldPath": "questionModule.uid",
+            "columnName": "q_module_uid",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "questionModule.history",
+            "columnName": "q_module_history",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "questionModule.sessionUid",
+            "columnName": "q_module_sessionUid",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "questionModule.questionsStack",
+            "columnName": "q_module_questionsStack",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "questionModule.currentQuestionIndex",
+            "columnName": "q_module_currentQuestionIndex",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "questionModule.currentHistoryIndex",
+            "columnName": "q_module_currentHistoryIndex",
+            "affinity": "INTEGER",
+            "notNull": false
           }
         ],
         "primaryKey": {
@@ -366,7 +402,7 @@
       },
       {
         "tableName": "ROOM_QUESTION_MODULE_TABLE",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`uid` TEXT NOT NULL, `history` TEXT NOT NULL, `questionsStack` TEXT NOT NULL, `currentQuestionIndex` INTEGER NOT NULL, `currentHistoryIndex` INTEGER NOT NULL, PRIMARY KEY(`uid`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`uid` TEXT NOT NULL, `history` TEXT NOT NULL, `sessionUid` TEXT, `questionsStack` TEXT NOT NULL, `currentQuestionIndex` INTEGER NOT NULL, `currentHistoryIndex` INTEGER NOT NULL, PRIMARY KEY(`uid`))",
         "fields": [
           {
             "fieldPath": "uid",
@@ -379,6 +415,12 @@
             "columnName": "history",
             "affinity": "TEXT",
             "notNull": true
+          },
+          {
+            "fieldPath": "sessionUid",
+            "columnName": "sessionUid",
+            "affinity": "TEXT",
+            "notNull": false
           },
           {
             "fieldPath": "questionsStack",
@@ -474,7 +516,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'e6dc29cfa099caf411860ef93f83307d')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'a40e68ac34706282158acf08281e6c74')"
     ]
   }
 }

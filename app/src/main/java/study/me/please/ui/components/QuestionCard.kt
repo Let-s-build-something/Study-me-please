@@ -31,10 +31,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
+import com.squadris.squadris.compose.components.DEFAULT_ANIMATION_LENGTH_SHORT
+import com.squadris.squadris.compose.components.EditFieldInput
 import com.squadris.squadris.compose.theme.LocalTheme
 import study.me.please.R
 import study.me.please.data.io.QuestionIO
-import study.me.please.ui.components.tab_switch.DEFAULT_ANIMATION_LENGTH_SHORT
 
 /** Card with the option of editing data inside */
 @Composable
