@@ -39,12 +39,15 @@ data class FactIO(
     @Deprecated("no use for now")
     var longInformationImage: LargePathAsset? = null,
 
+    /** List content of this fact, will be changed and used only in case of [FactType.LIST] */
+    val listContent: MutableList<String> = mutableListOf(),
+
     /** Image which can be questioned as well as answered with */
     @SerializedName("prompt_mage")
     var promptImage: LargePathAsset? = null,
 
     /** type of this fact */
-    var type: FactType = FactType.FACT,
+    var type: FactType = FactType.DEFINITION,
 
     /** date of creation of this data object */
     @SerializedName("date_created")
@@ -72,9 +75,10 @@ data class FactIO(
     fun getLongPrompt(context: Context) = context.getString(
         when(type) {
             FactType.FACT -> R.string.facts_type_long_fact_prompt
+            FactType.DEFINITION -> R.string.facts_type_long_person_prompt
             FactType.PERSON -> R.string.facts_type_long_person_prompt
             FactType.DATE -> R.string.facts_type_long_date_prompt
-            FactType.QUOTE -> R.string.facts_type_long_quote_prompt
+            /*FactType.QUOTE*/ else -> R.string.facts_type_long_quote_prompt
         },
         longInformation
     )
@@ -83,9 +87,11 @@ data class FactIO(
     fun getShortPrompt(context: Context) = context.getString(
         when(type) {
             FactType.FACT -> R.string.facts_type_short_fact_prompt
+            FactType.DEFINITION -> R.string.facts_type_short_definition_prompt
             FactType.PERSON -> R.string.facts_type_short_person_prompt
             FactType.DATE -> R.string.facts_type_short_date_prompt
             FactType.QUOTE -> R.string.facts_type_short_quote_prompt
+            FactType.LIST -> R.string.facts_type_short_list_prompt
         },
         shortKeyInformation
     )
@@ -94,9 +100,11 @@ data class FactIO(
     fun getImagePrompt(context: Context) = context.getString(
         when(type) {
             FactType.FACT -> R.string.facts_type_image_fact_prompt
+            FactType.DEFINITION -> R.string.facts_type_image_definition_prompt
             FactType.PERSON -> R.string.facts_type_image_person_prompt
             FactType.DATE -> R.string.facts_type_image_date_prompt
             FactType.QUOTE -> R.string.facts_type_image_quote_prompt
+            FactType.LIST -> R.string.facts_type_image_fact_prompt
         }
     )
 

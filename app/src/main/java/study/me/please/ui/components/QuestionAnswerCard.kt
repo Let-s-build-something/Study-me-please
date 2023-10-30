@@ -335,7 +335,12 @@ private fun DataCard(
                 modifier = Modifier
                     .animateContentSize()
                     .constrainAs(btnAddImage) {
-                        linkTo(parent.start, parent.end)
+                        linkTo(
+                            parent.start,
+                            checkBoxIsCorrect.start,
+                            endMargin = 4.dp,
+                            bias = 0f
+                        )
                         top.linkTo(imgExplanation.bottom, 4.dp)
                     },
                 leadingImageVector = Icons.Outlined.Image,
@@ -347,7 +352,11 @@ private fun DataCard(
         OutlinedButton(
             modifier = Modifier.constrainAs(checkBoxIsCorrect) {
                 end.linkTo(parent.end, -(8.dp))
-                top.linkTo(imgExplanation.bottom, 6.dp)
+                if(state.mode.value == InteractiveCardMode.EDIT && imageAsset.value == null) {
+                    linkTo(btnAddImage.top, btnAddImage.bottom)
+                }else if(imageAsset.value != null) {
+                    top.linkTo(imgExplanation.bottom, 6.dp)
+                }
             },
             isActivated = isCorrect.value,
             onClick = {

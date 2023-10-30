@@ -110,7 +110,10 @@ fun SearchChip(
                 ),
                 isError = isFieldError.value,
                 shape = LocalTheme.shapes.circularActionShape,
-                clearable = true
+                clearable = true,
+                onValueClear = {
+                    isChecked.value = false
+                }
             ) { output ->
                 fieldOutput.value = output
                 onSearchOutput(output)

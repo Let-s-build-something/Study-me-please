@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Edit
@@ -316,8 +318,10 @@ private fun DataCard(
             color = LocalTheme.colors.secondary
         )
 
+
+
         Crossfade(
-            targetState = state.mode.value == InteractiveCardMode.EDIT,
+            targetState = data.type == FactType.LIST,
             modifier = Modifier
                 .animateContentSize()
                 .constrainAs(txtLongInformation) {
@@ -327,26 +331,38 @@ private fun DataCard(
                 },
             label = "",
             animationSpec = tween(durationMillis = DEFAULT_ANIMATION_LENGTH_SHORT)
-        ) { inEditMode ->
-            if(inEditMode) {
-                EditFieldInput(
-                    modifier = Modifier.fillMaxWidth(),
-                    value = data.longInformation,
-                    hint = if(selectedType != null) stringResource(id = selectedType.getLongHintStringRes()) else "",
-                    minLines = 5,
-                    maxLines = 5
-                ) { output ->
-                    data.longInformation = output
-                    requestDataSave()
+        ) { isListType ->
+            if(isListType) {
+                LazyColumn {
+                    items()
                 }
             }else {
-                Text(
-                    text = data.longInformation,
-                    fontSize = 16.sp,
-                    color = LocalTheme.colors.secondary,
-                    maxLines = 5,
-                    overflow = TextOverflow.Ellipsis
-                )
+                Crossfade(
+                    targetState = state.mode.value == InteractiveCardMode.EDIT,
+                    label = "",
+                    animationSpec = tween(durationMillis = DEFAULT_ANIMATION_LENGTH_SHORT)
+                ) { inEditMode ->
+                    if(inEditMode) {
+                        EditFieldInput(
+                            modifier = Modifier.fillMaxWidth(),
+                            value = data.longInformation,
+                            hint = if(selectedType != null) stringResource(id = selectedType.getLongHintStringRes()) else "",
+                            minLines = 5,
+                            maxLines = 5
+                        ) { output ->
+                            data.longInformation = output
+                            requestDataSave()
+                        }
+                    }else {
+                        Text(
+                            text = data.longInformation,
+                            fontSize = 16.sp,
+                            color = LocalTheme.colors.secondary,
+                            maxLines = 5,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
             }
         }
         EditableImageAsset(

@@ -51,12 +51,15 @@
     <string name="facts_field_long_information_hint">Imagine this is a question</string>
 
     <string name="facts_type_fact">Information</string>
+    <string name="facts_type_definition">Definition</string>
     <string name="facts_type_person">Person</string>
     <string name="facts_type_date">Date</string>
     <string name="facts_type_quote">Quote</string>
     <!-- short information -->
     <string name="facts_type_long_fact_header">Information explanation</string>
+    <string name="facts_type_long_definition_header">Definition</string>
     <string name="facts_type_long_fact_hint">How would you explain the information?</string>
+    <string name="facts_type_long_definition_hint">Explain the definition</string>
     <string name="facts_type_long_person_header">Information about the person</string>
     <string name="facts_type_long_person_hint">What information is relevant about the person?</string>
     <string name="facts_type_long_date_header">Date explanation</string>
@@ -65,7 +68,9 @@
     <string name="facts_type_long_quote_hint">Who/what is the quote related to?</string>
     <!-- long information -->
     <string name="facts_type_short_fact_header">What is the information?</string>
-    <string name="facts_type_short_fact_hint">Social facilitation</string>
+    <string name="facts_type_short_definition_header">What are we defining?</string>
+    <string name="facts_type_short_fact_hint">Jack was very hungry</string>
+    <string name="facts_type_short_definition_hint">Social facilitation</string>
     <string name="facts_type_short_person_header">Who is the person?</string>
     <string name="facts_type_short_person_hint">Keanu Reeves</string>
     <string name="facts_type_short_date_header">What is the date?</string>
@@ -76,15 +81,18 @@
     <string name="facts_information_generic_prompt">To who/what is the following %1$s related to?\n%2$s</string>
     <!-- short prompts -->
     <string name="facts_type_short_fact_prompt">How would you explain %1$s?</string>
+    <string name="facts_type_short_definition_prompt">What is %1$s?</string>
     <string name="facts_type_short_person_prompt">What information is relevant about %1$s?</string>
     <string name="facts_type_short_date_prompt">What happened on %1$s or what is it related to?</string>
     <string name="facts_type_short_quote_prompt">Who/what is the quote "%1$s" related to?</string>
     <!-- long prompts -->
     <string name="facts_type_long_fact_prompt">What is the explanation "%1$s" related to?</string>
+    <string name="facts_type_long_definition_prompt">What defines "%1$s"?</string>
     <string name="facts_type_long_person_prompt">Who could be best described by "%1$s"?</string>
     <string name="facts_type_long_date_prompt">To what date is following information "%1$s" related to?</string>
     <string name="facts_type_long_quote_prompt">What quote is relevant to %1$s?</string>
     <!-- image prompts -->
+    <string name="facts_type_image_definition_prompt">To what is following image related to?</string>
     <string name="facts_type_image_fact_prompt">To what information is following image related to?</string>
     <string name="facts_type_image_person_prompt">To who is following image related to?</string>
     <string name="facts_type_image_date_prompt">To what date is following image related to?</string>

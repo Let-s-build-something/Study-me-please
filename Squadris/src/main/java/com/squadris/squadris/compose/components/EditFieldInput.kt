@@ -69,6 +69,7 @@ fun EditFieldInput(
     ),
     shape: Shape = LocalTheme.shapes.componentShape,
     maxLength: Int? = null,
+    onValueClear: () -> Unit = {},
     onValueChange: (String) -> Unit = {},
 ) {
     val isFocused = remember(value) { mutableStateOf(false) }
@@ -131,6 +132,7 @@ fun EditFieldInput(
                 ) {
                     text.value = ""
                     onValueChange("")
+                    onValueClear()
                 }
             }
         }else null,

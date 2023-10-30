@@ -57,12 +57,15 @@ class CollectionDetailViewModel @Inject constructor(
 
     /** local temporary save of downloaded questions */
     var collectionQuestions = dataManager.collectionQuestions.combine(questionsFilter) { collections, filter ->
-        collections.filter { question ->
-            (filter.text.isEmpty() || (question.prompt.contains(filter.text) || question.textExplanation.contains(filter.text)))
-                    && (filter.isInvalid.not() || (question.answers.any { it.isCorrect }.not() || question.prompt.isEmpty()))
-                    && (filter.hasImage.not() || (question.imagePromptUrl?.isEmpty == false
-                    || question.imageExplanationUrl?.isEmpty == false
-                    || question.answers.any { answer -> answer.imageExplanation?.isEmpty == false }))
+        withContext(Dispatchers.Default) {
+            collections.filter { question ->
+                (filter.text.isEmpty() || (question.prompt.lowercase().contains(filter.text.lowercase())
+                        || question.textExplanation.lowercase().contains(filter.text.lowercase())))
+                        && (filter.isInvalid.not() || (question.answers.any { it.isCorrect }.not() || question.prompt.isEmpty()))
+                        && (filter.hasImage.not() || (question.imagePromptUrl?.isEmpty == false
+                        || question.imageExplanationUrl?.isEmpty == false
+                        || question.answers.any { answer -> answer.imageExplanation?.isEmpty == false }))
+            }
         }
     }
 
@@ -71,12 +74,14 @@ class CollectionDetailViewModel @Inject constructor(
 
     /** local temporary save of downloaded facts */
     var collectionFacts = dataManager.collectionFacts.combine(factsFilter) { collections, filters ->
-        collections.filter { fact ->
-            (filters.types.isEmpty() || filters.types.contains(fact.type))
-                    && (filters.textFilter.isEmpty()
-                        || (fact.shortKeyInformation.contains(filters.textFilter)
-                            || fact.longInformation.contains(filters.textFilter))
-                    )
+        withContext(Dispatchers.Default) {
+            collections.filter { fact ->
+                (filters.types.isEmpty() || filters.types.contains(fact.type))
+                        && (filters.textFilter.isEmpty()
+                                || (fact.shortKeyInformation.lowercase().contains(filters.textFilter.lowercase())
+                                || fact.longInformation.lowercase().contains(filters.textFilter.lowercase()))
+                        )
+            }
         }
     }
 
