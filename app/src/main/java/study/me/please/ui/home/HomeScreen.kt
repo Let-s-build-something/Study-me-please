@@ -45,7 +45,7 @@ import study.me.please.base.DraggableRefreshIndicator
 import study.me.please.base.ProgressBarRefreshIndicator
 import study.me.please.base.navigation.NavigationUtils
 import study.me.please.data.io.CollectionIO
-import study.me.please.data.io.SessionIO
+import study.me.please.data.io.session.SessionIO
 import study.me.please.ui.components.CollectionCard
 import study.me.please.ui.components.ImageAction
 import study.me.please.ui.components.InteractiveCardState

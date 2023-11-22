@@ -8,8 +8,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import study.me.please.base.BaseViewModel
-import study.me.please.data.io.CollectionIO
-import study.me.please.data.io.SessionIO
+import study.me.please.data.io.session.SessionIO
 import javax.inject.Inject
 
 /** ViewModel containing behavior for refreshing data */

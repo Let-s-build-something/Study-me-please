@@ -1,4 +1,4 @@
-package study.me.please.data.io
+package study.me.please.data.io.session
 
 import androidx.room.PrimaryKey
 

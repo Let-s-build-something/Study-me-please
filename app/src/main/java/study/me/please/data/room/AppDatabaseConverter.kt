@@ -11,8 +11,8 @@ import study.me.please.data.io.ImportedSource
 import study.me.please.data.io.LargePathAsset
 import study.me.please.data.io.QuestionAnswerIO
 import study.me.please.data.io.QuestionIO
-import study.me.please.data.io.SessionAnswerValidation
-import study.me.please.data.io.SessionHistoryItem
+import study.me.please.data.io.session.SessionAnswerValidation
+import study.me.please.data.io.session.SessionHistoryItem
 import study.me.please.data.io.preferences.SessionPreference
 import study.me.please.data.io.preferences.SessionPreferencePack
 import study.me.please.ui.session.QuestionModule

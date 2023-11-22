@@ -2,7 +2,7 @@ package study.me.please.ui.session.lobby
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import study.me.please.data.io.SessionIO
+import study.me.please.data.io.session.SessionIO
 import study.me.please.data.room.PreferencesDao
 import study.me.please.data.room.SessionDao
 import study.me.please.ui.components.preference_chooser.PreferencePackRepository

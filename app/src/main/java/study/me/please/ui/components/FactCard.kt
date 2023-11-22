@@ -334,7 +334,7 @@ private fun DataCard(
         ) { isListType ->
             if(isListType) {
                 LazyColumn {
-                    items()
+
                 }
             }else {
                 Crossfade(

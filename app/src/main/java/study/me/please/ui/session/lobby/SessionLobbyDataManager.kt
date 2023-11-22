@@ -1,7 +1,7 @@
 package study.me.please.ui.session.lobby
 
 import kotlinx.coroutines.flow.MutableStateFlow
-import study.me.please.data.io.SessionIO
+import study.me.please.data.io.session.SessionIO
 import study.me.please.data.io.preferences.SessionPreferencePack
 import study.me.please.ui.components.preference_chooser.PreferencePackDataManager
 import javax.inject.Inject

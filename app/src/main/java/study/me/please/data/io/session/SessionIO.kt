@@ -1,4 +1,4 @@
-package study.me.please.data.io
+package study.me.please.data.io.session
 
 import androidx.room.ColumnInfo
 import androidx.room.Embedded
@@ -6,6 +6,7 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.google.gson.annotations.SerializedName
 import com.squadris.squadris.utils.DateUtils
+import study.me.please.data.io.QuestionMode
 import study.me.please.data.room.AppRoomDatabase
 import study.me.please.ui.session.QuestionModule
 import java.io.Serializable

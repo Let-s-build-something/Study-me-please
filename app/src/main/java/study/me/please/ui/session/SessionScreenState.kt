@@ -8,9 +8,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.withContext
 import study.me.please.data.io.QuestionAnswerIO
-import study.me.please.data.io.SessionAnswerValidation
-import study.me.please.data.io.SessionHistoryItem
+import study.me.please.data.io.session.SessionAnswerValidation
+import study.me.please.data.io.session.SessionHistoryItem
 import study.me.please.data.io.preferences.SessionPreferencePack
+import study.me.please.data.io.session.SessionItem
 import java.util.Calendar
 
 /** Saved state of screen for playing questions */
@@ -34,8 +35,8 @@ data class SessionScreenState(
      * Current question item.
      * No matter it's histry item or new question, it comes from here.
      */
-    val currentItem: MutableStateFlow<SessionQuestion> = MutableStateFlow(
-        SessionQuestion(correctAnswers = listOf())
+    val currentItem: MutableStateFlow<SessionItem> = MutableStateFlow(
+        SessionItem(correctAnswers = listOf())
     )
 
     /** List of all current validations */
@@ -58,7 +59,7 @@ data class SessionScreenState(
         module.stepForward(
             forceRepeat = forceRepeat,
             // we can't repeat history item, only recent questions
-            currentQuestion = currentItem.value.question
+            currentQuestion = currentItem.value.data
         )?.let { newItem ->
             validations.clear()
             mode.value = if(newItem.isHistory) SessionScreenMode.HISTORY else SessionScreenMode.REGULAR
@@ -109,7 +110,7 @@ data class SessionScreenState(
                 && validations.any { it.isCorrect.not() }
                 && sessionPreferencePack.value.repeatOnMistake.value
             ) {
-                currentItem.value.question?.let { question ->
+                currentItem.value.data?.let { question ->
                     module.injectQuestion(
                         question = question,
                         isMistake = true
@@ -127,7 +128,8 @@ data class SessionScreenState(
                                 index = module.currentQuestionIndex,
                                 answers = validations.toSet().toList(),
                                 timeToAnswer = DateUtils.now.timeInMillis,
-                                timeOfStart = timeOfStart?.timeInMillis
+                                timeOfStart = timeOfStart?.timeInMillis,
+                                wasRepeated = currentItem.value.isRepeated
                             )
                         )
                     }
@@ -140,7 +142,7 @@ data class SessionScreenState(
 
     private suspend fun injectCorrectValidations() {
         withContext(Dispatchers.Default) {
-            currentItem.value.question?.answers?.forEach { answer ->
+            currentItem.value.data?.answers?.forEach { answer ->
                 if(validations.any { it.uid == answer.uid }.not() && answer.isCorrect) {
                     validations.add(
                         SessionAnswerValidation(

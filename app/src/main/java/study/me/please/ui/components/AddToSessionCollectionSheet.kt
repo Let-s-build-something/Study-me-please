@@ -43,7 +43,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import study.me.please.R
 import study.me.please.data.io.CollectionIO
-import study.me.please.data.io.SessionIO
+import study.me.please.data.io.session.SessionIO
 import study.me.please.ui.components.session.SessionCard
 import study.me.please.ui.components.tab_switch.OutlinedTabSwitch
 import study.me.please.ui.components.tab_switch.TabSwitchState

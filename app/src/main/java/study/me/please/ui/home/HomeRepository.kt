@@ -3,7 +3,7 @@ package study.me.please.ui.home
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import study.me.please.data.io.CollectionIO
-import study.me.please.data.io.SessionIO
+import study.me.please.data.io.session.SessionIO
 import study.me.please.data.room.HomeDao
 import javax.inject.Inject
 

@@ -84,7 +84,6 @@ fun MultiChoiceSwitch(
                     color = LocalTheme.colors.brandMain,
                     shape = shape
                 )
-                .animateContentSize()
                 .width(indicatorWidth.value)
                 .animateContentSize()
                 .constrainAs(indicator) {

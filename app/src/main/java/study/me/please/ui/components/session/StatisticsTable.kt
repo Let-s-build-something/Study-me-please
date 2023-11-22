@@ -1,7 +1,6 @@
 package study.me.please.ui.components.session
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -17,14 +16,8 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import com.squadris.squadris.compose.theme.Colors
 import com.squadris.squadris.compose.theme.LocalTheme
 import com.squadris.squadris.ext.roundOffDecimal
-import com.squadris.squadris.utils.DateUtils
 import study.me.please.R
-import study.me.please.data.io.QuestionIO
-import study.me.please.data.io.SessionHistoryItem
 import study.me.please.ui.session.QuestionModule
-import java.math.RoundingMode
-import java.text.DecimalFormat
-import java.util.Calendar
 import java.util.concurrent.TimeUnit
 
 /**
@@ -37,7 +30,7 @@ fun StatisticsTable(
     questionModule: QuestionModule,
     backgroundColor: Color = LocalTheme.colors.onBackgroundComponent
 ) {
-    val items = questionModule.history.filter { it.timeOfStart != null }
+    val items = questionModule.history.filter { it.timeOfStart != null && it.wasRepeated.not() }
     val responseTimeAverages = mutableListOf<Long>()
     val successRates = mutableListOf<Double>()
     var iteratedValueSuccessRate = 0.0

@@ -8,7 +8,8 @@ import com.squadris.squadris.utils.DateUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import study.me.please.data.io.QuestionIO
-import study.me.please.data.io.SessionHistoryItem
+import study.me.please.data.io.session.SessionHistoryItem
+import study.me.please.data.io.session.SessionItem
 import study.me.please.data.room.AppRoomDatabase
 import java.util.UUID
 
@@ -57,7 +58,7 @@ data class QuestionModule(
     suspend fun stepForward(
         currentQuestion: QuestionIO?,
         forceRepeat: Boolean = false
-    ): SessionQuestion? {
+    ): SessionItem? {
         if(questions.isEmpty()) return null
         if(forceRepeat && currentQuestion != null) {
             injectQuestion(
@@ -70,12 +71,13 @@ data class QuestionModule(
         return withContext(Dispatchers.Default) {
             // plus 1 because it's an index
             if(currentHistoryIndex < history.size.minus(1) && history.isNotEmpty()) {
-                history.getOrNull(++currentHistoryIndex)?.let { question ->
-                    SessionQuestion(
+                history.getOrNull(++currentHistoryIndex)?.let { historyItem ->
+                    SessionItem(
                         isHistory = true,
-                        historyItem = question,
-                        correctAnswers = listOf(*question.answers.toTypedArray()).filter { it.isCorrect }
-                            .map { it.uid }
+                        historyItem = historyItem,
+                        correctAnswers = listOf(*historyItem.answers.toTypedArray()).filter { it.isCorrect }
+                            .map { it.uid },
+                        isRepeated = historyItem.wasRepeated
                     )
                 }
             }else {
@@ -87,10 +89,11 @@ data class QuestionModule(
                     questionsStack.addAll(questions.shuffled())
                 }
                 questionsStack.getOrNull(++currentQuestionIndex)?.let { question ->
-                    SessionQuestion(
+                    SessionItem(
                         isHistory = false,
-                        question = question,
-                        correctAnswers = question.answers.filter { it.isCorrect }.map { it.uid }
+                        data = question,
+                        correctAnswers = question.answers.filter { it.isCorrect }.map { it.uid },
+                        isRepeated = question.isRepeated
                     )
                 }
             }
@@ -99,24 +102,26 @@ data class QuestionModule(
 
     /** retrieves current step position without changing any data */
     @Ignore
-    fun getCurrentStep(): SessionQuestion? {
+    fun getCurrentStep(): SessionItem? {
         if(questions.isEmpty()) return null
         // browsing history
         return if(currentHistoryIndex < history.size.minus(1)) {
-            history.getOrNull(currentHistoryIndex)?.let { question ->
-                SessionQuestion(
+            history.getOrNull(currentHistoryIndex)?.let { historyItem ->
+                SessionItem(
                     isHistory = true,
-                    historyItem = question,
-                    correctAnswers = listOf(*question.answers.toTypedArray()).filter { it.isCorrect }
-                        .map { it.uid }
+                    historyItem = historyItem,
+                    correctAnswers = listOf(*historyItem.answers.toTypedArray()).filter { it.isCorrect }
+                        .map { it.uid },
+                    isRepeated = historyItem.wasRepeated
                 )
             }
         }else {
             questionsStack.getOrNull(currentQuestionIndex)?.let { question ->
-                SessionQuestion(
+                SessionItem(
                     isHistory = false,
-                    question = question,
-                    correctAnswers = question.answers.filter { it.isCorrect }.map { it.uid }
+                    data = question,
+                    correctAnswers = question.answers.filter { it.isCorrect }.map { it.uid },
+                    isRepeated = question.isRepeated
                 )
             }
         }
@@ -124,16 +129,17 @@ data class QuestionModule(
 
     /** steps backwards in history */
     @Ignore
-    suspend fun stepBackward(): SessionQuestion? {
+    suspend fun stepBackward(): SessionItem? {
         if(history.isEmpty() || currentHistoryIndex.minus(1) < 0) return null
         currentHistoryIndex = 0
 
         return withContext(Dispatchers.Default) {
-            history.getOrNull(--currentHistoryIndex)?.let { question ->
-                SessionQuestion(
+            history.getOrNull(--currentHistoryIndex)?.let { historyItem ->
+                SessionItem(
                     isHistory = true,
-                    historyItem = question,
-                    correctAnswers = question.answers.filter { it.isCorrect }.map { it.uid }
+                    historyItem = historyItem,
+                    correctAnswers = historyItem.answers.filter { it.isCorrect }.map { it.uid },
+                    isRepeated = historyItem.wasRepeated
                 )
             }
         }
@@ -163,9 +169,9 @@ data class QuestionModule(
     ) {
         val newIndex = this.currentQuestionIndex.plus(index)
         if(newIndex < questionsStack.size) {
-            questionsStack.add(newIndex, question)
+            questionsStack.add(newIndex, question.copy().also { it.isRepeated = true })
         }else if(isMistake) {
-            questionsStack.add(question)
+            questionsStack.add(question.copy().also { it.isRepeated = true })
         }
     }
 }

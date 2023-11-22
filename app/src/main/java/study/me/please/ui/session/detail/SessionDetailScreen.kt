@@ -1,6 +1,5 @@
 package study.me.please.ui.session.detail
 
-import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
@@ -58,7 +57,7 @@ import study.me.please.base.navigation.ActionBarIcon
 import study.me.please.base.navigation.CollectionDetailAppBarActions
 import study.me.please.base.navigation.NavigationUtils
 import study.me.please.data.io.CollectionIO
-import study.me.please.data.io.SessionIO
+import study.me.please.data.io.session.SessionIO
 import study.me.please.data.io.preferences.SessionPreferencePack
 import study.me.please.ui.collection.detail.OptionsLayout
 import study.me.please.ui.components.BasicAlertDialog

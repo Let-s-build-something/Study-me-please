@@ -53,6 +53,7 @@ import study.me.please.data.io.LargePathAsset
 import study.me.please.data.io.QuestionAnswerIO
 import study.me.please.data.io.QuestionIO
 import study.me.please.data.io.preferences.SessionPreferencePack
+import study.me.please.data.io.session.SessionItem
 import study.me.please.ui.components.EditableImageAsset
 import study.me.please.ui.components.ImageAction
 import study.me.please.ui.components.OutlinedButton
@@ -210,11 +211,11 @@ fun SessionScreen(
 private fun PromptLayout(
     modifier: Modifier = Modifier,
     coroutineScope: CoroutineScope,
-    sessionItem: SessionQuestion,
+    sessionItem: SessionItem,
     state: SessionScreenState
 ) {
     val question = remember(sessionItem) {
-        sessionItem.question ?: sessionItem.historyItem?.questionIO
+        sessionItem.data ?: sessionItem.historyItem?.questionIO
     }
     val answers = remember(question, sessionItem) {
         derivedStateOf {
@@ -418,9 +419,9 @@ private fun PromptLayout(
 private fun PromptPreview() {
     Box(modifier = Modifier.background(LocalTheme.colors.backgroundLight)) {
         PromptLayout(
-            sessionItem = SessionQuestion(
+            sessionItem = SessionItem(
                 isHistory = false,
-                question = QuestionIO(
+                data = QuestionIO(
                     prompt = "Some random prompt",
                     textExplanation = "Text explanation",
                     imageExplanationUrl = LargePathAsset(

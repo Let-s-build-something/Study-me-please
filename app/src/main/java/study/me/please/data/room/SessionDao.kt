@@ -4,7 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import study.me.please.data.io.SessionIO
+import study.me.please.data.io.session.SessionIO
 
 /** Interface for communication with local Room database */
 @Dao

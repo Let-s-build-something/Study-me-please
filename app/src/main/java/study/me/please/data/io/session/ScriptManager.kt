@@ -1,7 +1,8 @@
-package study.me.please.data.io
+package study.me.please.data.io.session
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import study.me.please.data.io.PsychologyTerm
 
 class ScriptManager(private var prompts: List<PsychologyTerm>) {
     var index: Int = 0

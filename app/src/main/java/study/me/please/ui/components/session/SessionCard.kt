@@ -1,7 +1,6 @@
 package study.me.please.ui.components.session
 
 import android.annotation.SuppressLint
-import android.util.Log
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
@@ -42,7 +41,7 @@ import com.squadris.squadris.compose.theme.LocalTheme
 import com.squadris.squadris.ext.brandShimmerEffect
 import study.me.please.R
 import study.me.please.data.io.QuestionMode
-import study.me.please.data.io.SessionIO
+import study.me.please.data.io.session.SessionIO
 import study.me.please.ui.components.InteractiveCardMode
 import study.me.please.ui.components.InteractiveCardState
 import study.me.please.ui.components.OptionsModeLayout

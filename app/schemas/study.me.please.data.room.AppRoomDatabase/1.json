@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "a40e68ac34706282158acf08281e6c74",
+    "identityHash": "312affa54a26506c7b9a5dcb266d6e87",
     "entities": [
       {
         "tableName": "ROOM_COLLECTION_TABLE",
@@ -452,7 +452,7 @@
       },
       {
         "tableName": "ROOM_FACT_TABLE",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`uid` TEXT NOT NULL, `shortKeyInformation` TEXT NOT NULL, `shortKeyImage` TEXT, `longInformation` TEXT NOT NULL, `longInformationImage` TEXT, `promptImage` TEXT, `type` TEXT NOT NULL, `date_created` TEXT NOT NULL, PRIMARY KEY(`uid`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`uid` TEXT NOT NULL, `shortKeyInformation` TEXT NOT NULL, `shortKeyImage` TEXT, `longInformation` TEXT NOT NULL, `longInformationImage` TEXT, `listContent` TEXT NOT NULL, `promptImage` TEXT, `type` TEXT NOT NULL, `date_created` TEXT NOT NULL, PRIMARY KEY(`uid`))",
         "fields": [
           {
             "fieldPath": "uid",
@@ -483,6 +483,12 @@
             "columnName": "longInformationImage",
             "affinity": "TEXT",
             "notNull": false
+          },
+          {
+            "fieldPath": "listContent",
+            "columnName": "listContent",
+            "affinity": "TEXT",
+            "notNull": true
           },
           {
             "fieldPath": "promptImage",
@@ -516,7 +522,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'a40e68ac34706282158acf08281e6c74')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '312affa54a26506c7b9a5dcb266d6e87')"
     ]
   }
 }

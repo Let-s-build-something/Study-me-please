@@ -69,4 +69,8 @@ data class QuestionIO (
     @get:Ignore
     val isEmpty: Boolean
         get() = prompt.isEmpty() || answers.isEmpty()
+
+    /** whether this question was repeated, local use only */
+    @Ignore
+    var isRepeated: Boolean = false
 }

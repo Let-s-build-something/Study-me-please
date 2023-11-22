@@ -54,6 +54,7 @@
     <string name="facts_type_definition">Definition</string>
     <string name="facts_type_person">Person</string>
     <string name="facts_type_date">Date</string>
+    <string name="facts_type_list">List</string>
     <string name="facts_type_quote">Quote</string>
     <!-- short information -->
     <string name="facts_type_long_fact_header">Information explanation</string>
@@ -61,7 +62,9 @@
     <string name="facts_type_long_fact_hint">How would you explain the information?</string>
     <string name="facts_type_long_definition_hint">Explain the definition</string>
     <string name="facts_type_long_person_header">Information about the person</string>
+    <string name="facts_type_long_list_header">Explanation of the list</string>
     <string name="facts_type_long_person_hint">What information is relevant about the person?</string>
+    <string name="facts_type_long_list_hint">All relevant items</string>
     <string name="facts_type_long_date_header">Date explanation</string>
     <string name="facts_type_long_date_hint">What happened on that date or what is it related to?</string>
     <string name="facts_type_long_quote_header">Quote explanation</string>
@@ -75,6 +78,7 @@
     <string name="facts_type_short_person_hint">Keanu Reeves</string>
     <string name="facts_type_short_date_header">What is the date?</string>
     <string name="facts_type_short_date_hint">Nov 17, 1989 - Dec 29, 1989</string>
+    <string name="facts_type_short_list_hint">item</string>
     <string name="facts_type_short_quote_header">What is the quote?</string>
     <string name="facts_type_short_quote_hint">Don\'t rely on your ability to predict, trust in your ability to damage control</string>
     <!-- prompts -->
@@ -85,6 +89,7 @@
     <string name="facts_type_short_person_prompt">What information is relevant about %1$s?</string>
     <string name="facts_type_short_date_prompt">What happened on %1$s or what is it related to?</string>
     <string name="facts_type_short_quote_prompt">Who/what is the quote "%1$s" related to?</string>
+    <string name="facts_type_short_list_prompt">TODO list</string>
     <!-- long prompts -->
     <string name="facts_type_long_fact_prompt">What is the explanation "%1$s" related to?</string>
     <string name="facts_type_long_definition_prompt">What defines "%1$s"?</string>

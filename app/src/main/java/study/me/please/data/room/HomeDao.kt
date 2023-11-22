@@ -3,7 +3,7 @@ package study.me.please.data.room
 import androidx.room.Dao
 import androidx.room.Query
 import study.me.please.data.io.CollectionIO
-import study.me.please.data.io.SessionIO
+import study.me.please.data.io.session.SessionIO
 
 /** Interface for communication with local Room database */
 @Dao
