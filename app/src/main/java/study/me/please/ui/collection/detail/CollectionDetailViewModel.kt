@@ -27,6 +27,7 @@ import study.me.please.data.io.clip_board.CollectionExport
 import study.me.please.ui.collection.RefreshableViewModel
 import study.me.please.ui.collection.detail.facts.FactsFilter
 import study.me.please.ui.collection.detail.questions.QuestionsFilter
+import study.me.please.ui.components.collapsing_layout.CollapsingLayoutState
 import javax.inject.Inject
 
 @HiltViewModel
@@ -46,6 +47,15 @@ class CollectionDetailViewModel @Inject constructor(
 
     override val isRefreshing: MutableStateFlow<Boolean> = MutableStateFlow(false)
     override var lastRefreshTimeMillis: Long = 0L
+
+    /** state for scrollable collapsing layout above everything else */
+    val collapsingLayoutGeneralState = CollapsingLayoutState()
+
+    /** state for scrollable collapsing layout for questions */
+    val collapsingLayoutQuestionsState = CollapsingLayoutState()
+
+    /** state for scrollable collapsing layout for facts */
+    val collapsingLayoutFactsState = CollapsingLayoutState()
 
     /** response from question generation */
     var questionGenerationResponse = MutableSharedFlow<QuestionGenerationResponse>()

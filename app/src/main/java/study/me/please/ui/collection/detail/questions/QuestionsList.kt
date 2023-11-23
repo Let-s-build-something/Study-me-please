@@ -78,9 +78,7 @@ private const val CHIP_HAS_IMAGE_ID = "HAS_IMAGE_CHIP"
 private const val CHIP_IS_INVALID_ID = "IS_INVALID_CHIP"
 
 /** Interactive list of questions */
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class,
-    ExperimentalLayoutApi::class
-)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun QuestionsList(
     viewModel: CollectionDetailViewModel,

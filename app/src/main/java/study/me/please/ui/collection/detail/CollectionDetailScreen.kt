@@ -33,7 +33,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.platform.ClipboardManager
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.res.stringResource
@@ -42,7 +41,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
-import com.squadris.squadris.compose.components.CollapsingLayout
 import com.squadris.squadris.compose.components.DEFAULT_ANIMATION_LENGTH_SHORT
 import com.squadris.squadris.compose.components.EditFieldInput
 import com.squadris.squadris.compose.theme.LocalTheme
@@ -62,6 +60,8 @@ import study.me.please.data.io.QuestionIO
 import study.me.please.ui.collection.detail.facts.FactsList
 import study.me.please.ui.collection.detail.questions.QuestionsList
 import study.me.please.ui.components.ImageAction
+import study.me.please.ui.components.collapsing_layout.CollapsingBehavior
+import study.me.please.ui.components.collapsing_layout.CollapsingLayout
 import study.me.please.ui.components.pull_refresh.PullRefreshScreen
 import study.me.please.ui.components.tab_switch.MultiChoiceSwitch
 import study.me.please.ui.components.tab_switch.rememberTabSwitchState
@@ -213,129 +213,124 @@ private fun ContentLayout(
 
     CollapsingLayout(
         modifier = modifier
-            .padding(top = 4.dp)
-            .shadow(
-                elevation = LocalTheme.styles.componentElevation,
-                shape = LocalTheme.shapes.componentShape,
-                clip = true
-            )
-            .background(
-                color = LocalTheme.colors.onBackgroundComponent,
-                shape = LocalTheme.shapes.componentShape
-            )
+            .background(color = LocalTheme.colors.onBackgroundComponent)
             .wrapContentHeight(),
-        collapsingToolbar = @Composable {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 12.dp)
-            ) {
-                val clipboardManager: ClipboardManager = LocalClipboardManager.current
-                Row(
+        state = viewModel.collapsingLayoutGeneralState,
+        content = listOf(
+            @Composable {
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState())
-                        .padding(start = 6.dp, top = 6.dp, end = 6.dp),
-                    horizontalArrangement = Arrangement.spacedBy(
-                        LocalTheme.shapes.betweenItemsSpace
-                    )
+                        .padding(horizontal = 12.dp)
                 ) {
-                    ImageAction(
-                        modifier = Modifier,
-                        leadingImageVector = Icons.Outlined.FileDownload,
-                        text = stringResource(id = R.string.button_import)
-                    ) {
-
-                    }
-                    ImageAction(
-                        modifier = Modifier,
-                        leadingImageVector = Icons.Outlined.FileUpload,
-                        text = stringResource(id = R.string.button_export)
-                    ) {
-                        viewModel.getExportString { json ->
-                            clipboardManager.setText(AnnotatedString(json))
-                        }
-                    }
-                    ImageAction(
-                        modifier = Modifier,
-                        leadingImageVector = Icons.Outlined.DocumentScanner,
-                        text = stringResource(id = R.string.button_scan)
-                    ) {
-
-                    }
-                }
-
-                EditFieldInput(
-                    modifier = itemModifier,
-                    value = collectionDetail.name,
-                    hint = stringResource(id = R.string.collection_detail_name_hint),
-                    maxLines = 1,
-                    minLines = 1
-                ) { output ->
-                    collectionDetail.apply {
-                        name = output
-                    }
-                    requestCollectionSave()
-                }
-                EditFieldInput(
-                    modifier = itemModifier,
-                    value = collectionDetail.description,
-                    hint = stringResource(id = R.string.collection_detail_description_hint),
-                    minLines = 8,
-                    maxLines = 8
-                ) { output ->
-                    collectionDetail.apply {
-                        description = output
-                    }
-                    requestCollectionSave()
-                }
-
-                Box(
-                    modifier = Modifier
-                        .padding(top = LocalTheme.shapes.betweenItemsSpace)
-                        .fillMaxWidth(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    MultiChoiceSwitch(
+                    val clipboardManager: ClipboardManager = LocalClipboardManager.current
+                    Row(
                         modifier = Modifier
-                            .wrapContentHeight()
-                            .fillMaxWidth(0.75f),
-                        state = contentSwitchState
-                    )
-                }
-            }
-        }
-    ) {
-        HorizontalPager(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 8.dp),
-            state = contentPagerState,
-            beyondBoundsPageCount = 2,
-            key = { it }
-        ) { index ->
-            if(index == PAGE_INDEX_QUESTIONS) {
-                QuestionsList(
-                    onNavigateToQuestionTest = onNavigateToQuestionTest,
-                    viewModel = viewModel,
-                    navigateToSession = navigateToSession,
-                    requestQuestionSave = requestQuestionSave
-                )
-            }else if(index == PAGE_INDEX_FACTS) {
-                FactsList(
-                    viewModel = viewModel,
-                    collectionDetail = collectionDetail,
-                    requestCollectionSave = requestCollectionSave,
-                    requestFactSave = requestFactSave,
-                    onPageChange = {
-                        coroutineScope.launch {
-                            contentPagerState.scrollToPage(0)
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState())
+                            .padding(start = 6.dp, top = 6.dp, end = 6.dp),
+                        horizontalArrangement = Arrangement.spacedBy(
+                            LocalTheme.shapes.betweenItemsSpace
+                        )
+                    ) {
+                        ImageAction(
+                            modifier = Modifier,
+                            leadingImageVector = Icons.Outlined.FileDownload,
+                            text = stringResource(id = R.string.button_import)
+                        ) {
+
+                        }
+                        ImageAction(
+                            modifier = Modifier,
+                            leadingImageVector = Icons.Outlined.FileUpload,
+                            text = stringResource(id = R.string.button_export)
+                        ) {
+                            viewModel.getExportString { json ->
+                                clipboardManager.setText(AnnotatedString(json))
+                            }
+                        }
+                        ImageAction(
+                            modifier = Modifier,
+                            leadingImageVector = Icons.Outlined.DocumentScanner,
+                            text = stringResource(id = R.string.button_scan)
+                        ) {
+
                         }
                     }
-                )
-            }
-        }
-    }
+
+                    EditFieldInput(
+                        modifier = itemModifier,
+                        value = collectionDetail.name,
+                        hint = stringResource(id = R.string.collection_detail_name_hint),
+                        maxLines = 1,
+                        minLines = 1
+                    ) { output ->
+                        collectionDetail.apply {
+                            name = output
+                        }
+                        requestCollectionSave()
+                    }
+                    EditFieldInput(
+                        modifier = itemModifier,
+                        value = collectionDetail.description,
+                        hint = stringResource(id = R.string.collection_detail_description_hint),
+                        minLines = 8,
+                        maxLines = 8
+                    ) { output ->
+                        collectionDetail.apply {
+                            description = output
+                        }
+                        requestCollectionSave()
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .padding(top = LocalTheme.shapes.betweenItemsSpace)
+                            .fillMaxWidth(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        MultiChoiceSwitch(
+                            modifier = Modifier
+                                .wrapContentHeight()
+                                .fillMaxWidth(0.75f),
+                            state = contentSwitchState
+                        )
+                    }
+                }
+            } to CollapsingBehavior.ON_TOP,
+            @Composable {
+                HorizontalPager(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp),
+                    state = contentPagerState,
+                    beyondBoundsPageCount = 2,
+                    key = { it }
+                ) { index ->
+                    if(index == PAGE_INDEX_QUESTIONS) {
+                        QuestionsList(
+                            onNavigateToQuestionTest = onNavigateToQuestionTest,
+                            viewModel = viewModel,
+                            navigateToSession = navigateToSession,
+                            requestQuestionSave = requestQuestionSave
+                        )
+                    }else if(index == PAGE_INDEX_FACTS) {
+                        FactsList(
+                            viewModel = viewModel,
+                            collectionDetail = collectionDetail,
+                            requestCollectionSave = requestCollectionSave,
+                            requestFactSave = requestFactSave,
+                            onPageChange = {
+                                coroutineScope.launch {
+                                    contentPagerState.scrollToPage(0)
+                                }
+                            }
+                        )
+                    }
+                }
+            } to CollapsingBehavior.NONE,
+        )
+    )
 }
 
 /** Layout for loading - shimmer effect */
