@@ -36,6 +36,7 @@ import com.squadris.squadris.compose.theme.LocalTheme
 fun CustomizableAppBar(
     modifier: Modifier = Modifier,
     title: String? = "Home",
+    subtitle: String? = null,
     navigationIcon: Pair<ImageVector, String>? = Icons.Outlined.Home to "",
     actions: @Composable RowScope.() -> Unit = {},
     onNavigationIconClick: () -> Unit = {}

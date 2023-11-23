@@ -1,14 +1,10 @@
 package study.me.please.ui.collection
 
-import android.app.Activity
-import android.util.Log
-import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,15 +16,12 @@ import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Deselect
 import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material.icons.outlined.SelectAll
-import androidx.compose.material.pullrefresh.pullRefresh
-import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberBottomSheetScaffoldState
@@ -42,35 +35,33 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.constraintlayout.compose.ConstraintLayout
-import androidx.constraintlayout.compose.Dimension
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
-import androidx.navigation.NavController
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.squadris.squadris.compose.components.DEFAULT_ANIMATION_LENGTH_SHORT
-import com.squadris.squadris.compose.components.getDefaultPullRefreshSize
-import com.squadris.squadris.compose.theme.LocalTheme
 import com.squadris.squadris.compose.theme.Colors
+import com.squadris.squadris.compose.theme.LocalTheme
 import com.squadris.squadris.utils.OnLifecycleEvent
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import study.me.please.R
-import study.me.please.base.DraggableRefreshIndicator
-import study.me.please.base.ProgressBarRefreshIndicator
-import study.me.please.base.navigation.NavigationUtils
+import study.me.please.base.LocalNavController
+import study.me.please.base.navigation.NavigationComponent
+import study.me.please.base.navigation.NavigationComponent.COLLECTION_UID
+import study.me.please.base.navigation.NavigationComponent.TOOLBAR_TITLE
+import study.me.please.base.navigation.NavigationDestination
 import study.me.please.ui.components.AddToSessionCollectionSheet
 import study.me.please.ui.components.BasicAlertDialog
 import study.me.please.ui.components.ButtonState
@@ -79,45 +70,26 @@ import study.me.please.ui.components.ComponentHeaderButton
 import study.me.please.ui.components.ImageAction
 import study.me.please.ui.components.InteractiveCardMode
 import study.me.please.ui.components.ListOptionsBottomSheet
+import study.me.please.ui.components.pull_refresh.PullRefreshScreen
 import study.me.please.ui.components.rememberInteractiveCardState
 import study.me.please.ui.session.lobby.EditableListShimmerLayout
 
 /** Screen with user's collections */
-@OptIn(ExperimentalMaterialApi::class, ExperimentalMaterial3Api::class,
-    ExperimentalFoundationApi::class
-)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun CollectionLobbyScreen(
-    navController: NavController,
-    activity: Activity,
     viewModel: CollectionViewModel = hiltViewModel()
 ) {
     val coroutineScope = rememberCoroutineScope()
     val collectionsFlow = viewModel.dataManager.collections.collectAsState()
     val sessions = viewModel.dataManager.sessions.collectAsState()
-    val isRefreshing = viewModel.isRefreshing.collectAsState()
-    val pullRefreshSize = getDefaultPullRefreshSize(activity = activity)
-    val pullRefreshState = rememberPullRefreshState(
-        refreshing = isRefreshing.value,
-        onRefresh = {
-            viewModel.requestCollections(true)
-        },
-        refreshThreshold = pullRefreshSize,
-        refreshingOffset = pullRefreshSize
-    )
-    val indicatorOffset = remember { mutableStateOf(0.dp) }
+
     val bottomSheetState = rememberBottomSheetScaffoldState(
         bottomSheetState = rememberStandardBottomSheetState(skipHiddenState = false)
     )
+
     val showDeleteDialog = remember { mutableStateOf(false) }
     val showAddToSheet = remember { mutableStateOf(false) }
-
-    OnLifecycleEvent { event ->
-        if(event == Lifecycle.Event.ON_RESUME) {
-            viewModel.requestCollections()
-        }
-    }
-
     val collections = remember(collectionsFlow.value) {
         mutableStateListOf(
             *collectionsFlow.value?.toTypedArray().orEmpty()
@@ -127,6 +99,17 @@ fun CollectionLobbyScreen(
     val interactiveStates = collections.map {
         rememberInteractiveCardState()
     }
+
+    val navController = LocalNavController.current
+    val context = LocalContext.current
+
+    OnLifecycleEvent { event ->
+        if(event == Lifecycle.Event.ON_RESUME) {
+            viewModel.requestCollections()
+        }
+    }
+
+
     val stopChecking = {
         interactiveStates.forEach {
             it.isChecked.value = false
@@ -145,11 +128,6 @@ fun CollectionLobbyScreen(
                 }
                 bottomSheetState.bottomSheetState.expand()
             } else stopChecking()
-        }
-    }
-    if(selectedCollectionUids.size > 0) {
-        BackHandler {
-            stopChecking()
         }
     }
 
@@ -201,100 +179,81 @@ fun CollectionLobbyScreen(
             }
         )
     }
-    DraggableRefreshIndicator(
-        pullRefreshSize = pullRefreshSize,
-        state = pullRefreshState,
-        isRefreshing = isRefreshing.value
-    ) { indicatorOffsetDp ->
-        indicatorOffset.value = indicatorOffsetDp
-    }
-    if(collectionsFlow.value == null) {
-        EditableListShimmerLayout()
-    }else {
-        ListOptionsBottomSheet(
-            modifier = Modifier
-                .fillMaxSize(),
-            onDismissRequest = {
-                stopChecking()
-            },
-            actions = {
-                ImageAction(
-                    leadingImageVector = Icons.Outlined.Delete,
-                    text = stringResource(id = R.string.button_delete),
-                    containerColor = Colors.RED_ERROR
-                ) {
-                    showDeleteDialog.value = true
-                }
-                ImageAction(
-                    leadingImageVector = Icons.Outlined.SelectAll,
-                    text = stringResource(id = R.string.button_select_all)
-                ) {
-                    interactiveStates.forEach {
-                        it.isChecked.value = true
-                    }
-                }
-                ImageAction(
-                    leadingImageVector = Icons.Outlined.Deselect,
-                    text = stringResource(id = R.string.button_deselect)
-                ) {
-                    selectedCollectionUids.clear()
-                }
-                ImageAction(
-                    leadingImageVector = Icons.Outlined.Add,
-                    text = stringResource(id = R.string.button_add_to)
-                ) {
-                    viewModel.requestSessions()
-                    showAddToSheet.value = true
-                }
-                val toolbarText = stringResource(id = R.string.session_detail_default_toolbar)
-                ImageAction(
-                    leadingImageVector = Icons.Outlined.PlayArrow,
-                    text = stringResource(id = R.string.button_start_session)
-                ) {
-                    NavigationUtils.navigateToSessionDetail(
-                        navController = navController,
-                        collectionUidList = selectedCollectionUids.toList(),
-                        toolbarTitle = toolbarText
-                    )
-                    stopChecking()
-                }
-            },
-            state = bottomSheetState
-        ) { paddingValues ->
-            ConstraintLayout(
-                modifier = Modifier
-                    .pullRefresh(pullRefreshState)
-                    .fillMaxSize()
-                    .graphicsLayer {
-                        translationY = indicatorOffset.value.toPx()
-                    }
-            ) {
-                val collectionList = createRef()
 
-                ProgressBarRefreshIndicator(isRefreshing = isRefreshing.value, state = pullRefreshState)
-                val toolbarText = stringResource(id = R.string.session_detail_default_toolbar)
+    PullRefreshScreen(
+        modifier = Modifier.fillMaxSize(),
+        viewModel = viewModel,
+        onBackPressed = {
+            if(selectedCollectionUids.size > 0) {
+                stopChecking()
+            }
+            selectedCollectionUids.size == 0
+        },
+        title = stringResource(id = R.string.screen_collection_title)
+    ) { paddingValues ->
+        if(collectionsFlow.value == null) {
+            EditableListShimmerLayout(modifier = Modifier.padding(paddingValues))
+        }else {
+            ListOptionsBottomSheet(
+                modifier = Modifier.padding(paddingValues),
+                onDismissRequest = {
+                    stopChecking()
+                },
+                actions = {
+                    ImageAction(
+                        leadingImageVector = Icons.Outlined.Delete,
+                        text = stringResource(id = R.string.button_delete),
+                        containerColor = Colors.RED_ERROR
+                    ) {
+                        showDeleteDialog.value = true
+                    }
+                    ImageAction(
+                        leadingImageVector = Icons.Outlined.SelectAll,
+                        text = stringResource(id = R.string.button_select_all)
+                    ) {
+                        interactiveStates.forEach {
+                            it.isChecked.value = true
+                        }
+                    }
+                    ImageAction(
+                        leadingImageVector = Icons.Outlined.Deselect,
+                        text = stringResource(id = R.string.button_deselect)
+                    ) {
+                        selectedCollectionUids.clear()
+                    }
+                    ImageAction(
+                        leadingImageVector = Icons.Outlined.Add,
+                        text = stringResource(id = R.string.button_add_to)
+                    ) {
+                        viewModel.requestSessions()
+                        showAddToSheet.value = true
+                    }
+                    val toolbarText = stringResource(id = R.string.session_detail_default_toolbar)
+                    ImageAction(
+                        leadingImageVector = Icons.Outlined.PlayArrow,
+                        text = stringResource(id = R.string.button_start_session)
+                    ) {
+                        navController?.navigate(
+                            NavigationDestination.SessionDetail.createRoute(
+                                NavigationComponent.COLLECTION_UID_LIST to selectedCollectionUids,
+                                TOOLBAR_TITLE to toolbarText
+                            )
+                        )
+                        stopChecking()
+                    }
+                },
+                state = bottomSheetState
+            ) { modalPaddingValues ->
                 LazyColumn(
                     modifier = Modifier
-                        .padding(paddingValues)
+                        .padding(modalPaddingValues)
                         .pointerInput(Unit) {
                             detectTapGestures(onTap = {
                                 stopChecking()
                             })
                         }
                         .windowInsetsPadding(WindowInsets.systemBars)
-                        .windowInsetsPadding(WindowInsets.ime)
-                        .constrainAs(collectionList) {
-                            linkTo(
-                                parent.top,
-                                parent.bottom
-                            )
-                            linkTo(
-                                parent.start,
-                                parent.end
-                            )
-                            width = Dimension.fillToConstraints
-                            height = Dimension.fillToConstraints
-                        },
+                        .windowInsetsPadding(WindowInsets.ime),
                     verticalArrangement = Arrangement.spacedBy(LocalTheme.shapes.betweenItemsSpace)
                 ) {
                     if(collections.isNotEmpty()) {
@@ -325,17 +284,21 @@ fun CollectionLobbyScreen(
                                         ),
                                     data = collection,
                                     onNavigateToDetail = {
-                                        NavigationUtils.navigateToCollectionDetail(
-                                            navController = navController,
-                                            collectionUid = collection.uid,
-                                            toolbarTitle = collection.name.ifEmpty { activity.getString(R.string.screen_collection_detail_new) }
+                                        navController?.navigate(
+                                            NavigationDestination.CollectionDetail.createRoute(
+                                                COLLECTION_UID to collection.uid,
+                                                TOOLBAR_TITLE to collection.name.ifEmpty {
+                                                    context.getString(R.string.screen_collection_detail_new)
+                                                }
+                                            )
                                         )
                                     },
                                     onNavigateToSession = {
-                                        NavigationUtils.navigateToSessionDetail(
-                                            navController = navController,
-                                            collectionUidList = listOf(collection.uid),
-                                            toolbarTitle = toolbarText
+                                        navController?.navigate(
+                                            NavigationDestination.SessionDetail.createRoute(
+                                                NavigationComponent.COLLECTION_UID_LIST to listOf(collection.uid),
+                                                TOOLBAR_TITLE to context.getString(R.string.session_detail_default_toolbar)
+                                            )
                                         )
                                     },
                                     state = state
@@ -356,9 +319,10 @@ fun CollectionLobbyScreen(
                             modifier = Modifier.padding(vertical = 8.dp),
                             text = stringResource(id = R.string.add_new_collection)
                         ) {
-                            NavigationUtils.navigateToCollectionDetail(
-                                navController = navController,
-                                toolbarTitle = activity.getString(R.string.screen_collection_detail_new)
+                            navController?.navigate(
+                                NavigationDestination.CollectionDetail.createRoute(
+                                    TOOLBAR_TITLE to context.getString(R.string.screen_collection_detail_new)
+                                )
                             )
                         }
                     }

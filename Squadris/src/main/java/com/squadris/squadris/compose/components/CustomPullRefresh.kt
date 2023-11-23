@@ -40,8 +40,8 @@ fun CustomPullRefresh(
 }
 
 @Composable
-fun getDefaultPullRefreshSize(activity: Activity): Dp {
-    return (LocalConfiguration.current.screenWidthDp).times(if(isTablet(activity = activity)) {
+fun getDefaultPullRefreshSize(isTablet: Boolean): Dp {
+    return (LocalConfiguration.current.screenWidthDp).times(if(isTablet) {
         REFRESH_WIDTH_PERCENTILE_TABLET
     }else REFRESH_WIDTH_PERCENTILE_PHONE).dp
 }

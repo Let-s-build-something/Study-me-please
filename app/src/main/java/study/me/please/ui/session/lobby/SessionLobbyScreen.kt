@@ -7,7 +7,6 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -42,7 +41,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
-import androidx.navigation.NavController
 import com.squadris.squadris.compose.components.DEFAULT_ANIMATION_LENGTH_SHORT
 import com.squadris.squadris.compose.theme.Colors
 import com.squadris.squadris.compose.theme.LocalTheme
@@ -51,7 +49,9 @@ import com.squadris.squadris.utils.OnLifecycleEvent
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import study.me.please.R
-import study.me.please.base.navigation.NavigationUtils
+import study.me.please.base.LocalNavController
+import study.me.please.base.navigation.NavigationComponent
+import study.me.please.base.navigation.NavigationDestination
 import study.me.please.base.navigation.SessionLobbyBarActions
 import study.me.please.data.io.preferences.SessionPreferencePack
 import study.me.please.ui.components.BasicAlertDialog
@@ -64,6 +64,7 @@ import study.me.please.ui.components.preference_chooser.PreferenceChooser
 import study.me.please.ui.components.session.SessionCard
 import study.me.please.ui.components.SimpleModalBottomSheet
 import study.me.please.ui.components.preference_chooser.PreferenceChooserController
+import study.me.please.ui.components.pull_refresh.PullRefreshScreen
 import study.me.please.ui.components.rememberInteractiveCardState
 
 /** communication bridge for controlling session lobby screen */
@@ -79,12 +80,18 @@ interface SessionLobbyListener {
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun SessionLobbyScreen(
-    navController: NavController,
     createNewItem: Boolean = false,
-    viewModel: SessionLobbyViewModel = hiltViewModel(),
-    changeActionBar: (actions: @Composable RowScope.() -> Unit) -> Unit
+    viewModel: SessionLobbyViewModel = hiltViewModel()
 ) {
+    val localDensity = LocalDensity.current
+    val coroutineScope = rememberCoroutineScope()
+    val localFocusManager = LocalFocusManager.current
+    val navController = LocalNavController.current
+
     val sessions = viewModel.sessions.collectAsState()
+    val preferencePacks = viewModel.preferencePacks.collectAsState()
+    val sessionsFlow = viewModel.sessions.collectAsState()
+
     val optionsSheetState = rememberBottomSheetScaffoldState(
         bottomSheetState = rememberStandardBottomSheetState(skipHiddenState = false)
     )
@@ -92,15 +99,12 @@ fun SessionLobbyScreen(
     val showPreferenceModal = remember { mutableStateOf(false) }
     val selectedSessionUids = remember { mutableStateListOf<String>() }
     val showDeleteDialog = remember { mutableStateOf(false) }
-    val localFocusManager = LocalFocusManager.current
-    val coroutineScope = rememberCoroutineScope()
-
     val newItem = remember(createNewItem) { mutableStateOf(createNewItem) }
-    val preferencePacks = viewModel.preferencePacks.collectAsState()
-    val sessionsFlow = viewModel.sessions.collectAsState()
     val interactiveStates = sessions.value?.map {
         rememberInteractiveCardState()
     }
+    var optionsSheetHeight by remember { mutableStateOf(0.dp) }
+
     val stopChecking = {
         interactiveStates?.forEach {
             it.isChecked.value = false
@@ -123,15 +127,6 @@ fun SessionLobbyScreen(
                 }
             }
         }
-    }
-    changeActionBar {
-        SessionLobbyBarActions(
-            onChangePreferences = {
-                if(preferencePacks.value.isNullOrEmpty().not()) {
-                    showPreferenceModal.value = true
-                }
-            }
-        )
     }
 
     LaunchedEffect(Unit) {
@@ -222,120 +217,135 @@ fun SessionLobbyScreen(
         )
     }
 
-    val localDensity = LocalDensity.current
-    var optionsSheet by remember { mutableStateOf(0.dp) }
-    if(sessionsFlow.value != null) {
-        ListOptionsBottomSheet(
-            modifier = Modifier
-                .pointerInput(Unit) {
-                    detectTapGestures(onTap = {
-                        localFocusManager.clearFocus()
-                        stopChecking()
-                    })
-                }
-                .fillMaxSize(),
-            onDismissRequest = {
-                stopChecking()
-            },
-            sheetContentModifier = Modifier.onGloballyPositioned { coordinates ->
-                optionsSheet = with(localDensity) { coordinates.size.height.toDp() }
-            },
-            actions = {
-                ImageAction(
-                    leadingImageVector = Icons.Outlined.Delete,
-                    text = stringResource(id = R.string.button_delete),
-                    containerColor = Colors.RED_ERROR
-                ) {
-                    showDeleteDialog.value = true
-                }
-                ImageAction(
-                    leadingImageVector = Icons.Outlined.SelectAll,
-                    text = stringResource(id = R.string.button_select_all)
-                ) {
-                    interactiveStates?.forEach {
-                        it.isChecked.value = true
+    PullRefreshScreen(
+        viewModel = viewModel,
+        actionIcons = {
+            SessionLobbyBarActions(
+                onChangePreferences = {
+                    if(preferencePacks.value.isNullOrEmpty().not()) {
+                        showPreferenceModal.value = true
                     }
                 }
-                ImageAction(
-                    leadingImageVector = Icons.Outlined.Deselect,
-                    text = stringResource(id = R.string.button_deselect)
-                ) {
-                    selectedSessionUids.clear()
-                }
-                /*TODO mix sessisons
-                ImageAction(
-                    leadingImageVector = Icons.Outlined.PlayArrow,
-                    text = stringResource(id = R.string.button_start_session)
-                ) {}*/
-            },
-            state = optionsSheetState
-        ) { paddingValues ->
-            Box(
+            )
+        },
+        title = stringResource(id = R.string.screen_session_lobby_title)
+    ) { paddingValues ->
+        if(sessionsFlow.value != null) {
+            ListOptionsBottomSheet(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-            ) {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    state = rememberLazyListState(),
-                    verticalArrangement = Arrangement.spacedBy(
-                        LocalTheme.shapes.betweenItemsSpace
-                    )
-                ) {
-                    item {
-                        Spacer(modifier = Modifier.height(56.dp))
+                    .pointerInput(Unit) {
+                        detectTapGestures(onTap = {
+                            stopChecking()
+                        })
                     }
-                    itemsIndexed(
-                        sessions.value.orEmpty(),
-                        key = { _, item -> item.uid }
-                    ) { index, session ->
-                        interactiveStates?.getOrNull(index)?.let { state ->
-                            LaunchedEffect(state.isChecked.value) {
-                                if(state.isChecked.value) {
-                                    selectedSessionUids.add(session.uid)
-                                }else selectedSessionUids.remove(session.uid)
-                            }
-                            SessionCard(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .animateItemPlacement(
-                                        tween(
-                                            durationMillis = DEFAULT_ANIMATION_LENGTH_SHORT,
-                                            easing = LinearOutSlowInEasing
-                                        )
-                                    ),
-                                session = session,
-                                onEditOptionPressed = {
-                                    NavigationUtils.navigateToSessionDetail(
-                                        navController = navController,
-                                        sessionUid = session.uid,
-                                        toolbarTitle = session.name
-                                    )
-                                },
-                                state = state
-                            )
+                    .padding(paddingValues)
+                    .fillMaxSize(),
+                onDismissRequest = {
+                    stopChecking()
+                },
+                sheetContentModifier = Modifier.onGloballyPositioned { coordinates ->
+                    optionsSheetHeight = with(localDensity) { coordinates.size.height.toDp() }
+                },
+                actions = {
+                    ImageAction(
+                        leadingImageVector = Icons.Outlined.Delete,
+                        text = stringResource(id = R.string.button_delete),
+                        containerColor = Colors.RED_ERROR
+                    ) {
+                        showDeleteDialog.value = true
+                    }
+                    ImageAction(
+                        leadingImageVector = Icons.Outlined.SelectAll,
+                        text = stringResource(id = R.string.button_select_all)
+                    ) {
+                        interactiveStates?.forEach {
+                            it.isChecked.value = true
                         }
                     }
-                }
-                ComponentHeaderButton(
+                    ImageAction(
+                        leadingImageVector = Icons.Outlined.Deselect,
+                        text = stringResource(id = R.string.button_deselect)
+                    ) {
+                        selectedSessionUids.clear()
+                    }
+                    /*TODO mix sessisons
+                    ImageAction(
+                        leadingImageVector = Icons.Outlined.PlayArrow,
+                        text = stringResource(id = R.string.button_start_session)
+                    ) {}*/
+                },
+                state = optionsSheetState
+            ) { paddingValues ->
+                Box(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp),
-                    text = stringResource(id = R.string.home_screen_sessions_empty_action)
+                        .fillMaxSize()
+                        .padding(paddingValues)
                 ) {
-                    listener.onCreateNewItem()
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        state = rememberLazyListState(),
+                        verticalArrangement = Arrangement.spacedBy(
+                            LocalTheme.shapes.betweenItemsSpace
+                        )
+                    ) {
+                        item {
+                            Spacer(modifier = Modifier.height(56.dp))
+                        }
+                        itemsIndexed(
+                            sessions.value.orEmpty(),
+                            key = { _, item -> item.uid }
+                        ) { index, session ->
+                            interactiveStates?.getOrNull(index)?.let { state ->
+                                LaunchedEffect(state.isChecked.value) {
+                                    if(state.isChecked.value) {
+                                        selectedSessionUids.add(session.uid)
+                                    }else selectedSessionUids.remove(session.uid)
+                                }
+                                SessionCard(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .animateItemPlacement(
+                                            tween(
+                                                durationMillis = DEFAULT_ANIMATION_LENGTH_SHORT,
+                                                easing = LinearOutSlowInEasing
+                                            )
+                                        ),
+                                    session = session,
+                                    onEditOptionPressed = {
+                                        navController?.navigate(
+                                            NavigationDestination.SessionDetail.createRoute(
+                                                NavigationComponent.SESSION_UID to session.uid,
+                                                NavigationComponent.TOOLBAR_TITLE to session.name
+                                            )
+                                        )
+                                    },
+                                    state = state
+                                )
+                            }
+                        }
+                    }
+                    ComponentHeaderButton(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp),
+                        text = stringResource(id = R.string.home_screen_sessions_empty_action)
+                    ) {
+                        listener.onCreateNewItem()
+                    }
                 }
             }
+        }else {
+            EditableListShimmerLayout(
+                modifier = Modifier.padding(paddingValues)
+            )
         }
-    }else {
-        EditableListShimmerLayout()
     }
 }
 
 @Composable
-fun EditableListShimmerLayout() {
+fun EditableListShimmerLayout(modifier: Modifier = Modifier) {
     Column(
-        modifier = Modifier.fillMaxSize()
+        modifier = modifier.fillMaxSize()
     ) {
         Spacer(modifier = Modifier.height(LocalTheme.shapes.betweenItemsSpace))
         repeat(3) {

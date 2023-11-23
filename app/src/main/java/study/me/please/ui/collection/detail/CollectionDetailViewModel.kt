@@ -24,6 +24,7 @@ import study.me.please.data.io.QuestionAnswerIO
 import study.me.please.data.io.QuestionIO
 import study.me.please.data.io.session.SessionIO
 import study.me.please.data.io.clip_board.CollectionExport
+import study.me.please.ui.collection.RefreshableViewModel
 import study.me.please.ui.collection.detail.facts.FactsFilter
 import study.me.please.ui.collection.detail.questions.QuestionsFilter
 import javax.inject.Inject
@@ -33,7 +34,7 @@ class CollectionDetailViewModel @Inject constructor(
     private val repository: CollectionDetailRepository,
     private val dataManager: CollectionDetailDataManager,
     val clipBoard: GeneralClipBoard
-): BaseViewModel() {
+): BaseViewModel(), RefreshableViewModel {
 
     companion object {
         /** The minimum amount of facts required to make a question - 1 prompt 2 answers */
@@ -42,6 +43,9 @@ class CollectionDetailViewModel @Inject constructor(
         /** The maximum amount of answers in a generated question - 1 prompt 4 answers */
         private const val QUESTION_GENERATION_MAXIMUM_ANSWERS = 4
     }
+
+    override val isRefreshing: MutableStateFlow<Boolean> = MutableStateFlow(false)
+    override var lastRefreshTimeMillis: Long = 0L
 
     /** response from question generation */
     var questionGenerationResponse = MutableSharedFlow<QuestionGenerationResponse>()
@@ -85,14 +89,18 @@ class CollectionDetailViewModel @Inject constructor(
         }
     }
 
-    /** Requests for a specific collection by an ID */
-    fun requestCollectionByUid(collectionUid: String) {
+    /** currently displayed colection identifier */
+    var collectionUid: String = ""
+
+    override fun requestData(isSpecial: Boolean, isPullRefresh: Boolean) {
         viewModelScope.launch {
+            if(isPullRefresh) setRefreshing(true)
             repository.getCollectionByUid(collectionUid)?.let { collectionDetail ->
                 dataManager.collectionDetail.value = collectionDetail
                 requestCachedQuestions(questionUidList = collectionDetail.questionUidList.toList())
                 requestCachedFacts(factUidList = collectionDetail.factUidList.toList())
             }
+            if(isPullRefresh) setRefreshing(false)
         }
     }
 

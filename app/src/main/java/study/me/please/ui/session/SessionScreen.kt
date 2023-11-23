@@ -2,6 +2,7 @@ package study.me.please.ui.session
 
 import android.annotation.SuppressLint
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -26,10 +27,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
@@ -48,6 +51,8 @@ import com.squadris.squadris.utils.OnLifecycleEvent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import study.me.please.R
+import study.me.please.base.BrandBaseScreen
+import study.me.please.base.navigation.NavIconType
 import study.me.please.base.navigation.SessionAppBarActions
 import study.me.please.data.io.LargePathAsset
 import study.me.please.data.io.QuestionAnswerIO
@@ -75,13 +80,13 @@ import study.me.please.ui.components.session.StatisticsTable
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SessionScreen(
+    title: String? = null,
     isTestingMode: Boolean = false,
     sessionUid: String? = null,
     preferencePackUid: String? = null,
     collectionUid: String? = null,
     questionUid: String? = null,
     questionUids: List<String>? = null,
-    changeActionBar: (actions: @Composable RowScope.() -> Unit) -> Unit,
     viewModel: SessionViewModel = hiltViewModel()
 ) {
     val session = viewModel.session.collectAsState()
@@ -89,25 +94,18 @@ fun SessionScreen(
     val preferencePacks = viewModel.preferencePacks.collectAsState()
     val preferencePack = viewModel.preferencePack.collectAsState()
 
-    val coroutineScope = rememberCoroutineScope()
-    val showStatistics = remember { mutableStateOf(false) }
-    val showPreferenceModal = remember { mutableStateOf(false) }
+    val onBackPressedDispatcher = LocalOnBackPressedDispatcherOwner.current
 
-    OnLifecycleEvent { event ->
-        if(event == Lifecycle.Event.ON_RESUME) {
-            changeActionBar {
-                SessionAppBarActions(
-                    isTest = isTestingMode,
-                    onChangePreferences = {
-                        showPreferenceModal.value = true
-                    },
-                    onStatisticsOpen = {
-                        showStatistics.value = showStatistics.value.not()
-                    }
-                )
-            }
-        }
+    val coroutineScope = rememberCoroutineScope()
+    var showStatistics by remember { mutableStateOf(false) }
+    var showPreferenceModal by remember { mutableStateOf(false) }
+    var showExitDialog by remember { mutableStateOf(false) }
+
+    if(showExitDialog) {
+        //TODO exit dialog
+        onBackPressedDispatcher?.onBackPressedDispatcher?.onBackPressed()
     }
+
     LaunchedEffect(Unit) {
         viewModel.requestStateData(
             isTestingMode = isTestingMode,
@@ -119,90 +117,98 @@ fun SessionScreen(
         )
     }
 
-    if(questions.value.isNullOrEmpty().not() && preferencePack.value != null) {
-        preferencePack.value?.let { preference ->
-            val sessionState = rememberSessionScreenState(
-                session.value?.questionModule ?: QuestionModule(),
+    BrandBaseScreen(
+        modifier = Modifier.fillMaxSize(),
+        actionIcons = {
+            SessionAppBarActions(
                 isTest = isTestingMode,
-                sessionPreferencePack = mutableStateOf(preference),
-                requestSave = { module ->
-                    viewModel.requestQuestionModuleSave(module)
-                }
+                onChangePreferences = { showPreferenceModal = true },
+                onStatisticsOpen = { showStatistics = showStatistics.not() }
             )
-            val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-
-            /*LaunchedEffect(preferencePack.value) {
-                preferencePack.value?.let { newPreference ->
-                    sessionState.sessionPreferencePack.value = newPreference
-                }
-            }*/
-            LaunchedEffect(showPreferenceModal.value) {
-                if(showPreferenceModal.value) {
-                    sheetState.expand()
-                }else sheetState.hide()
-            }
-            val sessionItem = sessionState.currentItem.collectAsState()
-            LaunchedEffect(questions.value) {
-                sessionState.module.questions = questions.value.orEmpty()
-                sessionState.initialize()
-            }
-            LaunchedEffect(sessionState.currentItem.value) {
-                showStatistics.value = false
-            }
-
-            if(showPreferenceModal.value) {
-                SimpleModalBottomSheet(
-                    onDismissRequest = {
-                        showPreferenceModal.value = false
-                    },
-                    sheetState = sheetState,
-                ) {
-                    PreferenceChooser(
-                        modifier = Modifier
-                            .padding(8.dp)
-                            .padding(bottom = 32.dp),
-                        controller = object: PreferenceChooserController {
-                            override fun addPreferencePack(name: String): SessionPreferencePack {
-                                return viewModel.addNewPreferencePack(name = name)
-                            }
-                            override fun savePreference(preference: SessionPreferencePack) {
-                                viewModel.requestPreferencePackSave(preference)
-                            }
-                            override fun deletePreference(preferenceUid: String) {
-                                viewModel.requestPreferencePackDelete(preferenceUid)
-                            }
-                            override fun choosePreference(preference: SessionPreferencePack) {
-                                sessionState.sessionPreferencePack.value = preference
-                                viewModel.requestSessionSave(preferencePack = preference)
-                            }
-                        },
-                        defaultPreferencePack = sessionState.sessionPreferencePack.value,
-                        preferencePacks = preferencePacks.value
-                    )
-                }
-            }
-            BackHandler {
-                coroutineScope.launch {
-                    sessionState.stepBackward()
-                }
-            }
-
-            Column {
-                AnimatedVisibility(visible = showStatistics.value) {
-                    StatisticsTable(
-                        modifier = Modifier
-                            .padding(16.dp)
-                            .fillMaxWidth(),
-                        questionModule = sessionState.module
-                    )
-                }
-                Spacer(modifier = Modifier.height(LocalTheme.shapes.betweenItemsSpace))
-                PromptLayout(
-                    sessionItem = sessionItem.value,
-                    state = sessionState,
-                    coroutineScope = coroutineScope
+        },
+        title = title,
+        navIconType = NavIconType.CLOSE,
+        onBackPressed = {
+            showExitDialog = true
+            false
+        }
+    ) { paddingValues ->
+        if(questions.value.isNullOrEmpty().not() && preferencePack.value != null) {
+            preferencePack.value?.let { preference ->
+                val sessionState = rememberSessionScreenState(
+                    session.value?.questionModule ?: QuestionModule(),
+                    isTest = isTestingMode,
+                    sessionPreferencePack = mutableStateOf(preference),
+                    requestSave = { module ->
+                        viewModel.requestQuestionModuleSave(module)
+                    }
                 )
+                val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+                LaunchedEffect(showPreferenceModal) {
+                    if(showPreferenceModal) {
+                        sheetState.expand()
+                    }else sheetState.hide()
+                }
+                val sessionItem = sessionState.currentItem.collectAsState()
+                LaunchedEffect(questions.value) {
+                    sessionState.module.questions = questions.value.orEmpty()
+                    sessionState.initialize()
+                }
+                LaunchedEffect(sessionState.currentItem.value) {
+                    showStatistics = false
+                }
+
+                if(showPreferenceModal) {
+                    SimpleModalBottomSheet(
+                        onDismissRequest = { showPreferenceModal = false },
+                        sheetState = sheetState,
+                    ) {
+                        PreferenceChooser(
+                            modifier = Modifier
+                                .padding(8.dp)
+                                .padding(bottom = 32.dp),
+                            controller = object: PreferenceChooserController {
+                                override fun addPreferencePack(name: String): SessionPreferencePack {
+                                    return viewModel.addNewPreferencePack(name = name)
+                                }
+                                override fun savePreference(preference: SessionPreferencePack) {
+                                    viewModel.requestPreferencePackSave(preference)
+                                }
+                                override fun deletePreference(preferenceUid: String) {
+                                    viewModel.requestPreferencePackDelete(preferenceUid)
+                                }
+                                override fun choosePreference(preference: SessionPreferencePack) {
+                                    sessionState.sessionPreferencePack.value = preference
+                                    viewModel.requestSessionSave(preferencePack = preference)
+                                }
+                            },
+                            defaultPreferencePack = sessionState.sessionPreferencePack.value,
+                            preferencePacks = preferencePacks.value
+                        )
+                    }
+                }
+                Column(
+                    modifier = Modifier.padding(paddingValues)
+                ) {
+                    AnimatedVisibility(visible = showStatistics) {
+                        StatisticsTable(
+                            modifier = Modifier
+                                .padding(16.dp)
+                                .fillMaxWidth(),
+                            questionModule = sessionState.module
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(LocalTheme.shapes.betweenItemsSpace))
+                    PromptLayout(
+                        sessionItem = sessionItem.value,
+                        state = sessionState,
+                        coroutineScope = coroutineScope
+                    )
+                }
             }
+        }else {
+            //TODO ShmmerLayout
         }
     }
 }

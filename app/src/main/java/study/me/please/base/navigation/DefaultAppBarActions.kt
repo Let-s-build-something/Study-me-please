@@ -20,20 +20,20 @@ import study.me.please.R
 @Composable
 fun DefaultAppBarActions(
     isUserSignedIn: Boolean = false,
-    route: String? = NavigationDestination.HOME.route,
+    currentRoute: String? = NavigationDestination.Home.route,
     actionNavigation: (screen: String) -> Unit = {}
 ) {
     // first action
-    when(route) {
+    when(currentRoute) {
         // lobby destinations
-        NavigationDestination.HOME.route,
-        NavigationDestination.SETTINGS.route -> {
-            if(route != NavigationDestination.SETTINGS.route) {
+        NavigationDestination.Home.route,
+        NavigationDestination.Settings.route -> {
+            if(currentRoute != NavigationDestination.Settings.route) {
                 ActionBarIcon(
                     text = stringResource(id = R.string.screen_settings_title),
                     imageVector = Icons.Outlined.Settings,
                     onClick = {
-                        actionNavigation(NavigationDestination.SETTINGS.route)
+                        actionNavigation(NavigationDestination.Settings.route)
                     }
                 )
             }
@@ -57,27 +57,27 @@ fun DefaultAppBarActions(
         }
     }
     // second action
-    when(route) {
-        NavigationDestination.SESSION_LOBBY.route -> {
+    when(currentRoute) {
+        NavigationDestination.SessionLobby.route -> {
             ActionBarIcon(
                 text = stringResource(id = R.string.screen_collection_title),
                 imageVector = Icons.Outlined.Inventory2,
                 onClick = {
-                    actionNavigation.invoke(NavigationDestination.COLLECTION_LOBBY.route)
+                    actionNavigation.invoke(NavigationDestination.CollectionLobby.route)
                 }
             )
         }
-        NavigationDestination.HOME.route,
-        NavigationDestination.SETTINGS.route,
-        NavigationDestination.COLLECTION_DETAIL.route,
-        NavigationDestination.SESSION_DETAIL.route,
-        NavigationDestination.SESSION.route -> {}
+        NavigationDestination.Home.route,
+        NavigationDestination.Settings.route,
+        NavigationDestination.CollectionDetail.route,
+        NavigationDestination.SessionDetail.route,
+        NavigationDestination.SessionPlay.route -> {}
         else -> {
             ActionBarIcon(
                 text = stringResource(id = R.string.screen_sessions_title),
                 imageVector = Icons.Outlined.PlayArrow,
                 onClick = {
-                    actionNavigation.invoke(NavigationDestination.SESSION_LOBBY.route)
+                    actionNavigation.invoke(NavigationDestination.SessionLobby.route)
                 }
             )
         }

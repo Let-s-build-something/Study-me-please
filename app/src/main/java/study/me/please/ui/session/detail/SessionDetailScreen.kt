@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -46,19 +45,20 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
-import androidx.navigation.NavController
 import com.squadris.squadris.compose.components.DEFAULT_ANIMATION_LENGTH_SHORT
 import com.squadris.squadris.compose.components.EditFieldInput
 import com.squadris.squadris.compose.theme.LocalTheme
 import com.squadris.squadris.ext.brandShimmerEffect
 import com.squadris.squadris.utils.OnLifecycleEvent
 import study.me.please.R
+import study.me.please.base.LocalNavController
 import study.me.please.base.navigation.ActionBarIcon
 import study.me.please.base.navigation.CollectionDetailAppBarActions
-import study.me.please.base.navigation.NavigationUtils
+import study.me.please.base.navigation.NavigationComponent
+import study.me.please.base.navigation.NavigationDestination
 import study.me.please.data.io.CollectionIO
-import study.me.please.data.io.session.SessionIO
 import study.me.please.data.io.preferences.SessionPreferencePack
+import study.me.please.data.io.session.SessionIO
 import study.me.please.ui.collection.detail.OptionsLayout
 import study.me.please.ui.components.BasicAlertDialog
 import study.me.please.ui.components.ButtonState
@@ -68,6 +68,7 @@ import study.me.please.ui.components.QuestionCard
 import study.me.please.ui.components.TextHeader
 import study.me.please.ui.components.preference_chooser.PreferenceChooser
 import study.me.please.ui.components.preference_chooser.PreferenceChooserController
+import study.me.please.ui.components.pull_refresh.PullRefreshScreen
 import study.me.please.ui.components.rememberInteractiveCardState
 import study.me.please.ui.components.session.StatisticsTable
 
@@ -88,66 +89,73 @@ fun SessionDetailScreen(
     sessionUid: String? = null,
     collectionUidList: List<String>? = null,
     questionUidList: List<String>? = null,
-    navController: NavController,
-    changeActionBar: (actions: @Composable RowScope.() -> Unit) -> Unit,
+    title: String? = null,
     viewModel: SessionDetailViewModel = hiltViewModel()
 ) {
     val sessionDetail = viewModel.session.collectAsState()
+    val navController = LocalNavController.current
 
     LaunchedEffect(Unit) {
         viewModel.requestPreferencePacks()
     }
+
     OnLifecycleEvent { event ->
         if(event == Lifecycle.Event.ON_CREATE) {
-            viewModel.requestSessionDetail(
-                sessionUid = sessionUid,
-                collectionUidList = collectionUidList.orEmpty(),
-                questionUidList = questionUidList.orEmpty()
+            viewModel.sessionUid = sessionUid
+            viewModel.collectionUidList = collectionUidList.orEmpty()
+            viewModel.questionUidList = questionUidList.orEmpty()
+            viewModel.requestData(isSpecial = true)
+        }
+    }
+
+    PullRefreshScreen(
+        viewModel = viewModel,
+        title = title,
+        actionIcons = {
+            CollectionDetailAppBarActions(
+                onClick = {
+                    navController?.navigate(
+                        NavigationDestination.SessionPlay.createRoute(
+                            NavigationComponent.TOOLBAR_TITLE to sessionDetail.value?.name,
+                            NavigationComponent.SESSION_UID to sessionDetail.value?.uid
+                        )
+                    )
+                }
+            )
+        }
+    ) { paddingValues ->
+        if(sessionDetail.value == null) {
+            ShimmerLayout(modifier = Modifier.padding(paddingValues))
+        }else {
+            ContentLayout(
+                modifier = Modifier.padding(paddingValues),
+                session = sessionDetail.value,
+                viewModel = viewModel,
+                requestDataSave = {
+                    viewModel.saveSessionDetail()
+                },
+                navigateToCollection = { collection ->
+                    navController?.navigate(
+                        NavigationDestination.CollectionDetail.createRoute(
+                            NavigationComponent.COLLECTION_UID to collection.uid,
+                            NavigationComponent.TOOLBAR_TITLE to collection.name
+                        )
+                    )
+                },
+                onAddCollection = {
+                    navController?.navigate(NavigationDestination.CollectionLobby.createRoute())
+                },
+                onPreferencePackChosen = { preferencePack ->
+                    sessionDetail.value?.apply {
+                        this.preferencePackUid = preferencePack.uid
+                        this.estimatedMode = preferencePack.estimatedMode
+                    }
+                    viewModel.saveSessionDetail()
+                }
             )
         }
     }
 
-    if(sessionDetail.value == null) {
-        ShimmerLayout()
-    }else {
-        LaunchedEffect(sessionDetail.value) {
-            changeActionBar {
-                CollectionDetailAppBarActions(
-                    onClick = {
-                        NavigationUtils.navigateToSession(
-                            navController = navController,
-                            sessionUid = sessionDetail.value?.uid,
-                            toolbarTitle = sessionDetail.value?.name ?: ""
-                        )
-                    }
-                )
-            }
-        }
-        ContentLayout(
-            session = sessionDetail.value,
-            viewModel = viewModel,
-            requestDataSave = {
-                viewModel.saveSessionDetail()
-            },
-            navigateToCollection = { collection ->
-                NavigationUtils.navigateToCollectionDetail(
-                    navController = navController,
-                    toolbarTitle = collection.name,
-                    collectionUid = collection.uid
-                )
-            },
-            onAddCollection = {
-                NavigationUtils.navigateToCollectionLobby(navController)
-            },
-            onPreferencePackChosen = { preferencePack ->
-                sessionDetail.value?.apply {
-                    this.preferencePackUid = preferencePack.uid
-                    this.estimatedMode = preferencePack.estimatedMode
-                }
-                viewModel.saveSessionDetail()
-            }
-        )
-    }
 }
 
 /** Layout for main content - showing actual information */
@@ -487,9 +495,9 @@ private fun ContentLayout(
 /** Layout for loading - shimmer effect */
 @Preview
 @Composable
-private fun ShimmerLayout() {
+private fun ShimmerLayout(modifier: Modifier = Modifier) {
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .verticalScroll(rememberScrollState())
             .background(

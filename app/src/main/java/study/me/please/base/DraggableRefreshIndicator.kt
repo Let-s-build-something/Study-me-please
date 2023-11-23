@@ -75,6 +75,10 @@ fun DraggableRefreshIndicator(
         lastAnimator?.start()
     }
 
+    LaunchedEffect(indicatorOffset.value) {
+        onScrollChange(indicatorOffset.value)
+    }
+
     LaunchedEffect(key1 = state.progress, isRefreshing) {
         if (state.progress == 0f
             && lastProgressValue >= 1f
@@ -98,7 +102,7 @@ fun DraggableRefreshIndicator(
             // something in between confirmation and beginning - failed refresh
             animateTo(
                 fromProgress = lastProgressValue,
-                toProgress = 0f
+                toProgress = if(isRefreshing) 1f else 0f
             )
         }else if(isRefreshing.not() && lastAnimator == null) {
             // normal move, only if there is no ongoing animation - active lastAnimator
@@ -107,7 +111,6 @@ fun DraggableRefreshIndicator(
         }
         lastProgressValue = kotlin.math.min(state.progress, 2f)
     }
-    onScrollChange(indicatorOffset.value)
 
     CustomPullRefresh(
         modifier = modifier,

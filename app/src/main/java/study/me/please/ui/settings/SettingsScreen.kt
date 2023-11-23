@@ -15,6 +15,7 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.squadris.squadris.compose.theme.LocalTheme
 import study.me.please.R
+import study.me.please.base.BrandBaseScreen
 
 /**
  * Screen for editing app preferences
@@ -25,36 +26,41 @@ fun SettingsScreen(
     viewModel: SettingsViewModel = hiltViewModel(),
     onThemeChange: (isDarkTheme: Boolean) -> Unit = {}
 ) {
-    ConstraintLayout(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = 10.dp)
-    ) {
-        val (txtTheme, switchTheme) = createRefs()
-        Text(
+    BrandBaseScreen(
+        title = stringResource(id = R.string.screen_settings_title)
+    ) { paddingValues ->
+        ConstraintLayout(
             modifier = Modifier
-                .constrainAs(txtTheme) {
-                    start.linkTo(parent.start)
-                    top.linkTo(switchTheme.top)
-                    bottom.linkTo(switchTheme.bottom)
+                .padding(paddingValues)
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 10.dp)
+        ) {
+            val (txtTheme, switchTheme) = createRefs()
+            Text(
+                modifier = Modifier
+                    .constrainAs(txtTheme) {
+                        start.linkTo(parent.start)
+                        top.linkTo(switchTheme.top)
+                        bottom.linkTo(switchTheme.bottom)
+                    },
+                text = stringResource(id = R.string.screen_settings_text_theme),
+                color = LocalTheme.colors.secondary,
+                fontSize = 16.sp
+            )
+            Switch(
+                modifier = Modifier
+                    .padding(12.dp)
+                    .constrainAs(switchTheme) {
+                        start.linkTo(txtTheme.end)
+                    },
+                checked = isDarkTheme,
+                onCheckedChange = { isChecked ->
+                    viewModel.requestThemeChange(isChecked)
+                    onThemeChange(isChecked)
                 },
-            text = stringResource(id = R.string.screen_settings_text_theme),
-            color = LocalTheme.colors.secondary,
-            fontSize = 16.sp
-        )
-        Switch(
-            modifier = Modifier
-                .padding(12.dp)
-                .constrainAs(switchTheme) {
-                    start.linkTo(txtTheme.end)
-                },
-            checked = isDarkTheme,
-            onCheckedChange = { isChecked ->
-                viewModel.requestThemeChange(isChecked)
-                onThemeChange(isChecked)
-            },
-            colors = LocalTheme.styles.switchColorsDefault
-        )
+                colors = LocalTheme.styles.switchColorsDefault
+            )
+        }
     }
 }

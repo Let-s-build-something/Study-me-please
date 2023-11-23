@@ -1,7 +1,5 @@
 package study.me.please.ui.collection.detail
 
-import android.content.ClipData
-import android.content.Context
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -10,7 +8,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -24,13 +21,15 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.DocumentScanner
 import androidx.compose.material.icons.outlined.FileDownload
 import androidx.compose.material.icons.outlined.FileUpload
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -41,12 +40,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat.getSystemService
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
-import androidx.navigation.NavController
 import com.squadris.squadris.compose.components.CollapsingLayout
 import com.squadris.squadris.compose.components.DEFAULT_ANIMATION_LENGTH_SHORT
+import com.squadris.squadris.compose.components.EditFieldInput
 import com.squadris.squadris.compose.theme.LocalTheme
 import com.squadris.squadris.ext.brandShimmerEffect
 import com.squadris.squadris.utils.OnLifecycleEvent
@@ -54,15 +52,17 @@ import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import study.me.please.R
+import study.me.please.base.LocalNavController
 import study.me.please.base.navigation.CollectionDetailAppBarActions
-import study.me.please.base.navigation.NavigationUtils
+import study.me.please.base.navigation.NavigationComponent
+import study.me.please.base.navigation.NavigationDestination
 import study.me.please.data.io.CollectionIO
 import study.me.please.data.io.FactIO
 import study.me.please.data.io.QuestionIO
-import com.squadris.squadris.compose.components.EditFieldInput
 import study.me.please.ui.collection.detail.facts.FactsList
 import study.me.please.ui.collection.detail.questions.QuestionsList
 import study.me.please.ui.components.ImageAction
+import study.me.please.ui.components.pull_refresh.PullRefreshScreen
 import study.me.please.ui.components.tab_switch.MultiChoiceSwitch
 import study.me.please.ui.components.tab_switch.rememberTabSwitchState
 
@@ -77,79 +77,94 @@ const val PAGE_INDEX_FACTS = 1
  */
 @Composable
 fun CollectionDetailScreen(
+    title: String? = null,
     collectionUid: String? = null,
-    navController: NavController,
-    changeActionBar: (actions: @Composable RowScope.() -> Unit) -> Unit,
     viewModel: CollectionDetailViewModel = hiltViewModel()
 ) {
     val coroutineScope = rememberCoroutineScope()
+    val navController = LocalNavController.current
+
     val collectionDetailFlow = viewModel.collectionDetail.collectAsState()
+
+    val collectionDetail = remember { collectionDetailFlow.value }
+    var collectionTitle by remember(title) { mutableStateOf(title) }
+
+    LaunchedEffect(collectionDetailFlow.value) {
+        collectionTitle = collectionDetailFlow.value.name
+    }
 
     OnLifecycleEvent { event ->
         if(event == Lifecycle.Event.ON_RESUME) {
             if(collectionUid.isNullOrEmpty().not()) {
-                viewModel.requestCollectionByUid(collectionUid ?: "")
+                viewModel.collectionUid = collectionUid ?: ""
+                viewModel.requestData(isSpecial = true)
             }
         }
     }
 
-    if(collectionUid.isNullOrEmpty().not() && collectionDetailFlow.value.dateCreated == null) {
-        ShimmerLayout()
-    }else {
-        val collectionDetail = remember { collectionDetailFlow.value }
-        LaunchedEffect(collectionDetailFlow.value) {
-            changeActionBar {
-                CollectionDetailAppBarActions {
-                    NavigationUtils.navigateToSessionDetail(
-                        navController,
-                        collectionUidList = listOf(collectionDetailFlow.value.uid),
-                        toolbarTitle = collectionDetailFlow.value.name
+    PullRefreshScreen(
+        viewModel = viewModel,
+        title = collectionTitle,
+        actionIcons = {
+            CollectionDetailAppBarActions {
+                navController?.navigate(
+                    NavigationDestination.SessionDetail.createRoute(
+                        NavigationComponent.COLLECTION_UID_LIST to listOf(collectionDetailFlow.value.uid),
+                        NavigationComponent.TOOLBAR_TITLE to collectionDetailFlow.value.name
                     )
-                }
+                )
             }
         }
-        ContentLayout(
-            collectionDetail = collectionDetail,
-            requestCollectionSave = {
-                coroutineScope.coroutineContext.cancelChildren()
-                coroutineScope.launch {
-                    delay(REQUEST_DATA_SAVE_DELAY)
-                    viewModel.requestCollectionSave(collectionDetail)
-                }
-            },
-            requestQuestionSave = { question ->
-                if(question.uid.isNotEmpty()) {
+    ) { paddingValues ->
+        if(collectionUid.isNullOrEmpty().not() && collectionDetailFlow.value.dateCreated == null) {
+            ShimmerLayout(modifier = Modifier.padding(paddingValues))
+        }else {
+            ContentLayout(
+                modifier = Modifier.padding(paddingValues),
+                collectionDetail = collectionDetail,
+                requestCollectionSave = {
                     coroutineScope.coroutineContext.cancelChildren()
                     coroutineScope.launch {
                         delay(REQUEST_DATA_SAVE_DELAY)
-                        viewModel.requestQuestionSave(question)
+                        viewModel.requestCollectionSave(collectionDetail)
                     }
+                },
+                requestQuestionSave = { question ->
+                    if(question.uid.isNotEmpty()) {
+                        coroutineScope.coroutineContext.cancelChildren()
+                        coroutineScope.launch {
+                            delay(REQUEST_DATA_SAVE_DELAY)
+                            viewModel.requestQuestionSave(question)
+                        }
+                    }
+                },
+                requestFactSave = { fact ->
+                    coroutineScope.coroutineContext.cancelChildren()
+                    coroutineScope.launch {
+                        delay(REQUEST_DATA_SAVE_DELAY)
+                        viewModel.requestFactSave(fact)
+                    }
+                },
+                onNavigateToQuestionTest = { question ->
+                    navController?.navigate(
+                        NavigationDestination.SessionPlay.createRoute(
+                            NavigationComponent.TOOLBAR_TITLE to question.prompt,
+                            NavigationComponent.IS_TESTING_MODE to true,
+                            NavigationComponent.QUESTION_UID to question.uid
+                        )
+                    )
+                },
+                viewModel = viewModel,
+                navigateToSession = { questionUids ->
+                    navController?.navigate(
+                        NavigationDestination.SessionPlay.createRoute(
+                            NavigationComponent.TOOLBAR_TITLE to collectionDetail.name,
+                            NavigationComponent.QUESTION_UID_LIST to questionUids
+                        )
+                    )
                 }
-            },
-            requestFactSave = { fact ->
-                coroutineScope.coroutineContext.cancelChildren()
-                coroutineScope.launch {
-                    delay(REQUEST_DATA_SAVE_DELAY)
-                    viewModel.requestFactSave(fact)
-                }
-            },
-            onNavigateToQuestionTest = { question ->
-                NavigationUtils.navigateToSession(
-                    navController = navController,
-                    toolbarTitle = question.prompt,
-                    questionUid = question.uid,
-                    isTesting = true
-                )
-            },
-            viewModel = viewModel,
-            navigateToSession = { questionUids ->
-                NavigationUtils.navigateToSession(
-                    navController = navController,
-                    toolbarTitle = collectionDetail.name,
-                    questionUids = questionUids
-                )
-            }
-        )
+            )
+        }
     }
 }
 
@@ -157,6 +172,7 @@ fun CollectionDetailScreen(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun ContentLayout(
+    modifier: Modifier = Modifier,
     collectionDetail: CollectionIO,
     onNavigateToQuestionTest: (questionIO: QuestionIO) -> Unit,
     viewModel: CollectionDetailViewModel,
@@ -196,7 +212,7 @@ private fun ContentLayout(
         .fillMaxWidth()
 
     CollapsingLayout(
-        modifier = Modifier
+        modifier = modifier
             .padding(top = 4.dp)
             .shadow(
                 elevation = LocalTheme.styles.componentElevation,
@@ -325,9 +341,9 @@ private fun ContentLayout(
 /** Layout for loading - shimmer effect */
 @Preview
 @Composable
-private fun ShimmerLayout() {
+private fun ShimmerLayout(modifier: Modifier = Modifier) {
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .verticalScroll(rememberScrollState())
             .padding(start = 4.dp, end = 4.dp, top = 8.dp, bottom = 32.dp)

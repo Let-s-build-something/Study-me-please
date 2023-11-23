@@ -38,6 +38,9 @@ interface RefreshableViewModel {
             isRefreshing.value = false
         }
     }
+
+    /** requests for completely new data batch */
+    fun requestData(isSpecial: Boolean, isPullRefresh: Boolean = false)
 }
 
 @HiltViewModel
@@ -50,15 +53,19 @@ class CollectionViewModel @Inject constructor(
 
     override var lastRefreshTimeMillis: Long = 0L
 
-    /** Requests all collections */
-    fun requestCollections(isRefresh: Boolean = false) {
+    override fun requestData(isSpecial: Boolean, isPullRefresh: Boolean) {
         viewModelScope.launch {
-            if(isRefresh) setRefreshing(true)
+            if(isPullRefresh) setRefreshing(true)
             repository.getCollections()?.let { collections ->
                 dataManager.collections.value = collections
             }
-            if(isRefresh) setRefreshing(false)
+            if(isPullRefresh) setRefreshing(false)
         }
+    }
+
+    /** Requests all collections */
+    fun requestCollections(isRefresh: Boolean = false) {
+
     }
 
     /** Requests all collections */

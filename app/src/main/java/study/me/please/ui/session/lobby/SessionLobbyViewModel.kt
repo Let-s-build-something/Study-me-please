@@ -3,6 +3,7 @@ package study.me.please.ui.session.lobby
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -10,6 +11,7 @@ import kotlinx.coroutines.launch
 import study.me.please.base.BaseViewModel
 import study.me.please.data.io.session.SessionIO
 import study.me.please.data.io.preferences.SessionPreferencePack
+import study.me.please.ui.collection.RefreshableViewModel
 import study.me.please.ui.components.preference_chooser.PreferencePackDataManager
 import study.me.please.ui.components.preference_chooser.PreferencePackRepository
 import study.me.please.ui.components.preference_chooser.PreferencePackViewModel
@@ -19,7 +21,10 @@ import javax.inject.Inject
 class SessionLobbyViewModel @Inject constructor(
     private val repository: SessionLobbyRepository,
     private val dataManager: SessionLobbyDataManager
-): BaseViewModel(), PreferencePackViewModel {
+): BaseViewModel(), PreferencePackViewModel, RefreshableViewModel {
+
+    override val isRefreshing: MutableStateFlow<Boolean> = MutableStateFlow(false)
+    override var lastRefreshTimeMillis: Long = 0L
 
     override val coroutineScope: CoroutineScope = viewModelScope
 
@@ -33,8 +38,18 @@ class SessionLobbyViewModel @Inject constructor(
     /** Received sessions from database */
     val sessions: StateFlow<List<SessionIO>?> = dataManager.sessions.asStateFlow()
 
+    override fun requestData(isSpecial: Boolean, isPullRefresh: Boolean) {
+        viewModelScope.launch {
+            if(isPullRefresh) setRefreshing(true)
+            repository.getAllSessions()?.let {
+                dataManager.sessions.value = it
+            }
+            if(isPullRefresh) setRefreshing(false)
+        }
+    }
+
     /** saves a sessions */
-    fun saveSession(session: SessionIO) {
+    private fun saveSession(session: SessionIO) {
         viewModelScope.launch {
             repository.saveSession(session)
         }

@@ -3,6 +3,7 @@ package study.me.please.ui.session.detail
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -11,6 +12,7 @@ import study.me.please.data.io.CollectionIO
 import study.me.please.data.io.QuestionIO
 import study.me.please.data.io.session.SessionIO
 import study.me.please.data.io.preferences.SessionPreferencePack
+import study.me.please.ui.collection.RefreshableViewModel
 import study.me.please.ui.components.preference_chooser.PreferencePackDataManager
 import study.me.please.ui.components.preference_chooser.PreferencePackRepository
 import study.me.please.ui.components.preference_chooser.PreferencePackViewModel
@@ -20,7 +22,10 @@ import javax.inject.Inject
 class SessionDetailViewModel @Inject constructor(
     private val repository: SessionDetailRepository,
     private val dataManager: SessionDetailDataManager
-): BaseViewModel(), PreferencePackViewModel {
+): BaseViewModel(), PreferencePackViewModel, RefreshableViewModel {
+
+    override val isRefreshing: MutableStateFlow<Boolean> = MutableStateFlow(false)
+    override var lastRefreshTimeMillis: Long = 0L
 
     override val coroutineScope: CoroutineScope = viewModelScope
 
@@ -40,28 +45,32 @@ class SessionDetailViewModel @Inject constructor(
     /** Collections inside current session */
     val collections: StateFlow<List<CollectionIO>?> = dataManager.collections.asStateFlow()
 
-    /** Makes a request for a session detail */
-    fun requestSessionDetail(
-        sessionUid: String?,
-        collectionUidList: List<String>,
-        questionUidList: List<String>
-    ) {
+    //TODO refactor needed for the RefreshableViewModel
+    var sessionUid: String? = null
+    var collectionUidList: List<String> = listOf()
+    var questionUidList: List<String> = listOf()
+
+    override fun requestData(isSpecial: Boolean, isPullRefresh: Boolean) {
         viewModelScope.launch {
-            if(sessionUid.isNullOrEmpty()) {
-                if(dataManager.session.value == null) {
-                    requestQuestions(questionUidList)
-                    requestCollections(collectionUidList)
-                    dataManager.session.value = SessionIO(
-                        collectionUidList = collectionUidList.toMutableSet(),
-                        questionUidList = questionUidList.toMutableSet()
-                    )
-                    saveSessionDetail()
-                }
-            }else {
-                dataManager.session.value = repository.getSessionDetail(sessionUid)?.also {
-                    requestCollections(it.collectionUidList.toList())
+            if(isPullRefresh) setRefreshing(true)
+            viewModelScope.launch {
+                if(sessionUid.isNullOrEmpty()) {
+                    if(dataManager.session.value == null) {
+                        requestQuestions(questionUidList)
+                        requestCollections(collectionUidList)
+                        dataManager.session.value = SessionIO(
+                            collectionUidList = collectionUidList.toMutableSet(),
+                            questionUidList = questionUidList.toMutableSet()
+                        )
+                        saveSessionDetail()
+                    }
+                }else {
+                    dataManager.session.value = repository.getSessionDetail(sessionUid ?: "")?.also {
+                        requestCollections(it.collectionUidList.toList())
+                    }
                 }
             }
+            if(isPullRefresh) setRefreshing(false)
         }
     }
 
