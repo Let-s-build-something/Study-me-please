@@ -81,8 +81,10 @@ fun CustomChipGroup(
     }
 
     chips.forEach { chipState ->
-        LaunchedEffect(chipState.isChecked.value) {
-            onChipPressed(chipState)
+        if(chipState.type != CustomChipType.SEARCH) {
+            LaunchedEffect(chipState.isChecked.value) {
+                onChipPressed(chipState)
+            }
         }
     }
 
@@ -96,14 +98,6 @@ fun CustomChipGroup(
             key = { chipState -> chipState.uid }
         ) { chipState ->
             if(chipState.isVisibleUnchecked || chipState.isChecked.value) {
-                val itemModifier = Modifier.animateItemPlacement(
-                    animationSpec = tween(
-                        durationMillis = DEFAULT_ANIMATION_LENGTH_SHORT,
-                        easing
-                        = LinearOutSlowInEasing
-                    )
-                )
-
                 val onChipClicked = {
                     filterScope.launch {
                         if(selectionInterceptor(chipState)) {
@@ -116,7 +110,6 @@ fun CustomChipGroup(
                 }
                 when(chipState.type) {
                     CustomChipType.SEARCH -> SearchChip(
-                        modifier = itemModifier,
                         onSearchOutput = chipState.onSearchOutput,
                         onClick = { onChipClicked() },
                         isChecked = chipState.isChecked,
@@ -124,7 +117,13 @@ fun CustomChipGroup(
                     )
                     CustomChipType.REGULAR -> {
                         SimpleChip(
-                            modifier = itemModifier,
+                            modifier = Modifier.animateItemPlacement(
+                                animationSpec = tween(
+                                    durationMillis = DEFAULT_ANIMATION_LENGTH_SHORT,
+                                    easing
+                                    = LinearOutSlowInEasing
+                                )
+                            ),
                             text = chipState.chipText.value,
                             selected = chipState.isChecked.value,
                             onClick = { onChipClicked() },
@@ -132,12 +131,10 @@ fun CustomChipGroup(
                         )
                     }
                     CustomChipType.SORT -> SortChip(
-                        modifier = itemModifier,
                         text = chipState.chipText.value,
                         onClick = { onChipClicked() }
                     )
                     CustomChipType.MORE -> MoreChip(
-                        modifier = itemModifier,
                         text = chipState.chipText.value,
                         onClick = { onChipClicked() }
                     )

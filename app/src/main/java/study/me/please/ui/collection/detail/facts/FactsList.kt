@@ -322,7 +322,8 @@ fun FactsList(
                         CustomChipGroup(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .zIndex(10f),
+                                .zIndex(10f)
+                                .animateItemPlacement(),
                             state = chipGroupState,
                             chips = remember { mutableStateListOf(*chips.toTypedArray()) }
                         )
