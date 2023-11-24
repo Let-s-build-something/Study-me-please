@@ -22,7 +22,7 @@ class AppThemeStyle: ThemeStyle {
         @Composable get() {
             return TextFieldDefaults.colors(
                 focusedContainerColor = LocalTheme.colors.onBackgroundComponentContrast,
-                unfocusedContainerColor = LocalTheme.colors.onBackgroundComponentContrast,
+                unfocusedContainerColor = LocalTheme.colors.onBackgroundComponent,
                 unfocusedIndicatorColor = Color.Transparent,
                 focusedIndicatorColor = Color.Transparent,
                 disabledTextColor = LocalTheme.colors.disabled,

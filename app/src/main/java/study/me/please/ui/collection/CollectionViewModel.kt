@@ -64,11 +64,6 @@ class CollectionViewModel @Inject constructor(
     }
 
     /** Requests all collections */
-    fun requestCollections(isRefresh: Boolean = false) {
-
-    }
-
-    /** Requests all collections */
     fun requestSessions() {
         viewModelScope.launch {
             repository.getSessions()?.let { sessions ->

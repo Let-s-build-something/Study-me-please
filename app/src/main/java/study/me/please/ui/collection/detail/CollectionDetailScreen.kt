@@ -103,6 +103,7 @@ fun CollectionDetailScreen(
     }
 
     PullRefreshScreen(
+        modifier = Modifier.background(color = LocalTheme.colors.onBackgroundComponent),
         viewModel = viewModel,
         title = collectionTitle,
         actionIcons = {
@@ -212,9 +213,7 @@ private fun ContentLayout(
         .fillMaxWidth()
 
     CollapsingLayout(
-        modifier = modifier
-            .background(color = LocalTheme.colors.onBackgroundComponent)
-            .wrapContentHeight(),
+        modifier = modifier.wrapContentHeight(),
         state = viewModel.collapsingLayoutGeneralState,
         content = listOf(
             @Composable {
@@ -342,10 +341,6 @@ private fun ShimmerLayout(modifier: Modifier = Modifier) {
             .fillMaxWidth()
             .verticalScroll(rememberScrollState())
             .padding(start = 4.dp, end = 4.dp, top = 8.dp, bottom = 32.dp)
-            .background(
-                LocalTheme.colors.onBackgroundComponent,
-                shape = LocalTheme.shapes.componentShape
-            )
     ) {
         Box(
             modifier = Modifier

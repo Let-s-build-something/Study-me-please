@@ -62,7 +62,7 @@ data class QuestionIO (
     /** date of creation of this data object */
     @SerializedName("date_created")
     @ColumnInfo("date_created")
-    val dateCreated: Date = DateUtils.now.time
+    val dateCreated: Long = DateUtils.now.timeInMillis
 ): Serializable {
 
     /** whether this data set is empty or not */

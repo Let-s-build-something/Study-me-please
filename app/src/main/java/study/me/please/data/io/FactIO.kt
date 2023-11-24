@@ -52,7 +52,7 @@ data class FactIO(
     /** date of creation of this data object */
     @SerializedName("date_created")
     @ColumnInfo("date_created")
-    val dateCreated: Date = DateUtils.now.time
+    val dateCreated: Long = DateUtils.now.timeInMillis
 ): Serializable {
 
     /** whether this data object is savable into the database - meaning lost progress if not */

@@ -2,24 +2,24 @@ package study.me.please.ui.collection.detail.facts
 
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imeNestedScroll
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.requiredSize
-import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.requiredWidth
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -36,7 +36,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
@@ -50,7 +52,6 @@ import com.squadris.squadris.compose.components.CustomChipGroup
 import com.squadris.squadris.compose.components.CustomChipType
 import com.squadris.squadris.compose.components.DEFAULT_ANIMATION_LENGTH_SHORT
 import com.squadris.squadris.compose.components.rememberCustomChipGroupState
-import com.squadris.squadris.compose.theme.LocalTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.delay
@@ -69,12 +70,12 @@ import study.me.please.ui.components.BrandHeaderButton
 import study.me.please.ui.components.ButtonState
 import study.me.please.ui.components.FactCard
 import study.me.please.ui.components.InteractiveCardMode
-import study.me.please.ui.components.collapsing_layout.CollapsingBehavior
-import study.me.please.ui.components.collapsing_layout.CollapsingLayout
+import study.me.please.ui.components.ScrollBarProgressIndicator
 import study.me.please.ui.components.rememberInteractiveCardState
+import kotlin.math.absoluteValue
 
 /** List of facts */
-@OptIn(ExperimentalFoundationApi::class, ExperimentalLayoutApi::class)
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun FactsList(
     viewModel: CollectionDetailViewModel,
@@ -103,6 +104,49 @@ fun FactsList(
     val coroutineScope = rememberCoroutineScope()
     val localFocusManager = LocalFocusManager.current
     val context = LocalContext.current
+
+    val localDensity = LocalDensity.current
+    var stickyHeaderHeight by remember { mutableStateOf(0.dp) }
+
+    val isSearchActivated = remember(chipsFilter.value) { mutableStateOf(chipsFilter.value.textFilter.isNotEmpty()) }
+    val chips = mutableListOf(
+        ChipState(
+            type = CustomChipType.SEARCH,
+            chipText = remember(chipsFilter.value) { mutableStateOf(chipsFilter.value.textFilter) },
+            onSearchOutput = { output ->
+                inputScope.coroutineContext.cancelChildren()
+                inputScope.launch {
+                    delay(INPUT_DELAYED_RESPONSE_MILLIS)
+                    viewModel.factsFilter.update { previousFilter ->
+                        FactsFilter(
+                            textFilter = output,
+                            types = previousFilter.types
+                        )
+                    }
+                }
+            },
+            onChipPressed = {
+                isSearchActivated.value = isSearchActivated.value.not()
+            },
+            isChecked = isSearchActivated
+        ),
+        ChipState(
+            type = CustomChipType.SORT,
+            onChipPressed = {
+                //TODO popup of some sorts
+            }
+        )
+    )
+    FactType.values().forEach { factType ->
+        chips.add(
+            ChipState(
+                type = CustomChipType.REGULAR,
+                icon = factType.getIconImageVector(),
+                uid = factType.name,
+                isChecked = mutableStateOf(viewModel.factsFilter.value.types.contains(factType))
+            )
+        )
+    }
 
     val controller = object: FactListController {
         val selectedFactUids = remember(facts.value) { mutableStateListOf<String>() }
@@ -242,122 +286,40 @@ fun FactsList(
         )
     }
 
-    val localDensity = LocalDensity.current
-    var stickyHeaderHeight by remember { mutableStateOf(0.dp) }
+    ConstraintLayout(modifier = Modifier.fillMaxSize()) {
+        val (progressScrollbar, content) = createRefs()
 
-    ConstraintLayout(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 12.dp)
-    ) {
-        val (progressScrollbar, content, btnAddItem) = createRefs()
-
-        val questionsScrollState = rememberLazyListState()
-        /*ProgressIndicator(
+        val factsScrollState = rememberLazyListState()
+        ScrollBarProgressIndicator(
             modifier = Modifier
+                .zIndex(2f)
+                .rotate(90f)
+                .width(LocalConfiguration.current.screenHeightDp.dp)
                 .constrainAs(progressScrollbar) {
-                    end.linkTo(parent.end, 2.dp)
+                    linkTo(content.end, content.end)
                     linkTo(content.top, content.bottom)
                 },
-            scrollState = questionsScrollState
-        )*/
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .zIndex(10f)
-                .onGloballyPositioned { coordinates ->
-                    stickyHeaderHeight = with(localDensity) { coordinates.size.height.toDp() }
-                }
-                .constrainAs(btnAddItem) {
-                    linkTo(parent.start, parent.end)
-                    top.linkTo(parent.top)
-                },
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Spacer(modifier = Modifier.weight(0.05f))
-            BrandHeaderButton(
-                modifier = (if (facts.value.isNotEmpty()) {
-                    Modifier.weight(0.45f)
-                } else Modifier.requiredSize(0.dp))
-                    .animateContentSize(),
-                text = stringResource(id = R.string.facts_list_generate_questions)
-            ) {
-                controller.onGenerateQuestionsRequest()
-            }
-            Spacer(
-                modifier = (if(facts.value.isNotEmpty()) {
-                    Modifier.weight(0.05f)
-                }else Modifier.requiredSize(0.dp))
-                    .animateContentSize()
-            )
-            BrandHeaderButton(
-                modifier = Modifier
-                    .zIndex(100f)
-                    .weight(0.45f),
-                text = stringResource(id = R.string.facts_list_add_new)
-            ) {
-                controller.onFactAdded()
-            }
-            Spacer(modifier = Modifier.weight(0.05f))
-        }
+            scrollState = factsScrollState,
+            totalItems = facts.value.size
+        )
+
         LazyColumn(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(top = 4.dp)
                 .constrainAs(content) {
-                    linkTo(parent.start, parent.end)
-                    linkTo(parent.top, parent.bottom, bias = 0f)
+                    linkTo(parent.start, parent.end, 4.dp, 4.dp)
+                    linkTo(parent.top, parent.bottom)
                     width = Dimension.fillToConstraints
+                    height = Dimension.fillToConstraints
                 }
-                // glitchy .imeNestedScroll()
                 .imePadding(),
+            state = factsScrollState,
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            if(facts.value.isNotEmpty() || chipsFilter.value.isEmpty().not()) {
-                item {
-                    val isSearchActivated = remember(chipsFilter.value) { mutableStateOf(chipsFilter.value.textFilter.isNotEmpty()) }
-                    val chips = mutableListOf(
-                        ChipState(
-                            type = CustomChipType.SEARCH,
-                            chipText = remember(chipsFilter.value) { mutableStateOf(chipsFilter.value.textFilter) },
-                            onSearchOutput = { output ->
-                                inputScope.coroutineContext.cancelChildren()
-                                inputScope.launch {
-                                    delay(INPUT_DELAYED_RESPONSE_MILLIS)
-                                    viewModel.factsFilter.update { previousFilter ->
-                                        FactsFilter(
-                                            textFilter = output,
-                                            types = previousFilter.types
-                                        )
-                                    }
-                                }
-                            },
-                            onChipPressed = {
-                                isSearchActivated.value = isSearchActivated.value.not()
-                            },
-                            isChecked = isSearchActivated
-                        ),
-                        ChipState(
-                            type = CustomChipType.SORT,
-                            onChipPressed = {
-                                //TODO popup of some sorts
-                            }
-                        )
-                    )
-                    FactType.values().forEach { factType ->
-                        chips.add(
-                            ChipState(
-                                type = CustomChipType.REGULAR,
-                                icon = factType.getIconImageVector(),
-                                uid = factType.name,
-                                isChecked = mutableStateOf(viewModel.factsFilter.value.types.contains(factType))
-                            )
-                        )
-                    }
-                    Column {
-                        Spacer(modifier = Modifier.height(stickyHeaderHeight))
+            stickyHeader {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    // filters if not empty
+                    if(facts.value.isNotEmpty() || chipsFilter.value.isEmpty().not()) {
                         CustomChipGroup(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -367,32 +329,69 @@ fun FactsList(
                             chips = remember { mutableStateListOf(*chips.toTypedArray()) }
                         )
                     }
-                }
-            }
-            item {
-                OptionsLayout(
-                    onCopyRequest = {
-                        controller.copyItems()
-                    },
-                    onPasteRequest = {
-                        viewModel.pasteFactsClipBoard()
-                        controller.stopChecking()
-                    },
-                    onDeleteRequest = {
-                        showDeleteDialog.value = true
-                    },
-                    onSelectAll = {
-                        interactiveStates.forEach {
-                            it.isChecked.value = true
+
+                    // buttons for adding new items
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .zIndex(10f)
+                            .onGloballyPositioned { coordinates ->
+                                stickyHeaderHeight =
+                                    with(localDensity) { coordinates.size.height.toDp() }
+                            },
+                        horizontalArrangement = Arrangement.SpaceEvenly,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Spacer(modifier = Modifier.weight(0.05f))
+                        BrandHeaderButton(
+                            modifier = (if (facts.value.isNotEmpty()) {
+                                Modifier.weight(0.45f)
+                            } else Modifier.requiredSize(0.dp))
+                                .animateContentSize(),
+                            text = stringResource(id = R.string.facts_list_generate_questions)
+                        ) {
+                            controller.onGenerateQuestionsRequest()
                         }
-                    },
-                    onDeselectAll = {
-                        controller.selectedFactUids.clear()
-                    },
-                    isEditMode = controller.selectedFactUids.size > 0,
-                    hasPasteOption = viewModel.clipBoard.facts.isEmpty.value.not(),
-                    animateTopDown = false
-                )
+                        Spacer(
+                            modifier = (if(facts.value.isNotEmpty()) {
+                                Modifier.weight(0.05f)
+                            }else Modifier.requiredSize(0.dp))
+                                .animateContentSize()
+                        )
+                        BrandHeaderButton(
+                            modifier = Modifier
+                                .zIndex(100f)
+                                .weight(0.45f),
+                            text = stringResource(id = R.string.facts_list_add_new)
+                        ) {
+                            controller.onFactAdded()
+                        }
+                        Spacer(modifier = Modifier.weight(0.05f))
+                    }
+                    OptionsLayout(
+                        onCopyRequest = {
+                            controller.copyItems()
+                        },
+                        onPasteRequest = {
+                            viewModel.pasteFactsClipBoard()
+                            controller.stopChecking()
+                        },
+                        onDeleteRequest = {
+                            showDeleteDialog.value = true
+                        },
+                        onSelectAll = {
+                            interactiveStates.forEach {
+                                it.isChecked.value = true
+                            }
+                        },
+                        onDeselectAll = {
+                            controller.selectedFactUids.clear()
+                        },
+                        isEditMode = controller.selectedFactUids.size > 0,
+                        hasPasteOption = viewModel.clipBoard.facts.isEmpty.value.not(),
+                        animateTopDown = true
+                    )
+                }
             }
             itemsIndexed(
                 facts.value,
@@ -400,7 +399,7 @@ fun FactsList(
             ) { index, fact ->
                 FactCard(
                     modifier = Modifier
-                        .zIndex(1f)
+                        .padding(bottom = 6.dp)
                         .animateItemPlacement(
                             tween(
                                 durationMillis = DEFAULT_ANIMATION_LENGTH_SHORT,
@@ -411,7 +410,9 @@ fun FactsList(
                     state = (interactiveStates.getOrNull(index) ?: rememberInteractiveCardState()),
                     requestDataSave = requestFactSave
                 )
-                Spacer(modifier = Modifier.height(LocalTheme.shapes.betweenItemsSpace))
+            }
+            item {
+                Spacer(modifier = Modifier.height(stickyHeaderHeight))
             }
         }
     }

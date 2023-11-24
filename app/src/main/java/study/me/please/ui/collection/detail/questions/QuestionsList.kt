@@ -10,11 +10,13 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imeNestedScroll
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -39,7 +41,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
@@ -72,6 +76,7 @@ import study.me.please.ui.components.ButtonState
 import study.me.please.ui.components.ImageAction
 import study.me.please.ui.components.InteractiveCardMode
 import study.me.please.ui.components.QuestionCard
+import study.me.please.ui.components.ScrollBarProgressIndicator
 import study.me.please.ui.components.rememberInteractiveCardState
 
 private const val CHIP_HAS_IMAGE_ID = "HAS_IMAGE_CHIP"
@@ -113,6 +118,57 @@ fun QuestionsList(
                 )
             }
         }
+    )
+
+    val isSearchActivated = remember(chipsFilter.value) { mutableStateOf(chipsFilter.value.text.isNotEmpty()) }
+    val chips = mutableListOf(
+        ChipState(
+            type = CustomChipType.SEARCH,
+            chipText = remember { mutableStateOf(chipsFilter.value.text) },
+            onSearchOutput = { output ->
+                inputScope.coroutineContext.cancelChildren()
+                inputScope.launch {
+                    delay(INPUT_DELAYED_RESPONSE_MILLIS)
+                    viewModel.questionsFilter.update { previousFilter ->
+                        QuestionsFilter(
+                            text = output,
+                            hasImage = previousFilter.hasImage,
+                            isInvalid = previousFilter.isInvalid
+                        )
+                    }
+                }
+            },
+            onChipPressed = {
+                isSearchActivated.value = isSearchActivated.value.not()
+            },
+            isChecked = isSearchActivated
+        ),
+        ChipState(
+            type = CustomChipType.REGULAR,
+            chipText = remember {
+                mutableStateOf(context.getString(R.string.questions_list_chip_has_image))
+            },
+            isChecked = remember(chipsFilter.value.hasImage) {
+                mutableStateOf(chipsFilter.value.hasImage)
+            },
+            uid = CHIP_HAS_IMAGE_ID,
+        ),
+        ChipState(
+            type = CustomChipType.REGULAR,
+            chipText = remember {
+                mutableStateOf(context.getString(R.string.questions_list_chip_is_invalid))
+            },
+            isChecked = remember(chipsFilter.value.isInvalid) {
+                mutableStateOf(chipsFilter.value.isInvalid)
+            },
+            uid = CHIP_IS_INVALID_ID
+        ),
+        ChipState(
+            type = CustomChipType.SORT,
+            onChipPressed = {
+                //TODO popup of some sorts
+            }
+        )
     )
 
     val controller = object: QuestionsListController {
@@ -253,7 +309,6 @@ fun QuestionsList(
     QuestionEditBottomSheetContent(
         questionIO = controller.questionInEdit.value,
         onDismissRequest = {
-            Log.d("questions_list", "question in edit, onDismissRequest")
             controller.closeQuestion()
         },
         requestDataSave = {
@@ -266,108 +321,39 @@ fun QuestionsList(
         sheetState = questionSheetState,
         clipBoard = viewModel.clipBoard,
         content = {
-            ConstraintLayout(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .wrapContentHeight()
-                    .padding(horizontal = 12.dp)
-            ) {
-                val (progressScrollbar, content, btnAddItem) = createRefs()
+            ConstraintLayout(modifier = Modifier.fillMaxSize()) {
+                val (progressScrollbar, content) = createRefs()
 
                 val questionsScrollState = rememberLazyListState()
-                /*ProgressIndicator(
+                ScrollBarProgressIndicator(
                     modifier = Modifier
+                        .zIndex(2f)
+                        .rotate(90f)
+                        .width(LocalConfiguration.current.screenHeightDp.dp)
                         .constrainAs(progressScrollbar) {
-                            end.linkTo(parent.end, 2.dp)
+                            linkTo(content.end, content.end)
                             linkTo(content.top, content.bottom)
                         },
-                    scrollState = questionsScrollState
-                )*/
+                    scrollState = questionsScrollState,
+                    totalItems = questions.value.size
+                )
 
-                BrandHeaderButton(
-                    modifier = Modifier
-                        .zIndex(100f)
-                        .onGloballyPositioned { coordinates ->
-                            stickyHeaderHeight =
-                                with(localDensity) { coordinates.size.height.toDp() }
-                        }
-                        .fillMaxWidth(0.85f)
-                        .constrainAs(btnAddItem) {
-                            linkTo(parent.start, parent.end)
-                            top.linkTo(parent.top)
-                        },
-                    text = stringResource(id = R.string.collection_detail_add_question)
-                ) {
-                    controller.stopChecking()
-                    controller.addQuestion()
-                }
                 LazyColumn(
                     modifier = Modifier
                         .constrainAs(content) {
-                            linkTo(parent.start, parent.end)
-                            linkTo(parent.top, parent.bottom, bias = 0f)
+                            linkTo(parent.start, parent.end, 4.dp, 4.dp)
+                            linkTo(parent.top, parent.bottom)
                             width = Dimension.fillToConstraints
+                            height = Dimension.fillToConstraints
                         }
-                        // glitchy .imeNestedScroll()
                         .imePadding(),
                     state = questionsScrollState,
                     verticalArrangement = Arrangement.Top,
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    if(questions.value.isNotEmpty() || chipsFilter.value.isEmpty().not()) {
-                        item {
-                            val isSearchActivated = remember(chipsFilter.value) { mutableStateOf(chipsFilter.value.text.isNotEmpty()) }
-                            val chips = mutableListOf(
-                                ChipState(
-                                    type = CustomChipType.SEARCH,
-                                    chipText = remember { mutableStateOf(chipsFilter.value.text) },
-                                    onSearchOutput = { output ->
-                                        inputScope.coroutineContext.cancelChildren()
-                                        inputScope.launch {
-                                            delay(INPUT_DELAYED_RESPONSE_MILLIS)
-                                            viewModel.questionsFilter.update { previousFilter ->
-                                                QuestionsFilter(
-                                                    text = output,
-                                                    hasImage = previousFilter.hasImage,
-                                                    isInvalid = previousFilter.isInvalid
-                                                )
-                                            }
-                                        }
-                                    },
-                                    onChipPressed = {
-                                        isSearchActivated.value = isSearchActivated.value.not()
-                                    },
-                                    isChecked = isSearchActivated
-                                ),
-                                ChipState(
-                                    type = CustomChipType.REGULAR,
-                                    chipText = remember {
-                                        mutableStateOf(context.getString(R.string.questions_list_chip_has_image))
-                                    },
-                                    isChecked = remember(chipsFilter.value.hasImage) {
-                                        mutableStateOf(chipsFilter.value.hasImage)
-                                    },
-                                    uid = CHIP_HAS_IMAGE_ID,
-                                ),
-                                ChipState(
-                                    type = CustomChipType.REGULAR,
-                                    chipText = remember {
-                                        mutableStateOf(context.getString(R.string.questions_list_chip_is_invalid))
-                                    },
-                                    isChecked = remember(chipsFilter.value.isInvalid) {
-                                        mutableStateOf(chipsFilter.value.isInvalid)
-                                    },
-                                    uid = CHIP_IS_INVALID_ID
-                                ),
-                                ChipState(
-                                    type = CustomChipType.SORT,
-                                    onChipPressed = {
-                                        //TODO popup of some sorts
-                                    }
-                                )
-                            )
-                            Column {
-                                Spacer(modifier = Modifier.height(stickyHeaderHeight))
+                    stickyHeader {
+                        Column(modifier = Modifier.fillMaxWidth()) {
+                            if(questions.value.isNotEmpty() || chipsFilter.value.isEmpty().not()) {
                                 CustomChipGroup(
                                     modifier = Modifier
                                         .fillMaxWidth()
@@ -379,59 +365,73 @@ fun QuestionsList(
                                     }
                                 )
                             }
-                        }
-                    }
-                    item {
-                        OptionsLayout(
-                            onCopyRequest = {
-                                controller.copyItems()
-                            },
-                            onPasteRequest = {
-                                viewModel.pasteQuestionsClipBoard()
+
+                            BrandHeaderButton(
+                                modifier = Modifier
+                                    .padding(horizontal = 8.dp)
+                                    .zIndex(10f)
+                                    .onGloballyPositioned { coordinates ->
+                                        stickyHeaderHeight =
+                                            with(localDensity) { coordinates.size.height.toDp() }
+                                    }
+                                    .fillMaxWidth(),
+                                text = stringResource(id = R.string.collection_detail_add_question)
+                            ) {
                                 controller.stopChecking()
-                            },
-                            onDeleteRequest = {
-                                showDeleteDialog.value = true
-                            },
-                            onSelectAll = {
-                                interactiveStates.forEach {
-                                    it.isChecked.value = true
-                                }
-                            },
-                            onDeselectAll = {
-                                controller.selectedQuestionUids.clear()
-                            },
-                            isEditMode = controller.selectedQuestionUids.size > 0,
-                            hasPasteOption = viewModel.clipBoard.questions.isEmpty.value.not(),
-                            animateTopDown = false
-                        ) {
-                            AnimatedVisibility(visible = controller.selectedQuestionUids.size > 0) {
-                                ImageAction(
-                                    leadingImageVector = Icons.Outlined.Add,
-                                    text = stringResource(id = R.string.button_add_to)
-                                ) {
-                                    viewModel.requestSessions()
-                                    showAddToSheet.value = true
-                                }
+                                controller.addQuestion()
                             }
-                            AnimatedVisibility(visible = controller.selectedQuestionUids.size > 0) {
-                                ImageAction(
-                                    leadingImageVector = Icons.Outlined.PlayArrow,
-                                    text = stringResource(id = R.string.button_start_session)
-                                ) {
-                                    navigateToSession(controller.selectedQuestionUids.toList())
+
+                            OptionsLayout(
+                                onCopyRequest = {
+                                    controller.copyItems()
+                                },
+                                onPasteRequest = {
+                                    viewModel.pasteQuestionsClipBoard()
                                     controller.stopChecking()
+                                },
+                                onDeleteRequest = {
+                                    showDeleteDialog.value = true
+                                },
+                                onSelectAll = {
+                                    interactiveStates.forEach {
+                                        it.isChecked.value = true
+                                    }
+                                },
+                                onDeselectAll = {
+                                    controller.selectedQuestionUids.clear()
+                                },
+                                isEditMode = controller.selectedQuestionUids.size > 0,
+                                hasPasteOption = viewModel.clipBoard.questions.isEmpty.value.not(),
+                                animateTopDown = true
+                            ) {
+                                AnimatedVisibility(visible = controller.selectedQuestionUids.size > 0) {
+                                    ImageAction(
+                                        leadingImageVector = Icons.Outlined.Add,
+                                        text = stringResource(id = R.string.button_add_to)
+                                    ) {
+                                        viewModel.requestSessions()
+                                        showAddToSheet.value = true
+                                    }
+                                }
+                                AnimatedVisibility(visible = controller.selectedQuestionUids.size > 0) {
+                                    ImageAction(
+                                        leadingImageVector = Icons.Outlined.PlayArrow,
+                                        text = stringResource(id = R.string.button_start_session)
+                                    ) {
+                                        navigateToSession(controller.selectedQuestionUids.toList())
+                                        controller.stopChecking()
+                                    }
                                 }
                             }
                         }
                     }
+
                     itemsIndexed(
                         questions.value,
                         key = { _, question -> question.uid }
                     ) { index, question ->
                         QuestionCard(
                             modifier = Modifier
-                                .zIndex(1f)
                                 .animateItemPlacement(
                                     tween(
                                         durationMillis = DEFAULT_ANIMATION_LENGTH_SHORT,
@@ -450,9 +450,7 @@ fun QuestionsList(
                         )
                         Spacer(modifier = Modifier.height(LocalTheme.shapes.betweenItemsSpace))
                     }
-                    item {
-                        Spacer(modifier = Modifier.height(48.dp))
-                    }
+                    item { Spacer(modifier = Modifier.height(stickyHeaderHeight)) }
                 }
             }
         }

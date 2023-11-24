@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "312affa54a26506c7b9a5dcb266d6e87",
+    "identityHash": "cd8daad2c6f62ebcdf35e61204117fb4",
     "entities": [
       {
         "tableName": "ROOM_COLLECTION_TABLE",
@@ -74,7 +74,7 @@
       },
       {
         "tableName": "ROOM_QUESTION_TABLE",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`prompt` TEXT NOT NULL, `textExplanation` TEXT NOT NULL, `imageExplanationUrl` TEXT, `answers` TEXT NOT NULL, `questionNumber` INTEGER NOT NULL, `categoryName` TEXT NOT NULL, `audioPromptUrl` TEXT, `videoPromptUrl` TEXT, `imagePromptUrl` TEXT, `uid` TEXT NOT NULL, `type` TEXT NOT NULL, `importedSource` TEXT NOT NULL, `date_created` TEXT NOT NULL, PRIMARY KEY(`uid`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`prompt` TEXT NOT NULL, `textExplanation` TEXT NOT NULL, `imageExplanationUrl` TEXT, `answers` TEXT NOT NULL, `questionNumber` INTEGER NOT NULL, `categoryName` TEXT NOT NULL, `audioPromptUrl` TEXT, `videoPromptUrl` TEXT, `imagePromptUrl` TEXT, `uid` TEXT NOT NULL, `type` TEXT NOT NULL, `importedSource` TEXT NOT NULL, `date_created` INTEGER NOT NULL, PRIMARY KEY(`uid`))",
         "fields": [
           {
             "fieldPath": "prompt",
@@ -151,7 +151,7 @@
           {
             "fieldPath": "dateCreated",
             "columnName": "date_created",
-            "affinity": "TEXT",
+            "affinity": "INTEGER",
             "notNull": true
           }
         ],
@@ -452,7 +452,7 @@
       },
       {
         "tableName": "ROOM_FACT_TABLE",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`uid` TEXT NOT NULL, `shortKeyInformation` TEXT NOT NULL, `shortKeyImage` TEXT, `longInformation` TEXT NOT NULL, `longInformationImage` TEXT, `listContent` TEXT NOT NULL, `promptImage` TEXT, `type` TEXT NOT NULL, `date_created` TEXT NOT NULL, PRIMARY KEY(`uid`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`uid` TEXT NOT NULL, `shortKeyInformation` TEXT NOT NULL, `shortKeyImage` TEXT, `longInformation` TEXT NOT NULL, `longInformationImage` TEXT, `listContent` TEXT NOT NULL, `promptImage` TEXT, `type` TEXT NOT NULL, `date_created` INTEGER NOT NULL, PRIMARY KEY(`uid`))",
         "fields": [
           {
             "fieldPath": "uid",
@@ -505,7 +505,7 @@
           {
             "fieldPath": "dateCreated",
             "columnName": "date_created",
-            "affinity": "TEXT",
+            "affinity": "INTEGER",
             "notNull": true
           }
         ],
@@ -522,7 +522,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '312affa54a26506c7b9a5dcb266d6e87')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'cd8daad2c6f62ebcdf35e61204117fb4')"
     ]
   }
 }

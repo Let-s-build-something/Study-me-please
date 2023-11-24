@@ -4,13 +4,16 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.squadris.squadris.compose.theme.LocalTheme
 import com.squadris.squadris.compose.theme.StudyMeAppTheme
 import com.squadris.squadris.ext.isTablet
 import dagger.hilt.android.AndroidEntryPoint
@@ -53,6 +56,7 @@ class MainActivity: ComponentActivity(), BackboneChannel {
                     LocalIsTablet provides isTablet
                 ) {
                     NavHost(
+                        modifier = Modifier.background(color = LocalTheme.colors.backgroundLight),
                         navController = navController,
                         startDestination = NavigationDestination.Home.route
                     ) {

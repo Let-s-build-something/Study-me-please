@@ -105,7 +105,7 @@ fun CollectionLobbyScreen(
 
     OnLifecycleEvent { event ->
         if(event == Lifecycle.Event.ON_RESUME) {
-            viewModel.requestCollections()
+            viewModel.requestData(isSpecial = true)
         }
     }
 
@@ -257,10 +257,19 @@ fun CollectionLobbyScreen(
                     verticalArrangement = Arrangement.spacedBy(LocalTheme.shapes.betweenItemsSpace)
                 ) {
                     if(collections.isNotEmpty()) {
-                        item {
-                            Spacer(modifier = Modifier.height(
-                                LocalTheme.shapes.betweenItemsSpace
-                            ))
+                        stickyHeader {
+                            ComponentHeaderButton(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = LocalTheme.shapes.betweenItemsSpace),
+                                text = stringResource(id = R.string.add_new_collection)
+                            ) {
+                                navController?.navigate(
+                                    NavigationDestination.CollectionDetail.createRoute(
+                                        TOOLBAR_TITLE to context.getString(R.string.screen_collection_detail_new)
+                                    )
+                                )
+                            }
                         }
                         itemsIndexed(
                             items = collections,
@@ -312,18 +321,6 @@ fun CollectionLobbyScreen(
                     }else {
                         item {
                             // loading state
-                        }
-                    }
-                    stickyHeader {
-                        ComponentHeaderButton(
-                            modifier = Modifier.padding(vertical = 8.dp),
-                            text = stringResource(id = R.string.add_new_collection)
-                        ) {
-                            navController?.navigate(
-                                NavigationDestination.CollectionDetail.createRoute(
-                                    TOOLBAR_TITLE to context.getString(R.string.screen_collection_detail_new)
-                                )
-                            )
                         }
                     }
                 }

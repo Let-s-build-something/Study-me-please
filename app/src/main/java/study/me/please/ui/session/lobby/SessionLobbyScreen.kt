@@ -275,11 +275,11 @@ fun SessionLobbyScreen(
                     ) {}*/
                 },
                 state = optionsSheetState
-            ) { paddingValues ->
+            ) { modalPaddingValues ->
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(paddingValues)
+                        .padding(modalPaddingValues)
                 ) {
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
@@ -288,8 +288,15 @@ fun SessionLobbyScreen(
                             LocalTheme.shapes.betweenItemsSpace
                         )
                     ) {
-                        item {
-                            Spacer(modifier = Modifier.height(56.dp))
+                        stickyHeader {
+                            ComponentHeaderButton(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = LocalTheme.shapes.betweenItemsSpace),
+                                text = stringResource(id = R.string.home_screen_sessions_empty_action)
+                            ) {
+                                listener.onCreateNewItem()
+                            }
                         }
                         itemsIndexed(
                             sessions.value.orEmpty(),
@@ -323,14 +330,6 @@ fun SessionLobbyScreen(
                                 )
                             }
                         }
-                    }
-                    ComponentHeaderButton(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 8.dp),
-                        text = stringResource(id = R.string.home_screen_sessions_empty_action)
-                    ) {
-                        listener.onCreateNewItem()
                     }
                 }
             }
