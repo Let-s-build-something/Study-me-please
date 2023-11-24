@@ -1,14 +1,16 @@
 package com.squadris.squadris.compose.components
 
-import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -39,6 +41,7 @@ import com.squadris.squadris.compose.theme.LocalTheme
 private const val PERCENTAGE_OF_SCREEN_WIDTH = 0.35f
 
 /** Chip for searching text */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun SearchChip(
     modifier: Modifier = Modifier,
@@ -50,16 +53,23 @@ fun SearchChip(
     onSearchOutput: (String) -> Unit,
     onClick: () -> Unit
 ) {
-    val isFocused = remember { mutableStateOf(false) }
+    val isImeVisible = WindowInsets.isImeVisible
     val localDensity = LocalDensity.current
     val focusRequester = FocusRequester()
+
+    val isFocused = remember { mutableStateOf(false) }
+    val fieldOutput = remember(text) { mutableStateOf(text) }
 
     LaunchedEffect(isChecked.value) {
         if(isChecked.value) {
             focusRequester.requestFocus()
         }
     }
-    val fieldOutput = remember(text) { mutableStateOf(text) }
+    LaunchedEffect(isImeVisible) {
+        if(isImeVisible.not() && fieldOutput.value.isEmpty()) {
+            isChecked.value = false
+        }
+    }
     Row(
         modifier = modifier
             .padding(vertical = 8.dp, horizontal = if (isChecked.value) 8.dp else 4.dp)

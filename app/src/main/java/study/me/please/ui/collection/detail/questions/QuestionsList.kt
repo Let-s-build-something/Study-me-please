@@ -358,7 +358,7 @@ fun QuestionsList(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .zIndex(10f)
-                                        .animateItemPlacement(),
+                                    ,
                                     state = chipGroupState,
                                     chips = remember {
                                         mutableStateListOf(*chips.toTypedArray())

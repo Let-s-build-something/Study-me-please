@@ -172,7 +172,6 @@ fun FactsList(
                     }
                     requestCollectionSave()
                 }
-                stopChecking()
             }
 
             if(selectedFactUids.size > 0) {
@@ -253,7 +252,7 @@ fun FactsList(
                 }else controller.selectedFactUids.remove(fact.uid)
             }
             LaunchedEffect(state.mode.value) {
-                localFocusManager.clearFocus()
+                //localFocusManager.clearFocus()
                 if(state.mode.value == InteractiveCardMode.EDIT) {
                     interactiveStates.forEachIndexed { stateIndex, state ->
                         if(index != stateIndex) {
@@ -323,8 +322,7 @@ fun FactsList(
                         CustomChipGroup(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .zIndex(10f)
-                                .animateItemPlacement(),
+                                .zIndex(10f),
                             state = chipGroupState,
                             chips = remember { mutableStateListOf(*chips.toTypedArray()) }
                         )
