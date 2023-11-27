@@ -17,7 +17,7 @@ import com.squadris.squadris.compose.theme.Colors
 import com.squadris.squadris.compose.theme.LocalTheme
 import com.squadris.squadris.ext.roundOffDecimal
 import study.me.please.R
-import study.me.please.ui.session.QuestionModule
+import study.me.please.ui.session.play.QuestionModule
 import java.util.concurrent.TimeUnit
 
 /**
@@ -30,7 +30,7 @@ fun StatisticsTable(
     questionModule: QuestionModule,
     backgroundColor: Color = LocalTheme.colors.onBackgroundComponent
 ) {
-    val items = questionModule.history.filter { it.timeOfStart != null && it.wasRepeated.not() }
+    val items = questionModule.history.filter { it.timeOfStart != null && it.isRepetition.not() }
     val responseTimeAverages = mutableListOf<Long>()
     val successRates = mutableListOf<Double>()
     var iteratedValueSuccessRate = 0.0

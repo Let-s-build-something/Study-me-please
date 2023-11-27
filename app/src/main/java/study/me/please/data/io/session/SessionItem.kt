@@ -1,6 +1,12 @@
 package study.me.please.data.io.session
 
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.room.Ignore
+import study.me.please.data.io.QuestionAnswerIO
 import study.me.please.data.io.QuestionIO
+import study.me.please.ui.session.play.SessionScreenMode
 import java.util.UUID
 
 /** Item of a session with all relevant information to one questioning screen */
@@ -14,13 +20,28 @@ data class SessionItem(
     /** current question to be answsered */
     val data: QuestionIO? = null,
 
-    /** list of correct answers. Either from history or current question */
-    val correctAnswers: List<String?>,
-
     /** whether this item's source is repetition */
-    val isRepeated: Boolean = false
+    val isRepetition: Boolean = false
 ) {
     /** unique identifier */
+    @get:Ignore
     val uid: String
         get() = data?.uid ?: historyItem?.uid ?: UUID.randomUUID().toString()
+
+    /** question data, historic or not */
+    @get:Ignore
+    val question
+        get() = historyItem?.questionIO ?: data
+
+    /** current screen mode */
+    @Ignore
+    val mode: MutableState<SessionScreenMode> = mutableStateOf(SessionScreenMode.REGULAR)
+
+    /** List of all current validations */
+    @Ignore
+    val validations = mutableStateListOf<SessionAnswerValidation>()
+
+    /** List of all currently selected answers */
+    @Ignore
+    val selectedAnswers = mutableStateListOf<QuestionAnswerIO>()
 }

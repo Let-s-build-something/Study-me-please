@@ -15,7 +15,8 @@ import study.me.please.data.io.session.SessionAnswerValidation
 import study.me.please.data.io.session.SessionHistoryItem
 import study.me.please.data.io.preferences.SessionPreference
 import study.me.please.data.io.preferences.SessionPreferencePack
-import study.me.please.ui.session.QuestionModule
+import study.me.please.data.io.session.QuestionItem
+import study.me.please.ui.session.play.QuestionModule
 import java.util.Date
 import javax.inject.Inject
 
@@ -47,6 +48,24 @@ class AppDatabaseConverter @Inject constructor(private val gson: Gson) {
         return gson.toJson(
             value,
             TypeToken.getParameterized(QuestionIO::class.java).type
+        )
+    }
+
+    /** Converts [QuestionItem] object to string */
+    @TypeConverter
+    fun fromQuestionItem(value: QuestionItem): String {
+        return gson.toJson(
+            value,
+            TypeToken.getParameterized(QuestionItem::class.java).type
+        )
+    }
+
+    /** Converts string to [QuestionItem] object */
+    @TypeConverter
+    fun toQuestionItem(value: String): QuestionItem {
+        return gson.fromJson(
+            value,
+            TypeToken.getParameterized(QuestionItem::class.java).type
         )
     }
 
@@ -247,7 +266,7 @@ class AppDatabaseConverter @Inject constructor(private val gson: Gson) {
         )
     }
 
-    /** Converts [SessionPreference] object to string */
+    /** Converts list of [QuestionIO] object to string */
     @TypeConverter
     fun fromQuestionIOList(value: List<QuestionIO>): String {
         return gson.toJson(
@@ -256,12 +275,30 @@ class AppDatabaseConverter @Inject constructor(private val gson: Gson) {
         )
     }
 
-    /** Converts string to [SessionPreference] */
+    /** Converts string to [QuestionIO] list */
     @TypeConverter
     fun toQuestionIOList(value: String): List<QuestionIO> {
         return gson.fromJson(
             value,
             TypeToken.getParameterized(List::class.java, QuestionIO::class.java).type
+        )
+    }
+
+    /** Converts list of [QuestionItem] object to string */
+    @TypeConverter
+    fun fromQuestionItemList(value: List<QuestionItem>): String {
+        return gson.toJson(
+            value,
+            TypeToken.getParameterized(List::class.java, QuestionItem::class.java).type
+        )
+    }
+
+    /** Converts string to [QuestionItem] list */
+    @TypeConverter
+    fun toQuestionItemList(value: String): List<QuestionItem> {
+        return gson.fromJson(
+            value,
+            TypeToken.getParameterized(List::class.java, QuestionItem::class.java).type
         )
     }
 

@@ -10,7 +10,7 @@ import study.me.please.data.io.QuestionAnswerIO
 import study.me.please.data.io.QuestionIO
 import study.me.please.data.io.session.SessionIO
 import study.me.please.data.io.preferences.SessionPreferencePack
-import study.me.please.ui.session.QuestionModule
+import study.me.please.ui.session.play.QuestionModule
 
 @Database(
     entities = [

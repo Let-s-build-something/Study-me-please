@@ -8,7 +8,7 @@ import java.util.UUID
 data class SessionHistoryItem(
 
     /** question information */
-    val questionIO: QuestionIO,
+    val questionIO: QuestionIO?,
 
     /** index of this question */
     val index: Int,
@@ -26,7 +26,10 @@ data class SessionHistoryItem(
     var timeToContinue: Long? = null,
 
     /** Whether this question was only for repetition */
-    val wasRepeated: Boolean = false,
+    val isRepetition: Boolean = false,
+
+    /** Whether this question was used to repeat */
+    var wasRepeated: Boolean = false,
 
     /** identifier */
     @PrimaryKey

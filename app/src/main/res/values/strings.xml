@@ -114,6 +114,7 @@
     <string name="session_lobby_screen_delete_text">
         You\'ve spent time on this, are you sure you want permanently delete the selected (%1$d) sessions?
     </string>
+    <string name="session_play_repeated_snackbar">Well done! You will learn this one better soon. We will make sure:)</string>
 
     <string name="add_new_collection">I collect questions, since I have no answers. Yet.</string>
     <string name="collection_empty_error">There are no collections…yet! But you can start right now:).</string>
@@ -198,7 +199,7 @@
     <string name="button_preferences">Preferences</string>
     <string name="button_continue">Continue</string>
     <string name="button_validate">Validate</string>
-    <string name="button_repeat">Repeat</string>
+    <string name="button_repeat">Repeat this question</string>
     <string name="button_delete">Delete</string>
     <string name="button_select_all">Select all</string>
     <string name="button_deselect">Deselect all</string>

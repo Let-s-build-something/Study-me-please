@@ -6,6 +6,8 @@ import androidx.room.Ignore
 import androidx.room.PrimaryKey
 import com.google.gson.annotations.SerializedName
 import com.squadris.squadris.utils.DateUtils
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import study.me.please.data.room.AppRoomDatabase
 import java.io.Serializable
 import java.util.Date
@@ -69,8 +71,4 @@ data class QuestionIO (
     @get:Ignore
     val isEmpty: Boolean
         get() = prompt.isEmpty() || answers.isEmpty()
-
-    /** whether this question was repeated, local use only */
-    @Ignore
-    var isRepeated: Boolean = false
 }

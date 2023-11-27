@@ -1,4 +1,4 @@
-package study.me.please.ui.session
+package study.me.please.ui.session.play
 
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -53,6 +53,7 @@ class SessionViewModel @Inject constructor(
         preferencePackUid: String?
     ) {
         viewModelScope.launch {
+            dataManager.currentQuestionUids
             val questions = mutableListOf<QuestionIO>()
             repository.getCollectionByUid(collectionUid)?.let { collectionDetail ->
                 dataManager.collection.value = collectionDetail
@@ -127,14 +128,18 @@ class SessionViewModel @Inject constructor(
     /** saves current session */
     fun requestQuestionModuleSave(questionModule: QuestionModule) {
         viewModelScope.launch {
-            dataManager.session.value?.let { session ->
-                repository.saveSession(session.apply {
-                    this.questionModule = questionModule
+            try {
+                dataManager.session.value?.let { session ->
+                    repository.saveSession(session.apply {
+                        this.questionModule = questionModule
+                    })
+                }
+                repository.saveQuestionModule(questionModule.apply {
+                    sessionUid = dataManager.session.value?.uid
                 })
+            }catch (e: Exception) {
+                e.printStackTrace()
             }
-            repository.saveQuestionModule(questionModule.apply {
-                sessionUid = dataManager.session.value?.uid
-            })
         }
     }
 }

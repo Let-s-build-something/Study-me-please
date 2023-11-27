@@ -43,7 +43,7 @@ data class SessionPreferencePack (
 
     @SerializedName("repeat_on_mistake")
     val repeatOnMistake: SessionPreference = SessionPreference(
-        false,
+        true,
         mapOf(null to ""),
         QuestionMode.PRACTICING
     ),
@@ -63,7 +63,7 @@ data class SessionPreferencePack (
     }
 
     /** sum of all difficulty mode scored */
-    val sumScore: Double
+    private val sumScore: Double
         get() {
             var result = 0.0
             mutableListOf<Pair<Int, Int>>().apply {

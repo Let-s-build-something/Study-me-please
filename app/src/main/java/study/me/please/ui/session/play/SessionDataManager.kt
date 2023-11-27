@@ -1,4 +1,4 @@
-package study.me.please.ui.session
+package study.me.please.ui.session.play
 
 import kotlinx.coroutines.flow.MutableStateFlow
 import study.me.please.data.io.CollectionIO
@@ -22,6 +22,9 @@ class SessionDataManager @Inject constructor(): PreferencePackDataManager {
 
     /** full list of questions for the session screen */
     val questions: MutableStateFlow<List<QuestionIO>?> = MutableStateFlow(null)
+
+    /** full list of questions for the session screen */
+    val currentQuestionUids = mutableListOf<QuestionIO>()
 
     /** all existing preferences to choose from if in testing mode */
     override val preferencePacks: MutableStateFlow<List<SessionPreferencePack>?> = MutableStateFlow(null)

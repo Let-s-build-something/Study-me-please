@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "cd8daad2c6f62ebcdf35e61204117fb4",
+    "identityHash": "4bd50f1895438498c6e483f5d1c4cfa5",
     "entities": [
       {
         "tableName": "ROOM_COLLECTION_TABLE",
@@ -304,7 +304,7 @@
       },
       {
         "tableName": "ROOM_SESSION_TABLE",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`name` TEXT NOT NULL, `uid` TEXT NOT NULL, `preferencePackUid` TEXT NOT NULL, `estimatedMode` TEXT, `last_played` TEXT NOT NULL, `collectionUidList` TEXT NOT NULL, `questionUidList` TEXT NOT NULL, `questionCount` INTEGER NOT NULL, `q_module_uid` TEXT, `q_module_history` TEXT, `q_module_sessionUid` TEXT, `q_module_questionsStack` TEXT, `q_module_currentQuestionIndex` INTEGER, `q_module_currentHistoryIndex` INTEGER, PRIMARY KEY(`uid`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`name` TEXT NOT NULL, `uid` TEXT NOT NULL, `preferencePackUid` TEXT NOT NULL, `estimatedMode` TEXT, `last_played` TEXT NOT NULL, `collectionUidList` TEXT NOT NULL, `questionUidList` TEXT NOT NULL, `questionCount` INTEGER NOT NULL, `q_module_sessionUid` TEXT, `q_module_questionsStack` TEXT, `q_module_uid` TEXT, `q_module_history` TEXT, `q_module_currentIndex` INTEGER, PRIMARY KEY(`uid`))",
         "fields": [
           {
             "fieldPath": "name",
@@ -355,18 +355,6 @@
             "notNull": true
           },
           {
-            "fieldPath": "questionModule.uid",
-            "columnName": "q_module_uid",
-            "affinity": "TEXT",
-            "notNull": false
-          },
-          {
-            "fieldPath": "questionModule.history",
-            "columnName": "q_module_history",
-            "affinity": "TEXT",
-            "notNull": false
-          },
-          {
             "fieldPath": "questionModule.sessionUid",
             "columnName": "q_module_sessionUid",
             "affinity": "TEXT",
@@ -379,14 +367,20 @@
             "notNull": false
           },
           {
-            "fieldPath": "questionModule.currentQuestionIndex",
-            "columnName": "q_module_currentQuestionIndex",
-            "affinity": "INTEGER",
+            "fieldPath": "questionModule.uid",
+            "columnName": "q_module_uid",
+            "affinity": "TEXT",
             "notNull": false
           },
           {
-            "fieldPath": "questionModule.currentHistoryIndex",
-            "columnName": "q_module_currentHistoryIndex",
+            "fieldPath": "questionModule.history",
+            "columnName": "q_module_history",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "questionModule.currentIndex",
+            "columnName": "q_module_currentIndex",
             "affinity": "INTEGER",
             "notNull": false
           }
@@ -402,20 +396,8 @@
       },
       {
         "tableName": "ROOM_QUESTION_MODULE_TABLE",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`uid` TEXT NOT NULL, `history` TEXT NOT NULL, `sessionUid` TEXT, `questionsStack` TEXT NOT NULL, `currentQuestionIndex` INTEGER NOT NULL, `currentHistoryIndex` INTEGER NOT NULL, PRIMARY KEY(`uid`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`sessionUid` TEXT, `questionsStack` TEXT NOT NULL, `uid` TEXT NOT NULL, `history` TEXT NOT NULL, `currentIndex` INTEGER NOT NULL, PRIMARY KEY(`uid`))",
         "fields": [
-          {
-            "fieldPath": "uid",
-            "columnName": "uid",
-            "affinity": "TEXT",
-            "notNull": true
-          },
-          {
-            "fieldPath": "history",
-            "columnName": "history",
-            "affinity": "TEXT",
-            "notNull": true
-          },
           {
             "fieldPath": "sessionUid",
             "columnName": "sessionUid",
@@ -429,14 +411,20 @@
             "notNull": true
           },
           {
-            "fieldPath": "currentQuestionIndex",
-            "columnName": "currentQuestionIndex",
-            "affinity": "INTEGER",
+            "fieldPath": "uid",
+            "columnName": "uid",
+            "affinity": "TEXT",
             "notNull": true
           },
           {
-            "fieldPath": "currentHistoryIndex",
-            "columnName": "currentHistoryIndex",
+            "fieldPath": "history",
+            "columnName": "history",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "currentIndex",
+            "columnName": "currentIndex",
             "affinity": "INTEGER",
             "notNull": true
           }
@@ -522,7 +510,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'cd8daad2c6f62ebcdf35e61204117fb4')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '4bd50f1895438498c6e483f5d1c4cfa5')"
     ]
   }
 }

@@ -1,4 +1,4 @@
-package study.me.please.ui.session
+package study.me.please.ui.session.play
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState

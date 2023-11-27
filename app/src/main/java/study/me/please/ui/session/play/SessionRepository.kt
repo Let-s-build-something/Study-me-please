@@ -1,4 +1,4 @@
-package study.me.please.ui.session
+package study.me.please.ui.session.play
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext

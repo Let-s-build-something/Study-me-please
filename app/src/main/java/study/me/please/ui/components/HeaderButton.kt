@@ -14,6 +14,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -32,6 +33,7 @@ private fun HeaderButton(
     text: String = "",
     contentColor: Color,
     containerColor: Color,
+    startIconVector: ImageVector = Icons.Outlined.Add,
     onClick: () -> Unit = {}
 ) {
     Button(
@@ -53,11 +55,11 @@ private fun HeaderButton(
         )
     ) {
         Icon(
-            Icons.Outlined.Add,
+            startIconVector,
             contentDescription = stringResource(id = R.string.add_new_content_description),
             tint = contentColor,
             modifier = Modifier
-                .size(38.dp)
+                .size(24.dp)
         )
         if(text.isNotEmpty()) {
             Text(
@@ -81,12 +83,14 @@ private fun HeaderButton(
 fun ComponentHeaderButton(
     modifier: Modifier = Modifier,
     text: String = "",
+    startIconVector: ImageVector = Icons.Outlined.Add,
     onClick: () -> Unit = {}
 ) {
     HeaderButton(
         modifier = modifier,
         text = text,
         onClick = onClick,
+        startIconVector = startIconVector,
         contentColor = LocalTheme.colors.secondary,
         containerColor = LocalTheme.colors.onBackgroundComponent
     )
