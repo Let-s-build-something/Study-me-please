@@ -27,6 +27,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.squadris.squadris.compose.theme.LocalTheme
+import kotlinx.coroutines.cancelChildren
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import study.me.please.base.BrandBaseScreen
@@ -34,6 +36,7 @@ import study.me.please.base.LocalNavController
 import study.me.please.base.navigation.NavIconType
 import study.me.please.base.navigation.SessionAppBarActions
 import study.me.please.data.io.preferences.SessionPreferencePack
+import study.me.please.ui.collection.detail.REQUEST_DATA_SAVE_DELAY
 import study.me.please.ui.components.SimpleModalBottomSheet
 import study.me.please.ui.components.preference_chooser.PreferenceChooser
 import study.me.please.ui.components.preference_chooser.PreferenceChooserController
@@ -69,6 +72,7 @@ fun SessionScreen(
     val navController = LocalNavController.current
 
     val coroutineScope = rememberCoroutineScope()
+    val savingScope = rememberCoroutineScope()
     var showStatistics by remember { mutableStateOf(false) }
     var showPreferenceModal by remember { mutableStateOf(false) }
     var showExitDialog by remember { mutableStateOf(false) }
@@ -97,7 +101,11 @@ fun SessionScreen(
                 isTest = isTestingMode,
                 sessionPreferencePack = mutableStateOf(preference),
                 requestSave = { module ->
-                    viewModel.requestQuestionModuleSave(module.copy())
+                    savingScope.coroutineContext.cancelChildren()
+                    savingScope.launch {
+                        delay(REQUEST_DATA_SAVE_DELAY)
+                        viewModel.requestSessionSave(module.copy())
+                    }
                 }
             )
             val preferenceSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -127,6 +135,12 @@ fun SessionScreen(
                         showStatistics = false
                         sessionState.module.currentIndex = newIndex
                         sessionState.liveIndex.value = newIndex
+
+                        savingScope.coroutineContext.cancelChildren()
+                        savingScope.launch {
+                            delay(REQUEST_DATA_SAVE_DELAY)
+                            viewModel.requestSessionSave(sessionState.module.copy())
+                        }
                     }
                 }
 

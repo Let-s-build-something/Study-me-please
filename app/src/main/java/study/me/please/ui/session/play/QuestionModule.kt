@@ -32,12 +32,12 @@ data class QuestionModule(
     val uid: String = UUID.randomUUID().toString(),
 
     /** history for displaying users' answers */
-    val history: MutableList<SessionHistoryItem> = mutableListOf()
-) {
+    val history: MutableList<SessionHistoryItem> = mutableListOf(),
 
     /** current index for both [history] and [questionsStack] */
     @SerializedName("current_index")
     var currentIndex: Int = 0
+) {
 
     /** lazy loaded, local saving of questions for this module */
     @Ignore

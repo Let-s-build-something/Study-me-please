@@ -124,22 +124,4 @@ class SessionViewModel @Inject constructor(
             }
         }
     }
-
-    /** saves current session */
-    fun requestQuestionModuleSave(questionModule: QuestionModule) {
-        viewModelScope.launch {
-            try {
-                dataManager.session.value?.let { session ->
-                    repository.saveSession(session.apply {
-                        this.questionModule = questionModule
-                    })
-                }
-                repository.saveQuestionModule(questionModule.apply {
-                    sessionUid = dataManager.session.value?.uid
-                })
-            }catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }
-    }
 }
