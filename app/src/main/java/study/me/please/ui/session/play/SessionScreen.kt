@@ -226,8 +226,6 @@ fun SessionScreen(
                                 questionModule = sessionState.module
                             )
                             Spacer(modifier = Modifier.height(LocalTheme.shapes.betweenItemsSpace))
-                            //TODO pagerState.currentPage + 1/totalItemCount info banner
-                            //TODO currentIndex isn't getting saved for some reason
                         }
                         AnimatedVisibility(
                             modifier = Modifier.padding(vertical = 4.dp),
