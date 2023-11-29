@@ -12,6 +12,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Repeat
+import androidx.compose.material.icons.outlined.SkipNext
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -23,7 +26,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.squadris.squadris.compose.theme.LocalTheme
@@ -31,16 +36,21 @@ import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import study.me.please.R
 import study.me.please.base.BrandBaseScreen
 import study.me.please.base.LocalNavController
 import study.me.please.base.navigation.NavIconType
 import study.me.please.base.navigation.SessionAppBarActions
 import study.me.please.data.io.preferences.SessionPreferencePack
 import study.me.please.ui.collection.detail.REQUEST_DATA_SAVE_DELAY
+import study.me.please.ui.components.ComponentHeaderButton
 import study.me.please.ui.components.SimpleModalBottomSheet
 import study.me.please.ui.components.preference_chooser.PreferenceChooser
 import study.me.please.ui.components.preference_chooser.PreferenceChooserController
 import study.me.please.ui.components.session.StatisticsTable
+
+/** how many items behind the front can be skipped forward */
+private const val INDEXES_FOR_SKIP_TO_FRONT = 5
 
 /**
  * Screen for displaying and answering questions within pre-defined session
@@ -205,7 +215,8 @@ fun SessionScreen(
                     }
                 ) { paddingValues ->
                     Column(
-                        modifier = Modifier.padding(paddingValues)
+                        modifier = Modifier.padding(paddingValues),
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         AnimatedVisibility(visible = showStatistics) {
                             StatisticsTable(
@@ -217,6 +228,20 @@ fun SessionScreen(
                             Spacer(modifier = Modifier.height(LocalTheme.shapes.betweenItemsSpace))
                             //TODO pagerState.currentPage + 1/totalItemCount info banner
                             //TODO currentIndex isn't getting saved for some reason
+                        }
+                        AnimatedVisibility(
+                            modifier = Modifier.padding(vertical = 4.dp),
+                            visible = liveIndex.value < sessionState.module.history.size.minus(INDEXES_FOR_SKIP_TO_FRONT)
+                        ) {
+                            ComponentHeaderButton(
+                                startIconVector = Icons.Outlined.SkipNext,
+                                text = stringResource(id = R.string.button_skip_to_front),
+                                onClick = {
+                                    coroutineScope.launch {
+                                        pagerState.animateScrollToPage(sessionState.module.history.size)
+                                    }
+                                }
+                            )
                         }
                         HorizontalPager(
                             state = pagerState,
