@@ -1,56 +1,88 @@
 package study.me.please.ui.components
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.squadris.squadris.compose.theme.LocalTheme
+import study.me.please.ui.components.simple_dialog.dismissibleDialogProperties
 
+/**
+ * Themed basic dialog
+ */
 @Composable
 fun BasicAlertDialog(
-    dialogTitle: String,
-    dialogText: String,
+    title: String? = null,
+    content: String,
     confirmButtonState: ButtonState? = null,
     dismissButtonState: ButtonState? = null,
     icon: ImageVector,
 ) {
     AlertDialog(
-        icon = {
-            Icon(icon, contentDescription = "")
-        },
-        title = {
-            Text(text = dialogTitle)
+        icon = null,
+        title = if(title == null) null else {
+            {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = "",
+                        tint = LocalTheme.colors.secondary
+                    )
+                    Text(
+                        text = title,
+                        style = TextStyle(
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = LocalTheme.colors.primary
+                        )
+                    )
+                }
+            }
         },
         text = {
-            Text(text = dialogText)
+            Text(
+                text = content,
+                style = TextStyle(
+                    fontSize = 16.sp,
+                    color = LocalTheme.colors.primary
+                )
+            )
         },
         onDismissRequest = {
             dismissButtonState?.onClick?.invoke()
         },
         confirmButton = {
-            confirmButtonState?.let { btn ->
-                TextButton(
-                    onClick = {
-                        btn.onClick()
-                    },
-                    enabled = btn.enabled
-                ) {
-                    Text(btn.text)
-                }
+            if(confirmButtonState != null) {
+                OutlinedButton(
+                    text = confirmButtonState.text,
+                    onClick = confirmButtonState.onClick,
+                    enabled = confirmButtonState.enabled,
+                    activeColor = LocalTheme.colors.brandMain
+                )
             }
         },
-        dismissButton = {
-            dismissButtonState?.let { btn ->
-                TextButton(
-                    onClick = {
-                        btn.onClick()
-                    },
-                    enabled = btn.enabled
-                ) {
-                    Text(btn.text)
-                }
+        dismissButton = if(dismissButtonState == null) null else {
+            {
+                OutlinedButton(
+                    text = dismissButtonState.text,
+                    onClick = dismissButtonState.onClick,
+                    enabled = dismissButtonState.enabled,
+                    activeColor = LocalTheme.colors.secondary
+                )
             }
-        }
+        },
+        containerColor = LocalTheme.colors.onBackgroundComponent,
+        properties = dismissibleDialogProperties
     )
 }

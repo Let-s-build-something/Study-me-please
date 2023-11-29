@@ -205,12 +205,12 @@ private fun ContentLayout(
 
     if(showDialog.value != null) {
         BasicAlertDialog(
-            dialogTitle = stringResource(
+            title = stringResource(
                 id = if(showDialog.value == DialogToShow.DeleteCollections) {
                     R.string.collection_delete_dialog_title
                 }else R.string.question_delete_dialog_title
             ),
-            dialogText = if(showDialog.value == DialogToShow.DeleteCollections) {
+            content = if(showDialog.value == DialogToShow.DeleteCollections) {
                 stringResource(
                     id = R.string.collection_delete_dialog_description,
                     selectedCollectionUids.size

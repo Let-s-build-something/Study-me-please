@@ -5,7 +5,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -133,8 +132,8 @@ fun CollectionLobbyScreen(
 
     if(showDeleteDialog.value) {
         BasicAlertDialog(
-            dialogTitle = stringResource(id = R.string.collection_delete_dialog_title),
-            dialogText = stringResource(
+            title = stringResource(id = R.string.collection_delete_dialog_title),
+            content = stringResource(
                 id = R.string.collection_delete_dialog_description,
                 selectedCollectionUids.size
             ),

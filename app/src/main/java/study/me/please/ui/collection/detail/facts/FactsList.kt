@@ -2,7 +2,6 @@ package study.me.please.ui.collection.detail.facts
 
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
-import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.tween
@@ -16,9 +15,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.requiredSize
-import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -72,7 +69,6 @@ import study.me.please.ui.components.FactCard
 import study.me.please.ui.components.InteractiveCardMode
 import study.me.please.ui.components.ScrollBarProgressIndicator
 import study.me.please.ui.components.rememberInteractiveCardState
-import kotlin.math.absoluteValue
 
 /** List of facts */
 @OptIn(ExperimentalFoundationApi::class)
@@ -266,8 +262,8 @@ fun FactsList(
 
     if(showDeleteDialog.value) {
         BasicAlertDialog(
-            dialogTitle = stringResource(id = R.string.fact_delete_dialog_title),
-            dialogText = stringResource(
+            title = stringResource(id = R.string.fact_delete_dialog_title),
+            content = stringResource(
                 id = R.string.fact_delete_dialog_description,
                 controller.selectedFactUids.size
             ),

@@ -196,8 +196,8 @@ fun SessionLobbyScreen(
 
     if(showDeleteDialog.value) {
         BasicAlertDialog(
-            dialogTitle = stringResource(id = R.string.collection_delete_dialog_title),
-            dialogText = stringResource(
+            title = stringResource(id = R.string.collection_delete_dialog_title),
+            content = stringResource(
                 id = R.string.collection_delete_dialog_description,
                 selectedSessionUids.size
             ),

@@ -49,6 +49,7 @@ fun BaseScreen(
     onBackPressed: () -> Boolean = { true },
     actionIcons: @Composable RowScope.() -> Unit = {},
     appBarVisible: Boolean = true,
+    onNavigationIconClick: (() -> Unit)? = null,
     containerColor: Color = Color.Transparent,
     contentColor: Color = Color.Transparent,
     floatingActionButtonPosition: FabPosition = FabPosition.End,
@@ -90,7 +91,8 @@ fun BaseScreen(
                         subtitle = subtitle,
                         actions = actionIcons,
                         onNavigationIconClick = {
-                            onBackPressedDispatcher?.onBackPressedDispatcher?.onBackPressed()
+                            onNavigationIconClick?: onBackPressedDispatcher?.onBackPressedDispatcher
+                                ?.onBackPressed()
                         }
                     )
                 }

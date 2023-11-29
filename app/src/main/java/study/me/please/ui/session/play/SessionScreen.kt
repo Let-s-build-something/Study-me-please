@@ -13,7 +13,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Repeat
+import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.DoorBack
 import androidx.compose.material.icons.outlined.SkipNext
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -43,11 +44,15 @@ import study.me.please.base.navigation.NavIconType
 import study.me.please.base.navigation.SessionAppBarActions
 import study.me.please.data.io.preferences.SessionPreferencePack
 import study.me.please.ui.collection.detail.REQUEST_DATA_SAVE_DELAY
+import study.me.please.ui.components.BasicAlertDialog
+import study.me.please.ui.components.ButtonState
 import study.me.please.ui.components.ComponentHeaderButton
 import study.me.please.ui.components.SimpleModalBottomSheet
 import study.me.please.ui.components.preference_chooser.PreferenceChooser
 import study.me.please.ui.components.preference_chooser.PreferenceChooserController
 import study.me.please.ui.components.session.StatisticsTable
+import study.me.please.ui.components.simple_dialog.SimpleDialog
+import study.me.please.ui.components.simple_dialog.rememberSimpleDialogState
 
 /** how many items behind the front can be skipped forward */
 private const val INDEXES_FOR_SKIP_TO_FRONT = 5
@@ -88,9 +93,22 @@ fun SessionScreen(
     var showExitDialog by remember { mutableStateOf(false) }
 
     if(showExitDialog) {
-        //TODO exit dialog
-        navController?.popBackStack()
-        showExitDialog = false
+        BasicAlertDialog(
+            title = stringResource(id = R.string.session_leave_dialog_title),
+            content = stringResource(R.string.session_leave_dialog_content),
+            icon = Icons.Outlined.DoorBack,
+            confirmButtonState = ButtonState(
+                text = stringResource(id = R.string.button_confirm)
+            ) {
+                showExitDialog = false
+                navController?.popBackStack()
+            },
+            dismissButtonState = ButtonState(
+                text = stringResource(id = R.string.button_cancel)
+            ) {
+                showExitDialog = false
+            }
+        )
     }
 
     LaunchedEffect(Unit) {

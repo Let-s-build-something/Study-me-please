@@ -1,6 +1,5 @@
 package study.me.please.ui.collection.detail.questions
 
-import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.LinearOutSlowInEasing
@@ -8,16 +7,13 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imeNestedScroll
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -283,8 +279,8 @@ fun QuestionsList(
 
     if(showDeleteDialog.value) {
         BasicAlertDialog(
-            dialogTitle = stringResource(id = R.string.question_delete_dialog_title),
-            dialogText = stringResource(
+            title = stringResource(id = R.string.question_delete_dialog_title),
+            content = stringResource(
                 id = R.string.question_delete_dialog_description,
                 controller.selectedQuestionUids.size
             ),

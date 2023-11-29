@@ -133,6 +133,12 @@
 
     <string name="screen_settings_text_theme">Dark and darker</string>
 
+    <string name="session_leave_dialog_title">Leave this session</string>
+    <string name="session_leave_dialog_content">Are you sure you want to leave this running session?</string>
+
+    <string name="leave_app_dialog_title">Closing app</string>
+    <string name="leave_app_dialog_content">Are you sure you want close this app? :(</string>
+
     <string name="preference_chooser_preferences_show">Edit preference</string>
     <string name="preference_chooser_preferences_hide">Close preference</string>
     <string name="preference_chooser_field_name_hint">Preference name</string>
@@ -200,6 +206,7 @@
     <string name="button_continue">Continue</string>
     <string name="button_validate">Validate</string>
     <string name="button_repeat">Repeat this question</string>
+    <string name="button_leave">Leave</string>
     <string name="button_skip_to_front">Skip to front</string>
     <string name="button_delete">Delete</string>
     <string name="button_select_all">Select all</string>

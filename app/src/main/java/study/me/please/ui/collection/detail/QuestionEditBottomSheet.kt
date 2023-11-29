@@ -1,7 +1,6 @@
 package study.me.please.ui.collection.detail
 
 import android.annotation.SuppressLint
-import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
@@ -24,7 +23,6 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.ContentPaste
@@ -141,8 +139,8 @@ fun QuestionEditBottomSheetContent(
 
     if(showDeleteDialog.value) {
         BasicAlertDialog(
-            dialogTitle = stringResource(id = R.string.answer_delete_dialog_title),
-            dialogText = stringResource(
+            title = stringResource(id = R.string.answer_delete_dialog_title),
+            content = stringResource(
                 id = R.string.answer_delete_dialog_description,
                 selectedAnswerUids.size
             ),

@@ -105,7 +105,9 @@ private fun Preview() {
             text = if(activated) "Activated" else "Inactivated",
             isActivated = activated,
             trailingIcon = if(activated) Icons.Outlined.Check else Icons.Outlined.Close,
-            onClick = {}
+            onClick = {},
+            activeColor = LocalTheme.colors.disabled,
+            inactiveColor = LocalTheme.colors.secondary,
         )
     }
 }

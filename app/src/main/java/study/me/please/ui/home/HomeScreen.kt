@@ -1,6 +1,8 @@
 package study.me.please.ui.home
 
+import android.app.Activity
 import android.content.res.Configuration
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -15,9 +17,14 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowForwardIos
+import androidx.compose.material.icons.outlined.DoorBack
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
@@ -37,6 +44,8 @@ import study.me.please.base.navigation.NavigationComponent
 import study.me.please.base.navigation.NavigationDestination
 import study.me.please.data.io.CollectionIO
 import study.me.please.data.io.session.SessionIO
+import study.me.please.ui.components.BasicAlertDialog
+import study.me.please.ui.components.ButtonState
 import study.me.please.ui.components.CollectionCard
 import study.me.please.ui.components.ImageAction
 import study.me.please.ui.components.InteractiveCardState
@@ -58,6 +67,8 @@ fun HomeScreen(
     val context = LocalContext.current
     val navController = LocalNavController.current
 
+    var showLeaveDialog by remember { mutableStateOf(false) }
+
     val interactiveCollectionStates = collections.value?.map {
         rememberInteractiveCardState()
     }
@@ -65,10 +76,33 @@ fun HomeScreen(
         rememberInteractiveCardState()
     }
 
+    BackHandler {
+        showLeaveDialog = true
+    }
+
     OnLifecycleEvent { event ->
         if(event == Lifecycle.Event.ON_RESUME) {
             viewModel.requestData(isSpecial = true)
         }
+    }
+
+    if(showLeaveDialog) {
+        BasicAlertDialog(
+            title = stringResource(id = R.string.leave_app_dialog_title),
+            content = stringResource(R.string.leave_app_dialog_content),
+            icon = Icons.Outlined.DoorBack,
+            confirmButtonState = ButtonState(
+                text = stringResource(id = R.string.button_cancel)
+            ) {
+                showLeaveDialog = false
+            },
+            dismissButtonState = ButtonState(
+                text = stringResource(id = R.string.button_confirm)
+            ) {
+                showLeaveDialog = false
+                (context as? Activity)?.finish()
+            }
+        )
     }
 
     PullRefreshScreen(
@@ -269,7 +303,6 @@ private fun SessionsRow(
 }
 
 /** Element to place shown whenever row content is empty */
-@Preview
 @Composable
 private fun EmptyElement(
     emptyText: String = "",

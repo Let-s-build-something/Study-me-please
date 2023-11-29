@@ -1,11 +1,9 @@
 package study.me.please.base
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.material3.FabPosition
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -34,33 +32,30 @@ fun BrandBaseScreen(
     val navController = LocalNavController.current
     val currentEntry = navController?.currentBackStackEntryAsState()
 
-    BackHandler(navIconType == NavIconType.HOME) {
-        navController?.popBackStack(NavigationDestination.Home.route, inclusive = false)
-    }
-
-    CompositionLocalProvider(
-        LocalNavController provides if(navIconType == NavIconType.HOME) null else navController
-    ) {
-        BaseScreen(
-            modifier = modifier,
-            title = title,
-            subtitle = subtitle,
-            onBackPressed = onBackPressed,
-            actionIcons = actionIcons ?: {
-                DefaultAppBarActions(
-                    currentRoute = currentEntry?.value?.destination?.route,
-                    actionNavigation = { route ->
-                        navController?.navigate(route)
-                    }
-                )
-            },
-            appBarVisible = appBarVisible,
-            containerColor = containerColor,
-            contentColor = contentColor,
-            floatingActionButtonPosition = floatingActionButtonPosition,
-            floatingActionButton = floatingActionButton,
-            navigationIcon = navIconType.imageVector,
-            content = content
-        )
-    }
+    BaseScreen(
+        modifier = modifier,
+        title = title,
+        subtitle = subtitle,
+        onBackPressed = onBackPressed,
+        actionIcons = actionIcons ?: {
+            DefaultAppBarActions(
+                currentRoute = currentEntry?.value?.destination?.route,
+                actionNavigation = { route ->
+                    navController?.navigate(route)
+                }
+            )
+        },
+        appBarVisible = appBarVisible,
+        containerColor = containerColor,
+        contentColor = contentColor,
+        onNavigationIconClick = if(navIconType == NavIconType.HOME) {
+            {
+                navController?.popBackStack(NavigationDestination.Home.route, inclusive = false)
+            }
+        } else null,
+        floatingActionButtonPosition = floatingActionButtonPosition,
+        floatingActionButton = floatingActionButton,
+        navigationIcon = navIconType.imageVector,
+        content = content
+    )
 }
