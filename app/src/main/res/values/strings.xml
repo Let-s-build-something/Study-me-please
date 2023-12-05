@@ -8,12 +8,15 @@
     <string name="screen_account_title">My business</string>
     <string name="screen_session_lobby_title">My sessions</string>
     <string name="screen_collection_detail_new">New collection</string>
+    <string name="screen_subject">Subjects</string>
     <string name="navigate_back">Back</string>
     <string name="navigate_close">Close</string>
 
     <string name="home_screen_collections_empty_action">Let\'s start collecting</string>
     <string name="home_screen_sessions_empty_action">Time to practice</string>
 
+    <string name="collection_detail_start_session">To session</string>
+    <string name="collection_detail_basic_information">Basic information</string>
     <string name="collection_detail_page_questions">Questions</string>
     <string name="collection_detail_page_facts">Facts</string>
     <string name="collection_detail_add_question">Sir, I have a question</string>
@@ -41,7 +44,22 @@
     <string name="questions_list_chip_has_image">has image</string>
     <string name="questions_list_chip_is_invalid">is invalid</string>
 
-    <string name="facts_list_add_new">Add a new fact</string>
+    <string name="subjects_delete_dialog_title">Subject deletion</string>
+    <string name="subjects_delete_dialog_content">
+        You\'ve spent time on this, are you sure you want permanently delete "%1$s"?
+    </string>
+    <string name="subject_heading_hint">Heading</string>
+    <string name="subject_subheading_hint">Subheading</string>
+    <string name="subject_add_bullet_point">Bullet point</string>
+    <string name="subject_add_fact">Fact</string>
+    <string name="subject_add_paragraph">Paragraph</string>
+    <string name="subject_categorize_paragraph">Paragraph name</string>
+    <string name="edit_field_item_picked_create">Create new item</string>
+    <string name="subject_paragraph_section_heading">Paragraphs</string>
+    <string name="subject_facts_section_heading">Facts</string>
+    <string name="subject_bullet_points_section_heading">Bullet points</string>
+
+    <string name="facts_list_add_new">Add a fact</string>
     <string name="facts_list_generate_questions">Generate questions</string>
     <string name="facts_field_short_information_header">Short key information</string>
     <string name="facts_field_long_information_header">Long key information</string>
@@ -122,6 +140,7 @@
     <string name="collection_delete_dialog_description">
         You\'ve spent time on this, are you sure you want permanently delete the selected (%1$d) collections?
     </string>
+    <string name="question_detail_new_answer">Create an answer</string>
     <string name="question_delete_dialog_title">Question deletion</string>
     <string name="question_delete_dialog_description">
         You\'ve spent time on this, are you sure you want permanently delete the selected (%1$d) questions?
@@ -138,6 +157,9 @@
 
     <string name="leave_app_dialog_title">Closing app</string>
     <string name="leave_app_dialog_content">Are you sure you want close this app? :(</string>
+
+    <string name="question">Question</string>
+    <string name="collection">Collection</string>
 
     <string name="preference_chooser_preferences_show">Edit preference</string>
     <string name="preference_chooser_preferences_hide">Close preference</string>
@@ -214,11 +236,14 @@
     <string name="button_cancel">Cancel</string>
 
 
-    <!--- ============================= CONTENT DESCRIPTION ==================================== -->
+    <!--- ============================= ACCESSIBILITY ==================================== -->
     <string name="btn_clear_content_description">Clear</string>
     <string name="add_new_content_description">Add new item</string>
     <string name="image_icon_content_description">Icon</string>
     <string name="close_content_description">Close</string>
     <string name="play_content_description">Play</string>
     <string name="edit_content_description">Edit</string>
+    <string name="expand_content_description">Expand</string>
+    <string name="collapse_content_description">Collapse</string>
+    <string name="accessibility_add_content">Add new content</string>
 </resources>

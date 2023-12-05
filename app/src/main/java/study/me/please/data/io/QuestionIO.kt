@@ -65,10 +65,4 @@ data class QuestionIO (
     @SerializedName("date_created")
     @ColumnInfo("date_created")
     val dateCreated: Long = DateUtils.now.timeInMillis
-): Serializable {
-
-    /** whether this data set is empty or not */
-    @get:Ignore
-    val isEmpty: Boolean
-        get() = prompt.isEmpty() || answers.isEmpty()
-}
+): Serializable

@@ -12,6 +12,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.DialogProperties
 import com.squadris.squadris.compose.theme.LocalTheme
 import study.me.please.ui.components.simple_dialog.dismissibleDialogProperties
 
@@ -24,6 +25,8 @@ fun BasicAlertDialog(
     content: String,
     confirmButtonState: ButtonState? = null,
     dismissButtonState: ButtonState? = null,
+    properties: DialogProperties = dismissibleDialogProperties,
+    onDismissRequest: () -> Unit = { dismissButtonState?.onClick?.invoke() },
     icon: ImageVector,
 ) {
     AlertDialog(
@@ -60,7 +63,7 @@ fun BasicAlertDialog(
             )
         },
         onDismissRequest = {
-            dismissButtonState?.onClick?.invoke()
+            onDismissRequest()
         },
         confirmButton = {
             if(confirmButtonState != null) {
@@ -83,6 +86,6 @@ fun BasicAlertDialog(
             }
         },
         containerColor = LocalTheme.colors.onBackgroundComponent,
-        properties = dismissibleDialogProperties
+        properties = properties
     )
 }

@@ -16,8 +16,15 @@ interface BaseColors {
     /** disabled color contrasted to background */
     val disabled: Color
 
+    /** Brand color */
     val brandMain: Color
+
+    /** Darker version of brand color */
+    val brandMainDark: Color
+
+    /** contrasting color to the brand color */
     val tetrial: Color
+
     val backgroundLight: Color
     val onBackGroundLight: Color
     val onBackgroundComponentContrast: Color

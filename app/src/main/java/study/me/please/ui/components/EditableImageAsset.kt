@@ -29,7 +29,7 @@ import coil.decode.GifDecoder
 import coil.decode.ImageDecoderDecoder
 import coil.decode.SvgDecoder
 import coil.request.ImageRequest
-import com.squadris.squadris.compose.components.EditFieldInput
+import com.squadris.squadris.compose.components.input.EditFieldInput
 import com.squadris.squadris.compose.theme.Colors
 import com.squadris.squadris.compose.theme.LocalTheme
 import kotlinx.coroutines.delay

@@ -1,6 +1,5 @@
 package study.me.please.ui.components.preference_chooser
 
-import android.util.Log
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
@@ -51,7 +50,7 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import com.squadris.squadris.compose.components.DEFAULT_ANIMATION_LENGTH_LONG
 import com.squadris.squadris.compose.components.DEFAULT_ANIMATION_LENGTH_SHORT
-import com.squadris.squadris.compose.components.EditFieldInput
+import com.squadris.squadris.compose.components.input.EditFieldInput
 import com.squadris.squadris.compose.components.MinimalisticIcon
 import com.squadris.squadris.compose.theme.Colors
 import com.squadris.squadris.compose.theme.LocalTheme

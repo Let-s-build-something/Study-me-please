@@ -36,7 +36,6 @@ fun CollapsingLayout(
     val scrollableElements = state.elements.filter { it.behavior != CollapsingBehavior.NONE }
     val alwaysScrollableElements = state.elements.filter { it.behavior == CollapsingBehavior.ALWAYS }
 
-    var availableCount = remember { 0 }
     var unConsumed = remember { 0 }
 
     fun calculateOffset(availableY: Float): Offset {
@@ -48,7 +47,9 @@ fun CollapsingLayout(
                 alwaysScrollableElements
             }else state.elements.filter {
                 // ALWAYS any time, ON_TOP only if we're on top
-                it.behavior == CollapsingBehavior.ALWAYS || (unConsumed > 2 && it.behavior == CollapsingBehavior.ON_TOP)
+                it.behavior == CollapsingBehavior.ALWAYS
+                        || (unConsumed > 2 && it.behavior == CollapsingBehavior.ON_TOP)
+                        || (state.overallScroll == 0f && it.behavior == CollapsingBehavior.ON_TOP)
             }).also { list ->
                 (list.find { it.isScrolling } ?: list.lastOrNull { it.isCollapsed })?.run {
                     val oldOffset = offset.doubleValue
@@ -88,7 +89,8 @@ fun CollapsingLayout(
             ): Offset {
                 if(available.y < 0f) unConsumed = 0
                 if(consumed.y == 0f) unConsumed++ else unConsumed = 0
-                state.overallScroll = (state.overallScroll + consumed.y).coerceAtMost(0f)
+                state.overallScroll = if(consumed.y == 0f && (state.overallScroll >= -30f || unConsumed > 2)) 0.0f
+                else (state.overallScroll + consumed.y).coerceAtMost(0f)
 
                 return calculateOffset(available.y)
             }

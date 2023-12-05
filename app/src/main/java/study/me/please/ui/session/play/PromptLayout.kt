@@ -102,7 +102,7 @@ fun PromptLayout(
                             Icon(
                                 modifier = Modifier
                                     .size(32.dp)
-                                    .rotate(190f),
+                                    .rotate(180f),
                                 imageVector = icon.first,
                                 contentDescription = icon.second
                             )

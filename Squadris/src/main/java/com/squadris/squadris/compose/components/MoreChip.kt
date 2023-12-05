@@ -24,7 +24,7 @@ import com.squadris.squadris.compose.theme.LocalTheme
 fun MoreChip(
     modifier: Modifier = Modifier,
     text: String,
-    imageVector: ImageVector = Icons.Outlined.FilterList,
+    imageVector: ImageVector? = null,
     onClick: () -> Unit = {}
 ) {
     val localDensity = LocalDensity.current
@@ -45,7 +45,7 @@ fun MoreChip(
             Icon(
                 modifier = Modifier
                     .size(18.dp),
-                imageVector = imageVector,
+                imageVector = imageVector ?: Icons.Outlined.FilterList,
                 tint = LocalTheme.colors.tetrial,
                 contentDescription = "Sort" //TODO string resources
             )

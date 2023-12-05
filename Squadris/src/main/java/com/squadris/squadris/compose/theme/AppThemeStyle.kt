@@ -13,8 +13,11 @@ import androidx.compose.material3.TextFieldColors
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 /** Styles specific to main app theme [LocalTheme] */
 class AppThemeStyle: ThemeStyle {
@@ -31,6 +34,26 @@ class AppThemeStyle: ThemeStyle {
                 cursorColor = LocalTheme.colors.secondary,
                 disabledIndicatorColor = Color.Transparent,
                 errorContainerColor = LocalTheme.colors.onBackgroundComponentContrast,
+                errorIndicatorColor = Color.Transparent,
+                errorTextColor = Colors.RED_ERROR,
+                errorTrailingIconColor = Colors.RED_ERROR
+            )
+        }
+
+    override val textFieldColorsOnFocus: TextFieldColors
+        @Composable get() {
+            return TextFieldDefaults.colors(
+                focusedContainerColor = LocalTheme.colors.onBackgroundComponent,
+                unfocusedContainerColor = Color.Transparent,
+                unfocusedIndicatorColor = Color.Transparent,
+                focusedIndicatorColor = Color.Transparent,
+                unfocusedLabelColor = Color.Transparent,
+                disabledTextColor = LocalTheme.colors.disabled,
+                focusedTextColor = LocalTheme.colors.primary,
+                unfocusedTextColor = Color.Transparent,
+                cursorColor = LocalTheme.colors.secondary,
+                disabledIndicatorColor = Color.Transparent,
+                errorContainerColor = LocalTheme.colors.onBackgroundComponent,
                 errorIndicatorColor = Color.Transparent,
                 errorTextColor = Colors.RED_ERROR,
                 errorTrailingIconColor = Colors.RED_ERROR
@@ -93,5 +116,28 @@ class AppThemeStyle: ThemeStyle {
             labelColor = LocalTheme.colors.brandMain,
             selectedContainerColor = LocalTheme.colors.brandMain,
             selectedLabelColor = LocalTheme.colors.tetrial
+        )
+    override val heading: TextStyle
+        @Composable
+        get() = TextStyle(
+            color = LocalTheme.colors.primary,
+            fontSize = 28.sp,
+            fontWeight = FontWeight.Bold
+        )
+
+    override val subheading: TextStyle
+        @Composable
+        get() = TextStyle(
+            color = LocalTheme.colors.primary,
+            fontSize = 22.sp,
+            fontWeight = FontWeight.Medium
+        )
+
+    override val category: TextStyle
+        @Composable
+        get() = TextStyle(
+            color = LocalTheme.colors.secondary,
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Medium
         )
 }

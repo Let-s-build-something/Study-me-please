@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.DeleteSweep
 import androidx.compose.material.icons.outlined.Deselect
 import androidx.compose.material.icons.outlined.SelectAll
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -248,7 +249,7 @@ fun SessionLobbyScreen(
                 },
                 actions = {
                     ImageAction(
-                        leadingImageVector = Icons.Outlined.Delete,
+                        leadingImageVector = Icons.Outlined.DeleteSweep,
                         text = stringResource(id = R.string.button_delete),
                         containerColor = Colors.RED_ERROR
                     ) {

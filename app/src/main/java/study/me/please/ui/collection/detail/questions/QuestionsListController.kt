@@ -7,8 +7,6 @@ interface QuestionsListController {
     fun addQuestion()
     fun stopChecking()
     fun deleteQuestions()
-    fun deleteAnswers(uidList: List<String>)
     fun openQuestion(question: QuestionIO)
-    fun closeQuestion()
     fun copyItems()
 }

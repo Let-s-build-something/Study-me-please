@@ -10,6 +10,8 @@ import study.me.please.data.io.QuestionAnswerIO
 import study.me.please.data.io.QuestionIO
 import study.me.please.data.io.session.SessionIO
 import study.me.please.data.io.preferences.SessionPreferencePack
+import study.me.please.data.io.subjects.CategoryIO
+import study.me.please.data.io.subjects.SubjectIO
 import study.me.please.ui.session.play.QuestionModule
 
 @Database(
@@ -21,7 +23,9 @@ import study.me.please.ui.session.play.QuestionModule
         SessionPreferencePack::class,
         SessionIO::class,
         QuestionModule::class,
-        FactIO::class
+        FactIO::class,
+        SubjectIO::class,
+        CategoryIO::class
     ],
     version = 1,
     exportSchema = true
@@ -37,6 +41,8 @@ abstract class AppRoomDatabase: RoomDatabase() {
     abstract fun preferencesDbDao(): PreferencesDao
 
     abstract fun factDbDao(): FactDao
+    abstract fun subjectDbDao(): SubjectDao
+    abstract fun categoryDbDao(): CategoryDao
 
     companion object {
 
@@ -81,6 +87,12 @@ abstract class AppRoomDatabase: RoomDatabase() {
 
         /** Identification of table for [FactIO] */
         const val ROOM_FACT_TABLE = "ROOM_FACT_TABLE"
+
+        /** Identification of table for [SubjectIO] */
+        const val ROOM_SUBJECT_TABLE = "ROOM_SUBJECT_TABLE"
+
+        /** Identification of table for [CategoryIO] */
+        const val ROOM_CATEGORY_TABLE = "ROOM_SUBJECTS_TABLE"
 
         /** Identification of table for [QuestionAnswerIO] */
         const val ROOM_QUESTION_ANSWER_TABLE = "ROOM_QUESTION_ANSWER_TABLE"

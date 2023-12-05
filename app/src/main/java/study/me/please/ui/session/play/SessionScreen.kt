@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.DoorBack
 import androidx.compose.material.icons.outlined.SkipNext
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -51,8 +50,6 @@ import study.me.please.ui.components.SimpleModalBottomSheet
 import study.me.please.ui.components.preference_chooser.PreferenceChooser
 import study.me.please.ui.components.preference_chooser.PreferenceChooserController
 import study.me.please.ui.components.session.StatisticsTable
-import study.me.please.ui.components.simple_dialog.SimpleDialog
-import study.me.please.ui.components.simple_dialog.rememberSimpleDialogState
 
 /** how many items behind the front can be skipped forward */
 private const val INDEXES_FOR_SKIP_TO_FRONT = 5
@@ -228,8 +225,8 @@ fun SessionScreen(
                     title = title,
                     navIconType = NavIconType.CLOSE,
                     onBackPressed = {
-                        showExitDialog = true
-                        false
+                        if(sessionState.isTest.not()) showExitDialog = true
+                        sessionState.isTest
                     }
                 ) { paddingValues ->
                     Column(

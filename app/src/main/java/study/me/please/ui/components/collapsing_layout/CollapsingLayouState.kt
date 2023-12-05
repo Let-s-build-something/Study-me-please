@@ -39,4 +39,10 @@ class CollapsingLayoutState {
             overallScroll = restoration.second
         }
     }
+
+    /** returns the overall height above the given [index] */
+    fun getCollapsingHeightAbove(index: Int): Double {
+        return if(elements.lastIndex < index) 0.0
+        else elements.take(index.plus(1)).sumOf { it.height.doubleValue }
+    }
 }

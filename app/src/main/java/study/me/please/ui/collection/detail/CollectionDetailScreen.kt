@@ -18,11 +18,12 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.DocumentScanner
-import androidx.compose.material.icons.outlined.FileDownload
 import androidx.compose.material.icons.outlined.FileUpload
+import androidx.compose.material.icons.outlined.PlayArrow
+import androidx.compose.material.icons.outlined.Source
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -42,7 +43,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import com.squadris.squadris.compose.components.DEFAULT_ANIMATION_LENGTH_SHORT
-import com.squadris.squadris.compose.components.EditFieldInput
+import com.squadris.squadris.compose.components.input.EditFieldInput
 import com.squadris.squadris.compose.theme.LocalTheme
 import com.squadris.squadris.ext.brandShimmerEffect
 import com.squadris.squadris.utils.OnLifecycleEvent
@@ -51,14 +52,13 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import study.me.please.R
 import study.me.please.base.LocalNavController
-import study.me.please.base.navigation.CollectionDetailAppBarActions
+import study.me.please.base.navigation.ActionBarIcon
 import study.me.please.base.navigation.NavigationComponent
 import study.me.please.base.navigation.NavigationDestination
 import study.me.please.data.io.CollectionIO
-import study.me.please.data.io.FactIO
-import study.me.please.data.io.QuestionIO
 import study.me.please.ui.collection.detail.facts.FactsList
 import study.me.please.ui.collection.detail.questions.QuestionsList
+import study.me.please.ui.components.ExpandableContent
 import study.me.please.ui.components.ImageAction
 import study.me.please.ui.components.collapsing_layout.CollapsingBehavior
 import study.me.please.ui.components.collapsing_layout.CollapsingLayout
@@ -71,6 +71,16 @@ const val REQUEST_DATA_SAVE_DELAY = 500L
 const val PAGE_INDEX_QUESTIONS = 0
 const val PAGE_INDEX_FACTS = 1
 
+/** Main communication and controlling channel */
+interface CollectionDetailBridge {
+
+    /** Updates collection by changes in receiving collection */
+    fun updateCollection(collection: CollectionIO)
+
+    /** Requests a DB collection save */
+    fun requestCollectionSave()
+}
+
 /**
  * Screen for creating a new collection
  * including adding of questions, configuration and import of both
@@ -81,16 +91,11 @@ fun CollectionDetailScreen(
     collectionUid: String? = null,
     viewModel: CollectionDetailViewModel = hiltViewModel()
 ) {
-    val coroutineScope = rememberCoroutineScope()
     val navController = LocalNavController.current
 
-    val collectionDetailFlow = viewModel.collectionDetail.collectAsState()
-
-    val collectionDetail = remember { collectionDetailFlow.value }
-    var collectionTitle by remember(title) { mutableStateOf(title) }
-
-    LaunchedEffect(collectionDetailFlow.value) {
-        collectionTitle = collectionDetailFlow.value.name
+    val collectionDetail = viewModel.collectionDetail.collectAsState()
+    val collectionTitle = remember(title) {
+        mutableStateOf(collectionDetail.value.name.ifBlank { title })
     }
 
     OnLifecycleEvent { event ->
@@ -105,65 +110,42 @@ fun CollectionDetailScreen(
     PullRefreshScreen(
         modifier = Modifier.background(color = LocalTheme.colors.onBackgroundComponent),
         viewModel = viewModel,
-        title = collectionTitle,
+        title = collectionTitle.value,
+        subtitle = stringResource(id = R.string.collection),
         actionIcons = {
-            CollectionDetailAppBarActions {
-                navController?.navigate(
-                    NavigationDestination.SessionDetail.createRoute(
-                        NavigationComponent.COLLECTION_UID_LIST to listOf(collectionDetailFlow.value.uid),
-                        NavigationComponent.TOOLBAR_TITLE to collectionDetailFlow.value.name
+            ActionBarIcon(
+                text = stringResource(id = R.string.collection_detail_start_session),
+                imageVector = Icons.Outlined.PlayArrow,
+                onClick = {
+                    navController?.navigate(
+                        NavigationDestination.SessionDetail.createRoute(
+                            NavigationComponent.COLLECTION_UID_LIST to listOf(collectionDetail.value.uid),
+                            NavigationComponent.TOOLBAR_TITLE to collectionDetail.value.name
+                        )
                     )
-                )
-            }
+                }
+            )
+            ActionBarIcon(
+                text = stringResource(id = R.string.screen_subject),
+                imageVector = Icons.Outlined.Source,
+                onClick = {
+                    navController?.navigate(
+                        NavigationDestination.Subjects.createRoute(
+                            NavigationComponent.COLLECTION_UID to collectionDetail.value.uid,
+                            NavigationComponent.TOOLBAR_TITLE to collectionDetail.value.name
+                        )
+                    )
+                }
+            )
         }
     ) { paddingValues ->
-        if(collectionUid.isNullOrEmpty().not() && collectionDetailFlow.value.dateCreated == null) {
+        if(collectionUid.isNullOrEmpty().not() && collectionDetail.value.dateCreated == null) {
             ShimmerLayout(modifier = Modifier.padding(paddingValues))
         }else {
             ContentLayout(
                 modifier = Modifier.padding(paddingValues),
-                collectionDetail = collectionDetail,
-                requestCollectionSave = {
-                    coroutineScope.coroutineContext.cancelChildren()
-                    coroutineScope.launch {
-                        delay(REQUEST_DATA_SAVE_DELAY)
-                        viewModel.requestCollectionSave(collectionDetail)
-                    }
-                },
-                requestQuestionSave = { question ->
-                    if(question.uid.isNotEmpty()) {
-                        coroutineScope.coroutineContext.cancelChildren()
-                        coroutineScope.launch {
-                            delay(REQUEST_DATA_SAVE_DELAY)
-                            viewModel.requestQuestionSave(question)
-                        }
-                    }
-                },
-                requestFactSave = { fact ->
-                    coroutineScope.coroutineContext.cancelChildren()
-                    coroutineScope.launch {
-                        delay(REQUEST_DATA_SAVE_DELAY)
-                        viewModel.requestFactSave(fact)
-                    }
-                },
-                onNavigateToQuestionTest = { question ->
-                    navController?.navigate(
-                        NavigationDestination.SessionPlay.createRoute(
-                            NavigationComponent.TOOLBAR_TITLE to question.prompt,
-                            NavigationComponent.IS_TESTING_MODE to true,
-                            NavigationComponent.QUESTION_UID to question.uid
-                        )
-                    )
-                },
                 viewModel = viewModel,
-                navigateToSession = { questionUids ->
-                    navController?.navigate(
-                        NavigationDestination.SessionPlay.createRoute(
-                            NavigationComponent.TOOLBAR_TITLE to collectionDetail.name,
-                            NavigationComponent.QUESTION_UID_LIST to questionUids
-                        )
-                    )
-                }
+                collectionTitleState = collectionTitle
             )
         }
     }
@@ -174,14 +156,11 @@ fun CollectionDetailScreen(
 @Composable
 private fun ContentLayout(
     modifier: Modifier = Modifier,
-    collectionDetail: CollectionIO,
-    onNavigateToQuestionTest: (questionIO: QuestionIO) -> Unit,
     viewModel: CollectionDetailViewModel,
-    requestCollectionSave: () -> Unit,
-    navigateToSession: (questionUids: List<String>) -> Unit,
-    requestQuestionSave: (question: QuestionIO) -> Unit,
-    requestFactSave: (fact: FactIO) -> Unit
+    collectionTitleState: MutableState<String?>
 ) {
+    val collectionDetail = viewModel.collectionDetail.collectAsState()
+
     val coroutineScope = rememberCoroutineScope()
     val contentPagerState = rememberPagerState { 2 }
     val contentSwitchState = rememberTabSwitchState(
@@ -201,6 +180,25 @@ private fun ContentLayout(
             }
         }
     )
+    val clipboardManager: ClipboardManager = LocalClipboardManager.current
+
+    val bridge = remember(collectionDetail.value.uid) {
+        object: CollectionDetailBridge {
+            override fun requestCollectionSave() {
+                coroutineScope.coroutineContext.cancelChildren()
+                coroutineScope.launch {
+                    delay(REQUEST_DATA_SAVE_DELAY)
+                    viewModel.requestCollectionSave(collectionDetail.value)
+                }
+            }
+
+            override fun updateCollection(collection: CollectionIO) {
+                viewModel.updateCollection(collection)
+                requestCollectionSave()
+            }
+        }
+    }
+
     LaunchedEffect(contentPagerState) {
         snapshotFlow { contentPagerState.currentPage }.collect { page ->
             contentSwitchState.selectedTabIndex.value = page
@@ -212,113 +210,108 @@ private fun ContentLayout(
         .wrapContentHeight()
         .fillMaxWidth()
 
+    val isExpandedByDefault = collectionDetail.value.name.isEmpty()
+            || collectionDetail.value.factUidList.size <= 3
+            || collectionDetail.value.questionUidList.size <= 3
+    var isBasicInfoExpanded by remember { mutableStateOf(isExpandedByDefault) }
+
     CollapsingLayout(
         modifier = modifier.wrapContentHeight(),
-        state = viewModel.collapsingLayoutGeneralState,
+        state = viewModel.collapsingLayoutState,
         content = listOf(
             @Composable {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 12.dp)
+                ExpandableContent(
+                    text = stringResource(R.string.collection_detail_basic_information),
+                    defaultValue = isExpandedByDefault,
+                    onExpansionChange = { isExpanded ->
+                        isBasicInfoExpanded = isExpanded
+                    }
                 ) {
-                    val clipboardManager: ClipboardManager = LocalClipboardManager.current
-                    Row(
+                    Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .horizontalScroll(rememberScrollState())
-                            .padding(start = 6.dp, top = 6.dp, end = 6.dp),
-                        horizontalArrangement = Arrangement.spacedBy(
-                            LocalTheme.shapes.betweenItemsSpace
-                        )
+                            .padding(horizontal = 12.dp)
                     ) {
-                        ImageAction(
-                            modifier = Modifier,
-                            leadingImageVector = Icons.Outlined.FileDownload,
-                            text = stringResource(id = R.string.button_import)
-                        ) {
-
-                        }
-                        ImageAction(
-                            modifier = Modifier,
-                            leadingImageVector = Icons.Outlined.FileUpload,
-                            text = stringResource(id = R.string.button_export)
-                        ) {
-                            viewModel.getExportString { json ->
-                                clipboardManager.setText(AnnotatedString(json))
-                            }
-                        }
-                        ImageAction(
-                            modifier = Modifier,
-                            leadingImageVector = Icons.Outlined.DocumentScanner,
-                            text = stringResource(id = R.string.button_scan)
-                        ) {
-
-                        }
-                    }
-
-                    EditFieldInput(
-                        modifier = itemModifier,
-                        value = collectionDetail.name,
-                        hint = stringResource(id = R.string.collection_detail_name_hint),
-                        maxLines = 1,
-                        minLines = 1
-                    ) { output ->
-                        collectionDetail.apply {
-                            name = output
-                        }
-                        requestCollectionSave()
-                    }
-                    EditFieldInput(
-                        modifier = itemModifier,
-                        value = collectionDetail.description,
-                        hint = stringResource(id = R.string.collection_detail_description_hint),
-                        minLines = 8,
-                        maxLines = 8
-                    ) { output ->
-                        collectionDetail.apply {
-                            description = output
-                        }
-                        requestCollectionSave()
-                    }
-
-                    Box(
-                        modifier = Modifier
-                            .padding(top = LocalTheme.shapes.betweenItemsSpace)
-                            .fillMaxWidth(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        MultiChoiceSwitch(
+                        Row(
                             modifier = Modifier
-                                .wrapContentHeight()
-                                .fillMaxWidth(0.75f),
-                            state = contentSwitchState
-                        )
+                                .fillMaxWidth()
+                                .horizontalScroll(rememberScrollState())
+                                .padding(start = 6.dp, top = 6.dp, end = 6.dp),
+                            horizontalArrangement = Arrangement.spacedBy(
+                                LocalTheme.shapes.betweenItemsSpace
+                            )
+                        ) {
+                            ImageAction(
+                                modifier = Modifier,
+                                leadingImageVector = Icons.Outlined.FileUpload,
+                                text = stringResource(id = R.string.button_export)
+                            ) {
+                                viewModel.getExportString { json ->
+                                    clipboardManager.setText(AnnotatedString(json))
+                                }
+                            }
+                            /*ImageAction(
+                                modifier = Modifier,
+                                leadingImageVector = Icons.Outlined.DocumentScanner,
+                                text = stringResource(id = R.string.button_scan)
+                            ) {
+
+                            }*/
+                        }
+
+                        EditFieldInput(
+                            modifier = itemModifier,
+                            value = collectionDetail.value.name,
+                            hint = stringResource(id = R.string.collection_detail_name_hint),
+                            maxLines = 1,
+                            minLines = 1
+                        ) { output ->
+                            collectionDetail.value.name = output
+                            bridge.updateCollection(collectionDetail.value)
+                            collectionTitleState.value = output
+                        }
+                        EditFieldInput(
+                            modifier = itemModifier,
+                            value = collectionDetail.value.description,
+                            hint = stringResource(id = R.string.collection_detail_description_hint),
+                            minLines = 8,
+                            maxLines = 8
+                        ) { output ->
+                            collectionDetail.value.description = output
+                            bridge.updateCollection(collectionDetail.value)
+                        }
                     }
                 }
-            } to CollapsingBehavior.ON_TOP,
+            } to CollapsingBehavior.NONE,
+            @Composable {
+                Box(
+                    modifier = Modifier
+                        .padding(top = LocalTheme.shapes.betweenItemsSpace)
+                        .fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    MultiChoiceSwitch(
+                        modifier = Modifier
+                            .wrapContentHeight()
+                            .fillMaxWidth(0.75f),
+                        state = contentSwitchState
+                    )
+                }
+            } to CollapsingBehavior.NONE,
             @Composable {
                 HorizontalPager(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 8.dp),
+                        .padding(horizontal = 8.dp),
                     state = contentPagerState,
                     beyondBoundsPageCount = 2,
                     key = { it }
                 ) { index ->
                     if(index == PAGE_INDEX_QUESTIONS) {
-                        QuestionsList(
-                            onNavigateToQuestionTest = onNavigateToQuestionTest,
-                            viewModel = viewModel,
-                            navigateToSession = navigateToSession,
-                            requestQuestionSave = requestQuestionSave
-                        )
+                        QuestionsList(viewModel = viewModel)
                     }else if(index == PAGE_INDEX_FACTS) {
                         FactsList(
                             viewModel = viewModel,
-                            collectionDetail = collectionDetail,
-                            requestCollectionSave = requestCollectionSave,
-                            requestFactSave = requestFactSave,
                             onPageChange = {
                                 coroutineScope.launch {
                                     contentPagerState.scrollToPage(0)

@@ -47,7 +47,10 @@ data class CollectionIO(
     var questionUidList: MutableSet<String> = mutableSetOf(),
 
     /** list of all fact identifiers related to this collection */
-    val factUidList: MutableSet<String> = mutableSetOf()
+    var factUidList: MutableSet<String> = mutableSetOf(),
+
+    /** uid for this collection's subject */
+    val subjectUid: String = UUID.randomUUID().toString()
 ): Serializable {
 
     /** Checks whether object contains any non-default data */

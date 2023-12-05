@@ -1,10 +1,15 @@
 package study.me.please.base.navigation
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.ripple.rememberRipple
@@ -19,7 +24,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.squadris.squadris.compose.theme.LocalTheme
@@ -44,12 +51,33 @@ fun CustomizableAppBar(
     TopAppBar(
         modifier = modifier,
         title = {
-            Text(
-                text = title ?: "",
-                fontWeight = FontWeight.Bold,
-                fontSize = 22.sp,
-                color = LocalTheme.colors.tetrial
-            )
+            Column(verticalArrangement = Arrangement.Center) {
+                AnimatedVisibility(visible = title != null) {
+                    Text(
+                        modifier = Modifier
+                            .wrapContentHeight()
+                            .offset {
+                                IntOffset(0, if(subtitle != null) 14.sp.value.toInt() else 0)
+                            },
+                        text = title ?: "",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 22.sp,
+                        color = LocalTheme.colors.tetrial,
+                        overflow = TextOverflow.Ellipsis,
+                        maxLines = 1
+                    )
+                }
+                AnimatedVisibility(visible = subtitle != null) {
+                    Text(
+                        modifier = Modifier.wrapContentHeight(),
+                        text = subtitle ?: "",
+                        fontSize = 14.sp,
+                        color = LocalTheme.colors.tetrial,
+                        overflow = TextOverflow.Ellipsis,
+                        maxLines = 1
+                    )
+                }
+            }
         },
         navigationIcon = {
             navigationIcon?.let { navigationIcon ->
@@ -95,6 +123,8 @@ private fun Preview() {
     CustomizableAppBar(
         actions = {
             DefaultAppBarActions()
-        }
+        },
+        subtitle = "subtitle",
+        title = "title"
     )
 }

@@ -22,26 +22,19 @@ import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.SheetValue
-import androidx.compose.material3.rememberBottomSheetScaffoldState
-import androidx.compose.material3.rememberStandardBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -60,17 +53,19 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import study.me.please.R
+import study.me.please.base.LocalNavController
+import study.me.please.base.navigation.NavigationComponent
+import study.me.please.base.navigation.NavigationDestination
 import study.me.please.data.io.QuestionIO
 import study.me.please.ui.collection.detail.CollectionDetailViewModel
-import study.me.please.ui.collection.detail.INPUT_DELAYED_RESPONSE_MILLIS
-import study.me.please.ui.collection.detail.OptionsLayout
-import study.me.please.ui.collection.detail.QuestionEditBottomSheetContent
+import study.me.please.ui.collection.detail.questions.detail.INPUT_DELAYED_RESPONSE_MILLIS
 import study.me.please.ui.components.AddToSessionCollectionSheet
 import study.me.please.ui.components.BasicAlertDialog
 import study.me.please.ui.components.BrandHeaderButton
 import study.me.please.ui.components.ButtonState
 import study.me.please.ui.components.ImageAction
 import study.me.please.ui.components.InteractiveCardMode
+import study.me.please.ui.components.OptionsLayout
 import study.me.please.ui.components.QuestionCard
 import study.me.please.ui.components.ScrollBarProgressIndicator
 import study.me.please.ui.components.rememberInteractiveCardState
@@ -81,12 +76,7 @@ private const val CHIP_IS_INVALID_ID = "IS_INVALID_CHIP"
 /** Interactive list of questions */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
-fun QuestionsList(
-    viewModel: CollectionDetailViewModel,
-    requestQuestionSave: (question: QuestionIO) -> Unit,
-    onNavigateToQuestionTest: (questionIO: QuestionIO) -> Unit,
-    navigateToSession: (questionUids: List<String>) -> Unit
-) {
+fun QuestionsList(viewModel: CollectionDetailViewModel) {
     val sessions = viewModel.sessions.collectAsState()
     val questions = viewModel.collectionQuestions.collectAsState(initial = listOf())
     val chipsFilter = viewModel.questionsFilter.collectAsState()
@@ -94,28 +84,26 @@ fun QuestionsList(
     val coroutineScope = rememberCoroutineScope()
     val inputScope = rememberCoroutineScope()
     val localFocusManager = LocalFocusManager.current
+    val navController = LocalNavController.current
     val context = LocalContext.current
 
-    val questionSheetState = rememberBottomSheetScaffoldState(
-        bottomSheetState = rememberStandardBottomSheetState(
-            skipHiddenState = false, initialValue = SheetValue.Hidden
-        )
-    )
     val interactiveStates = questions.value.map { rememberInteractiveCardState() }
     val showAddToSheet = remember(questions.value) { mutableStateOf(false) }
     val showDeleteDialog = remember(questions.value) { mutableStateOf(false) }
     val chipGroupState = rememberCustomChipGroupState(
         onCheckedChipsChanged = { chipUids ->
             viewModel.questionsFilter.update { previousFilter ->
-                QuestionsFilter(
-                    text = previousFilter.text,
+                previousFilter.copy(
                     hasImage = chipUids.contains(CHIP_HAS_IMAGE_ID),
-                    isInvalid = chipUids.contains(CHIP_IS_INVALID_ID)
+                    isInvalid = chipUids.contains(CHIP_IS_INVALID_ID),
                 )
             }
         }
     )
 
+    val sortChipIcon = remember {
+        mutableStateOf<ImageVector?>(chipsFilter.value.sortBy.getDirectionIcon())
+    }
     val isSearchActivated = remember(chipsFilter.value) { mutableStateOf(chipsFilter.value.text.isNotEmpty()) }
     val chips = mutableListOf(
         ChipState(
@@ -126,11 +114,7 @@ fun QuestionsList(
                 inputScope.launch {
                     delay(INPUT_DELAYED_RESPONSE_MILLIS)
                     viewModel.questionsFilter.update { previousFilter ->
-                        QuestionsFilter(
-                            text = output,
-                            hasImage = previousFilter.hasImage,
-                            isInvalid = previousFilter.isInvalid
-                        )
+                        previousFilter.copy(text = output)
                     }
                 }
             },
@@ -160,17 +144,28 @@ fun QuestionsList(
             uid = CHIP_IS_INVALID_ID
         ),
         ChipState(
+            chipText = remember {
+                mutableStateOf(context.getString(R.string.facts_type_date))
+            },
             type = CustomChipType.SORT,
+            icon = sortChipIcon,
             onChipPressed = {
-                //TODO popup of some sorts
+                viewModel.questionsFilter.update { previousFilter ->
+                    sortChipIcon.value = (if(previousFilter.sortBy == SortByType.DATE_CREATED_ASC) {
+                        SortByType.DATE_CREATED_DESC
+                    }else SortByType.DATE_CREATED_ASC).getDirectionIcon()
+
+                    previousFilter.copy(
+                        sortBy = if(previousFilter.sortBy == SortByType.DATE_CREATED_ASC) {
+                            SortByType.DATE_CREATED_DESC
+                        }else SortByType.DATE_CREATED_ASC
+                    )
+                }
             }
         )
     )
 
     val controller = object: QuestionsListController {
-        val questionInEdit: MutableState<QuestionIO> = remember(questions.value) {
-            mutableStateOf(QuestionIO(uid = ""))
-        }
         val selectedQuestionUids = remember(questions.value) { mutableStateListOf<String>() }
 
         init {
@@ -186,7 +181,11 @@ fun QuestionsList(
             }
         }
         override fun addQuestion() {
-            questionInEdit.value = viewModel.addNewQuestion()
+            val newQuestion = viewModel.addNewQuestion()
+            navController?.navigate(NavigationDestination.QuestionDetail.createRoute(
+                NavigationComponent.QUESTION_UID to newQuestion.uid,
+                NavigationComponent.TOOLBAR_TITLE to newQuestion.prompt
+            ))
             stopChecking()
         }
         override fun stopChecking() {
@@ -202,27 +201,11 @@ fun QuestionsList(
             )
             stopChecking()
         }
-        override fun deleteAnswers(uidList: List<String>) {
-            viewModel.requestAnswersDeletion(
-                uidList = uidList.toSet(),
-                question = questionInEdit.value
-            )
-        }
         override fun openQuestion(question: QuestionIO) {
-            questionInEdit.value = question
-            coroutineScope.launch {
-                localFocusManager.clearFocus()
-                questionSheetState.bottomSheetState.expand()
-            }
-            localFocusManager.clearFocus()
-        }
-        override fun closeQuestion() {
-            questionInEdit.value = QuestionIO(uid = "")
-            if(questionSheetState.bottomSheetState.isVisible) {
-                coroutineScope.launch {
-                    questionSheetState.bottomSheetState.hide()
-                }
-            }
+            navController?.navigate(NavigationDestination.QuestionDetail.createRoute(
+                NavigationComponent.QUESTION_UID to question.uid,
+                NavigationComponent.TOOLBAR_TITLE to question.prompt
+            ))
             localFocusManager.clearFocus()
         }
         override fun copyItems() {
@@ -248,11 +231,6 @@ fun QuestionsList(
     if(controller.selectedQuestionUids.size > 0) {
         BackHandler {
             controller.stopChecking()
-        }
-    }
-    if(controller.questionInEdit.value.uid.isNotEmpty()) {
-        BackHandler {
-            controller.closeQuestion()
         }
     }
 
@@ -299,156 +277,137 @@ fun QuestionsList(
         )
     }
 
-    val localDensity = LocalDensity.current
-    var stickyHeaderHeight by remember { mutableStateOf(0.dp) }
+    ConstraintLayout(modifier = Modifier.fillMaxSize()) {
+        val (progressScrollbar, content) = createRefs()
 
-    QuestionEditBottomSheetContent(
-        questionIO = controller.questionInEdit.value,
-        onDismissRequest = {
-            controller.closeQuestion()
-        },
-        requestDataSave = {
-            requestQuestionSave(controller.questionInEdit.value)
-        },
-        onDeleteRequest = { uids ->
-            controller.deleteAnswers(uids)
-        },
-        onQuestionTestPlay = onNavigateToQuestionTest,
-        sheetState = questionSheetState,
-        clipBoard = viewModel.clipBoard,
-        content = {
-            ConstraintLayout(modifier = Modifier.fillMaxSize()) {
-                val (progressScrollbar, content) = createRefs()
+        val questionsScrollState = rememberLazyListState()
+        ScrollBarProgressIndicator(
+            modifier = Modifier
+                .zIndex(2f)
+                .rotate(90f)
+                .width(LocalConfiguration.current.screenHeightDp.dp)
+                .constrainAs(progressScrollbar) {
+                    linkTo(content.end, content.end)
+                    linkTo(content.top, content.bottom)
+                },
+            scrollState = questionsScrollState,
+            totalItems = questions.value.size
+        )
 
-                val questionsScrollState = rememberLazyListState()
-                ScrollBarProgressIndicator(
-                    modifier = Modifier
-                        .zIndex(2f)
-                        .rotate(90f)
-                        .width(LocalConfiguration.current.screenHeightDp.dp)
-                        .constrainAs(progressScrollbar) {
-                            linkTo(content.end, content.end)
-                            linkTo(content.top, content.bottom)
-                        },
-                    scrollState = questionsScrollState,
-                    totalItems = questions.value.size
-                )
-
-                LazyColumn(
-                    modifier = Modifier
-                        .constrainAs(content) {
-                            linkTo(parent.start, parent.end, 4.dp, 4.dp)
-                            linkTo(parent.top, parent.bottom)
-                            width = Dimension.fillToConstraints
-                            height = Dimension.fillToConstraints
-                        }
-                        .imePadding(),
-                    state = questionsScrollState,
-                    verticalArrangement = Arrangement.Top,
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    stickyHeader {
-                        Column(modifier = Modifier.fillMaxWidth()) {
-                            if(questions.value.isNotEmpty() || chipsFilter.value.isEmpty().not()) {
-                                CustomChipGroup(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .zIndex(10f)
-                                        .animateItemPlacement(),
-                                    state = chipGroupState,
-                                    chips = remember {
-                                        mutableStateListOf(*chips.toTypedArray())
-                                    }
-                                )
-                            }
-
-                            BrandHeaderButton(
-                                modifier = Modifier
-                                    .padding(horizontal = 8.dp)
-                                    .zIndex(10f)
-                                    .onGloballyPositioned { coordinates ->
-                                        stickyHeaderHeight =
-                                            with(localDensity) { coordinates.size.height.toDp() }
-                                    }
-                                    .fillMaxWidth(),
-                                text = stringResource(id = R.string.collection_detail_add_question)
-                            ) {
-                                controller.stopChecking()
-                                controller.addQuestion()
-                            }
-
-                            OptionsLayout(
-                                onCopyRequest = {
-                                    controller.copyItems()
-                                },
-                                onPasteRequest = {
-                                    viewModel.pasteQuestionsClipBoard()
-                                    controller.stopChecking()
-                                },
-                                onDeleteRequest = {
-                                    showDeleteDialog.value = true
-                                },
-                                onSelectAll = {
-                                    interactiveStates.forEach {
-                                        it.isChecked.value = true
-                                    }
-                                },
-                                onDeselectAll = {
-                                    controller.selectedQuestionUids.clear()
-                                },
-                                isEditMode = controller.selectedQuestionUids.size > 0,
-                                hasPasteOption = viewModel.clipBoard.questions.isEmpty.value.not(),
-                                animateTopDown = true
-                            ) {
-                                AnimatedVisibility(visible = controller.selectedQuestionUids.size > 0) {
-                                    ImageAction(
-                                        leadingImageVector = Icons.Outlined.Add,
-                                        text = stringResource(id = R.string.button_add_to)
-                                    ) {
-                                        viewModel.requestSessions()
-                                        showAddToSheet.value = true
-                                    }
-                                }
-                                AnimatedVisibility(visible = controller.selectedQuestionUids.size > 0) {
-                                    ImageAction(
-                                        leadingImageVector = Icons.Outlined.PlayArrow,
-                                        text = stringResource(id = R.string.button_start_session)
-                                    ) {
-                                        navigateToSession(controller.selectedQuestionUids.toList())
-                                        controller.stopChecking()
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    itemsIndexed(
-                        questions.value,
-                        key = { _, question -> question.uid }
-                    ) { index, question ->
-                        QuestionCard(
+        LazyColumn(
+            modifier = Modifier
+                .constrainAs(content) {
+                    linkTo(parent.start, parent.end, 4.dp, 4.dp)
+                    linkTo(parent.top, parent.bottom)
+                    width = Dimension.fillToConstraints
+                    height = Dimension.fillToConstraints
+                }
+                .imePadding(),
+            state = questionsScrollState,
+            verticalArrangement = Arrangement.Top,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            stickyHeader {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    if(questions.value.isNotEmpty() || chipsFilter.value.isEmpty().not()) {
+                        CustomChipGroup(
                             modifier = Modifier
-                                .animateItemPlacement(
-                                    tween(
-                                        durationMillis = DEFAULT_ANIMATION_LENGTH_SHORT,
-                                        easing = LinearOutSlowInEasing
-                                    )
-                                ),
-                            data = question,
-                            requestDataSave = {
-                                requestQuestionSave(question)
-                            },
-                            onNavigateToSession = onNavigateToQuestionTest,
-                            state = interactiveStates.getOrNull(index) ?: rememberInteractiveCardState(),
-                            onClick = {
-                                controller.openQuestion(question)
+                                .fillMaxWidth()
+                                .zIndex(10f)
+                                .animateItemPlacement(),
+                            state = chipGroupState,
+                            chips = remember {
+                                mutableStateListOf(*chips.toTypedArray())
                             }
                         )
-                        Spacer(modifier = Modifier.height(LocalTheme.shapes.betweenItemsSpace))
                     }
-                    item { Spacer(modifier = Modifier.height(stickyHeaderHeight)) }
+
+                    BrandHeaderButton(
+                        modifier = Modifier
+                            .padding(horizontal = 8.dp)
+                            .zIndex(10f)
+                            .fillMaxWidth(),
+                        text = stringResource(id = R.string.collection_detail_add_question)
+                    ) {
+                        controller.stopChecking()
+                        controller.addQuestion()
+                    }
+
+                    OptionsLayout(
+                        onCopyRequest = {
+                            controller.copyItems()
+                        },
+                        onPasteRequest = {
+                            viewModel.pasteQuestionsClipBoard()
+                            controller.stopChecking()
+                        },
+                        onDeleteRequest = {
+                            showDeleteDialog.value = true
+                        },
+                        onSelectAll = {
+                            interactiveStates.forEach {
+                                it.isChecked.value = true
+                            }
+                        },
+                        onDeselectAll = {
+                            controller.selectedQuestionUids.clear()
+                        },
+                        isEditMode = controller.selectedQuestionUids.size > 0,
+                        hasPasteOption = viewModel.clipBoard.questions.isEmpty.value.not(),
+                        animateTopDown = true
+                    ) {
+                        AnimatedVisibility(visible = controller.selectedQuestionUids.size > 0) {
+                            ImageAction(
+                                leadingImageVector = Icons.Outlined.Add,
+                                text = stringResource(id = R.string.button_add_to)
+                            ) {
+                                viewModel.requestSessions()
+                                showAddToSheet.value = true
+                            }
+                        }
+                        AnimatedVisibility(visible = controller.selectedQuestionUids.size > 0) {
+                            ImageAction(
+                                leadingImageVector = Icons.Outlined.PlayArrow,
+                                text = stringResource(id = R.string.button_start_session)
+                            ) {
+                                navController?.navigate(
+                                    NavigationDestination.SessionPlay.createRoute(
+                                        NavigationComponent.TOOLBAR_TITLE to viewModel.collectionDetail.value.name,
+                                        NavigationComponent.QUESTION_UID_LIST to controller.selectedQuestionUids.toList()
+                                    )
+                                )
+                                controller.stopChecking()
+                            }
+                        }
+                    }
                 }
             }
+
+            itemsIndexed(
+                questions.value,
+                key = { _, question -> question.uid }
+            ) { index, question ->
+                QuestionCard(
+                    modifier = Modifier
+                        .animateItemPlacement(
+                            tween(
+                                durationMillis = DEFAULT_ANIMATION_LENGTH_SHORT,
+                                easing = LinearOutSlowInEasing
+                            )
+                        ),
+                    data = question,
+                    state = interactiveStates.getOrNull(index) ?: rememberInteractiveCardState(),
+                    onClick = {
+                        controller.openQuestion(question)
+                    }
+                )
+                Spacer(modifier = Modifier.height(LocalTheme.shapes.betweenItemsSpace))
+            }
+            item {
+                Spacer(modifier = Modifier.height(
+                    viewModel.collapsingLayoutState.getCollapsingHeightAbove(1).div(2).dp
+                ))
+            }
         }
-    )
+    }
 }

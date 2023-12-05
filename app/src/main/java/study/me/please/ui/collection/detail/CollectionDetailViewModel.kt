@@ -27,7 +27,9 @@ import study.me.please.data.io.clip_board.CollectionExport
 import study.me.please.ui.collection.RefreshableViewModel
 import study.me.please.ui.collection.detail.facts.FactsFilter
 import study.me.please.ui.collection.detail.questions.QuestionsFilter
+import study.me.please.ui.collection.detail.questions.SortByType
 import study.me.please.ui.components.collapsing_layout.CollapsingLayoutState
+import java.util.UUID
 import javax.inject.Inject
 
 @HiltViewModel
@@ -49,13 +51,7 @@ class CollectionDetailViewModel @Inject constructor(
     override var lastRefreshTimeMillis: Long = 0L
 
     /** state for scrollable collapsing layout above everything else */
-    val collapsingLayoutGeneralState = CollapsingLayoutState()
-
-    /** state for scrollable collapsing layout for questions */
-    val collapsingLayoutQuestionsState = CollapsingLayoutState()
-
-    /** state for scrollable collapsing layout for facts */
-    val collapsingLayoutFactsState = CollapsingLayoutState()
+    val collapsingLayoutState = CollapsingLayoutState()
 
     /** response from question generation */
     var questionGenerationResponse = MutableSharedFlow<QuestionGenerationResponse>()
@@ -74,12 +70,16 @@ class CollectionDetailViewModel @Inject constructor(
         withContext(Dispatchers.Default) {
             collections.filter { question ->
                 (filter.text.isEmpty() || (question.prompt.lowercase().contains(filter.text.lowercase())
-                        || question.textExplanation.lowercase().contains(filter.text.lowercase())))
+                            || question.textExplanation.lowercase().contains(filter.text.lowercase())))
                         && (filter.isInvalid.not() || (question.answers.any { it.isCorrect }.not() || question.prompt.isEmpty()))
                         && (filter.hasImage.not() || (question.imagePromptUrl?.isEmpty == false
-                        || question.imageExplanationUrl?.isEmpty == false
-                        || question.answers.any { answer -> answer.imageExplanation?.isEmpty == false }))
-            }
+                            || question.imageExplanationUrl?.isEmpty == false
+                            || question.answers.any { answer -> answer.imageExplanation?.isEmpty == false }))
+            }.sortedWith(
+                if(filter.sortBy == SortByType.DATE_CREATED_ASC) {
+                    compareBy { it.dateCreated }
+                }else compareByDescending { it.dateCreated }
+            )
         }
     }
 
@@ -87,15 +87,18 @@ class CollectionDetailViewModel @Inject constructor(
     val factsFilter: MutableStateFlow<FactsFilter> = MutableStateFlow(FactsFilter())
 
     /** local temporary save of downloaded facts */
-    var collectionFacts = dataManager.collectionFacts.combine(factsFilter) { collections, filters ->
+    var collectionFacts = dataManager.collectionFacts.combine(factsFilter) { collections, filter ->
         withContext(Dispatchers.Default) {
             collections.filter { fact ->
-                (filters.types.isEmpty() || filters.types.contains(fact.type))
-                        && (filters.textFilter.isEmpty()
-                                || (fact.shortKeyInformation.lowercase().contains(filters.textFilter.lowercase())
-                                || fact.longInformation.lowercase().contains(filters.textFilter.lowercase()))
-                        )
-            }
+                (filter.types.isEmpty() || filter.types.contains(fact.type))
+                        && (filter.textFilter.isEmpty()
+                                || (fact.shortKeyInformation.lowercase().contains(filter.textFilter.lowercase())
+                                || fact.longInformation.lowercase().contains(filter.textFilter.lowercase())))
+            }.sortedWith(
+                if(filter.sortBy == SortByType.DATE_CREATED_ASC) {
+                    compareBy { it.dateCreated }
+                }else compareByDescending { it.dateCreated }
+            )
         }
     }
 
@@ -106,6 +109,7 @@ class CollectionDetailViewModel @Inject constructor(
         viewModelScope.launch {
             if(isPullRefresh) setRefreshing(true)
             repository.getCollectionByUid(collectionUid)?.let { collectionDetail ->
+                Log.d("kostka_test", "requestData, questionUidList: ${collectionDetail.questionUidList}")
                 dataManager.collectionDetail.value = collectionDetail
                 requestCachedQuestions(questionUidList = collectionDetail.questionUidList.toList())
                 requestCachedFacts(factUidList = collectionDetail.factUidList.toList())
@@ -115,13 +119,13 @@ class CollectionDetailViewModel @Inject constructor(
     }
 
     /** Requests for a collection data save */
-    @Deprecated("collectionIO argument shouldn't be used, as it's always the same - once it's changed locally - not a good approach")
-    fun requestCollectionSave(collectionIO: CollectionIO) {
+    fun requestCollectionSave(collection: CollectionIO) {
         viewModelScope.launch(Dispatchers.Default) {
-            if(collectionIO.isNotEmpty) {
-                repository.saveCollection(collection = collectionIO.apply {
+            if(collection.isNotEmpty) {
+                Log.d("kostka_test", "request_collection_save, collection: $collection")
+                repository.saveCollection(collection = collection.apply {
                     dateModified = DateUtils.now.time
-                    if(collectionIO.dateCreated == null) dateCreated = DateUtils.now.time
+                    if(collection.dateCreated == null) dateCreated = DateUtils.now.time
                 })
             }
         }
@@ -131,7 +135,27 @@ class CollectionDetailViewModel @Inject constructor(
         viewModelScope.launch {
             dataManager.collectionQuestions.value = repository.getQuestionsByUid(
                 questionUidList
-            ).orEmpty()
+            ).orEmpty().also { newList ->
+                if(newList.isNotEmpty()
+                    && newList.size != dataManager.collectionDetail.value.questionUidList.size
+                ) {
+                    dataManager.collectionDetail.value.questionUidList = newList.map { it.uid }.toMutableSet()
+                }
+            }
+        }
+    }
+
+    private fun requestCachedFacts(factUidList: List<String>) {
+        viewModelScope.launch {
+            dataManager.collectionFacts.value = repository.getFactsByUid(
+                factUidList
+            ).orEmpty().also { newList ->
+                if(newList.isNotEmpty()
+                    && newList.size != dataManager.collectionDetail.value.factUidList.size
+                ) {
+                    dataManager.collectionDetail.value.factUidList = newList.map { it.uid }.toMutableSet()
+                }
+            }
         }
     }
 
@@ -410,14 +434,6 @@ class CollectionDetailViewModel @Inject constructor(
         }
     }
 
-    private fun requestCachedFacts(factUidList: List<String>) {
-        viewModelScope.launch {
-            dataManager.collectionFacts.value = repository.getFactsByUid(
-                factUidList
-            ).orEmpty()
-        }
-    }
-
     /** Requests for a fact data save */
     fun requestFactSave(fact: FactIO) {
         viewModelScope.launch {
@@ -442,7 +458,7 @@ class CollectionDetailViewModel @Inject constructor(
 
     /** Adds a new question */
     fun addNewQuestion(): QuestionIO {
-        val newQuestion = QuestionIO()
+        val newQuestion = QuestionIO(uid = "TESTING QUESTION CREATION".plus(UUID.randomUUID().toString()))
         dataManager.collectionQuestions.update {
             it.toMutableList().apply {
                 add(0, newQuestion)
@@ -453,6 +469,7 @@ class CollectionDetailViewModel @Inject constructor(
                 questionUidList.add(newQuestion.uid)
             })
         }
+        Log.d("kostka_test", "newQuestion uid: ${newQuestion.uid}")
         return newQuestion
     }
 
@@ -499,22 +516,6 @@ class CollectionDetailViewModel @Inject constructor(
         }
     }
 
-    /** Requests for a removal of answers */
-    fun requestAnswersDeletion(
-        uidList: Set<String>,
-        question: QuestionIO
-    ) {
-        viewModelScope.launch {
-            repository.saveQuestion(
-                question.apply {
-                    answers.removeAll {
-                        uidList.contains(it.uid)
-                    }
-                }
-            )
-        }
-    }
-
     /** Requests all collections */
     fun requestSessions() {
         viewModelScope.launch {
@@ -541,6 +542,16 @@ class CollectionDetailViewModel @Inject constructor(
                     facts = dataManager.collectionFacts.value,
                 ),
                 onSuccess = onSuccess
+            )
+        }
+    }
+
+    /** Update current TO with new one */
+    fun updateCollection(collection: CollectionIO) {
+        dataManager.collectionDetail.update { previousCollection ->
+            previousCollection.copy(
+                description = collection.description,
+                name = collection.name
             )
         }
     }

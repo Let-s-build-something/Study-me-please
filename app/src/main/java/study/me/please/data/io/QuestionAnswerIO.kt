@@ -1,6 +1,7 @@
 package study.me.please.data.io
 
 import androidx.room.Entity
+import androidx.room.Ignore
 import androidx.room.PrimaryKey
 import com.google.gson.annotations.SerializedName
 import study.me.please.data.room.AppRoomDatabase
@@ -31,8 +32,17 @@ data class QuestionAnswerIO (
 ): Serializable {
 
     /** whether this object has no important data */
+    @get:Ignore
     val isEmpty: Boolean
         get() = text.isEmpty()
             && explanationMessage.isEmpty()
             && imageExplanation?.isEmpty != false
+
+    /** Updates this object with new question */
+    fun updateTO(answer: QuestionAnswerIO) {
+        this.text = answer.text
+        this.explanationMessage = answer.explanationMessage
+        this.imageExplanation = answer.imageExplanation
+        this.isCorrect = answer.isCorrect
+    }
 }

@@ -1,4 +1,4 @@
-package com.squadris.squadris.compose.components
+package com.squadris.squadris.compose.components.input
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -24,8 +24,11 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.squadris.squadris.compose.components.MinimalisticIcon
 import com.squadris.squadris.compose.theme.Colors
 import com.squadris.squadris.compose.theme.LocalTheme
 import com.squadris.squadris.compose.theme.StudyMeAppTheme
@@ -59,13 +62,16 @@ fun EditFieldInput(
     clearable: Boolean = false,
     focusRequester: FocusRequester? = null,
     leadingIcon: ImageVector? = null,
+    prefix: @Composable (() -> Unit)? = null,
     minLines: Int = 1,
     maxLines: Int = 1,
     paddingValues: PaddingValues = TextFieldDefaults.contentPaddingWithoutLabel(),
     textStyle: TextStyle = TextStyle(
         color = LocalTheme.colors.primary,
-        fontSize = 16.sp
+        fontSize = 16.sp,
+        textAlign = TextAlign.Start
     ),
+    isUnfocusedTransparent: Boolean = false,
     shape: Shape = LocalTheme.shapes.componentShape,
     maxLength: Int? = null,
     onValueClear: () -> Unit = {},
@@ -73,20 +79,23 @@ fun EditFieldInput(
 ) {
     val isFocused = remember(value) { mutableStateOf(false) }
     val text = remember(value) { mutableStateOf(value) }
-    LaunchedEffect(key1 = value) {
+
+    LaunchedEffect(value) {
         text.value = value
     }
     CustomTextField(
         modifier = modifier
-            .border(
-                if (isFocused.value) 1.dp else 0.25.dp,
-                if (isError) {
-                    Colors.RED_ERROR
-                } else if (isFocused.value) {
-                    LocalTheme.colors.secondary
-                } else LocalTheme.colors.brandMain,
-                shape
-            )
+            .then(if(isUnfocusedTransparent.not()) {
+                Modifier.border(
+                    if (isFocused.value) 1.dp else 0.25.dp,
+                    if (isError) {
+                        Colors.RED_ERROR
+                    } else if (isFocused.value) {
+                        LocalTheme.colors.secondary
+                    } else LocalTheme.colors.brandMain,
+                    shape
+                )
+            }else Modifier)
             .onFocusChanged {
                 isFocused.value = it.isFocused
             }
@@ -95,6 +104,7 @@ fun EditFieldInput(
                     Modifier.focusRequester(focusRequester)
                 } else Modifier
             ),
+        prefix = prefix,
         isError = isError,
         minLines = minLines,
         maxLines = maxLines,
@@ -113,7 +123,7 @@ fun EditFieldInput(
                 MinimalisticIcon(imageVector = leadingIcon)
             }
         }else null,
-        colors = LocalTheme.styles.textFieldColors,
+        colors = if(isUnfocusedTransparent) LocalTheme.styles.textFieldColorsOnFocus else LocalTheme.styles.textFieldColors,
         placeholder = {
             if(hint?.isNotEmpty() == true) {
                 Text(
@@ -139,6 +149,7 @@ fun EditFieldInput(
     )
 }
 
+@Preview
 @Composable
 private fun Preview() {
     StudyMeAppTheme(isDarkTheme = false) {

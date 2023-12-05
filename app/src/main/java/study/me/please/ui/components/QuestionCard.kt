@@ -23,7 +23,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -32,9 +31,7 @@ import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import com.squadris.squadris.compose.components.DEFAULT_ANIMATION_LENGTH_SHORT
-import com.squadris.squadris.compose.components.EditFieldInput
 import com.squadris.squadris.compose.theme.LocalTheme
-import study.me.please.R
 import study.me.please.data.io.QuestionIO
 
 /** Card with the option of editing data inside */
@@ -43,7 +40,6 @@ fun QuestionCard(
     modifier: Modifier = Modifier,
     state: InteractiveCardState = rememberInteractiveCardState(),
     data: QuestionIO?,
-    requestDataSave: () -> Unit = {},
     onNavigateToSession: (questionIO: QuestionIO) -> Unit = {},
     onClick: () -> Unit
 ) {
@@ -53,7 +49,6 @@ fun QuestionCard(
             data = data,
             state = state,
             onNavigateToSession = onNavigateToSession,
-            requestDataSave = requestDataSave,
             onClick = {
                 if(state.mode.value == InteractiveCardMode.CHECKING) {
                     state.isChecked.value = state.isChecked.value.not()
@@ -71,7 +66,6 @@ private fun ContentLayout(
     modifier: Modifier,
     data: QuestionIO,
     state: InteractiveCardState,
-    requestDataSave: () -> Unit,
     onNavigateToSession: (questionIO: QuestionIO) -> Unit,
     onClick: () -> Unit
 ) {
@@ -126,8 +120,7 @@ private fun ContentLayout(
                         cardHeight = with(localDensity) { coordinates.size.height.toDp() }
                     },
                     state = state,
-                    data = data,
-                    requestDataSave = requestDataSave
+                    data = data
                 )
             }
         }
@@ -138,8 +131,7 @@ private fun ContentLayout(
 private fun DataCard(
     modifier: Modifier = Modifier,
     data: QuestionIO,
-    state: InteractiveCardState,
-    requestDataSave: () -> Unit
+    state: InteractiveCardState
 ) {
     ConstraintLayout(
         modifier = modifier
@@ -185,46 +177,23 @@ private fun DataCard(
                 width = Dimension.fillToConstraints
             }
 
-        if(state.mode.value == InteractiveCardMode.EDIT) {
-            EditFieldInput(
-                modifier = answerModifier,
-                value = data.prompt,
-                hint = stringResource(id = R.string.question_edit_field_prompt_hint),
-                minLines = 2,
-                maxLines = 2
-            ) { output ->
-                data.prompt = output
-                requestDataSave()
-            }
-            EditFieldInput(
-                modifier = explanationModifier,
-                value = data.textExplanation,
-                hint = stringResource(id = R.string.question_edit_field_hint_explanation),
-                minLines = 3,
-                maxLines = 3
-            ) { output ->
-                data.textExplanation = output
-                requestDataSave()
-            }
-        }else {
-            Text(
-                modifier = answerModifier,
-                text = data.prompt,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Medium,
-                color = LocalTheme.colors.secondary,
-                maxLines = 3,
-                overflow = TextOverflow.Ellipsis
-            )
-            Text(
-                modifier = explanationModifier,
-                text = data.textExplanation,
-                fontSize = 14.sp,
-                color = LocalTheme.colors.secondary,
-                maxLines = 5,
-                overflow = TextOverflow.Ellipsis
-            )
-        }
+        Text(
+            modifier = answerModifier,
+            text = data.prompt,
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Medium,
+            color = LocalTheme.colors.secondary,
+            maxLines = 3,
+            overflow = TextOverflow.Ellipsis
+        )
+        Text(
+            modifier = explanationModifier,
+            text = data.textExplanation,
+            fontSize = 14.sp,
+            color = LocalTheme.colors.secondary,
+            maxLines = 5,
+            overflow = TextOverflow.Ellipsis
+        )
         EditableImageAsset(
             modifier = Modifier
                 .wrapContentHeight()
@@ -251,7 +220,6 @@ private fun Preview() {
             prompt = "This is my question prompt",
             textExplanation = "This question is veeeeeeery easy, so If you failed, you're a loser lol"
         ),
-        requestDataSave = {},
         onNavigateToSession = {},
         onClick = {}
     )

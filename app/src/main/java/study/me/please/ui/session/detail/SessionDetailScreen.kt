@@ -27,6 +27,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -46,20 +47,19 @@ import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import com.squadris.squadris.compose.components.DEFAULT_ANIMATION_LENGTH_SHORT
-import com.squadris.squadris.compose.components.EditFieldInput
+import com.squadris.squadris.compose.components.input.EditFieldInput
 import com.squadris.squadris.compose.theme.LocalTheme
 import com.squadris.squadris.ext.brandShimmerEffect
 import com.squadris.squadris.utils.OnLifecycleEvent
 import study.me.please.R
 import study.me.please.base.LocalNavController
 import study.me.please.base.navigation.ActionBarIcon
-import study.me.please.base.navigation.CollectionDetailAppBarActions
 import study.me.please.base.navigation.NavigationComponent
 import study.me.please.base.navigation.NavigationDestination
 import study.me.please.data.io.CollectionIO
 import study.me.please.data.io.preferences.SessionPreferencePack
 import study.me.please.data.io.session.SessionIO
-import study.me.please.ui.collection.detail.OptionsLayout
+import study.me.please.ui.components.OptionsLayout
 import study.me.please.ui.components.BasicAlertDialog
 import study.me.please.ui.components.ButtonState
 import study.me.please.ui.components.CollectionCard
@@ -112,7 +112,9 @@ fun SessionDetailScreen(
         viewModel = viewModel,
         title = title,
         actionIcons = {
-            CollectionDetailAppBarActions(
+            ActionBarIcon(
+                text = stringResource(id = R.string.button_play),
+                imageVector = Icons.Outlined.PlayArrow,
                 onClick = {
                     navController?.navigate(
                         NavigationDestination.SessionPlay.createRoute(

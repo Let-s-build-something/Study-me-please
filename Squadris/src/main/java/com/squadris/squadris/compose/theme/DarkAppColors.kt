@@ -16,6 +16,8 @@ object DarkAppColors: BaseColors {
 
     override val brandMain: Color = Colors.PRIMARY
 
+    override val brandMainDark: Color = Colors.PRIMARY_DARK
+
     override val tetrial: Color = Colors.TETRIAL
 
     override val backgroundLight: Color = Colors.DARK_GREY

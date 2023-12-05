@@ -67,12 +67,7 @@ fun DefaultAppBarActions(
                 }
             )
         }
-        NavigationDestination.Home.route,
-        NavigationDestination.Settings.route,
-        NavigationDestination.CollectionDetail.route,
-        NavigationDestination.SessionDetail.route,
-        NavigationDestination.SessionPlay.route -> {}
-        else -> {
+        NavigationDestination.CollectionLobby.route -> {
             ActionBarIcon(
                 text = stringResource(id = R.string.screen_sessions_title),
                 imageVector = Icons.Outlined.PlayArrow,
@@ -82,18 +77,6 @@ fun DefaultAppBarActions(
             )
         }
     }
-}
-
-@Preview
-@Composable
-fun CollectionDetailAppBarActions(
-    onClick: () -> Unit = {}
-) {
-    ActionBarIcon(
-        text = stringResource(id = R.string.button_play),
-        imageVector = Icons.Outlined.PlayArrow,
-        onClick = onClick
-    )
 }
 
 @Composable

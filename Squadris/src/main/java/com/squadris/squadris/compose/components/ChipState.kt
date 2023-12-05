@@ -33,7 +33,7 @@ data class ChipState(
     val isVisibleUnchecked: Boolean = true,
 
     /** icon of this chip */
-    val icon: ImageVector? = null,
+    val icon: MutableState<ImageVector?> = mutableStateOf(null),
 
     /** called whenever chip is pressed */
     val onChipPressed: (isChecked: Boolean) -> Unit = {}

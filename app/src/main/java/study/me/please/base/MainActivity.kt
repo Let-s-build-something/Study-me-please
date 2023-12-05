@@ -24,6 +24,8 @@ import study.me.please.base.navigation.NavigationDestination
 import study.me.please.hilt.SharedPreferencesModule
 import study.me.please.ui.collection.CollectionLobbyScreen
 import study.me.please.ui.collection.detail.CollectionDetailScreen
+import study.me.please.ui.collection.detail.questions.detail.QuestionDetailScreen
+import study.me.please.ui.collection.detail.subjects.SubjectsHostScreen
 import study.me.please.ui.home.HomeScreen
 import study.me.please.ui.session.play.SessionScreen
 import study.me.please.ui.session.detail.SessionDetailScreen
@@ -119,6 +121,30 @@ class MainActivity: ComponentActivity(), BackboneChannel {
                             )
                             backStackEntry.arguments?.remove(NavigationComponent.QUESTION_UID_LIST)
                             backStackEntry.arguments?.remove(NavigationComponent.COLLECTION_UID)
+                        }
+                        composable(
+                            NavigationDestination.QuestionDetail.route,
+                            arguments = NavigationDestination.QuestionDetail.navArguments
+                        ) { backStackEntry ->
+                            backStackEntry.getArgument(NavigationComponent.QUESTION_UID)?.let { uid ->
+                                QuestionDetailScreen(
+                                    questionUid = uid,
+                                    toolbarTitle = backStackEntry.getArgument(NavigationComponent.TOOLBAR_TITLE)
+                                )
+                            }
+                        }
+                        composable(
+                            NavigationDestination.Subjects.route,
+                            arguments = NavigationDestination.Subjects.navArguments
+                        ) { backStackEntry ->
+                            backStackEntry.getArgument(NavigationComponent.COLLECTION_UID)?.let { collectionUid ->
+                                SubjectsHostScreen(
+                                    collectionUid = collectionUid,
+                                    toolbarTitle = backStackEntry.getArgument(
+                                        NavigationComponent.TOOLBAR_TITLE
+                                    )
+                                )
+                            }
                         }
                     }
                 }

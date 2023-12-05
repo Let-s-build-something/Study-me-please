@@ -8,6 +8,7 @@ import androidx.compose.material3.SelectableChipColors
 import androidx.compose.material3.SwitchColors
 import androidx.compose.material3.TextFieldColors
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Dp
 
 /** Variables with default styles */
@@ -16,6 +17,10 @@ interface ThemeStyle {
     /** default colors for material3 text input */
     @get:Composable
     val textFieldColors: TextFieldColors
+
+    /** only focusable colors for material3 text input */
+    @get:Composable
+    val textFieldColorsOnFocus: TextFieldColors
 
     /** default colors for material3 checkbox */
     @get:Composable
@@ -39,4 +44,16 @@ interface ThemeStyle {
     @OptIn(ExperimentalMaterial3Api::class)
     @get:Composable
     val chipColorsDefault: SelectableChipColors
+
+    /** Large, bold, heading style for text */
+    @get:Composable
+    val heading: TextStyle
+
+    /** Medium, bold, subheading style for text */
+    @get:Composable
+    val subheading: TextStyle
+
+    /** Medium, thin, category style for text */
+    @get:Composable
+    val category: TextStyle
 }

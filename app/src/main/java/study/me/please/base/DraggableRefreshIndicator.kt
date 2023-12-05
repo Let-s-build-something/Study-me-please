@@ -13,6 +13,7 @@ import androidx.compose.material.pullrefresh.PullRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -31,8 +32,9 @@ import com.airbnb.lottie.compose.rememberLottieComposition
 import com.squadris.squadris.compose.components.CustomPullRefresh
 import com.squadris.squadris.compose.components.REFRESH_RETURN_ANIMATION_LENGTH
 import com.squadris.squadris.compose.components.randomLoadingLottieAnim
+import com.squadris.squadris.compose.theme.LocalTheme
 
-private val animRawResBackground = mutableStateOf(randomLoadingLottieAnim)
+private val animRawResBackground = mutableIntStateOf(randomLoadingLottieAnim)
 private var lastProgressValue = 0f
 private var lastAnimator: ValueAnimator? = null
 
@@ -48,7 +50,7 @@ fun DraggableRefreshIndicator(
 ) {
     val indicatorOffset = remember { mutableStateOf(0.dp) }
     val composition by rememberLottieComposition(
-        LottieCompositionSpec.RawRes(animRawResBackground.value.first)
+        LottieCompositionSpec.RawRes(animRawResBackground.intValue)
     )
     fun animateTo(fromProgress: Float, toProgress: Float) {
         if(lastAnimator != null) return
@@ -63,7 +65,7 @@ fun DraggableRefreshIndicator(
         }
         lastAnimator?.doOnEnd {
             if(toProgress == 0f) {
-                animRawResBackground.value = randomLoadingLottieAnim
+                animRawResBackground.intValue = randomLoadingLottieAnim
             }
             lastAnimator?.removeAllListeners()
             lastAnimator = null
@@ -126,7 +128,7 @@ fun DraggableRefreshIndicator(
                         end = 4.dp,
                         bottom = 8.dp
                     )
-                    .background(animRawResBackground.value.second, RoundedCornerShape(20.dp))
+                    .background(LocalTheme.colors.tetrial, RoundedCornerShape(20.dp))
                     .size(pullRefreshSize.minus(12.dp)),
                 composition = composition,
                 restartOnPlay = true,
@@ -143,7 +145,7 @@ fun DraggableRefreshIndicator(
                         end = 4.dp,
                         bottom = 8.dp
                     )
-                    .background(animRawResBackground.value.second, RoundedCornerShape(20.dp))
+                    .background(LocalTheme.colors.tetrial, RoundedCornerShape(20.dp))
                     .size(pullRefreshSize.minus(12.dp))
             )
         }
@@ -172,7 +174,7 @@ fun ConstraintLayoutScope.ProgressBarRefreshIndicator(
         progress = if(isRefreshing) 1f else {
             kotlin.math.min(state.progress, 1f)
         },
-        color = animRawResBackground.value.second,
+        color = LocalTheme.colors.tetrial,
         trackColor = Color.Transparent
     )
     LinearProgressIndicator(
@@ -185,7 +187,7 @@ fun ConstraintLayoutScope.ProgressBarRefreshIndicator(
                 width = Dimension.fillToConstraints
             },
         progress = if(isRefreshing) 1f else kotlin.math.min(state.progress, 1f),
-        color = animRawResBackground.value.second,
+        color = LocalTheme.colors.tetrial,
         trackColor = Color.Transparent
     )
 }

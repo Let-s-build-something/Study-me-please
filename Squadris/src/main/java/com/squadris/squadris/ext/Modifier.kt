@@ -1,23 +1,37 @@
 package com.squadris.squadris.ext
 
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.TabPosition
+import androidx.compose.material3.TabRow
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.debugInspectorInfo
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.squadris.squadris.compose.theme.LocalTheme
@@ -64,3 +78,34 @@ fun Modifier.brandShimmerEffect(
     )
 }
 
+/**
+ * [Modifier] that takes up all the available width inside the [TabRow], and then animates
+ * the offset of the indicator it is applied to, depending on the [currentTabPosition].
+ *
+ * @param currentTabPosition [TabPosition] of the currently selected tab. This is used to
+ * calculate the offset of the indicator this modifier is applied to, as well as its width.
+ */
+fun Modifier.customTabIndicatorOffset(
+    currentTabPosition: TabPosition,
+    horizontalPadding: Dp = 4.dp
+): Modifier = composed(
+    inspectorInfo = debugInspectorInfo {
+        name = "tabIndicatorOffset"
+        value = currentTabPosition
+    }
+) {
+    val currentTabWidth by animateDpAsState(
+        targetValue = currentTabPosition.width,
+        animationSpec = tween(durationMillis = 250, easing = FastOutSlowInEasing),
+        label = "tabWidthAnimation"
+    )
+    val indicatorOffset by animateDpAsState(
+        targetValue = currentTabPosition.left,
+        animationSpec = tween(durationMillis = 250, easing = FastOutSlowInEasing),
+        label = "tabOffsetAnimation"
+    )
+    fillMaxWidth()
+        .wrapContentSize(Alignment.BottomStart)
+        .offset(x = indicatorOffset.plus(horizontalPadding))
+        .width(currentTabWidth.minus(horizontalPadding.times(2)))
+}

@@ -1,6 +1,5 @@
 package study.me.please.ui.collection.detail.facts
 
-import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.LinearOutSlowInEasing
@@ -25,19 +24,16 @@ import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -55,13 +51,15 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import study.me.please.R
+import study.me.please.base.LocalSnackbarHost
 import study.me.please.data.io.CollectionIO
 import study.me.please.data.io.FactIO
 import study.me.please.data.io.FactType
 import study.me.please.ui.collection.detail.CollectionDetailViewModel
-import study.me.please.ui.collection.detail.INPUT_DELAYED_RESPONSE_MILLIS
-import study.me.please.ui.collection.detail.OptionsLayout
+import study.me.please.ui.collection.detail.questions.detail.INPUT_DELAYED_RESPONSE_MILLIS
+import study.me.please.ui.components.OptionsLayout
 import study.me.please.ui.collection.detail.PAGE_INDEX_QUESTIONS
+import study.me.please.ui.collection.detail.questions.SortByType
 import study.me.please.ui.components.BasicAlertDialog
 import study.me.please.ui.components.BrandHeaderButton
 import study.me.please.ui.components.ButtonState
@@ -75,13 +73,12 @@ import study.me.please.ui.components.rememberInteractiveCardState
 @Composable
 fun FactsList(
     viewModel: CollectionDetailViewModel,
-    collectionDetail: CollectionIO,
-    requestCollectionSave: () -> Unit,
-    onPageChange: (index: Int) -> Unit,
-    requestFactSave: (fact: FactIO) -> Unit,
+    onPageChange: (index: Int) -> Unit
 ) {
     val facts = viewModel.collectionFacts.collectAsState(initial = listOf())
     val chipsFilter = viewModel.factsFilter.collectAsState()
+    val collectionDetail = viewModel.collectionDetail.collectAsState()
+    val questionGenerationResponse = viewModel.questionGenerationResponse.collectAsState(initial = null)
 
     val interactiveStates = facts.value.map { rememberInteractiveCardState() }
     val showDeleteDialog = remember(collectionDetail) { mutableStateOf(false) }
@@ -100,10 +97,12 @@ fun FactsList(
     val coroutineScope = rememberCoroutineScope()
     val localFocusManager = LocalFocusManager.current
     val context = LocalContext.current
+    val snackbarHost = LocalSnackbarHost.current
 
-    val localDensity = LocalDensity.current
-    var stickyHeaderHeight by remember { mutableStateOf(0.dp) }
 
+    val sortChipIcon = remember {
+        mutableStateOf<ImageVector?>(chipsFilter.value.sortBy.getDirectionIcon())
+    }
     val isSearchActivated = remember(chipsFilter.value) { mutableStateOf(chipsFilter.value.textFilter.isNotEmpty()) }
     val chips = mutableListOf(
         ChipState(
@@ -127,9 +126,23 @@ fun FactsList(
             isChecked = isSearchActivated
         ),
         ChipState(
+            chipText = remember {
+                mutableStateOf(context.getString(R.string.facts_type_date))
+            },
             type = CustomChipType.SORT,
+            icon = sortChipIcon,
             onChipPressed = {
-                //TODO popup of some sorts
+                viewModel.factsFilter.update { previousFilter ->
+                    sortChipIcon.value = (if(previousFilter.sortBy == SortByType.DATE_CREATED_ASC) {
+                        SortByType.DATE_CREATED_DESC
+                    }else SortByType.DATE_CREATED_ASC).getDirectionIcon()
+
+                    previousFilter.copy(
+                        sortBy = if(previousFilter.sortBy == SortByType.DATE_CREATED_ASC) {
+                            SortByType.DATE_CREATED_DESC
+                        }else SortByType.DATE_CREATED_ASC
+                    )
+                }
             }
         )
     )
@@ -137,7 +150,9 @@ fun FactsList(
         chips.add(
             ChipState(
                 type = CustomChipType.REGULAR,
-                icon = factType.getIconImageVector(),
+                icon = remember {
+                    mutableStateOf(factType.getIconImageVector())
+                },
                 uid = factType.name,
                 isChecked = mutableStateOf(viewModel.factsFilter.value.types.contains(factType))
             )
@@ -159,14 +174,14 @@ fun FactsList(
                 }
             }
             LaunchedEffect(facts.value.size) {
-                if(collectionDetail.factUidList.size < facts.value.size) {
+                if(collectionDetail.value.factUidList.size < facts.value.size) {
                     interactiveStates.firstOrNull()?.mode?.value = InteractiveCardMode.EDIT
                 }
                 coroutineScope.launch(Dispatchers.Default) {
-                    collectionDetail.factUidList.apply {
+                    collectionDetail.value.factUidList.apply {
                         addAll(facts.value.map { it.uid })
                     }
-                    requestCollectionSave()
+                    viewModel.requestCollectionSave(collectionDetail.value)
                 }
             }
 
@@ -191,10 +206,10 @@ fun FactsList(
         }
         override fun onDeleteRequest() {
             coroutineScope.launch(Dispatchers.Default) {
-                collectionDetail.factUidList.removeAll {
+                collectionDetail.value.factUidList.removeAll {
                     selectedFactUids.contains(it)
                 }
-                requestCollectionSave()
+                viewModel.requestCollectionSave(collectionDetail.value)
                 viewModel.requestFactsDeletion(selectedFactUids.toSet())
                 selectedFactUids.clear()
             }
@@ -225,17 +240,13 @@ fun FactsList(
         }
     }
 
-    val questionGenerationResponse = viewModel.questionGenerationResponse.collectAsState(initial = null)
-    //TODO use snackbar using Scaffold instead
     LaunchedEffect(key1 = questionGenerationResponse.value) {
         questionGenerationResponse.value?.let { response ->
-            Toast.makeText(
-                context,
+            snackbarHost?.showSnackbar(
                 if(response.isSuccessful == true) {
                     "Successfuly generated ${response.questionsGenerated} questions!"
-                }else "Failed to generate questions due to insufficient facts",
-                Toast.LENGTH_LONG
-            ).show()
+                }else "Failed to generate questions due to insufficient facts"
+            )
             if(response.isSuccessful == true) onPageChange(PAGE_INDEX_QUESTIONS)
         }
     }
@@ -329,11 +340,7 @@ fun FactsList(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .zIndex(10f)
-                            .onGloballyPositioned { coordinates ->
-                                stickyHeaderHeight =
-                                    with(localDensity) { coordinates.size.height.toDp() }
-                            },
+                            .zIndex(10f),
                         horizontalArrangement = Arrangement.SpaceEvenly,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -403,11 +410,15 @@ fun FactsList(
                         ),
                     data = fact,
                     state = (interactiveStates.getOrNull(index) ?: rememberInteractiveCardState()),
-                    requestDataSave = requestFactSave
+                    requestDataSave = {
+                        viewModel.requestFactSave(it)
+                    }
                 )
             }
             item {
-                Spacer(modifier = Modifier.height(stickyHeaderHeight))
+                Spacer(modifier = Modifier.height(
+                    viewModel.collapsingLayoutState.getCollapsingHeightAbove(1).div(2).dp
+                ))
             }
         }
     }

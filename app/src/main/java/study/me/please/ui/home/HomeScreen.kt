@@ -33,6 +33,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.constraintlayout.compose.Dimension
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import com.squadris.squadris.compose.theme.LocalTheme
@@ -101,6 +103,9 @@ fun HomeScreen(
             ) {
                 showLeaveDialog = false
                 (context as? Activity)?.finish()
+            },
+            onDismissRequest = {
+                showLeaveDialog = false
             }
         )
     }
@@ -110,75 +115,88 @@ fun HomeScreen(
         navIconType = NavIconType.HOME,
         title = stringResource(id = R.string.home_screen_title)
     ) { paddingValues ->
-        Column(
+        // hotfix to Google bug - crash on "replace()..."
+        ConstraintLayout(
             modifier = Modifier
                 .padding(paddingValues)
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(
-                LocalTheme.shapes.betweenItemsSpace
-            )
         ) {
-            CollectionsRow(
-                interactiveStates = interactiveCollectionStates,
-                configuration = configuration,
-                collections = collections.value,
-                onNavigationToDetail = { collection ->
-                    navController?.navigate(
-                        NavigationDestination.CollectionDetail.createRoute(
-                            NavigationComponent.COLLECTION_UID to collection.uid,
-                            NavigationComponent.TOOLBAR_TITLE to collection.name.ifEmpty {
-                                context.getString(R.string.screen_collection_detail_new)
-                            }
-                        )
-                    )
-                },
-                onNavigationToLobby = { createNewItem ->
-                    if(createNewItem) {
+            val contentRef = createRef()
+
+            Column(
+                modifier = Modifier
+                    .constrainAs(contentRef) {
+                        linkTo(parent.start, parent.end)
+                        linkTo(parent.top, parent.bottom)
+                        width = Dimension.fillToConstraints
+                        height = Dimension.fillToConstraints
+                    }
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(
+                    LocalTheme.shapes.betweenItemsSpace
+                )
+            ) {
+                CollectionsRow(
+                    interactiveStates = interactiveCollectionStates,
+                    configuration = configuration,
+                    collections = collections.value,
+                    onNavigationToDetail = { collection ->
                         navController?.navigate(
                             NavigationDestination.CollectionDetail.createRoute(
-                                NavigationComponent.TOOLBAR_TITLE to context.getString(
-                                    R.string.screen_collection_detail_new
-                                )
+                                NavigationComponent.COLLECTION_UID to collection.uid,
+                                NavigationComponent.TOOLBAR_TITLE to collection.name.ifEmpty {
+                                    context.getString(R.string.screen_collection_detail_new)
+                                }
                             )
                         )
-                    }else {
-                        navController?.navigate(NavigationDestination.CollectionLobby.createRoute())
+                    },
+                    onNavigationToLobby = { createNewItem ->
+                        if(createNewItem) {
+                            navController?.navigate(
+                                NavigationDestination.CollectionDetail.createRoute(
+                                    NavigationComponent.TOOLBAR_TITLE to context.getString(
+                                        R.string.screen_collection_detail_new
+                                    )
+                                )
+                            )
+                        }else {
+                            navController?.navigate(NavigationDestination.CollectionLobby.createRoute())
+                        }
+                    },
+                    onNavigationToSession = { collection ->
+                        navController?.navigate(
+                            NavigationDestination.SessionPlay.createRoute(
+                                NavigationComponent.TOOLBAR_TITLE to collection.name,
+                                NavigationComponent.COLLECTION_UID to collection.uid
+                            )
+                        )
                     }
-                },
-                onNavigationToSession = { collection ->
-                    navController?.navigate(
-                        NavigationDestination.SessionPlay.createRoute(
-                            NavigationComponent.TOOLBAR_TITLE to collection.name,
-                            NavigationComponent.COLLECTION_UID to collection.uid
+                )
+                SessionsRow(
+                    interactiveStates = interactiveSessionStates,
+                    sessions = sessions.value,
+                    configuration = configuration,
+                    onNavigationToLobby = {
+                        navController?.navigate(NavigationDestination.SessionLobby.createRoute())
+                    },
+                    onNavigationToSession = { session ->
+                        navController?.navigate(
+                            NavigationDestination.SessionPlay.createRoute(
+                                NavigationComponent.TOOLBAR_TITLE to session.name,
+                                NavigationComponent.SESSION_UID to session.uid
+                            )
                         )
-                    )
-                }
-            )
-            SessionsRow(
-                interactiveStates = interactiveSessionStates,
-                sessions = sessions.value,
-                configuration = configuration,
-                onNavigationToLobby = {
-                    navController?.navigate(NavigationDestination.SessionLobby.createRoute())
-                },
-                onNavigationToSession = { session ->
-                    navController?.navigate(
-                        NavigationDestination.SessionPlay.createRoute(
-                            NavigationComponent.TOOLBAR_TITLE to session.name,
-                            NavigationComponent.SESSION_UID to session.uid
+                    },
+                    onNavigationToDetail = { session ->
+                        navController?.navigate(
+                            NavigationDestination.SessionDetail.createRoute(
+                                NavigationComponent.SESSION_UID to session.uid,
+                                NavigationComponent.TOOLBAR_TITLE to session.name
+                            )
                         )
-                    )
-                },
-                onNavigationToDetail = { session ->
-                    navController?.navigate(
-                        NavigationDestination.SessionDetail.createRoute(
-                            NavigationComponent.SESSION_UID to session.uid,
-                            NavigationComponent.TOOLBAR_TITLE to session.name
-                        )
-                    )
-                }
-            )
+                    }
+                )
+            }
         }
     }
 }

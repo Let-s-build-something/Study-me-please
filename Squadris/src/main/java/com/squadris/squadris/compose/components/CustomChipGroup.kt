@@ -127,10 +127,11 @@ fun CustomChipGroup(
                             text = chipState.chipText.value,
                             selected = chipState.isChecked.value,
                             onClick = { onChipClicked() },
-                            imageVector = chipState.icon
+                            imageVector = chipState.icon.value
                         )
                     }
                     CustomChipType.SORT -> SortChip(
+                        imageVector = chipState.icon.value,
                         text = chipState.chipText.value,
                         onClick = { onChipClicked() }
                     )

@@ -6,7 +6,6 @@ import androidx.navigation.NavDeepLink
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
-import java.net.URLDecoder
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 
@@ -74,7 +73,7 @@ sealed class NavigationDestination(
                         }
                         else -> it.second?.toString() ?: it.first
                     },
-                    StandardCharsets.UTF_8
+                    StandardCharsets.UTF_8.toString()
                 )
             )
         }
@@ -123,6 +122,24 @@ sealed class NavigationDestination(
             NavigationComponent.QUESTION_UID,
             NavigationComponent.QUESTION_UID_LIST,
             NavigationComponent.IS_TESTING_MODE
+        )
+    )
+
+    /** screen for editable question detail */
+    object QuestionDetail: NavigationDestination(
+        identification = "question_detail",
+        arguments = listOf(
+            NavigationComponent.TOOLBAR_TITLE,
+            NavigationComponent.QUESTION_UID
+        )
+    )
+
+    /** screen for subject detail with user's main notes for certain collection */
+    object Subjects: NavigationDestination(
+        identification = "subjects",
+        arguments = listOf(
+            NavigationComponent.TOOLBAR_TITLE,
+            NavigationComponent.COLLECTION_UID
         )
     )
 }

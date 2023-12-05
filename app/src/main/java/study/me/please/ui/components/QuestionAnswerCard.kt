@@ -1,6 +1,7 @@
 package study.me.please.ui.components
 
 import android.annotation.SuppressLint
+import android.util.Log
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.tween
@@ -40,7 +41,7 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import coil.compose.AsyncImagePainter
 import com.squadris.squadris.compose.components.DEFAULT_ANIMATION_LENGTH_SHORT
-import com.squadris.squadris.compose.components.EditFieldInput
+import com.squadris.squadris.compose.components.input.EditFieldInput
 import com.squadris.squadris.compose.components.MinimalisticIcon
 import com.squadris.squadris.compose.theme.LocalTheme
 import kotlinx.coroutines.cancelChildren
@@ -49,7 +50,7 @@ import kotlinx.coroutines.launch
 import study.me.please.R
 import study.me.please.data.io.LargePathAsset
 import study.me.please.data.io.QuestionAnswerIO
-import study.me.please.ui.collection.detail.INPUT_DELAYED_RESPONSE_MILLIS
+import study.me.please.ui.collection.detail.questions.detail.INPUT_DELAYED_RESPONSE_MILLIS
 
 /** Card with the option of editing data inside */
 @Composable
@@ -60,6 +61,7 @@ fun QuestionAnswerCard(
     requestDataSave: () -> Unit
 ) {
     if(data != null) {
+        Log.d("kostka_test", "QuestionAnswerCard, state: ${state.mode}")
         ContentLayout(
             modifier = modifier,
             data = data,
@@ -354,7 +356,7 @@ private fun DataCard(
                 end.linkTo(parent.end, -(8.dp))
                 if(state.mode.value == InteractiveCardMode.EDIT && imageAsset.value == null) {
                     linkTo(btnAddImage.top, btnAddImage.bottom)
-                }else if(imageAsset.value != null) {
+                }else {
                     top.linkTo(imgExplanation.bottom, 6.dp)
                 }
             },
@@ -392,7 +394,7 @@ private fun Preview() {
         ),
         requestDataSave = {},
         state = InteractiveCardState(
-            mode = mutableStateOf(InteractiveCardMode.EDIT)
+            mode = mutableStateOf(InteractiveCardMode.DATA_DISPLAY)
         )
     )
 }

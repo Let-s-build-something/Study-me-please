@@ -33,7 +33,7 @@ private fun HeaderButton(
     text: String = "",
     contentColor: Color,
     containerColor: Color,
-    startIconVector: ImageVector = Icons.Outlined.Add,
+    startIconVector: ImageVector? = Icons.Outlined.Add,
     onClick: () -> Unit = {}
 ) {
     Button(
@@ -54,13 +54,15 @@ private fun HeaderButton(
             defaultElevation = LocalTheme.styles.actionElevation
         )
     ) {
-        Icon(
-            startIconVector,
-            contentDescription = stringResource(id = R.string.add_new_content_description),
-            tint = contentColor,
-            modifier = Modifier
-                .size(24.dp)
-        )
+        if(startIconVector != null) {
+            Icon(
+                startIconVector,
+                contentDescription = stringResource(id = R.string.add_new_content_description),
+                tint = contentColor,
+                modifier = Modifier
+                    .size(24.dp)
+            )
+        }
         if(text.isNotEmpty()) {
             Text(
                 modifier = Modifier
@@ -83,7 +85,7 @@ private fun HeaderButton(
 fun ComponentHeaderButton(
     modifier: Modifier = Modifier,
     text: String = "",
-    startIconVector: ImageVector = Icons.Outlined.Add,
+    startIconVector: ImageVector? = Icons.Outlined.Add,
     onClick: () -> Unit = {}
 ) {
     HeaderButton(

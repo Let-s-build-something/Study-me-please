@@ -7,6 +7,7 @@ import androidx.room.TypeConverter
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import study.me.please.data.io.CollectionIO
+import study.me.please.data.io.FactIO
 import study.me.please.data.io.ImportedSource
 import study.me.please.data.io.LargePathAsset
 import study.me.please.data.io.QuestionAnswerIO
@@ -16,6 +17,9 @@ import study.me.please.data.io.session.SessionHistoryItem
 import study.me.please.data.io.preferences.SessionPreference
 import study.me.please.data.io.preferences.SessionPreferencePack
 import study.me.please.data.io.session.QuestionItem
+import study.me.please.data.io.subjects.CategoryIO
+import study.me.please.data.io.subjects.ParagraphIO
+import study.me.please.data.io.subjects.SubjectIO
 import study.me.please.ui.session.play.QuestionModule
 import java.util.Date
 import javax.inject.Inject
@@ -23,6 +27,42 @@ import javax.inject.Inject
 /** Factory converter for Room database */
 @ProvidedTypeConverter
 class AppDatabaseConverter @Inject constructor(private val gson: Gson) {
+
+    /** Converts [SubjectIO] object to string */
+    @TypeConverter
+    fun fromSubjectIO(value: SubjectIO): String {
+        return gson.toJson(
+            value,
+            TypeToken.getParameterized(SubjectIO::class.java).type
+        )
+    }
+
+    /** Converts string to [SubjectIO] object */
+    @TypeConverter
+    fun toSubjectIO(value: String): SubjectIO {
+        return gson.fromJson(
+            value,
+            TypeToken.getParameterized(SubjectIO::class.java).type
+        )
+    }
+
+    /** Converts [CollectionIO] object to string */
+    @TypeConverter
+    fun fromCategoryIO(value: CategoryIO): String {
+        return gson.toJson(
+            value,
+            TypeToken.getParameterized(CategoryIO::class.java).type
+        )
+    }
+
+    /** Converts string to [CategoryIO] object */
+    @TypeConverter
+    fun toCategoryIO(value: String): CategoryIO {
+        return gson.fromJson(
+            value,
+            TypeToken.getParameterized(CategoryIO::class.java).type
+        )
+    }
 
     /** Converts [CollectionIO] object to string */
     @TypeConverter
@@ -174,6 +214,60 @@ class AppDatabaseConverter @Inject constructor(private val gson: Gson) {
         return gson.toJson(
             value,
             TypeToken.getParameterized(List::class.java, SessionHistoryItem::class.java).type
+        )
+    }
+
+    /** Converts string to [ParagraphIO] array */
+    @TypeConverter
+    fun toParticleIOList(value: String): List<ParagraphIO> {
+        return gson.fromJson(
+            value,
+            TypeToken.getParameterized(List::class.java, ParagraphIO::class.java).type
+        )
+    }
+
+    /** Converts [ParagraphIO] object array to string */
+    @TypeConverter
+    fun fromParticleIOList(value: List<ParagraphIO>): String {
+        return gson.toJson(
+            value,
+            TypeToken.getParameterized(List::class.java, ParagraphIO::class.java).type
+        )
+    }
+
+    /** Converts string to [FactIO] array */
+    @TypeConverter
+    fun toFactIOList(value: String): List<FactIO> {
+        return gson.fromJson(
+            value,
+            TypeToken.getParameterized(List::class.java, FactIO::class.java).type
+        )
+    }
+
+    /** Converts [FactIO] object array to string */
+    @TypeConverter
+    fun fromFactIOList(value: List<FactIO>): String {
+        return gson.toJson(
+            value,
+            TypeToken.getParameterized(List::class.java, FactIO::class.java).type
+        )
+    }
+
+    /** Converts string to [CategoryIO] array */
+    @TypeConverter
+    fun toCategoryIOList(value: String): List<CategoryIO> {
+        return gson.fromJson(
+            value,
+            TypeToken.getParameterized(List::class.java, CategoryIO::class.java).type
+        )
+    }
+
+    /** Converts [CategoryIO] object array to string */
+    @TypeConverter
+    fun fromCategoryIOList(value: List<CategoryIO>): String {
+        return gson.toJson(
+            value,
+            TypeToken.getParameterized(List::class.java, CategoryIO::class.java).type
         )
     }
 

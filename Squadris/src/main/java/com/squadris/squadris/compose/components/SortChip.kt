@@ -24,7 +24,7 @@ import com.squadris.squadris.compose.theme.LocalTheme
 fun SortChip(
     modifier: Modifier = Modifier,
     text: String,
-    imageVector: ImageVector = Icons.AutoMirrored.Outlined.Sort,
+    imageVector: ImageVector?,
     onClick: () -> Unit = {}
 ) {
     val localDensity = LocalDensity.current
@@ -45,7 +45,7 @@ fun SortChip(
             Icon(
                 modifier = Modifier
                     .size(18.dp),
-                imageVector = imageVector,
+                imageVector = imageVector ?: Icons.AutoMirrored.Outlined.Sort,
                 tint = LocalTheme.colors.tetrial,
                 contentDescription = "Sort" //TODO string resources
             )

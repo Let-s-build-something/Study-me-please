@@ -45,6 +45,14 @@ object DatabaseServicesModule {
     @Provides
     fun provideFactDao(appDatabase: AppRoomDatabase) = appDatabase.factDbDao()
 
+    /** Interface for accessing preferences data in local Room database */
+    @Provides
+    fun provideSubjectsDao(appDatabase: AppRoomDatabase) = appDatabase.subjectDbDao()
+
+    /** Interface for accessing preferences data in local Room database */
+    @Provides
+    fun provideCategoryDao(appDatabase: AppRoomDatabase) = appDatabase.categoryDbDao()
+
     /** Local main Room database */
     @ActivityRetainedScoped
     @Provides
