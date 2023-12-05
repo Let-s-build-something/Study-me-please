@@ -217,7 +217,7 @@ fun SubjectsHostScreen(
                                         }
                                     }
                             }
-                        } to CollapsingBehavior.ON_TOP,
+                        } to CollapsingBehavior.ALWAYS,
                         @Composable {
                             HorizontalPager(
                                 modifier = Modifier
