@@ -48,7 +48,8 @@
     <string name="subjects_delete_dialog_content">
         You\'ve spent time on this, are you sure you want permanently delete "%1$s"?
     </string>
-    <string name="subject_heading_hint">Heading</string>
+    <string name="subject_heading_hint">Subject name</string>
+    <string name="subject_heading_prefix">Subject</string>
     <string name="subject_subheading_hint">Subheading</string>
     <string name="subject_add_bullet_point">Bullet point</string>
     <string name="subject_add_fact">Fact</string>
@@ -59,6 +60,8 @@
     <string name="subject_facts_section_heading">Facts</string>
     <string name="subject_bullet_points_section_heading">Bullet points</string>
 
+    <string name="list_item_generic_hint">item</string>
+
     <string name="facts_list_add_new">Add a fact</string>
     <string name="facts_list_generate_questions">Generate questions</string>
     <string name="facts_field_short_information_header">Short key information</string>
@@ -68,13 +71,21 @@
     <string name="facts_field_short_information_hint">Image this is one of the answers</string>
     <string name="facts_field_long_information_hint">Imagine this is a question</string>
 
-    <string name="facts_type_fact">Information</string>
+    <string name="facts_type_bullet_points">Bullet points</string>
     <string name="facts_type_definition">Definition</string>
     <string name="facts_type_person">Person</string>
     <string name="facts_type_date">Date</string>
-    <string name="facts_type_list">List</string>
+    <string name="facts_type_list">Ordered list</string>
     <string name="facts_type_quote">Quote</string>
+
     <!-- short information -->
+    <string name="facts_type_short_bullet_point_hint">The French orchestra</string>
+    <string name="facts_type_short_definition_hint">Social loafing</string>
+    <string name="facts_type_short_person_hint">Keanu Reeves</string>
+    <string name="facts_type_short_date_hint">Nov 17, 1989 - Dec 29, 1989</string>
+    <string name="facts_type_short_list_hint">List of doubts</string>
+    <string name="facts_type_short_quote_hint">Don\'t rely on your ability to predict, trust in your ability to damage control</string>
+
     <string name="facts_type_long_fact_header">Information explanation</string>
     <string name="facts_type_long_definition_header">Definition</string>
     <string name="facts_type_long_fact_hint">How would you explain the information?</string>
@@ -82,7 +93,6 @@
     <string name="facts_type_long_person_header">Information about the person</string>
     <string name="facts_type_long_list_header">Explanation of the list</string>
     <string name="facts_type_long_person_hint">What information is relevant about the person?</string>
-    <string name="facts_type_long_list_hint">All relevant items</string>
     <string name="facts_type_long_date_header">Date explanation</string>
     <string name="facts_type_long_date_hint">What happened on that date or what is it related to?</string>
     <string name="facts_type_long_quote_header">Quote explanation</string>
@@ -90,15 +100,11 @@
     <!-- long information -->
     <string name="facts_type_short_fact_header">What is the information?</string>
     <string name="facts_type_short_definition_header">What are we defining?</string>
-    <string name="facts_type_short_fact_hint">Jack was very hungry</string>
-    <string name="facts_type_short_definition_hint">Social facilitation</string>
     <string name="facts_type_short_person_header">Who is the person?</string>
-    <string name="facts_type_short_person_hint">Keanu Reeves</string>
     <string name="facts_type_short_date_header">What is the date?</string>
-    <string name="facts_type_short_date_hint">Nov 17, 1989 - Dec 29, 1989</string>
-    <string name="facts_type_short_list_hint">item</string>
     <string name="facts_type_short_quote_header">What is the quote?</string>
-    <string name="facts_type_short_quote_hint">Don\'t rely on your ability to predict, trust in your ability to damage control</string>
+    <string name="facts_type_short_bullet_point_header">What are we describing?</string>
+    <string name="facts_type_short_list_header">How do we call following list?</string>
     <!-- prompts -->
     <string name="facts_information_generic_prompt">To who/what is the following %1$s related to?\n%2$s</string>
     <!-- short prompts -->

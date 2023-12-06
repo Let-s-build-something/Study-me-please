@@ -14,6 +14,9 @@ data class QuestionAnswerIO (
     /** Answer text to be displayed */
     var text: String = "",
 
+    /** list of texts */
+    var textList: List<String> = listOf(),
+
     /** What is the reasoniung behind this answer being wrong/correct */
     @SerializedName("explanation_message")
     var explanationMessage: String = "",

@@ -19,7 +19,7 @@ object Colors {
     val TETRIAL_8: Color = Color(0x14F8E3CB)
     val TETRIAL_16: Color = Color(0x29F8E3CB)
     val TETRIAL_16_ON_DARK_BACKGROUND: Color = Color(0xFF474440)
-    val TETRIAL_16_ON_DARK_COMPONENT: Color = Color(0xFF635d58)
+    val TETRIAL_16_ON_DARK_COMPONENT: Color = Color(0xFF5A584F)
     val TETRIAL_24: Color = Color(0x3DF8E3CB)
     val TETRIAL_50: Color = Color(0x80F8E3CB)
     val TETRIAL_LIGHT: Color = Color(0xFFfdf8f3)

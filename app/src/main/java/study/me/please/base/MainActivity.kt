@@ -43,12 +43,11 @@ class MainActivity: ComponentActivity(), BackboneChannel {
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
         setContent {
-            val isSystemInDarkTheme = isSystemInDarkTheme()
             // Whether this app is in dark theme
             val isDarkTheme = remember { mutableStateOf(
                 settingsViewModel.sharedPreferences.getBoolean(
                     SharedPreferencesModule.SP_IS_DARK_THEME,
-                    isSystemInDarkTheme
+                    true
                 )
             ) }
 

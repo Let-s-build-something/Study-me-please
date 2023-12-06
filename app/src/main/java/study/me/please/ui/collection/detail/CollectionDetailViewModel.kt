@@ -447,7 +447,7 @@ class CollectionDetailViewModel @Inject constructor(
             val newFact = if(isEmpty && factsFilter.value.isEmpty().not()) {
                 FactIO(
                     shortKeyInformation = factsFilter.value.textFilter,
-                    type = factsFilter.value.types.firstOrNull() ?: FactType.FACT
+                    type = factsFilter.value.types.firstOrNull() ?: FactType.BULLET_POINTS
                 )
             }else FactIO()
             dataManager.collectionFacts.update {

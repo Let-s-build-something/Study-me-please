@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "09b0098c8597d08ddd1fde6a2380ffb0",
+    "identityHash": "55a9f6c6f8aa3024487a23732868bf9c",
     "entities": [
       {
         "tableName": "ROOM_COLLECTION_TABLE",
@@ -172,11 +172,17 @@
       },
       {
         "tableName": "ROOM_QUESTION_ANSWER_TABLE",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`text` TEXT NOT NULL, `explanationMessage` TEXT NOT NULL, `uid` TEXT NOT NULL, `imageExplanation` TEXT, `isCorrect` INTEGER NOT NULL, PRIMARY KEY(`uid`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`text` TEXT NOT NULL, `textList` TEXT NOT NULL, `explanationMessage` TEXT NOT NULL, `uid` TEXT NOT NULL, `imageExplanation` TEXT, `isCorrect` INTEGER NOT NULL, PRIMARY KEY(`uid`))",
         "fields": [
           {
             "fieldPath": "text",
             "columnName": "text",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "textList",
+            "columnName": "textList",
             "affinity": "TEXT",
             "notNull": true
           },
@@ -446,7 +452,7 @@
       },
       {
         "tableName": "ROOM_FACT_TABLE",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`uid` TEXT NOT NULL, `shortKeyInformation` TEXT NOT NULL, `shortKeyImage` TEXT, `longInformation` TEXT NOT NULL, `longInformationImage` TEXT, `listContent` TEXT NOT NULL, `promptImage` TEXT, `type` TEXT NOT NULL, `date_created` INTEGER NOT NULL, PRIMARY KEY(`uid`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`uid` TEXT NOT NULL, `shortKeyInformation` TEXT NOT NULL, `shortKeyImage` TEXT, `longInformation` TEXT NOT NULL, `textList` TEXT NOT NULL, `longInformationImage` TEXT, `promptImage` TEXT, `type` TEXT NOT NULL, `date_created` INTEGER NOT NULL, PRIMARY KEY(`uid`))",
         "fields": [
           {
             "fieldPath": "uid",
@@ -473,16 +479,16 @@
             "notNull": true
           },
           {
+            "fieldPath": "textList",
+            "columnName": "textList",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
             "fieldPath": "longInformationImage",
             "columnName": "longInformationImage",
             "affinity": "TEXT",
             "notNull": false
-          },
-          {
-            "fieldPath": "listContent",
-            "columnName": "listContent",
-            "affinity": "TEXT",
-            "notNull": true
           },
           {
             "fieldPath": "promptImage",
@@ -610,7 +616,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '09b0098c8597d08ddd1fde6a2380ffb0')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '55a9f6c6f8aa3024487a23732868bf9c')"
     ]
   }
 }

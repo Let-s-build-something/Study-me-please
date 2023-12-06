@@ -69,11 +69,11 @@ class SubjectsViewModel @Inject constructor(
     }
 
     /** Adds new subject and creates, but doesn't create a DB record for it */
-    fun addNewSubject(collectionUid: String) {
+    fun addNewSubject(collectionUid: String, prefix: String) {
         viewModelScope.launch {
             _subjectsList.update { previousSubjects ->
                 previousSubjects?.toMutableList()?.apply {
-                    add(SubjectIO(collectionUid = collectionUid))
+                    add(SubjectIO(collectionUid = collectionUid, name = "$prefix ${this.size.plus(1)}"))
                 }
             }
         }

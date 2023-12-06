@@ -23,6 +23,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -63,8 +64,11 @@ fun EditFieldInput(
     focusRequester: FocusRequester? = null,
     leadingIcon: ImageVector? = null,
     prefix: @Composable (() -> Unit)? = null,
+    suffix: @Composable (() -> Unit)? = null,
     minLines: Int = 1,
     maxLines: Int = 1,
+    enabled: Boolean = true,
+    onTextLayout: (TextLayoutResult) -> Unit = {},
     paddingValues: PaddingValues = TextFieldDefaults.contentPaddingWithoutLabel(),
     textStyle: TextStyle = TextStyle(
         color = LocalTheme.colors.primary,
@@ -105,9 +109,10 @@ fun EditFieldInput(
                 } else Modifier
             ),
         prefix = prefix,
+        suffix = suffix,
         isError = isError,
+        onTextLayout = onTextLayout,
         minLines = minLines,
-        maxLines = maxLines,
         paddingValues = paddingValues,
         singleLine = maxLines == 1,
         value = text.value,
@@ -145,6 +150,7 @@ fun EditFieldInput(
                 }
             }
         }else null,
+        enabled = enabled,
         shape = shape
     )
 }

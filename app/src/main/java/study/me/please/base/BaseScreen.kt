@@ -30,7 +30,7 @@ val LocalNavController = staticCompositionLocalOf<NavController?> { null }
 val LocalSnackbarHost = staticCompositionLocalOf<SnackbarHostState?> { null }
 
 /** whether device is a tablet or not */
-val LocalIsTablet = staticCompositionLocalOf<Boolean> { false }
+val LocalIsTablet = staticCompositionLocalOf { false }
 
 /**
  * Most basic all-in-one implementation of a screen with action bar, without bottom bar

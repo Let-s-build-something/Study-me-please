@@ -48,15 +48,19 @@ class AppThemeStyle: ThemeStyle {
                 unfocusedIndicatorColor = Color.Transparent,
                 focusedIndicatorColor = Color.Transparent,
                 unfocusedLabelColor = Color.Transparent,
-                disabledTextColor = LocalTheme.colors.disabled,
+                disabledTextColor = LocalTheme.colors.secondary,
                 focusedTextColor = LocalTheme.colors.primary,
-                unfocusedTextColor = Color.Transparent,
+                unfocusedTextColor = LocalTheme.colors.secondary,
                 cursorColor = LocalTheme.colors.secondary,
                 disabledIndicatorColor = Color.Transparent,
                 errorContainerColor = LocalTheme.colors.onBackgroundComponent,
                 errorIndicatorColor = Color.Transparent,
                 errorTextColor = Colors.RED_ERROR,
-                errorTrailingIconColor = Colors.RED_ERROR
+                errorTrailingIconColor = Colors.RED_ERROR,
+                disabledContainerColor = Color.Transparent,
+                disabledLabelColor = Color.Transparent,
+                disabledPrefixColor = LocalTheme.colors.secondary,
+                disabledSuffixColor = LocalTheme.colors.secondary
             )
         }
 

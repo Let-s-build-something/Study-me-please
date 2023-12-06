@@ -24,6 +24,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -64,6 +65,7 @@ fun SubjectsHostScreen(
     val filter = viewModel.filter.collectAsState()
 
     val coroutineScope = rememberCoroutineScope()
+    val context = LocalContext.current
 
     val isSearchChipChecked = remember(collectionUid) { mutableStateOf(false) }
     val currentPagerIndex = remember(collectionUid) { mutableIntStateOf(0) }
@@ -198,7 +200,10 @@ fun SubjectsHostScreen(
                                                 ComponentHeaderButton(
                                                     modifier = modifier,
                                                     onClick = {
-                                                        viewModel.addNewSubject(collectionUid = collectionUid)
+                                                        viewModel.addNewSubject(
+                                                            collectionUid = collectionUid,
+                                                            prefix = context.getString(R.string.subject_heading_prefix)
+                                                        )
                                                     }
                                                 )
                                             }
