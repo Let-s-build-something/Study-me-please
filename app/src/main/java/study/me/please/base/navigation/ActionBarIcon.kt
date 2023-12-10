@@ -28,6 +28,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.squadris.squadris.compose.theme.LocalTheme
 import study.me.please.R
+import study.me.please.ui.components.AutoResizeText
+import study.me.please.ui.components.FontSizeRange
 
 @Composable
 fun ActionBarIcon(
@@ -61,18 +63,21 @@ fun ActionBarIcon(
             contentDescription = text,
             tint = LocalTheme.colors.tetrial
         )
-        Text(
+        AutoResizeText(
             modifier = Modifier
                 .wrapContentHeight()
                 .padding(top = 4.dp),
             text = text,
             color = LocalTheme.colors.tetrial,
-            fontSize = 12.sp,
             fontWeight = FontWeight.Medium,
             textAlign = TextAlign.Center,
-            maxLines = 1,
-            minLines = 1,
-            overflow = TextOverflow.Clip
+            maxLines = 2,
+            overflow = TextOverflow.Clip,
+            // some users tune up font size so high we can draw it otherwise
+            fontSizeRange = FontSizeRange(
+                min = 6.sp,
+                max = 14.sp
+            )
         )
     }
 }

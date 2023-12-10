@@ -379,9 +379,7 @@ private fun ContentLayout(
 
         OptionsLayout(
             isEditMode = selectedCollectionUids.size > 0,
-            onDeleteRequest = {
-                showDialog.value = DialogToShow.DeleteCollections
-            },
+            onDeleteRequest = { showDialog.value = DialogToShow.DeleteCollections },
             onCopyRequest = {
 
             },
@@ -395,7 +393,8 @@ private fun ContentLayout(
             },
             onDeselectAll = {
                 selectedCollectionUids.clear()
-            }
+            },
+            onClipBoardRemoval = {  }
         )
 
         // questions
@@ -467,7 +466,8 @@ private fun ContentLayout(
             deselectAllVisible = selectedQuestionUids.size > 1,
             onDeselectAll = {
                 selectedQuestionUids.clear()
-            }
+            },
+            onClipBoardRemoval = {  }
         )
         Spacer(modifier = Modifier.height(32.dp))
     }

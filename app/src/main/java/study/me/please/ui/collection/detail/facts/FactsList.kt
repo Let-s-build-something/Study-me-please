@@ -185,10 +185,8 @@ fun FactsList(
                 }
             }
 
-            if(selectedFactUids.size > 0) {
-                BackHandler {
-                    stopChecking()
-                }
+            BackHandler(selectedFactUids.size > 0) {
+                stopChecking()
             }
         }
 
@@ -371,27 +369,22 @@ fun FactsList(
                         Spacer(modifier = Modifier.weight(0.05f))
                     }
                     OptionsLayout(
-                        onCopyRequest = {
-                            controller.copyItems()
-                        },
+                        onCopyRequest = { controller.copyItems() },
                         onPasteRequest = {
                             viewModel.pasteFactsClipBoard()
                             controller.stopChecking()
                         },
-                        onDeleteRequest = {
-                            showDeleteDialog.value = true
-                        },
+                        onDeleteRequest = { showDeleteDialog.value = true },
                         onSelectAll = {
                             interactiveStates.forEach {
                                 it.isChecked.value = true
                             }
                         },
-                        onDeselectAll = {
-                            controller.selectedFactUids.clear()
-                        },
+                        onDeselectAll = { controller.selectedFactUids.clear() },
                         isEditMode = controller.selectedFactUids.size > 0,
                         hasPasteOption = viewModel.clipBoard.facts.isEmpty.value.not(),
-                        animateTopDown = true
+                        animateTopDown = true,
+                        onClipBoardRemoval = { viewModel.clipBoard.facts.clear() }
                     )
                 }
             }
@@ -412,7 +405,8 @@ fun FactsList(
                     state = (interactiveStates.getOrNull(index) ?: rememberInteractiveCardState()),
                     requestDataSave = {
                         viewModel.requestFactSave(it)
-                    }
+                    },
+                    categoryUseCase = viewModel
                 )
             }
             item {

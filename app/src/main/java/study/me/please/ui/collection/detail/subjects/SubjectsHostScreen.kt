@@ -11,6 +11,7 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.LibraryAdd
 import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material3.SecondaryScrollableTabRow
 import androidx.compose.material3.TabRowDefaults
@@ -228,7 +229,9 @@ fun SubjectsHostScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .weight(1f),
-                                state = pagerState
+                                state = pagerState,
+                                // causes crashes if 0
+                                beyondBoundsPageCount = 2
                             ) { index ->
                                 subjects.value?.getOrNull(index)?.let { subject ->
                                     SubjectScreen(

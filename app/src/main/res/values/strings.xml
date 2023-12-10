@@ -44,6 +44,7 @@
     <string name="questions_list_chip_has_image">has image</string>
     <string name="questions_list_chip_is_invalid">is invalid</string>
 
+    <string name="subjects_button_generate">Generate questions</string>
     <string name="subjects_delete_dialog_title">Subject deletion</string>
     <string name="subjects_delete_dialog_content">
         You\'ve spent time on this, are you sure you want permanently delete "%1$s"?
@@ -66,10 +67,8 @@
     <string name="facts_list_generate_questions">Generate questions</string>
     <string name="facts_field_short_information_header">Short key information</string>
     <string name="facts_field_long_information_header">Long key information</string>
-    <string name="facts_field_tags_header">Codes</string>
-    <string name="facts_field_tags_explanation">Codes are a way of categorizing your facts and connecting them between each-other</string>
-    <string name="facts_field_short_information_hint">Image this is one of the answers</string>
-    <string name="facts_field_long_information_hint">Imagine this is a question</string>
+    <string name="tags_add_new">Add tag</string>
+    <string name="tags_explanation">Tags are a way of categorizing your facts and connecting them between each-other</string>
 
     <string name="facts_type_bullet_points">Bullet points</string>
     <string name="facts_type_definition">Definition</string>

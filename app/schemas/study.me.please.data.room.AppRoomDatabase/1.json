@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "55a9f6c6f8aa3024487a23732868bf9c",
+    "identityHash": "b257fff2ed6090600d540afb59e168b7",
     "entities": [
       {
         "tableName": "ROOM_COLLECTION_TABLE",
@@ -452,7 +452,7 @@
       },
       {
         "tableName": "ROOM_FACT_TABLE",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`uid` TEXT NOT NULL, `shortKeyInformation` TEXT NOT NULL, `shortKeyImage` TEXT, `longInformation` TEXT NOT NULL, `textList` TEXT NOT NULL, `longInformationImage` TEXT, `promptImage` TEXT, `type` TEXT NOT NULL, `date_created` INTEGER NOT NULL, PRIMARY KEY(`uid`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`uid` TEXT NOT NULL, `shortKeyInformation` TEXT NOT NULL, `shortKeyImage` TEXT, `longInformation` TEXT NOT NULL, `textList` TEXT NOT NULL, `longInformationImage` TEXT, `promptImage` TEXT, `type` TEXT NOT NULL, `date_created` INTEGER NOT NULL, `categoryUids` TEXT NOT NULL, PRIMARY KEY(`uid`))",
         "fields": [
           {
             "fieldPath": "uid",
@@ -506,6 +506,12 @@
             "fieldPath": "dateCreated",
             "columnName": "date_created",
             "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "categoryUids",
+            "columnName": "categoryUids",
+            "affinity": "TEXT",
             "notNull": true
           }
         ],
@@ -616,7 +622,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '55a9f6c6f8aa3024487a23732868bf9c')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'b257fff2ed6090600d540afb59e168b7')"
     ]
   }
 }

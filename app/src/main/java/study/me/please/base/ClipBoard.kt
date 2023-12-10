@@ -19,7 +19,7 @@ sealed class ClipBoard<T: Any>(protected val list: SnapshotStateList<T> = mutabl
     }
 
     /** clears current backstack */
-    private fun clear() {
+    fun clear() {
         list.clear()
     }
 

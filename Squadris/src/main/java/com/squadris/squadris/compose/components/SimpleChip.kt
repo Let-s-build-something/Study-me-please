@@ -1,13 +1,9 @@
 package com.squadris.squadris.compose.components
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.requiredHeight
-import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
@@ -23,6 +19,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.squadris.squadris.compose.theme.Colors
 import com.squadris.squadris.compose.theme.LocalTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -48,10 +45,9 @@ fun SimpleChip(
             ) {
                 if(imageVector != null) {
                     Icon(
-                        modifier = Modifier
-                            .size(18.dp),
+                        modifier = Modifier.size(18.dp),
                         imageVector = imageVector,
-                        tint = if(selected) LocalTheme.colors.tetrial else LocalTheme.colors.brandMain,
+                        tint = if(selected) LocalTheme.colors.tetrial else Colors.DARK_GREY_70,
                         contentDescription = null
                     )
                     Spacer(modifier = Modifier.width(4.dp))

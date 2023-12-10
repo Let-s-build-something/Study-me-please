@@ -410,23 +410,18 @@ fun QuestionDetailScreen(
                                             bridge.stopChecking()
                                         }
                                     },
-                                    onPasteRequest = {
-                                        bridge.pasteRequest()
-                                    },
-                                    onDeleteRequest = {
-                                        showDeleteDialog = true
-                                    },
+                                    onPasteRequest = { bridge.pasteRequest() },
+                                    onDeleteRequest = { showDeleteDialog = true },
                                     onSelectAll = {
                                         answers.forEach {
                                             it.second.isChecked.value = true
                                         }
                                     },
-                                    onDeselectAll = {
-                                        bridge.selectedAnswerUids.clear()
-                                    },
+                                    onDeselectAll = { bridge.selectedAnswerUids.clear() },
                                     isEditMode = bridge.selectedAnswerUids.size > 0,
                                     hasPasteOption = viewModel.clipBoard.answers.isEmpty.value.not(),
-                                    animateTopDown = true
+                                    animateTopDown = true,
+                                    onClipBoardRemoval = { viewModel.clipBoard.answers.clear() }
                                 )
                             }
                         }

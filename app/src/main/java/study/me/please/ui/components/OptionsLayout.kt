@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.ContentPaste
 import androidx.compose.material.icons.outlined.DeleteSweep
@@ -35,6 +36,7 @@ fun OptionsLayout(
     onDeleteRequest: () -> Unit = {},
     onCopyRequest: () -> Unit = {},
     onPasteRequest: () -> Unit = {},
+    onClipBoardRemoval: () -> Unit,
     selectAllVisible: Boolean = true,
     onSelectAll: () -> Unit = {},
     deselectAllVisible: Boolean = true,
@@ -69,7 +71,9 @@ fun OptionsLayout(
             ImageAction(
                 leadingImageVector = Icons.Outlined.ContentPaste,
                 text = stringResource(id = R.string.button_paste),
-                onClick = onPasteRequest
+                onClick = onPasteRequest,
+                trailingImageVector = Icons.Outlined.Close,
+                onTrailingIconClick = onClipBoardRemoval
             )
         }
         AnimatedVisibility(
@@ -85,7 +89,7 @@ fun OptionsLayout(
             )
         ) {
             Row(
-                modifier = modifier
+                modifier = Modifier
                     .wrapContentWidth()
                     .wrapContentHeight(),
                 horizontalArrangement = Arrangement.spacedBy(

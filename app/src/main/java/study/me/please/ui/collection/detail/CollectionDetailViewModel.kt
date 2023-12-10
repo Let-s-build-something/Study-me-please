@@ -8,6 +8,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
@@ -24,10 +25,12 @@ import study.me.please.data.io.QuestionAnswerIO
 import study.me.please.data.io.QuestionIO
 import study.me.please.data.io.session.SessionIO
 import study.me.please.data.io.clip_board.CollectionExport
+import study.me.please.data.io.subjects.CategoryIO
 import study.me.please.ui.collection.RefreshableViewModel
 import study.me.please.ui.collection.detail.facts.FactsFilter
 import study.me.please.ui.collection.detail.questions.QuestionsFilter
 import study.me.please.ui.collection.detail.questions.SortByType
+import study.me.please.ui.components.FactCardCategoryUseCase
 import study.me.please.ui.components.collapsing_layout.CollapsingLayoutState
 import java.util.UUID
 import javax.inject.Inject
@@ -37,7 +40,7 @@ class CollectionDetailViewModel @Inject constructor(
     private val repository: CollectionDetailRepository,
     private val dataManager: CollectionDetailDataManager,
     val clipBoard: GeneralClipBoard
-): BaseViewModel(), RefreshableViewModel {
+): BaseViewModel(), RefreshableViewModel, FactCardCategoryUseCase {
 
     companion object {
         /** The minimum amount of facts required to make a question - 1 prompt 2 answers */
@@ -49,6 +52,12 @@ class CollectionDetailViewModel @Inject constructor(
 
     override val isRefreshing: MutableStateFlow<Boolean> = MutableStateFlow(false)
     override var lastRefreshTimeMillis: Long = 0L
+
+    override val categories = dataManager.categories.asStateFlow()
+        get() {
+            if(field.value == null) requestAllCategories()
+            return field
+        }
 
     /** state for scrollable collapsing layout above everything else */
     val collapsingLayoutState = CollapsingLayoutState()
@@ -122,12 +131,30 @@ class CollectionDetailViewModel @Inject constructor(
     fun requestCollectionSave(collection: CollectionIO) {
         viewModelScope.launch(Dispatchers.Default) {
             if(collection.isNotEmpty) {
-                Log.d("kostka_test", "request_collection_save, collection: $collection")
                 repository.saveCollection(collection = collection.apply {
                     dateModified = DateUtils.now.time
                     if(collection.dateCreated == null) dateCreated = DateUtils.now.time
                 })
             }
+        }
+    }
+
+    override fun requestAllCategories() {
+        viewModelScope.launch {
+            dataManager.categories.value = repository.getAllCategories()
+        }
+    }
+
+    override fun requestAddNewCategory(name: String) {
+        viewModelScope.launch {
+            val category = CategoryIO(name = name)
+            dataManager.categories.update { previousCategories ->
+                previousCategories?.toMutableList()?.apply {
+                    add(category)
+                }
+            }
+            Log.d("kostka_test", "insert result: ${repository.insertCategory(category)}, " +
+                    "categories: ${dataManager.categories.value}")
         }
     }
 

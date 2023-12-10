@@ -5,6 +5,7 @@ import study.me.please.data.io.CollectionIO
 import study.me.please.data.io.FactIO
 import study.me.please.data.io.QuestionIO
 import study.me.please.data.io.session.SessionIO
+import study.me.please.data.io.subjects.CategoryIO
 import java.util.UUID
 import javax.inject.Inject
 
@@ -12,16 +13,19 @@ import javax.inject.Inject
 class CollectionDetailDataManager @Inject constructor() {
 
     /** Detail of received collection from database */
-    var collectionDetail: MutableStateFlow<CollectionIO> = MutableStateFlow(CollectionIO())
+    val collectionDetail: MutableStateFlow<CollectionIO> = MutableStateFlow(CollectionIO())
 
     /** list of all sessions saved locally */
-    var sessions: MutableStateFlow<List<SessionIO>?> = MutableStateFlow(null)
+    val sessions: MutableStateFlow<List<SessionIO>?> = MutableStateFlow(null)
 
     /** local temporary save of downloaded questions */
-    var collectionQuestions: MutableStateFlow<List<QuestionIO>> = MutableStateFlow(listOf())
+    val collectionQuestions: MutableStateFlow<List<QuestionIO>> = MutableStateFlow(listOf())
 
     /** local temporary save of downloaded facts */
-    var collectionFacts: MutableStateFlow<List<FactIO>> = MutableStateFlow(listOf())
+    val collectionFacts: MutableStateFlow<List<FactIO>> = MutableStateFlow(listOf())
+
+    /** List of all categories from DB */
+    val categories = MutableStateFlow<List<CategoryIO>?>(null)
 }
 
 enum class ErrorType {

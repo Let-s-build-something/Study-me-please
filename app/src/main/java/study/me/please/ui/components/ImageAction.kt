@@ -1,12 +1,16 @@
 package study.me.please.ui.components
 
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowForwardIos
 import androidx.compose.material.icons.outlined.Dashboard
+import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
@@ -14,7 +18,9 @@ import androidx.compose.material3.ButtonDefaults.elevatedButtonElevation
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
@@ -31,6 +37,7 @@ fun ImageAction(
     text: String? = null,
     leadingImageVector: ImageVector? = null,
     trailingImageVector: ImageVector? = null,
+    onTrailingIconClick: (() -> Unit)? = null,
     containerColor: Color = LocalTheme.colors.brandMain,
     contentColor: Color = LocalTheme.colors.tetrial,
     onClick: () -> Unit
@@ -72,7 +79,16 @@ fun ImageAction(
         }
         trailingImageVector?.let { icon ->
             Icon(
-                modifier = Modifier.size(ButtonDefaults.IconSize),
+                modifier = Modifier
+                    .size(ButtonDefaults.IconSize)
+                    .clip(CircleShape)
+                    .then(if(onTrailingIconClick != null) {
+                        Modifier.clickable(
+                            indication = rememberRipple(bounded = false),
+                            interactionSource = remember { MutableInteractionSource() },
+                            onClick = onTrailingIconClick
+                        )
+                    }else Modifier),
                 imageVector = icon,
                 contentDescription = null
             )

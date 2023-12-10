@@ -117,7 +117,7 @@ class AppThemeStyle: ThemeStyle {
     override val chipColorsDefault: SelectableChipColors
         @Composable get() = FilterChipDefaults.filterChipColors(
             containerColor = LocalTheme.colors.tetrial,
-            labelColor = LocalTheme.colors.brandMain,
+            labelColor = Colors.DARK_GREY_70,
             selectedContainerColor = LocalTheme.colors.brandMain,
             selectedLabelColor = LocalTheme.colors.tetrial
         )

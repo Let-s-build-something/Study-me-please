@@ -1,6 +1,5 @@
 package study.me.please.ui.collection.detail.subjects
 
-import android.util.Log
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -9,18 +8,20 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import study.me.please.base.BaseViewModel
+import study.me.please.base.GeneralClipBoard
 import study.me.please.data.io.subjects.CategoryIO
 import study.me.please.data.io.subjects.ParagraphIO
 import study.me.please.data.io.subjects.SubjectIO
-import study.me.please.ui.components.collapsing_layout.CollapsingLayout
+import study.me.please.ui.components.FactCardCategoryUseCase
 import study.me.please.ui.components.collapsing_layout.CollapsingLayoutState
 import javax.inject.Inject
 
 /** Communication bridge between UI and DB */
 @HiltViewModel
 class SubjectsViewModel @Inject constructor(
-    private val repository: SubjectsRepository
-): BaseViewModel() {
+    private val repository: SubjectsRepository,
+    val clipBoard: GeneralClipBoard
+): BaseViewModel(), FactCardCategoryUseCase {
 
     /** List of all subjects */
     private val _subjectsList = MutableStateFlow<List<SubjectIO>?>(null)
@@ -37,7 +38,7 @@ class SubjectsViewModel @Inject constructor(
     }
 
     /** List of all categories */
-    val categories = _categories.asStateFlow()
+    override val categories = _categories.asStateFlow()
 
     val collapsingLayoutState = CollapsingLayoutState()
 
@@ -53,6 +54,12 @@ class SubjectsViewModel @Inject constructor(
                     }
                 }
             }
+        }
+    }
+
+    override fun requestAllCategories() {
+        viewModelScope.launch {
+            _categories.value = repository.getAllCategories()
         }
     }
 
@@ -113,8 +120,7 @@ class SubjectsViewModel @Inject constructor(
         }
     }
 
-    /** Adds new bullet point to a subject */
-    fun addNewCategory(name: String) {
+    override fun requestAddNewCategory(name: String) {
         viewModelScope.launch {
             val category = CategoryIO(name = name)
             _categories.update { previousCategories ->

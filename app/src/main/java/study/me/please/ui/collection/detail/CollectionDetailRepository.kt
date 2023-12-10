@@ -8,6 +8,8 @@ import study.me.please.data.io.FactIO
 import study.me.please.data.io.QuestionIO
 import study.me.please.data.io.session.SessionIO
 import study.me.please.data.io.clip_board.CollectionExport
+import study.me.please.data.io.subjects.CategoryIO
+import study.me.please.data.room.CategoryDao
 import study.me.please.data.room.CollectionDao
 import study.me.please.data.room.FactDao
 import study.me.please.data.room.QuestionDao
@@ -20,6 +22,7 @@ class CollectionDetailRepository @Inject constructor(
     private val sessionDao: SessionDao,
     private val questionDao: QuestionDao,
     private val factDao: FactDao,
+    private val categoryDao: CategoryDao,
     private val gson: Gson
 ) {
 
@@ -55,6 +58,23 @@ class CollectionDetailRepository @Inject constructor(
     suspend fun saveQuestion(question: QuestionIO) {
         return withContext(Dispatchers.IO) {
             questionDao.insertQuestion(question)
+        }
+    }
+
+    /** Creates a new record of category or replaces existing */
+    suspend fun insertCategory(category: CategoryIO): Boolean {
+        return withContext(Dispatchers.IO) {
+            val exists = categoryDao.getCategoriesByNameExact(category.name) != null
+            // we create a new record if it doesn't exist yet
+            if(exists.not()) categoryDao.insertCategory(category)
+            exists
+        }
+    }
+
+    /** Returns all categories */
+    suspend fun getAllCategories(): List<CategoryIO>? {
+        return withContext(Dispatchers.IO) {
+            categoryDao.getAllCategories()
         }
     }
 

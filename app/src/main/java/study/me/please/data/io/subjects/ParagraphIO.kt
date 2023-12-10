@@ -23,6 +23,10 @@ data class ParagraphIO(
     var facts: List<FactIO> = listOf()
 ): Serializable {
 
+    /** Whether this data is empty or not */
+    val isEmpty: Boolean
+        get() = bulletPoints.isEmpty() && paragraphs.isEmpty() && facts.isEmpty()
+
     /** Locally saved category associated with this paragraph */
     @Ignore
     var localCategory: CategoryIO? = null

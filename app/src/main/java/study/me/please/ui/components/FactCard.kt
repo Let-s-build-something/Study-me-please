@@ -1,11 +1,16 @@
+@file:OptIn(ExperimentalMaterial3Api::class)
+
 package study.me.please.ui.components
 
 import android.annotation.SuppressLint
+import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -16,27 +21,44 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.FormatQuote
 import androidx.compose.material.icons.outlined.Image
+import androidx.compose.material.icons.outlined.QuestionMark
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.PlainTooltip
+import androidx.compose.material3.PlainTooltipBox
+import androidx.compose.material3.PlainTooltipState
+import androidx.compose.material3.RichTooltipBox
+import androidx.compose.material3.RichTooltipColors
 import androidx.compose.material3.Text
+import androidx.compose.material3.TooltipBox
+import androidx.compose.material3.rememberPlainTooltipState
+import androidx.compose.material3.rememberRichTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.onFocusEvent
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontStyle
@@ -45,21 +67,31 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.PopupPositionProvider
+import androidx.compose.ui.zIndex
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
-import androidx.constraintlayout.compose.Visibility
 import coil.compose.AsyncImagePainter
+import com.squadris.squadris.compose.components.ChipState
+import com.squadris.squadris.compose.components.CustomChipGroup
 import com.squadris.squadris.compose.components.DEFAULT_ANIMATION_LENGTH_SHORT
 import com.squadris.squadris.compose.components.MinimalisticIcon
 import com.squadris.squadris.compose.components.input.EditFieldInput
+import com.squadris.squadris.compose.theme.Colors
 import com.squadris.squadris.compose.theme.LocalTheme
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import study.me.please.R
 import study.me.please.data.io.FactIO
 import study.me.please.data.io.FactType
 import study.me.please.data.io.LargePathAsset
+import study.me.please.data.io.subjects.CategoryIO
 import study.me.please.ui.collection.detail.questions.detail.INPUT_DELAYED_RESPONSE_MILLIS
 import study.me.please.ui.components.tab_switch.MultiChoiceSwitch
 import study.me.please.ui.components.tab_switch.rememberTabSwitchState
@@ -70,6 +102,7 @@ fun FactCard(
     modifier: Modifier = Modifier,
     state: InteractiveCardState = rememberInteractiveCardState(),
     data: FactIO?,
+    categoryUseCase: FactCardCategoryUseCase,
     requestDataSave: (FactIO) -> Unit
 ) {
     Crossfade(targetState = data == null, label = "") { isShimmer ->
@@ -80,6 +113,7 @@ fun FactCard(
                 modifier = modifier,
                 data = data,
                 state = state,
+                categoryUseCase = categoryUseCase,
                 requestDataSave = requestDataSave,
                 onClick = {
                     when(state.mode.value) {
@@ -106,6 +140,7 @@ private fun ContentLayout(
     modifier: Modifier,
     data: FactIO,
     state: InteractiveCardState,
+    categoryUseCase: FactCardCategoryUseCase,
     requestDataSave: (FactIO) -> Unit,
     onClick: () -> Unit,
     onLongClick: () -> Unit
@@ -135,6 +170,7 @@ private fun ContentLayout(
         DataCard(
             state = state,
             data = data,
+            categoryUseCase = categoryUseCase,
             requestDataSave = {
                 requestDataSave(data)
             }
@@ -146,9 +182,65 @@ private fun ContentLayout(
 private fun DataCard(
     modifier: Modifier = Modifier,
     state: InteractiveCardState,
+    categoryUseCase: FactCardCategoryUseCase,
     requestDataSave: () -> Unit,
     data: FactIO
 ) {
+    val coroutineScope = rememberCoroutineScope()
+
+    val showAddNewCategory = remember { mutableStateOf(false) }
+
+    val categories = categoryUseCase.categories.collectAsState()
+    val chosenCategories = remember(data) {
+        mutableStateListOf(
+            *categories.value?.filter { data.categoryUids.contains(it.uid) }.orEmpty().toTypedArray()
+        )
+    }
+    val newCategories = remember(data) {
+        derivedStateOf {
+            categories.value.orEmpty().filter { chosenCategories.contains(it).not() }
+        }
+    }
+    val categoryChips = remember {
+        mutableStateListOf<ChipState>()
+    }
+
+    LaunchedEffect(chosenCategories.size) {
+        withContext(Dispatchers.Default) {
+            if(categories.value != null) {
+                data.categoryUids = chosenCategories.toList().map { it.uid }
+                requestDataSave()
+                categoryChips.clear()
+                categoryChips.addAll(chosenCategories.map { category ->
+                    ChipState(
+                        uid = category.uid,
+                        chipText = mutableStateOf(category.name),
+                        isChecked = mutableStateOf(false),
+                        isCheckable = false,
+                        onChipPressed = {
+                            if(state.mode.value == InteractiveCardMode.EDIT) {
+                                chosenCategories.removeIf { it.uid == category.uid }
+                            }
+                        }
+                    )
+                })
+            }
+        }
+    }
+    LaunchedEffect(categories.value) {
+        withContext(Dispatchers.Default) {
+            chosenCategories.clear()
+            chosenCategories.addAll(
+                categories.value?.filter { data.categoryUids.contains(it.uid) }.orEmpty()
+            )
+        }
+    }
+    LaunchedEffect(state.mode.value) {
+        if(state.mode.value != InteractiveCardMode.EDIT) {
+            showAddNewCategory.value = false
+        }
+    }
+
     val switchTypeState = rememberTabSwitchState(
         selectedTabIndex = remember(data) { mutableIntStateOf(data.type.ordinal) },
         tabs = arrayOfNulls<String?>(FactType.values().size).map { "" }.toMutableList(),
@@ -160,7 +252,11 @@ private fun DataCard(
         }
     )
 
-    val selectedType = FactType.values().getOrNull(switchTypeState.selectedTabIndex.value) ?: data.type
+    val selectedType = remember {
+        derivedStateOf {
+            FactType.values().getOrNull(switchTypeState.selectedTabIndex.value) ?: data.type
+        }
+    }
     val showCheckbox = state.mode.value == InteractiveCardMode.CHECKING
     val showRightAction = state.mode.value == InteractiveCardMode.DATA_DISPLAY
             || state.mode.value == InteractiveCardMode.EDIT
@@ -169,8 +265,8 @@ private fun DataCard(
     val selectedListIndex = remember(data) { mutableIntStateOf(-1) }
     val listItems = remember(data) { mutableStateListOf<String>() }
 
-    LaunchedEffect(selectedType) {
-        if(data.type == FactType.LIST || selectedType == FactType.BULLET_POINTS) {
+    LaunchedEffect(selectedType.value) {
+        if(selectedType.value == FactType.BULLET_POINTS) {
             listItems.clear()
             listItems.addAll(data.textList)
         }
@@ -180,6 +276,93 @@ private fun DataCard(
         requestDataSave()
     }
 
+    Row(
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        AnimatedVisibility(visible = state.mode.value == InteractiveCardMode.EDIT) {
+            Crossfade(targetState = showAddNewCategory, label = "") { showInput ->
+                if(showInput.value) {
+                    EditFieldItemPicker(
+                        modifier = Modifier
+                            .padding(start = 8.dp, top = 4.dp)
+                            .zIndex(1f),
+                        values = newCategories.value,
+                        defaultValue = "",
+                        onValueChosen = { chosenCategory ->
+                            showAddNewCategory.value = false
+                            chosenCategories.add(chosenCategory)
+                        },
+                        hint = stringResource(R.string.subject_categorize_paragraph),
+                        onEmptyStateClicked = { inputValue ->
+                            categoryUseCase.requestAddNewCategory(inputValue)
+                        },
+                        onFocusLost = {
+                            showAddNewCategory.value = false
+                        }
+                    )
+                }else {
+                    ComponentHeaderButton(
+                        modifier = Modifier.padding(start = 8.dp, top = 4.dp),
+                        text = stringResource(R.string.tags_add_new),
+                        onClick = {
+                            showAddNewCategory.value = true
+                        }
+                    )
+                }
+            }
+        }
+        AnimatedVisibility(
+            visible = (categories.value?.size ?: 6) < 5 && state.mode.value == InteractiveCardMode.EDIT
+        ) {
+            val tooltipState = rememberRichTooltipState(isPersistent = true)
+            RichTooltipBox(
+                tooltipState = tooltipState,
+                text = {
+                    Text(
+                        stringResource(R.string.tags_explanation),
+                        style = TextStyle(
+                            fontSize = 16.sp,
+                            color = Color.White
+                        )
+                    )
+                },
+                colors = RichTooltipColors(
+                    containerColor = LocalTheme.colors.backgroundLight,
+                    contentColor = Color.White,
+                    titleContentColor = Color.White,
+                    actionContentColor = Color.White
+                )
+            ) {
+                Icon(
+                    modifier = Modifier
+                        .padding(horizontal = 8.dp)
+                        .size(24.dp)
+                        .background(color = LocalTheme.colors.tetrial, shape = CircleShape)
+                        .tooltipTrigger()
+                        .clip(CircleShape)
+                        .clickable(
+                            onClick = {
+                                coroutineScope.launch {
+                                    tooltipState.show()
+                                }
+                            },
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = rememberRipple()
+                        )
+                        .padding(4.dp),
+                    imageVector = Icons.Outlined.QuestionMark,
+                    contentDescription = null,
+                    tint = Colors.DARK_GREY
+                )
+            }
+        }
+
+        AnimatedVisibility(visible = categoryChips.isNotEmpty()) {
+            CustomChipGroup(
+                chips = categoryChips
+            )
+        }
+    }
 
     ConstraintLayout(
         modifier = modifier
@@ -263,7 +446,7 @@ private fun DataCard(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(bottom = 2.dp, start = 4.dp),
-                    text = stringResource(id = selectedType.getStringRes()),
+                    text = stringResource(id = selectedType.value.getStringRes()),
                     fontSize = 12.sp,
                     color = LocalTheme.colors.secondary,
                     textAlign = TextAlign.Left
@@ -299,7 +482,7 @@ private fun DataCard(
                     top.linkTo(switchType.bottom, 8.dp)
                     width = Dimension.fillToConstraints
                 },
-            text = stringResource(selectedType.getShortHeaderStringRes()),
+            text = stringResource(selectedType.value.getShortHeaderStringRes()),
             fontSize = 12.sp,
             color = LocalTheme.colors.secondary
         )
@@ -320,15 +503,15 @@ private fun DataCard(
             if(inEditMode) {
                 EditFieldInput(
                     modifier = Modifier.fillMaxWidth(),
-                    prefix = if(selectedType == FactType.QUOTE) { { QuoteIcon() } }else null,
-                    suffix = if(selectedType == FactType.QUOTE) { { QuoteIcon() } }else null,
+                    prefix = if(selectedType.value == FactType.QUOTE) { { QuoteIcon() } }else null,
+                    suffix = if(selectedType.value == FactType.QUOTE) { { QuoteIcon() } }else null,
                     value = data.shortKeyInformation,
-                    hint = stringResource(id = selectedType.getShortHintStringRes()),
+                    hint = stringResource(id = selectedType.value.getShortHintStringRes()),
                     textStyle = TextStyle(
                         color = LocalTheme.colors.primary,
                         fontSize = 18.sp,
                         textAlign = TextAlign.Start,
-                        fontStyle = if(selectedType == FactType.QUOTE) FontStyle.Italic else FontStyle.Normal
+                        fontStyle = if(selectedType.value == FactType.QUOTE) FontStyle.Italic else FontStyle.Normal
                     ),
                     minLines = 2,
                     maxLines = 2
@@ -338,7 +521,7 @@ private fun DataCard(
                 }
             }else {
                 Crossfade(
-                    targetState = selectedType == FactType.QUOTE,
+                    targetState = selectedType.value == FactType.QUOTE,
                     label = "QuoteLayoutChange"
                 ) { isQuote ->
                     if(isQuote) {
@@ -374,7 +557,7 @@ private fun DataCard(
             }
         }
 
-        val longHeaderRes = selectedType.getLongHeaderStringRes()
+        val longHeaderRes = selectedType.value.getLongHeaderStringRes()
         Text(
             modifier = Modifier
                 .constrainAs(txtLongInformationHeader) {
@@ -422,7 +605,7 @@ private fun DataCard(
                     }
                     listItems.forEachIndexed { index, listItem ->
                         ListItemEditField(
-                            prefix = if(selectedType == FactType.BULLET_POINTS) {
+                            prefix = if(selectedType.value == FactType.BULLET_POINTS) {
                                 FactType.BULLET_POINT_PREFIX
                             }else "${index.plus(1)}.\t\t",
                             value = listItem,
@@ -448,7 +631,7 @@ private fun DataCard(
                     animationSpec = tween(durationMillis = DEFAULT_ANIMATION_LENGTH_SHORT)
                 ) { inEditMode ->
                     if(inEditMode) {
-                        val hint = selectedType.getLongHintStringRes()
+                        val hint = selectedType.value.getLongHintStringRes()
                         EditFieldInput(
                             modifier = Modifier.fillMaxWidth(),
                             value = data.longInformation,
@@ -535,6 +718,19 @@ private fun QuoteIcon() {
     )
 }
 
+/** Use case for categorizing facts */
+interface FactCardCategoryUseCase {
+
+    /** List of all current categories */
+    val categories: StateFlow<List<CategoryIO>?>
+
+    /** Requests for a new category */
+    fun requestAddNewCategory(name: String)
+
+    /** Makes a request for all existing categories */
+    fun requestAllCategories()
+}
+
 @SuppressLint("UnrememberedMutableState")
 @Preview
 @Composable
@@ -548,6 +744,20 @@ private fun Preview() {
         requestDataSave = {},
         state = InteractiveCardState(
             mode = mutableStateOf(InteractiveCardMode.EDIT)
-        )
+        ),
+        categoryUseCase = object: FactCardCategoryUseCase {
+            override val categories: StateFlow<List<CategoryIO>?>
+                get() = MutableStateFlow(listOf(
+                    CategoryIO(name = "test")
+                )).asStateFlow()
+
+            override fun requestAddNewCategory(name: String) {
+
+            }
+
+            override fun requestAllCategories() {
+
+            }
+        }
     )
 }

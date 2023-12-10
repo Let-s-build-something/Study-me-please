@@ -63,6 +63,7 @@ fun EditFieldItemPicker(
     defaultValue: String,
     emptyContent: (@Composable (inputValue: String) -> Unit)? = null,
     onValueChosen: (category: CategoryIO) -> Unit,
+    onFocusLost: () -> Unit = {},
     hint: String,
     textStyle: TextStyle = LocalTheme.styles.subheading,
     onEmptyStateClicked: (inputValue: String) -> Unit = {}
@@ -83,7 +84,7 @@ fun EditFieldItemPicker(
     val filteredValues = remember { mutableStateOf(values) }
     val isValid = remember {
         derivedStateOf {
-            inputValue.isNotEmpty() && values.none { it.name == inputValue }
+            inputValue.isNotEmpty() && values.none { it.name.lowercase() == inputValue.lowercase() }
         }
     }
     val showAddMore = remember {
@@ -105,15 +106,20 @@ fun EditFieldItemPicker(
         coroutineScope.launch {
             withContext(Dispatchers.Default) {
                 filteredValues.value = values.filter { value ->
-                    value.name != inputValue && value.name != defaultValue
+                    value.name != defaultValue
                             && Normalizer2.getNFDInstance().normalize(
                         value.name.filter { it.isWhitespace().not() }
-                    ).lowercase().contains(inputValue)
+                    ).lowercase().contains(
+                        Normalizer2.getNFDInstance().normalize(
+                            inputValue.filter { it.isWhitespace().not() }
+                        ).lowercase()
+                    )
                 }
             }
         }
     }
 
+    var previousFocusState = false
     Column(modifier = modifier) {
         EditFieldInput(
             modifier = Modifier
@@ -124,6 +130,10 @@ fun EditFieldItemPicker(
                         .plus(16.dp)
                 })
                 .onFocusEvent { state ->
+                    if (state.hasFocus.not() && previousFocusState) {
+                        onFocusLost()
+                    }
+                    previousFocusState = state.hasFocus
                     isFocused = state.hasFocus
                 },
             shape = inputShape,
@@ -158,37 +168,39 @@ fun EditFieldItemPicker(
                     }
                 }
                 itemsIndexed(filteredValues.value) { index, category ->
-                    if(index == 0) {
-                        HorizontalDivider(
-                            modifier = Modifier.padding(horizontal = 12.dp),
-                            thickness = 1.dp,
-                            color = LocalTheme.colors.backgroundLight
+                    Column {
+                        if(index == 0) {
+                            HorizontalDivider(
+                                modifier = Modifier.padding(horizontal = 12.dp),
+                                thickness = 1.dp,
+                                color = LocalTheme.colors.backgroundLight
+                            )
+                        }
+                        Text(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable(
+                                    indication = rememberRipple(bounded = true),
+                                    interactionSource = remember { MutableInteractionSource() }
+                                ) {
+                                    focusManager.clearFocus()
+                                    onValueChosen(category)
+                                    inputValue = category.name
+                                }
+                                .padding(12.dp)
+                                .padding(start = 4.dp),
+                            text = category.name,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            style = LocalTheme.styles.category
                         )
-                    }
-                    Text(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable(
-                                indication = rememberRipple(bounded = true),
-                                interactionSource = remember { MutableInteractionSource() }
-                            ) {
-                                focusManager.clearFocus()
-                                onValueChosen(category)
-                                inputValue = category.name
-                            }
-                            .padding(12.dp)
-                            .padding(start = 4.dp),
-                        text = category.name,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        style = LocalTheme.styles.category
-                    )
-                    if(filteredValues.value.lastIndex != index) {
-                        HorizontalDivider(
-                            modifier = Modifier.padding(horizontal = 12.dp),
-                            thickness = 1.dp,
-                            color = LocalTheme.colors.secondary
-                        )
+                        if(filteredValues.value.lastIndex != index) {
+                            HorizontalDivider(
+                                modifier = Modifier.padding(horizontal = 12.dp),
+                                thickness = 1.dp,
+                                color = LocalTheme.colors.secondary
+                            )
+                        }
                     }
                 }
                 item {

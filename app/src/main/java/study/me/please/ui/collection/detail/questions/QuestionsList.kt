@@ -334,27 +334,22 @@ fun QuestionsList(viewModel: CollectionDetailViewModel) {
                     }
 
                     OptionsLayout(
-                        onCopyRequest = {
-                            controller.copyItems()
-                        },
+                        onCopyRequest = { controller.copyItems() },
                         onPasteRequest = {
                             viewModel.pasteQuestionsClipBoard()
                             controller.stopChecking()
                         },
-                        onDeleteRequest = {
-                            showDeleteDialog.value = true
-                        },
+                        onDeleteRequest = { showDeleteDialog.value = true },
                         onSelectAll = {
                             interactiveStates.forEach {
                                 it.isChecked.value = true
                             }
                         },
-                        onDeselectAll = {
-                            controller.selectedQuestionUids.clear()
-                        },
+                        onDeselectAll = { controller.selectedQuestionUids.clear() },
                         isEditMode = controller.selectedQuestionUids.size > 0,
                         hasPasteOption = viewModel.clipBoard.questions.isEmpty.value.not(),
-                        animateTopDown = true
+                        animateTopDown = true,
+                        onClipBoardRemoval = { viewModel.clipBoard.questions.clear() }
                     ) {
                         AnimatedVisibility(visible = controller.selectedQuestionUids.size > 0) {
                             ImageAction(

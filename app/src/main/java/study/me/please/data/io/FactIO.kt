@@ -51,7 +51,10 @@ data class FactIO(
     /** date of creation of this data object */
     @SerializedName("date_created")
     @ColumnInfo("date_created")
-    val dateCreated: Long = DateUtils.now.timeInMillis
+    val dateCreated: Long = DateUtils.now.timeInMillis,
+
+    /** List of category unique identifiers to identify categories by which this fact is categorized */
+    var categoryUids: List<String> = listOf()
 ): Serializable {
 
     /**
@@ -127,5 +130,6 @@ data class FactIO(
         this.longInformationImage = fact.longInformationImage
         this.textList = fact.textList
         this.promptImage = fact.promptImage
+        this.categoryUids = fact.categoryUids
     }
 }

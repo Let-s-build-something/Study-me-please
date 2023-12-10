@@ -30,6 +30,8 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.squadris.squadris.compose.theme.LocalTheme
+import study.me.please.ui.components.AutoResizeText
+import study.me.please.ui.components.FontSizeRange
 
 /**
  * Custom app bar with options of customization
@@ -53,25 +55,28 @@ fun CustomizableAppBar(
         title = {
             Column(verticalArrangement = Arrangement.Center) {
                 AnimatedVisibility(visible = title != null) {
-                    Text(
-                        modifier = Modifier
-                            .wrapContentHeight()
-                            .offset {
-                                IntOffset(0, if(subtitle != null) 14.sp.value.toInt() else 0)
-                            },
+                    AutoResizeText(
+                        modifier = Modifier.wrapContentHeight(),
                         text = title ?: "",
                         fontWeight = FontWeight.Bold,
-                        fontSize = 22.sp,
+                        fontSizeRange = FontSizeRange(
+                            // cannot be lower than 14.sp as it could become smaller than subtitle
+                            min = 14.sp,
+                            max = 22.sp
+                        ),
                         color = LocalTheme.colors.tetrial,
                         overflow = TextOverflow.Ellipsis,
                         maxLines = 1
                     )
                 }
                 AnimatedVisibility(visible = subtitle != null) {
-                    Text(
+                    AutoResizeText(
                         modifier = Modifier.wrapContentHeight(),
                         text = subtitle ?: "",
-                        fontSize = 14.sp,
+                        fontSizeRange = FontSizeRange(
+                            min = 8.sp,
+                            max = 14.sp
+                        ),
                         color = LocalTheme.colors.tetrial,
                         overflow = TextOverflow.Ellipsis,
                         maxLines = 1
