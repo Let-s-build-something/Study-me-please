@@ -1,11 +1,15 @@
 package study.me.please.ui.collection.detail.questions.detail
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -25,11 +29,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
@@ -37,6 +43,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImagePainter
+import com.squadris.squadris.compose.components.DEFAULT_ANIMATION_LENGTH_SHORT
+import com.squadris.squadris.compose.components.MinimalisticIcon
 import com.squadris.squadris.compose.components.input.EditFieldInput
 import com.squadris.squadris.compose.theme.LocalTheme
 import kotlinx.coroutines.Dispatchers
@@ -49,22 +57,27 @@ import study.me.please.base.navigation.ActionBarIcon
 import study.me.please.base.navigation.NavIconType
 import study.me.please.base.navigation.NavigationComponent
 import study.me.please.base.navigation.NavigationDestination
+import study.me.please.data.io.FactType
 import study.me.please.data.io.LargePathAsset
 import study.me.please.data.io.QuestionAnswerIO
 import study.me.please.ui.collection.detail.REQUEST_DATA_SAVE_DELAY
 import study.me.please.ui.components.BasicAlertDialog
 import study.me.please.ui.components.BrandHeaderButton
 import study.me.please.ui.components.ButtonState
+import study.me.please.ui.components.ComponentHeaderButton
 import study.me.please.ui.components.EditableImageAsset
 import study.me.please.ui.components.ImageAction
 import study.me.please.ui.components.InteractiveCardMode
 import study.me.please.ui.components.InteractiveCardState
+import study.me.please.ui.components.ListItemEditField
 import study.me.please.ui.components.OptionsLayout
 import study.me.please.ui.components.QuestionAnswerCard
 import study.me.please.ui.components.TextHeader
 import study.me.please.ui.components.collapsing_layout.CollapsingBehavior
 import study.me.please.ui.components.collapsing_layout.CollapsingLayout
 import study.me.please.ui.components.pull_refresh.PullRefreshScreen
+import study.me.please.ui.components.tab_switch.MultiChoiceSwitch
+import study.me.please.ui.components.tab_switch.rememberTabSwitchState
 
 /** Main communication bridge for question detail */
 interface QuestionDetailBridge {
@@ -269,8 +282,54 @@ fun QuestionDetailScreen(
                     Column(modifier = Modifier.fillMaxWidth()) {
                         Spacer(modifier = Modifier.height(8.dp))
 
+                        val listItems = remember(question.value) {
+                            mutableStateListOf(*question.value?.promptList?.toTypedArray().orEmpty())
+                        }
+                        val selectedListIndex = remember(question.value) { mutableIntStateOf(-1) }
+
+                        LaunchedEffect(listItems.size) {
+                            question.value?.promptList = listItems.toList()
+                            bridge.updateQuestion()
+                        }
+
                         // prompt
                         TextHeader(text = stringResource(id = R.string.question_edit_field_prompt_header))
+
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .padding(4.dp)
+                                    .fillMaxWidth(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                ComponentHeaderButton(
+                                    onClick = {
+                                        listItems.add(0, " ")
+                                        selectedListIndex.intValue = listItems.size.minus(1)
+                                    }
+                                )
+                            }
+                            listItems.forEachIndexed { index, listItem ->
+                                ListItemEditField(
+                                    prefix = FactType.BULLET_POINT_PREFIX,
+                                    value = listItem,
+                                    onValueChange = { output ->
+                                        if (output.isBlank()) {
+                                            listItems.removeAt(index)
+                                            selectedListIndex.intValue--
+                                        } else {
+                                            listItems.removeAt(index)
+                                            listItems.add(index, output)
+                                            question.value?.promptList = listItems.toList()
+                                            bridge.updateQuestion()
+                                        }
+                                    }
+                                )
+                            }
+                        }
+
                         EditFieldInput(
                             modifier = itemModifier,
                             value = question.value?.prompt ?: "",

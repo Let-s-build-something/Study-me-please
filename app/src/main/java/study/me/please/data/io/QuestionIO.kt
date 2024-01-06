@@ -21,7 +21,7 @@ data class QuestionIO (
     var prompt: String = "",
 
     /** In case we are asking multiple points */
-    val promptList: List<String> = listOf(),
+    var promptList: List<String> = listOf(),
 
     /** further explanation of this question */
     @SerializedName("text_explanation")

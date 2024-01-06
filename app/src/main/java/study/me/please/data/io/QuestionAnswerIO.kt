@@ -31,7 +31,10 @@ data class QuestionAnswerIO (
 
     /** whether this answer is the correct one to a parent prompt */
     @SerializedName("is_correct")
-    var isCorrect: Boolean = false
+    var isCorrect: Boolean = false,
+
+    /** Whether the prompt is list mode */
+    var isListAnswer: Boolean = textList.isNotEmpty()
 ): Serializable {
 
     /** whether this object has no important data */

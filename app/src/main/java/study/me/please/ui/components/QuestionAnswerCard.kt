@@ -1,13 +1,15 @@
 package study.me.please.ui.components
 
 import android.annotation.SuppressLint
-import android.util.Log
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
@@ -24,10 +26,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -48,9 +53,12 @@ import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import study.me.please.R
+import study.me.please.data.io.FactType
 import study.me.please.data.io.LargePathAsset
 import study.me.please.data.io.QuestionAnswerIO
 import study.me.please.ui.collection.detail.questions.detail.INPUT_DELAYED_RESPONSE_MILLIS
+import study.me.please.ui.components.tab_switch.MultiChoiceSwitch
+import study.me.please.ui.components.tab_switch.rememberTabSwitchState
 
 /** Card with the option of editing data inside */
 @Composable
@@ -141,6 +149,9 @@ private fun DataCard(
 ) {
     val isCorrect = remember { mutableStateOf(data.isCorrect) }
     val imageAsset = remember { mutableStateOf(data.imageExplanation) }
+
+    val inputScope = rememberCoroutineScope()
+
     LaunchedEffect(data) {
         isCorrect.value = data.isCorrect
     }
@@ -153,7 +164,7 @@ private fun DataCard(
         val (checkBox,
             imgRightAction,
             txtAnswerHeader,
-            txtAnswer,
+            txtAnswerContainer,
             txtExplanation,
             txtExplanationHeader,
             imgExplanation,
@@ -197,75 +208,167 @@ private fun DataCard(
             }
         }
 
-        Text(
+        Column(
             modifier = Modifier
-                .constrainAs(txtAnswerHeader) {
-                    start.linkTo(
+                .animateContentSize()
+                .constrainAs(txtAnswerContainer) {
+                    linkTo(
                         if(state.mode.value == InteractiveCardMode.CHECKING) {
                             checkBox.end
-                        }else parent.start
+                        }else parent.start,
+                        imgRightAction.start
                     )
+                    width = Dimension.fillToConstraints
+                }
+        ) {
+            val isListType = remember(data) { mutableStateOf(data.isListAnswer) }
+
+            val switchTypeState = rememberTabSwitchState(
+                selectedTabIndex = remember(data) {
+                    mutableIntStateOf(if(isListType.value) 1 else 0)
                 },
-            text = stringResource(id = R.string.answer_field_content_header),
-            fontSize = 12.sp,
-            color = LocalTheme.colors.secondary
-        )
+                tabs = mutableListOf("", ""),
+                onSelectionChange = { index ->
+                    isListType.value = index == 1
+                }
+            )
+
+            MultiChoiceSwitch(
+                modifier = Modifier
+                    .padding(bottom = 2.dp)
+                    .fillMaxWidth(0.5f),
+                state = switchTypeState,
+                onItemCreation = { modifier, index, animatedColor ->
+                    listOf(
+                        FactType.DEFINITION,
+                        FactType.BULLET_POINTS
+                    ).getOrNull(index)?.getIconImageVector()?.let { imageVector ->
+                        MinimalisticIcon(
+                            modifier = modifier,
+                            indication = null,
+                            tint = animatedColor,
+                            imageVector = imageVector,
+                            onClick = {
+                                switchTypeState.selectedTabIndex.value = index
+                            }
+                        )
+                    }
+                }
+            )
+
+            Text(
+                modifier = Modifier.padding(bottom = 2.dp),
+                text = stringResource(
+                    if(isListType.value) {
+                        R.string.answer_field_content_header_list
+                    }else R.string.answer_field_content_header
+                ),
+                fontSize = 12.sp,
+                color = LocalTheme.colors.secondary
+            )
+            Crossfade(
+                targetState = isListType.value,
+                modifier = Modifier.animateContentSize(),
+                label = "",
+                animationSpec = tween(durationMillis = DEFAULT_ANIMATION_LENGTH_SHORT)
+            ) { isList ->
+                if (isList) {
+                    val listItems = remember(data) {
+                        mutableStateListOf(*data.textList.toTypedArray())
+                    }
+                    val selectedListIndex = remember(data) { mutableIntStateOf(-1) }
+
+                    LaunchedEffect(listItems.size) {
+                        data.textList = listItems.toList()
+                        requestDataSave()
+                    }
+
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .padding(4.dp)
+                                .fillMaxWidth(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            ComponentHeaderButton(
+                                onClick = {
+                                    listItems.add(0, " ")
+                                    selectedListIndex.intValue = listItems.size.minus(1)
+                                }
+                            )
+                        }
+                        listItems.forEachIndexed { index, listItem ->
+                            ListItemEditField(
+                                prefix = FactType.BULLET_POINT_PREFIX,
+                                value = listItem,
+                                onValueChange = { output ->
+                                    if (output.isBlank()) {
+                                        listItems.removeAt(index)
+                                        selectedListIndex.intValue--
+                                    } else {
+                                        listItems.removeAt(index)
+                                        listItems.add(index, output)
+                                        data.textList = listItems.toList()
+                                        requestDataSave()
+                                    }
+                                }
+                            )
+                        }
+                    }
+                }else {
+                    Crossfade(
+                        targetState = state.mode.value == InteractiveCardMode.EDIT,
+                        label = "",
+                        animationSpec = tween(durationMillis = DEFAULT_ANIMATION_LENGTH_SHORT)
+                    ) { inEditMode ->
+                        if(inEditMode) {
+                            EditFieldInput(
+                                modifier = Modifier.fillMaxWidth(),
+                                value = data.text,
+                                hint = stringResource(id = R.string.answer_edit_field_hint_content),
+                                minLines = 2,
+                                maxLines = 2
+                            ) { output ->
+                                data.text = output
+                                inputScope.coroutineContext.cancelChildren()
+                                inputScope.launch {
+                                    delay(INPUT_DELAYED_RESPONSE_MILLIS)
+                                    requestDataSave()
+                                }
+                            }
+                        }else {
+                            Text(
+                                text = data.text,
+                                fontSize = 18.sp,
+                                color = LocalTheme.colors.primary,
+                                maxLines = 3,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
         Text(
             modifier = Modifier
                 .constrainAs(txtExplanationHeader) {
-                    start.linkTo(txtAnswerHeader.start)
-                    top.linkTo(txtAnswer.bottom, 4.dp)
+                    start.linkTo(txtAnswerContainer.start)
+                    top.linkTo(txtAnswerContainer.bottom, 4.dp)
                 },
             text = stringResource(id = R.string.answer_field_explanation_header),
             fontSize = 12.sp,
             color = LocalTheme.colors.secondary
         )
-
-        val inputScope = rememberCoroutineScope()
-        Crossfade(
-            targetState = state.mode.value == InteractiveCardMode.EDIT,
-            modifier = Modifier
-                .animateContentSize()
-                .constrainAs(txtAnswer) {
-                    linkTo(txtAnswerHeader.start, imgRightAction.start)
-                    top.linkTo(txtAnswerHeader.bottom, 2.dp)
-                    width = Dimension.fillToConstraints
-                },
-            label = "",
-            animationSpec = tween(durationMillis = DEFAULT_ANIMATION_LENGTH_SHORT)
-        ) { inEditMode ->
-            if(inEditMode) {
-                EditFieldInput(
-                    modifier = Modifier.fillMaxWidth(),
-                    value = data.text,
-                    hint = stringResource(id = R.string.answer_edit_field_hint_content),
-                    minLines = 2,
-                    maxLines = 2
-                ) { output ->
-                    data.text = output
-                    inputScope.coroutineContext.cancelChildren()
-                    inputScope.launch {
-                        delay(INPUT_DELAYED_RESPONSE_MILLIS)
-                        requestDataSave()
-                    }
-                }
-            }else {
-                Text(
-                    text = data.text,
-                    fontSize = 18.sp,
-                    color = LocalTheme.colors.primary,
-                    maxLines = 3,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-        }
         Crossfade(
             targetState = state.mode.value == InteractiveCardMode.EDIT,
             modifier = Modifier
                 .animateContentSize()
                 .constrainAs(txtExplanation) {
                     linkTo(
-                        txtAnswerHeader.start,
+                        txtAnswerContainer.start,
                         if (state.mode.value == InteractiveCardMode.EDIT) {
                             imgRightAction.start
                         } else txtIsCorrect.start
@@ -393,7 +496,7 @@ private fun Preview() {
         ),
         requestDataSave = {},
         state = InteractiveCardState(
-            mode = mutableStateOf(InteractiveCardMode.DATA_DISPLAY)
+            mode = mutableStateOf(InteractiveCardMode.EDIT)
         )
     )
 }
