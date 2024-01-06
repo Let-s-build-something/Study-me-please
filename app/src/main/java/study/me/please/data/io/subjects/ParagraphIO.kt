@@ -23,6 +23,10 @@ data class ParagraphIO(
     var facts: List<FactIO> = listOf()
 ): Serializable {
 
+    /** Whether this data can be taken seriously */
+    val isSeriousDataPoint: Boolean
+        get() = bulletPoints.isNotEmpty() && categoryUid.isNullOrEmpty().not()
+
     /** Whether this data is empty or not */
     val isEmpty: Boolean
         get() = bulletPoints.isEmpty() && paragraphs.isEmpty() && facts.isEmpty()

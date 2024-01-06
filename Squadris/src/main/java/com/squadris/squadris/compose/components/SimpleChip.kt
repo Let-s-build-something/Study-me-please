@@ -47,7 +47,7 @@ fun SimpleChip(
                     Icon(
                         modifier = Modifier.size(18.dp),
                         imageVector = imageVector,
-                        tint = if(selected) LocalTheme.colors.tetrial else Colors.DARK_GREY_70,
+                        tint = if(selected) LocalTheme.colors.tetrial else LocalTheme.colors.brandMain,
                         contentDescription = null
                     )
                     Spacer(modifier = Modifier.width(4.dp))

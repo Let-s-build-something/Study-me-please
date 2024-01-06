@@ -1,5 +1,6 @@
 package study.me.please.base
 
+import android.app.Activity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.animation.AnimatedVisibility
@@ -31,6 +32,9 @@ val LocalSnackbarHost = staticCompositionLocalOf<SnackbarHostState?> { null }
 
 /** whether device is a tablet or not */
 val LocalIsTablet = staticCompositionLocalOf { false }
+
+/** Currently displayed, hosting activity */
+val LocalActivity = staticCompositionLocalOf<Activity?> { null }
 
 /**
  * Most basic all-in-one implementation of a screen with action bar, without bottom bar
@@ -66,7 +70,7 @@ fun BaseScreen(
     }
 
     CompositionLocalProvider(
-        LocalSnackbarHost provides snackbarHostState
+        LocalSnackbarHost provides (LocalSnackbarHost.current ?: snackbarHostState)
     ) {
         Scaffold(
             modifier = modifier
@@ -85,7 +89,7 @@ fun BaseScreen(
             topBar = {
                 AnimatedVisibility(visible = appBarVisible) {
                     CustomizableAppBar(
-                        modifier = Modifier.background(LocalTheme.colors.brandMain),
+                        modifier = Modifier.background(color = LocalTheme.colors.brandMain),
                         title = title,
                         navigationIcon = navigationIcon,
                         subtitle = subtitle,

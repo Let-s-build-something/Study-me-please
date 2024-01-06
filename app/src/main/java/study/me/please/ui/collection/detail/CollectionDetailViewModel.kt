@@ -118,7 +118,6 @@ class CollectionDetailViewModel @Inject constructor(
         viewModelScope.launch {
             if(isPullRefresh) setRefreshing(true)
             repository.getCollectionByUid(collectionUid)?.let { collectionDetail ->
-                Log.d("kostka_test", "requestData, questionUidList: ${collectionDetail.questionUidList}")
                 dataManager.collectionDetail.value = collectionDetail
                 requestCachedQuestions(questionUidList = collectionDetail.questionUidList.toList())
                 requestCachedFacts(factUidList = collectionDetail.factUidList.toList())
@@ -153,8 +152,6 @@ class CollectionDetailViewModel @Inject constructor(
                     add(category)
                 }
             }
-            Log.d("kostka_test", "insert result: ${repository.insertCategory(category)}, " +
-                    "categories: ${dataManager.categories.value}")
         }
     }
 
@@ -496,7 +493,6 @@ class CollectionDetailViewModel @Inject constructor(
                 questionUidList.add(newQuestion.uid)
             })
         }
-        Log.d("kostka_test", "newQuestion uid: ${newQuestion.uid}")
         return newQuestion
     }
 

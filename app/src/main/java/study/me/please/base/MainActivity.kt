@@ -1,11 +1,16 @@
 package study.me.please.base
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -38,6 +43,7 @@ class MainActivity: ComponentActivity(), BackboneChannel {
 
     private val settingsViewModel: SettingsViewModel by viewModels()
 
+    @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
@@ -50,99 +56,118 @@ class MainActivity: ComponentActivity(), BackboneChannel {
                     true
                 )
             ) }
+            val snackbarHostState = SnackbarHostState()
 
-            StudyMeAppTheme(isDarkTheme = isDarkTheme.value) {
-                val navController = rememberNavController()
-                val isTablet = isTablet(activity = this)
+            Scaffold(
+                snackbarHost = {
+                    SnackbarHost(
+                        hostState = snackbarHostState,
+                        snackbar = { data ->
+                            Snackbar(
+                                data,
+                                shape = LocalTheme.shapes.componentShape,
+                                containerColor = LocalTheme.colors.brandMain,
+                                contentColor = LocalTheme.colors.tetrial
+                            )
+                        }
+                    )
+                }
+            ) { _ ->
+                StudyMeAppTheme(isDarkTheme = isDarkTheme.value) {
+                    val navController = rememberNavController()
+                    val isTablet = isTablet(activity = this)
 
-                CompositionLocalProvider(
-                    LocalNavController provides navController,
-                    LocalIsTablet provides isTablet
-                ) {
-                    NavHost(
-                        modifier = Modifier.background(color = LocalTheme.colors.backgroundLight),
-                        navController = navController,
-                        startDestination = NavigationDestination.Home.route
+                    CompositionLocalProvider(
+                        LocalNavController provides navController,
+                        LocalIsTablet provides isTablet,
+                        LocalActivity provides this,
+                        LocalSnackbarHost provides snackbarHostState
                     ) {
-                        composable(NavigationDestination.Home.route) {
-                            HomeScreen()
-                        }
-                        composable(NavigationDestination.CollectionLobby.route) { backStackEntry ->
-                            CollectionLobbyScreen()
-                            backStackEntry.arguments?.remove(
-                                NavigationComponent.CREATE_NEW_ITEM
-                            )
-                        }
-                        composable(NavigationDestination.Settings.route) {
-                            SettingsScreen(
-                                isDarkTheme = isDarkTheme.value,
-                                viewModel = settingsViewModel
-                            ) { newValue ->
-                                isDarkTheme.value = newValue
+                        NavHost(
+                            modifier = Modifier.background(color = LocalTheme.colors.backgroundLight),
+                            navController = navController,
+                            startDestination = NavigationDestination.Home.route
+                        ) {
+                            composable(NavigationDestination.Home.route) {
+                                HomeScreen()
                             }
-                        }
-                        composable(NavigationDestination.SessionLobby.route) { backStackEntry ->
-                            SessionLobbyScreen(
-                                createNewItem = backStackEntry.getArgument(NavigationComponent.CREATE_NEW_ITEM).toBoolean()
-                            )
-                        }
-                        composable(
-                            NavigationDestination.SessionDetail.route,
-                            arguments = NavigationDestination.SessionDetail.navArguments
-                        ) { backStackEntry ->
-                            SessionDetailScreen(
-                                title = backStackEntry.getArgument(NavigationComponent.TOOLBAR_TITLE),
-                                collectionUidList = backStackEntry.getArgument(NavigationComponent.COLLECTION_UID_LIST)?.split(","),
-                                questionUidList = backStackEntry.getArgument(NavigationComponent.QUESTION_UID_LIST)?.split(","),
-                                sessionUid = backStackEntry.getArgument(NavigationComponent.SESSION_UID)
-                            )
-                        }
-                        composable(
-                            NavigationDestination.CollectionDetail.route,
-                            arguments = NavigationDestination.CollectionDetail.navArguments
-                        ) { backStackEntry ->
-                            CollectionDetailScreen(
-                                title = backStackEntry.getArgument(NavigationComponent.TOOLBAR_TITLE),
-                                collectionUid = backStackEntry.getArgument(NavigationComponent.COLLECTION_UID)
-                            )
-                        }
-                        composable(
-                            NavigationDestination.SessionPlay.route,
-                            arguments = NavigationDestination.SessionPlay.navArguments
-                        ) { backStackEntry ->
-                            SessionScreen(
-                                title = backStackEntry.getArgument(NavigationComponent.TOOLBAR_TITLE),
-                                isTestingMode = backStackEntry.getArgument(NavigationComponent.IS_TESTING_MODE).toBoolean(),
-                                sessionUid = backStackEntry.getArgument(NavigationComponent.SESSION_UID),
-                                questionUid = backStackEntry.getArgument(NavigationComponent.QUESTION_UID),
-                                questionUids = backStackEntry.getArgument(NavigationComponent.QUESTION_UID_LIST)?.split(","),
-                                collectionUid = backStackEntry.getArgument(NavigationComponent.COLLECTION_UID)
-                            )
-                            backStackEntry.arguments?.remove(NavigationComponent.QUESTION_UID_LIST)
-                            backStackEntry.arguments?.remove(NavigationComponent.COLLECTION_UID)
-                        }
-                        composable(
-                            NavigationDestination.QuestionDetail.route,
-                            arguments = NavigationDestination.QuestionDetail.navArguments
-                        ) { backStackEntry ->
-                            backStackEntry.getArgument(NavigationComponent.QUESTION_UID)?.let { uid ->
-                                QuestionDetailScreen(
-                                    questionUid = uid,
-                                    toolbarTitle = backStackEntry.getArgument(NavigationComponent.TOOLBAR_TITLE)
+                            composable(NavigationDestination.CollectionLobby.route) { backStackEntry ->
+                                CollectionLobbyScreen()
+                                backStackEntry.arguments?.remove(
+                                    NavigationComponent.CREATE_NEW_ITEM
                                 )
                             }
-                        }
-                        composable(
-                            NavigationDestination.Subjects.route,
-                            arguments = NavigationDestination.Subjects.navArguments
-                        ) { backStackEntry ->
-                            backStackEntry.getArgument(NavigationComponent.COLLECTION_UID)?.let { collectionUid ->
-                                SubjectsHostScreen(
-                                    collectionUid = collectionUid,
-                                    toolbarTitle = backStackEntry.getArgument(
-                                        NavigationComponent.TOOLBAR_TITLE
+                            composable(NavigationDestination.Settings.route) {
+                                SettingsScreen(
+                                    isDarkTheme = isDarkTheme.value,
+                                    viewModel = settingsViewModel
+                                ) { newValue ->
+                                    isDarkTheme.value = newValue
+                                }
+                            }
+                            composable(NavigationDestination.SessionLobby.route) { backStackEntry ->
+                                SessionLobbyScreen(
+                                    createNewItem = backStackEntry.getArgument(NavigationComponent.CREATE_NEW_ITEM).toBoolean()
+                                )
+                            }
+                            composable(
+                                NavigationDestination.SessionDetail.route,
+                                arguments = NavigationDestination.SessionDetail.navArguments
+                            ) { backStackEntry ->
+                                SessionDetailScreen(
+                                    title = backStackEntry.getArgument(NavigationComponent.TOOLBAR_TITLE),
+                                    collectionUidList = backStackEntry.getArgument(NavigationComponent.COLLECTION_UID_LIST)?.split(","),
+                                    questionUidList = backStackEntry.getArgument(NavigationComponent.QUESTION_UID_LIST)?.split(","),
+                                    sessionUid = backStackEntry.getArgument(NavigationComponent.SESSION_UID)
+                                )
+                            }
+                            composable(
+                                NavigationDestination.CollectionDetail.route,
+                                arguments = NavigationDestination.CollectionDetail.navArguments
+                            ) { backStackEntry ->
+                                CollectionDetailScreen(
+                                    title = backStackEntry.getArgument(NavigationComponent.TOOLBAR_TITLE),
+                                    collectionUid = backStackEntry.getArgument(NavigationComponent.COLLECTION_UID)
+                                )
+                            }
+                            composable(
+                                NavigationDestination.SessionPlay.route,
+                                arguments = NavigationDestination.SessionPlay.navArguments
+                            ) { backStackEntry ->
+                                SessionScreen(
+                                    title = backStackEntry.getArgument(NavigationComponent.TOOLBAR_TITLE),
+                                    isTestingMode = backStackEntry.getArgument(NavigationComponent.IS_TESTING_MODE).toBoolean(),
+                                    sessionUid = backStackEntry.getArgument(NavigationComponent.SESSION_UID),
+                                    questionUid = backStackEntry.getArgument(NavigationComponent.QUESTION_UID),
+                                    questionUids = backStackEntry.getArgument(NavigationComponent.QUESTION_UID_LIST)?.split(","),
+                                    collectionUid = backStackEntry.getArgument(NavigationComponent.COLLECTION_UID)
+                                )
+                                backStackEntry.arguments?.remove(NavigationComponent.QUESTION_UID_LIST)
+                                backStackEntry.arguments?.remove(NavigationComponent.COLLECTION_UID)
+                            }
+                            composable(
+                                NavigationDestination.QuestionDetail.route,
+                                arguments = NavigationDestination.QuestionDetail.navArguments
+                            ) { backStackEntry ->
+                                backStackEntry.getArgument(NavigationComponent.QUESTION_UID)?.let { uid ->
+                                    QuestionDetailScreen(
+                                        questionUid = uid,
+                                        toolbarTitle = backStackEntry.getArgument(NavigationComponent.TOOLBAR_TITLE)
                                     )
-                                )
+                                }
+                            }
+                            composable(
+                                NavigationDestination.Subjects.route,
+                                arguments = NavigationDestination.Subjects.navArguments
+                            ) { backStackEntry ->
+                                backStackEntry.getArgument(NavigationComponent.COLLECTION_UID)?.let { collectionUid ->
+                                    SubjectsHostScreen(
+                                        collectionUid = collectionUid,
+                                        toolbarTitle = backStackEntry.getArgument(
+                                            NavigationComponent.TOOLBAR_TITLE
+                                        )
+                                    )
+                                }
                             }
                         }
                     }

@@ -47,6 +47,10 @@ data class SubjectIO(
     val dateCreated: Long = DateUtils.now.timeInMillis
 ): Serializable {
 
+    /** Whether this data can be taken seriously */
+    val isSeriousDataPoint: Boolean
+        get() = bulletPoints.isNotEmpty() && name.isNotEmpty()
+
     /** Updates this object with new subject [subject] */
     fun updateTO(subject: SubjectIO) {
         this.categoryUids = subject.categoryUids

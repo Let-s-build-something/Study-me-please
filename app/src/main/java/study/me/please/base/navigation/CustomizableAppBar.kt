@@ -1,11 +1,15 @@
 package study.me.please.base.navigation
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -19,12 +23,19 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -53,35 +64,41 @@ fun CustomizableAppBar(
     TopAppBar(
         modifier = modifier,
         title = {
-            Column(verticalArrangement = Arrangement.Center) {
-                AnimatedVisibility(visible = title != null) {
-                    AutoResizeText(
-                        modifier = Modifier.wrapContentHeight(),
-                        text = title ?: "",
+            Column(
+                modifier = Modifier.height(64.0.dp),
+                verticalArrangement = Arrangement.Center
+            ) {
+                var fontSizeValue by remember { mutableStateOf(22f) }
+
+                AutoResizeText(
+                    modifier = Modifier.animateContentSize(),
+                    text = buildAnnotatedString {
+                        if(title != null) {
+                            withStyle(SpanStyle(fontSize = fontSizeValue.sp)) {
+                                append(title)
+                            }
+                        }
+                        if(subtitle != null) {
+                            if(title != null) append("\n")
+                            withStyle(SpanStyle(fontSize = fontSizeValue.times(0.65f).sp, fontWeight = FontWeight.Normal)) {
+                                append(subtitle)
+                            }
+                        }
+                    },
+                    style = TextStyle(
                         fontWeight = FontWeight.Bold,
-                        fontSizeRange = FontSizeRange(
-                            // cannot be lower than 14.sp as it could become smaller than subtitle
-                            min = 14.sp,
-                            max = 22.sp
-                        ),
-                        color = LocalTheme.colors.tetrial,
-                        overflow = TextOverflow.Ellipsis,
-                        maxLines = 1
-                    )
-                }
-                AnimatedVisibility(visible = subtitle != null) {
-                    AutoResizeText(
-                        modifier = Modifier.wrapContentHeight(),
-                        text = subtitle ?: "",
-                        fontSizeRange = FontSizeRange(
-                            min = 8.sp,
-                            max = 14.sp
-                        ),
-                        color = LocalTheme.colors.tetrial,
-                        overflow = TextOverflow.Ellipsis,
-                        maxLines = 1
-                    )
-                }
+                        color = LocalTheme.colors.tetrial
+                    ),
+                    fontSizeRange = FontSizeRange(
+                        min = 10.sp,
+                        max = 22.sp
+                    ),
+                    overflow = TextOverflow.Ellipsis,
+                    maxLines = if(title != null && subtitle != null) 2 else 1,
+                    onFontSizeChange = { fontSize ->
+                        fontSizeValue = fontSize
+                    }
+                )
             }
         },
         navigationIcon = {

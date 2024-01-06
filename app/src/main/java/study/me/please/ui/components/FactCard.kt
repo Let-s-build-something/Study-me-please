@@ -45,6 +45,7 @@ import androidx.compose.material3.rememberPlainTooltipState
 import androidx.compose.material3.rememberRichTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -241,22 +242,18 @@ private fun DataCard(
         }
     }
 
+    val selectedFactType = remember { mutableStateOf(data.type) }
     val switchTypeState = rememberTabSwitchState(
         selectedTabIndex = remember(data) { mutableIntStateOf(data.type.ordinal) },
         tabs = arrayOfNulls<String?>(FactType.values().size).map { "" }.toMutableList(),
         onSelectionChange = { index ->
             FactType.values().getOrNull(index)?.let { factType ->
                 data.type = factType
+                selectedFactType.value = factType
             }
             requestDataSave()
         }
     )
-
-    val selectedType = remember {
-        derivedStateOf {
-            FactType.values().getOrNull(switchTypeState.selectedTabIndex.value) ?: data.type
-        }
-    }
     val showCheckbox = state.mode.value == InteractiveCardMode.CHECKING
     val showRightAction = state.mode.value == InteractiveCardMode.DATA_DISPLAY
             || state.mode.value == InteractiveCardMode.EDIT
@@ -265,8 +262,8 @@ private fun DataCard(
     val selectedListIndex = remember(data) { mutableIntStateOf(-1) }
     val listItems = remember(data) { mutableStateListOf<String>() }
 
-    LaunchedEffect(selectedType.value) {
-        if(selectedType.value == FactType.BULLET_POINTS) {
+    LaunchedEffect(selectedFactType.value) {
+        if(selectedFactType.value == FactType.BULLET_POINTS || selectedFactType.value == FactType.LIST) {
             listItems.clear()
             listItems.addAll(data.textList)
         }
@@ -446,8 +443,8 @@ private fun DataCard(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(bottom = 2.dp, start = 4.dp),
-                    text = stringResource(id = selectedType.value.getStringRes()),
-                    fontSize = 12.sp,
+                    text = stringResource(id = selectedFactType.value.getStringRes()),
+                    fontSize = 16.sp,
                     color = LocalTheme.colors.secondary,
                     textAlign = TextAlign.Left
                 )
@@ -482,7 +479,7 @@ private fun DataCard(
                     top.linkTo(switchType.bottom, 8.dp)
                     width = Dimension.fillToConstraints
                 },
-            text = stringResource(selectedType.value.getShortHeaderStringRes()),
+            text = stringResource(selectedFactType.value.getShortHeaderStringRes()),
             fontSize = 12.sp,
             color = LocalTheme.colors.secondary
         )
@@ -503,15 +500,15 @@ private fun DataCard(
             if(inEditMode) {
                 EditFieldInput(
                     modifier = Modifier.fillMaxWidth(),
-                    prefix = if(selectedType.value == FactType.QUOTE) { { QuoteIcon() } }else null,
-                    suffix = if(selectedType.value == FactType.QUOTE) { { QuoteIcon() } }else null,
+                    prefix = if(selectedFactType.value == FactType.QUOTE) { { QuoteIcon() } }else null,
+                    suffix = if(selectedFactType.value == FactType.QUOTE) { { QuoteIcon() } }else null,
                     value = data.shortKeyInformation,
-                    hint = stringResource(id = selectedType.value.getShortHintStringRes()),
+                    hint = stringResource(id = selectedFactType.value.getShortHintStringRes()),
                     textStyle = TextStyle(
                         color = LocalTheme.colors.primary,
                         fontSize = 18.sp,
                         textAlign = TextAlign.Start,
-                        fontStyle = if(selectedType.value == FactType.QUOTE) FontStyle.Italic else FontStyle.Normal
+                        fontStyle = if(selectedFactType.value == FactType.QUOTE) FontStyle.Italic else FontStyle.Normal
                     ),
                     minLines = 2,
                     maxLines = 2
@@ -521,7 +518,7 @@ private fun DataCard(
                 }
             }else {
                 Crossfade(
-                    targetState = selectedType.value == FactType.QUOTE,
+                    targetState = selectedFactType.value == FactType.QUOTE,
                     label = "QuoteLayoutChange"
                 ) { isQuote ->
                     if(isQuote) {
@@ -557,7 +554,7 @@ private fun DataCard(
             }
         }
 
-        val longHeaderRes = selectedType.value.getLongHeaderStringRes()
+        val longHeaderRes = selectedFactType.value.getLongHeaderStringRes()
         Text(
             modifier = Modifier
                 .constrainAs(txtLongInformationHeader) {
@@ -605,7 +602,7 @@ private fun DataCard(
                     }
                     listItems.forEachIndexed { index, listItem ->
                         ListItemEditField(
-                            prefix = if(selectedType.value == FactType.BULLET_POINTS) {
+                            prefix = if(selectedFactType.value == FactType.BULLET_POINTS) {
                                 FactType.BULLET_POINT_PREFIX
                             }else "${index.plus(1)}.\t\t",
                             value = listItem,
@@ -631,7 +628,7 @@ private fun DataCard(
                     animationSpec = tween(durationMillis = DEFAULT_ANIMATION_LENGTH_SHORT)
                 ) { inEditMode ->
                     if(inEditMode) {
-                        val hint = selectedType.value.getLongHintStringRes()
+                        val hint = selectedFactType.value.getLongHintStringRes()
                         EditFieldInput(
                             modifier = Modifier.fillMaxWidth(),
                             value = data.longInformation,

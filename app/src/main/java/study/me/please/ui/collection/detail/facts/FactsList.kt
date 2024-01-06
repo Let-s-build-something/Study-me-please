@@ -1,5 +1,6 @@
 package study.me.please.ui.collection.detail.facts
 
+import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.LinearOutSlowInEasing
@@ -174,14 +175,16 @@ fun FactsList(
                 }
             }
             LaunchedEffect(facts.value.size) {
-                if(collectionDetail.value.factUidList.size < facts.value.size) {
-                    interactiveStates.firstOrNull()?.mode?.value = InteractiveCardMode.EDIT
-                }
-                coroutineScope.launch(Dispatchers.Default) {
-                    collectionDetail.value.factUidList.apply {
-                        addAll(facts.value.map { it.uid })
+                if(collectionDetail.value.factUidList.size != facts.value.size) {
+                    if(collectionDetail.value.factUidList.size < facts.value.size) {
+                        interactiveStates.firstOrNull()?.mode?.value = InteractiveCardMode.EDIT
                     }
-                    viewModel.requestCollectionSave(collectionDetail.value)
+                    coroutineScope.launch(Dispatchers.Default) {
+                        collectionDetail.value.factUidList.apply {
+                            addAll(facts.value.map { it.uid })
+                        }
+                        viewModel.requestCollectionSave(collectionDetail.value)
+                    }
                 }
             }
 

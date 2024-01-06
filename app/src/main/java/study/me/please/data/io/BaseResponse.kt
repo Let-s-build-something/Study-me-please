@@ -10,5 +10,8 @@ data class BaseResponse<D> (
     val isLoading: Boolean = data != null,
 
     /** Error response message to the user */
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+
+    /** Code of last error */
+    val errorCode: String? = null
 )

@@ -213,7 +213,7 @@ fun SubjectScreen(
                         )
                         AnimatedVisibility(
                             modifier = Modifier.weight(1f),
-                            visible = subjectParagraphs.size == 0
+                            visible = showButtonParagraphsUp
                         ) {
                             ButtonAddParagraph(
                                 modifier = Modifier.weight(1f),
@@ -269,6 +269,7 @@ fun SubjectScreen(
                     onNewCategoryChosen = { chosenCategory ->
                         subjectParagraphs.getOrNull(index)?.apply {
                             localCategory = chosenCategory
+                            categoryUid = chosenCategory.uid
                             bridge.updateParagraph(this)
                         }
                     },

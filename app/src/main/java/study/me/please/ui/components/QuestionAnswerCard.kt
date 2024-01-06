@@ -61,7 +61,6 @@ fun QuestionAnswerCard(
     requestDataSave: () -> Unit
 ) {
     if(data != null) {
-        Log.d("kostka_test", "QuestionAnswerCard, state: ${state.mode}")
         ContentLayout(
             modifier = modifier,
             data = data,

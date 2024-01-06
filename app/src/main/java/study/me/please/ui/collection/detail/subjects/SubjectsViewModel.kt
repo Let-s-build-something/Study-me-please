@@ -1,14 +1,25 @@
 package study.me.please.ui.collection.detail.subjects
 
+import android.app.Activity
+import android.util.Log
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import study.me.please.base.BaseViewModel
 import study.me.please.base.GeneralClipBoard
+import study.me.please.data.io.BaseResponse
+import study.me.please.data.io.QuestionIO
 import study.me.please.data.io.subjects.CategoryIO
 import study.me.please.data.io.subjects.ParagraphIO
 import study.me.please.data.io.subjects.SubjectIO
@@ -20,18 +31,31 @@ import javax.inject.Inject
 @HiltViewModel
 class SubjectsViewModel @Inject constructor(
     private val repository: SubjectsRepository,
-    val clipBoard: GeneralClipBoard
+    val clipBoard: GeneralClipBoard,
+    private val questionGenerator: QuestionGenerator
 ): BaseViewModel(), FactCardCategoryUseCase {
 
-    /** List of all subjects */
+    companion object {
+        /** in case we failed updating collection with the new questions */
+        const val FAILED_INSERT = "failed_insert"
+    }
+
+    /** List of all subjects related to a collection */
     private val _subjectsList = MutableStateFlow<List<SubjectIO>?>(null)
 
+    /** List of all categories */
     private val _categories = MutableStateFlow<List<CategoryIO>?>(null)
+
+    /** response from generating questions */
+    private val _questionsGeneratingResponse = MutableSharedFlow<BaseResponse<List<QuestionIO>>>()
 
     /** Filter for current subjects */
     val filter = MutableStateFlow(SubjectsFilter())
 
-    /** Current data from the DB */
+    /** response from generating questions */
+    val questionsGeneratingResponse = _questionsGeneratingResponse.asSharedFlow()
+
+    /** List of all subjects related to a collection */
     val subjects = _subjectsList.combine(filter) { subjects, filter ->
         // TODO searching in subjects
         subjects
@@ -41,6 +65,35 @@ class SubjectsViewModel @Inject constructor(
     override val categories = _categories.asStateFlow()
 
     val collapsingLayoutState = CollapsingLayoutState()
+
+    /** Generates questions and saves them right after that */
+    fun generateQuestions(
+        checkedSubjectUids: List<String>,
+        activity: Activity,
+        collectionUid: String
+    ) {
+        viewModelScope.launch(Dispatchers.Default) {
+            val collection = repository.getCollection(collectionUid)
+            val response = questionGenerator.generateQuestions(
+                activity = activity,
+                subjects = _subjectsList.value?.filter { checkedSubjectUids.contains(it.uid) }.orEmpty(),
+                allSubject = _subjectsList.value.orEmpty(),
+                categories = categories.value.orEmpty(),
+                excludedList = repository.getAllQuestions(collectionUid = collectionUid)
+                    ?.map { it.uid }
+                    .orEmpty()
+            )
+            if(response.data?.isNotEmpty() == true && collection != null) {
+                repository.insertQuestions(response.data)
+                repository.updateCollection(collection.apply {
+                    questionUidList.addAll(response.data.map { it.uid })
+                })
+            }
+            _questionsGeneratingResponse.emit(response.copy(
+                errorCode = if(collection == null) FAILED_INSERT else response.errorCode
+            ))
+        }
+    }
 
     /** Makes a request to return subjects */
     fun requestSubjectsList(collectionUid: String) {

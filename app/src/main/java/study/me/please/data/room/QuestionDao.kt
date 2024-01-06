@@ -25,4 +25,8 @@ interface QuestionDao {
     /** Inserts or updates a new question [question] into the database */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertQuestion(question: QuestionIO)
+
+    /** Inserts new questions [questions] into the database */
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertQuestions(questions: List<QuestionIO>)
 }

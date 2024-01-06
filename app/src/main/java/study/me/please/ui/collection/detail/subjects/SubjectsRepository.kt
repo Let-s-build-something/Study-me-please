@@ -3,16 +3,22 @@ package study.me.please.ui.collection.detail.subjects
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import study.me.please.data.io.BaseResponse
+import study.me.please.data.io.CollectionIO
+import study.me.please.data.io.QuestionIO
 import study.me.please.data.io.subjects.CategoryIO
 import study.me.please.data.io.subjects.SubjectIO
 import study.me.please.data.room.CategoryDao
+import study.me.please.data.room.CollectionDao
+import study.me.please.data.room.QuestionDao
 import study.me.please.data.room.SubjectDao
 import javax.inject.Inject
 
 /** Proxy for calling network end points */
 class SubjectsRepository @Inject constructor(
     private val subjectsDao: SubjectDao,
-    private val categoryDao: CategoryDao
+    private val categoryDao: CategoryDao,
+    private val collectionDao: CollectionDao,
+    private val questionDao: QuestionDao
 ) {
 
     /** Returns list of subjects based off of a collection uid [collectionUid] */
@@ -50,6 +56,29 @@ class SubjectsRepository @Inject constructor(
         }
     }
 
+    /** Returns collection by its uid */
+    suspend fun getCollection(collectionUid: String): CollectionIO? {
+        return withContext(Dispatchers.IO) {
+            collectionDao.getCollectionByUid(collectionUid)
+        }
+    }
+
+    /** Updates a collection with new data */
+    suspend fun updateCollection(collection: CollectionIO) {
+        return withContext(Dispatchers.IO) {
+            collectionDao.insertCollection(collection)
+        }
+    }
+
+    /** Returns all questions within this collection */
+    suspend fun getAllQuestions(collectionUid: String): List<QuestionIO>? {
+        return withContext(Dispatchers.IO) {
+            questionDao.getQuestionsByUid(
+                collectionDao.getCollectionByUid(collectionUid)?.questionUidList?.toList().orEmpty()
+            )
+        }
+    }
+
     /** Updates an existing record of category */
     suspend fun updateCategory(category: CategoryIO) {
         return withContext(Dispatchers.IO) {
@@ -64,6 +93,13 @@ class SubjectsRepository @Inject constructor(
             // we create a new record if it doesn't exist yet
             if(exists.not()) categoryDao.insertCategory(category)
             exists
+        }
+    }
+
+    /** Creates new records of questions */
+    suspend fun insertQuestions(questions: List<QuestionIO>) {
+        return withContext(Dispatchers.IO) {
+            questionDao.insertQuestions(questions)
         }
     }
 }

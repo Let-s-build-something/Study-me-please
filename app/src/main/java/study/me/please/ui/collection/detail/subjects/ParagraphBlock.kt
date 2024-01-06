@@ -130,7 +130,9 @@ fun ParagraphBlock(
         // if we start editing one fact, others should stop being edited
         LaunchedEffect(fact.second.mode.value == InteractiveCardMode.EDIT) {
             nestedFacts.forEach {
-                if(it.first.uid != fact.first.uid) {
+                if(it.first.uid != fact.first.uid
+                    && fact.second.mode.value == InteractiveCardMode.EDIT
+                ) {
                     it.second.mode.value = InteractiveCardMode.DATA_DISPLAY
                 }
             }
@@ -323,6 +325,7 @@ fun ParagraphBlock(
                         viewModel.clipBoard.facts.copyItems(
                             paragraph.facts.filter { bridge.selectedFactUids.contains(it.uid) }
                         )
+                        bridge.stopChecking()
                     }
                 },
                 onPasteRequest = { bridge.requestFactsPaste() },
@@ -375,6 +378,7 @@ fun ParagraphBlock(
                     onNewCategoryChosen = { chosenCategory ->
                         nestedParagraphs.getOrNull(index)?.apply {
                             localCategory = chosenCategory
+                            categoryUid = chosenCategory.uid
                             parentBridge.updateParagraph(this)
                         }
                     },

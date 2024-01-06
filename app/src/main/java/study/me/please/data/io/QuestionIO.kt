@@ -20,6 +20,9 @@ data class QuestionIO (
     /** Question prompt for user */
     var prompt: String = "",
 
+    /** In case we are asking multiple points */
+    val promptList: List<String> = listOf(),
+
     /** further explanation of this question */
     @SerializedName("text_explanation")
     var textExplanation: String = "",
@@ -59,7 +62,7 @@ data class QuestionIO (
     val type: QuestionPromptType = QuestionPromptType.TEXT_QUESTION,
 
     /** source of importation if any */
-    val importedSource: ImportedSource = ImportedSource(),
+    var importedSource: ImportedSource = ImportedSource(),
 
     /** date of creation of this data object */
     @SerializedName("date_created")

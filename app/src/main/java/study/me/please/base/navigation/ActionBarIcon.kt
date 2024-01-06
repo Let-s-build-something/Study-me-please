@@ -4,8 +4,13 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material.icons.Icons
@@ -41,9 +46,10 @@ fun ActionBarIcon(
     Column(
         modifier = Modifier
             .padding(horizontal = 4.dp)
+            .heightIn(max = 64.0.dp)
             .then(modifier)
-            .widthIn(32.dp, 110.dp)
-            .wrapContentHeight()
+            .widthIn(32.dp, 100.dp)
+            .fillMaxHeight()
             .clip(LocalTheme.shapes.rectangularActionShape)
             .clickable(
                 indication = rememberRipple(
@@ -58,7 +64,7 @@ fun ActionBarIcon(
         verticalArrangement = Arrangement.Center
     ) {
         Icon(
-            modifier = Modifier.size(32.dp),
+            modifier = Modifier.size(24.dp),
             imageVector = imageVector,
             contentDescription = text,
             tint = LocalTheme.colors.tetrial
@@ -72,10 +78,9 @@ fun ActionBarIcon(
             fontWeight = FontWeight.Medium,
             textAlign = TextAlign.Center,
             maxLines = 2,
-            overflow = TextOverflow.Clip,
             // some users tune up font size so high we can draw it otherwise
             fontSizeRange = FontSizeRange(
-                min = 6.sp,
+                min = 9.5.sp,
                 max = 14.sp
             )
         )

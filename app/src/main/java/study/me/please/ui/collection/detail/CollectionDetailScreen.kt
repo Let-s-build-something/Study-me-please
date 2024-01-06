@@ -1,5 +1,6 @@
 package study.me.please.ui.collection.detail
 
+import android.util.Log
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -211,8 +212,8 @@ private fun ContentLayout(
         .fillMaxWidth()
 
     val isExpandedByDefault = collectionDetail.value.name.isEmpty()
-            || collectionDetail.value.factUidList.size <= 3
-            || collectionDetail.value.questionUidList.size <= 3
+            || (collectionDetail.value.factUidList.size <= 3
+                && collectionDetail.value.questionUidList.size <= 3)
     var isBasicInfoExpanded by remember { mutableStateOf(isExpandedByDefault) }
 
     CollapsingLayout(

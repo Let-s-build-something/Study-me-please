@@ -1,6 +1,7 @@
 package study.me.please.ui.components
 
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -34,6 +35,7 @@ private fun HeaderButton(
     contentColor: Color,
     containerColor: Color,
     startIconVector: ImageVector? = Icons.Outlined.Add,
+    extraContent: @Composable RowScope.() -> Unit = {},
     onClick: () -> Unit = {}
 ) {
     Button(
@@ -73,6 +75,7 @@ private fun HeaderButton(
                 fontWeight = FontWeight.Bold
             )
         }
+        extraContent()
     }
 }
 
@@ -86,12 +89,14 @@ fun ComponentHeaderButton(
     modifier: Modifier = Modifier,
     text: String = "",
     startIconVector: ImageVector? = Icons.Outlined.Add,
+    extraContent: @Composable RowScope.() -> Unit = {},
     onClick: () -> Unit = {}
 ) {
     HeaderButton(
         modifier = modifier,
         text = text,
         onClick = onClick,
+        extraContent = extraContent,
         startIconVector = startIconVector,
         contentColor = LocalTheme.colors.secondary,
         containerColor = LocalTheme.colors.onBackgroundComponent

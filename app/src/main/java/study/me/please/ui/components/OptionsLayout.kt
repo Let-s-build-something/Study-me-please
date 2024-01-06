@@ -30,6 +30,9 @@ import com.squadris.squadris.compose.theme.Colors
 import com.squadris.squadris.compose.theme.LocalTheme
 import study.me.please.R
 
+/**
+ * Standardised way of giving user options for editing or handling list of items
+ */
 @Composable
 fun OptionsLayout(
     modifier: Modifier = Modifier,
