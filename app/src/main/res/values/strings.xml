@@ -36,7 +36,8 @@
     <string name="question_edit_field_hint_explanation">Further explanation for the correct answer(s)</string>
     <string name="answer_edit_field_hint_content">Answer is - …idk</string>
     <string name="answer_edit_field_hint_explanation">Explanation of this answer</string>
-    <string name="answer_field_content_header">Answer</string>
+    <string name="answer_field_content_header">Answer text</string>
+    <string name="answer_field_content_header_list">Answer list</string>
     <string name="answer_field_explanation_header">Explanation</string>
     <string name="answer_is_correct_ticked">Correct answer</string>
     <string name="answer_is_correct_not_ticked">Wrong answer</string>

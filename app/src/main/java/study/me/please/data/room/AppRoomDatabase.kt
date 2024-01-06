@@ -1,8 +1,11 @@
 package study.me.please.data.room
 
+import androidx.room.AutoMigration
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import study.me.please.data.io.CollectionIO
 import study.me.please.data.io.FactIO
 import study.me.please.data.io.LargePathAsset
@@ -27,7 +30,7 @@ import study.me.please.ui.session.play.QuestionModule
         SubjectIO::class,
         CategoryIO::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = true
 )
 @TypeConverters(AppDatabaseConverter::class)
