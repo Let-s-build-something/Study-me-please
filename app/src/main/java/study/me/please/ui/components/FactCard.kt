@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
@@ -95,6 +96,7 @@ import study.me.please.data.io.LargePathAsset
 import study.me.please.data.io.subjects.CategoryIO
 import study.me.please.ui.collection.detail.questions.detail.INPUT_DELAYED_RESPONSE_MILLIS
 import study.me.please.ui.components.tab_switch.MultiChoiceSwitch
+import study.me.please.ui.components.tab_switch.TabSwitchState
 import study.me.please.ui.components.tab_switch.rememberTabSwitchState
 
 /** Card with the option of editing data inside */
@@ -242,8 +244,8 @@ private fun DataCard(
         }
     }
 
-    val selectedFactType = remember { mutableStateOf(data.type) }
-    val switchTypeState = rememberTabSwitchState(
+    val selectedFactType = remember(data) { mutableStateOf(data.type) }
+    val switchTypeState = TabSwitchState(
         selectedTabIndex = remember(data) { mutableIntStateOf(data.type.ordinal) },
         tabs = arrayOfNulls<String?>(FactType.values().size).map { "" }.toMutableList(),
         onSelectionChange = { index ->
@@ -252,7 +254,8 @@ private fun DataCard(
                 selectedFactType.value = factType
             }
             requestDataSave()
-        }
+        },
+        scrollState = rememberScrollState()
     )
     val showCheckbox = state.mode.value == InteractiveCardMode.CHECKING
     val showRightAction = state.mode.value == InteractiveCardMode.DATA_DISPLAY

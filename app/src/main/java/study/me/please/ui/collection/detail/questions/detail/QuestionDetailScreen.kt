@@ -76,8 +76,6 @@ import study.me.please.ui.components.TextHeader
 import study.me.please.ui.components.collapsing_layout.CollapsingBehavior
 import study.me.please.ui.components.collapsing_layout.CollapsingLayout
 import study.me.please.ui.components.pull_refresh.PullRefreshScreen
-import study.me.please.ui.components.tab_switch.MultiChoiceSwitch
-import study.me.please.ui.components.tab_switch.rememberTabSwitchState
 
 /** Main communication bridge for question detail */
 interface QuestionDetailBridge {
