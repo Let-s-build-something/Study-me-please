@@ -19,7 +19,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.squadris.squadris.compose.theme.Colors
 import com.squadris.squadris.compose.theme.LocalTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -27,7 +26,8 @@ import com.squadris.squadris.compose.theme.LocalTheme
 fun SimpleChip(
     modifier: Modifier = Modifier,
     text: String,
-    selected: Boolean = false,
+    checked: Boolean = false,
+    checkable: Boolean = true,
     imageVector: ImageVector? = null,
     onClick: () -> Unit
 ) {
@@ -36,7 +36,7 @@ fun SimpleChip(
         modifier = modifier
             .height(with(localDensity) { 32.sp.toDp() }),
         shape = LocalTheme.shapes.chipShape,
-        selected = selected,
+        selected = checked,
         onClick = onClick,
         label = {
             Row(
@@ -47,7 +47,7 @@ fun SimpleChip(
                     Icon(
                         modifier = Modifier.size(18.dp),
                         imageVector = imageVector,
-                        tint = if(selected) LocalTheme.colors.tetrial else LocalTheme.colors.brandMain,
+                        tint = if(checked) LocalTheme.colors.tetrial else LocalTheme.colors.brandMain,
                         contentDescription = null
                     )
                     Spacer(modifier = Modifier.width(4.dp))
@@ -61,7 +61,7 @@ fun SimpleChip(
             }
         },
         trailingIcon = {
-            if(selected) {
+            if(checked && checkable) {
                 Icon(
                     modifier = Modifier
                         .size(18.dp),

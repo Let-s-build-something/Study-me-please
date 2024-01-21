@@ -199,6 +199,25 @@
     <string name="question_generating_bulletin_name">Describe <b>\"%1$s\"</b></string>
     <string name="question_generating_bulletin_points">What best describes:</string>
     <string name="question_generating_fact_parent_name_short">
+        What is one of the <b>%1$s</b> (%2$s, %3$s)?
+    </string>
+    <string name="question_generating_fact_parent_name_long">
+        What best describes one of the <b>%1$s</b> (%2$s, %3$s)?
+    </string>
+    <string name="question_generating_fact_parent_addition">, under <b>%1$s</b></string>
+
+    <string name="question_generating_fact_short">What is <b>\"%1$s\"?</b></string>
+    <string name="question_generating_fact_long">What best describes: <b>\"%1$s\"</b>?</string>
+    <string name="question_generating_fact_list">Choose all items of <b>\"%1$s\"</b>?</string>
+    <string name="question_generating_fact_list_short_key">What are following items related to?</string>
+    <string name="question_generating_explanation_paragraph">Show full paragraph</string>
+    <string name="question_generating_children_items">
+        Pick related information to the <b>%1$s</b> (<b>%2$s</b>).
+    </string>
+
+    <!---
+
+    <string name="question_generating_fact_parent_name_short">
         What is one of the <b><![CDATA[<a href="/paragraph/%2$s">%1$s</a>]]></b>%5$s (<![CDATA[<a href="/subject/%4$s">%3$s</a>]]>)?
     </string>
     <string name="question_generating_fact_parent_name_long">
@@ -212,6 +231,8 @@
     <string name="question_generating_children_items">
         Pick related information to the <b><![CDATA[<a href="/paragraph/%2$s">%1$s</a>]]></b> (<b><![CDATA[<a href="/subject/%4$s">%3$s</a>]]></b>).
     </string>
+
+    -->
 
 
     <!--- =================================== COMPONENTS ======================================= -->

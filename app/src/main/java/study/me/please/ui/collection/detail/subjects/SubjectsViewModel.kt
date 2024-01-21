@@ -3,6 +3,7 @@ package study.me.please.ui.collection.detail.subjects
 import android.app.Activity
 import android.util.Log
 import androidx.lifecycle.viewModelScope
+import com.squadris.squadris.utils.DateUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -85,9 +86,10 @@ class SubjectsViewModel @Inject constructor(
             )
             if(response.data?.isNotEmpty() == true && collection != null) {
                 repository.insertQuestions(response.data)
-                repository.updateCollection(collection.apply {
-                    questionUidList.addAll(response.data.map { it.uid })
-                })
+                repository.updateCollectionQuestions(
+                    collectionUid = collection.uid,
+                    uidList = collection.questionUidList.plus(response.data.map { it.uid })
+                )
             }
             _questionsGeneratingResponse.emit(response.copy(
                 errorCode = if(collection == null) FAILED_INSERT else response.errorCode
@@ -173,9 +175,8 @@ class SubjectsViewModel @Inject constructor(
         }
     }
 
-    override fun requestAddNewCategory(name: String) {
+    override fun requestAddNewCategory(category: CategoryIO) {
         viewModelScope.launch {
-            val category = CategoryIO(name = name)
             _categories.update { previousCategories ->
                 previousCategories?.toMutableList()?.apply {
                     add(category)

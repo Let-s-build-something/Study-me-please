@@ -1,5 +1,6 @@
 package study.me.please.ui.collection.detail.subjects
 
+import com.squadris.squadris.utils.DateUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import study.me.please.data.io.BaseResponse
@@ -64,9 +65,22 @@ class SubjectsRepository @Inject constructor(
     }
 
     /** Updates a collection with new data */
-    suspend fun updateCollection(collection: CollectionIO) {
+    suspend fun updateCollectionDateModified(collectionUid: String) {
         return withContext(Dispatchers.IO) {
-            collectionDao.insertCollection(collection)
+            collectionDao.updateCollectionDateModified(
+                collectionUid = collectionUid,
+                dateModified = DateUtils.now.time
+            )
+        }
+    }
+
+    /** Updates a collection with new questions */
+    suspend fun updateCollectionQuestions(uidList: Set<String>, collectionUid: String) {
+        return withContext(Dispatchers.IO) {
+            collectionDao.updateCollectionQuestions(
+                collectionUid = collectionUid,
+                questionUidList = uidList
+            )
         }
     }
 

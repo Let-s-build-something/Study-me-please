@@ -53,12 +53,13 @@ import com.squadris.squadris.compose.theme.LocalTheme
 import study.me.please.R
 import study.me.please.base.LocalIsTablet
 import study.me.please.data.io.FactType
+import study.me.please.data.io.subjects.CategoryIO
 import study.me.please.data.io.subjects.ParagraphIO
 import study.me.please.data.io.subjects.SubjectIO
 import study.me.please.ui.components.ComponentHeaderButton
 import study.me.please.ui.components.ListItemEditField
 
-private const val MAX_LENGTH_SHORT_TEXT = 24
+private const val MAX_LENGTH_SHORT_TEXT = 42
 
 /**
  * Detail of a subject specific to a collection
@@ -263,7 +264,9 @@ fun SubjectScreen(
                 ParagraphBlock(
                     categories = categories.value.orEmpty(),
                     addNewCategory = { name ->
-                        viewModel.requestAddNewCategory(name = name)
+                        val newCategory = CategoryIO(name = name)
+                        viewModel.requestAddNewCategory(newCategory)
+                        newCategory
                     },
                     paragraph = paragraph,
                     onNewCategoryChosen = { chosenCategory ->
@@ -273,6 +276,7 @@ fun SubjectScreen(
                             bridge.updateParagraph(this)
                         }
                     },
+                    forceExpand = subjectParagraphs.size == 1,
                     parentBridge = bridge,
                     addContentVisible = addContentVisible,
                     parentLayer = -1,

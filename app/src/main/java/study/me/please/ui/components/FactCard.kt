@@ -3,7 +3,6 @@
 package study.me.please.ui.components
 
 import android.annotation.SuppressLint
-import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateContentSize
@@ -18,12 +17,14 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.FormatQuote
@@ -35,31 +36,22 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.PlainTooltip
-import androidx.compose.material3.PlainTooltipBox
-import androidx.compose.material3.PlainTooltipState
 import androidx.compose.material3.RichTooltipBox
 import androidx.compose.material3.RichTooltipColors
 import androidx.compose.material3.Text
-import androidx.compose.material3.TooltipBox
-import androidx.compose.material3.rememberPlainTooltipState
 import androidx.compose.material3.rememberRichTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.onFocusEvent
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
@@ -69,7 +61,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.PopupPositionProvider
 import androidx.compose.ui.zIndex
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
@@ -78,6 +69,7 @@ import com.squadris.squadris.compose.components.ChipState
 import com.squadris.squadris.compose.components.CustomChipGroup
 import com.squadris.squadris.compose.components.DEFAULT_ANIMATION_LENGTH_SHORT
 import com.squadris.squadris.compose.components.MinimalisticIcon
+import com.squadris.squadris.compose.components.SimpleChip
 import com.squadris.squadris.compose.components.input.EditFieldInput
 import com.squadris.squadris.compose.theme.Colors
 import com.squadris.squadris.compose.theme.LocalTheme
@@ -97,7 +89,6 @@ import study.me.please.data.io.subjects.CategoryIO
 import study.me.please.ui.collection.detail.questions.detail.INPUT_DELAYED_RESPONSE_MILLIS
 import study.me.please.ui.components.tab_switch.MultiChoiceSwitch
 import study.me.please.ui.components.tab_switch.TabSwitchState
-import study.me.please.ui.components.tab_switch.rememberTabSwitchState
 
 /** Card with the option of editing data inside */
 @Composable
@@ -190,6 +181,7 @@ private fun DataCard(
     data: FactIO
 ) {
     val coroutineScope = rememberCoroutineScope()
+    val inputScope = rememberCoroutineScope()
 
     val showAddNewCategory = remember { mutableStateOf(false) }
 
@@ -258,12 +250,10 @@ private fun DataCard(
         scrollState = rememberScrollState()
     )
     val showCheckbox = state.mode.value == InteractiveCardMode.CHECKING
-    val showRightAction = state.mode.value == InteractiveCardMode.DATA_DISPLAY
-            || state.mode.value == InteractiveCardMode.EDIT
 
     val promptImage = remember(data) { mutableStateOf(data.promptImage) }
     val selectedListIndex = remember(data) { mutableIntStateOf(-1) }
-    val listItems = remember(data) { mutableStateListOf<String>() }
+    val listItems = remember { mutableStateListOf<String>() }
 
     LaunchedEffect(selectedFactType.value) {
         if(selectedFactType.value == FactType.BULLET_POINTS || selectedFactType.value == FactType.LIST) {
@@ -276,153 +266,117 @@ private fun DataCard(
         requestDataSave()
     }
 
-    Row(
-        verticalAlignment = Alignment.CenterVertically
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(top = 6.dp, bottom = 6.dp, start = 12.dp, end = 8.dp),
+        horizontalAlignment = Alignment.Start
     ) {
-        AnimatedVisibility(visible = state.mode.value == InteractiveCardMode.EDIT) {
-            Crossfade(targetState = showAddNewCategory, label = "") { showInput ->
-                if(showInput.value) {
-                    EditFieldItemPicker(
-                        modifier = Modifier
-                            .padding(start = 8.dp, top = 4.dp)
-                            .zIndex(1f),
-                        values = newCategories.value,
-                        defaultValue = "",
-                        onValueChosen = { chosenCategory ->
-                            showAddNewCategory.value = false
-                            chosenCategories.add(chosenCategory)
-                        },
-                        hint = stringResource(R.string.subject_categorize_paragraph),
-                        onEmptyStateClicked = { inputValue ->
-                            categoryUseCase.requestAddNewCategory(inputValue)
-                        },
-                        onFocusLost = {
-                            showAddNewCategory.value = false
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(
+                modifier = Modifier.weight(1f),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                AnimatedVisibility(visible = state.mode.value == InteractiveCardMode.EDIT) {
+                    Crossfade(targetState = showAddNewCategory, label = "") { showInput ->
+                        if(showInput.value) {
+                            EditFieldItemPicker(
+                                modifier = Modifier
+                                    .padding(start = 8.dp, top = 4.dp)
+                                    .zIndex(1f),
+                                values = newCategories.value,
+                                defaultValue = "",
+                                onValueChosen = { chosenCategory ->
+                                    showAddNewCategory.value = false
+                                    chosenCategories.add(chosenCategory)
+                                },
+                                hint = stringResource(R.string.subject_categorize_paragraph),
+                                onEmptyStateClicked = { inputValue ->
+                                    val newCategory = CategoryIO(name = inputValue)
+                                    categoryUseCase.requestAddNewCategory(newCategory)
+                                    showAddNewCategory.value = false
+                                    chosenCategories.add(newCategory)
+                                },
+                                onFocusLost = {
+                                    showAddNewCategory.value = false
+                                }
+                            )
+                        }else {
+                            SimpleChip(
+                                text = stringResource(R.string.tags_add_new),
+                                checked = true,
+                                imageVector = Icons.Outlined.Add,
+                                onClick = {
+                                    showAddNewCategory.value = true
+                                },
+                                checkable = false
+                            )
                         }
-                    )
-                }else {
-                    ComponentHeaderButton(
-                        modifier = Modifier.padding(start = 8.dp, top = 4.dp),
-                        text = stringResource(R.string.tags_add_new),
-                        onClick = {
-                            showAddNewCategory.value = true
-                        }
+                    }
+                }
+                AnimatedVisibility(
+                    visible = (categories.value?.size ?: 6) < 5 && state.mode.value == InteractiveCardMode.EDIT
+                ) {
+                    val tooltipState = rememberRichTooltipState(isPersistent = true)
+                    RichTooltipBox(
+                        tooltipState = tooltipState,
+                        text = {
+                            Text(
+                                stringResource(R.string.tags_explanation),
+                                style = TextStyle(
+                                    fontSize = 16.sp,
+                                    color = Color.White
+                                )
+                            )
+                        },
+                        colors = RichTooltipColors(
+                            containerColor = LocalTheme.colors.backgroundLight,
+                            contentColor = Color.White,
+                            titleContentColor = Color.White,
+                            actionContentColor = Color.White
+                        )
+                    ) {
+                        Icon(
+                            modifier = Modifier
+                                .padding(horizontal = 8.dp)
+                                .size(24.dp)
+                                .background(color = LocalTheme.colors.tetrial, shape = CircleShape)
+                                .tooltipTrigger()
+                                .clip(CircleShape)
+                                .clickable(
+                                    onClick = {
+                                        coroutineScope.launch {
+                                            tooltipState.show()
+                                        }
+                                    },
+                                    interactionSource = remember { MutableInteractionSource() },
+                                    indication = rememberRipple()
+                                )
+                                .padding(4.dp),
+                            imageVector = Icons.Outlined.QuestionMark,
+                            contentDescription = null,
+                            tint = Colors.DARK_GREY
+                        )
+                    }
+                }
+
+                AnimatedVisibility(visible = categoryChips.isNotEmpty()) {
+                    CustomChipGroup(
+                        chips = categoryChips
                     )
                 }
             }
-        }
-        AnimatedVisibility(
-            visible = (categories.value?.size ?: 6) < 5 && state.mode.value == InteractiveCardMode.EDIT
-        ) {
-            val tooltipState = rememberRichTooltipState(isPersistent = true)
-            RichTooltipBox(
-                tooltipState = tooltipState,
-                text = {
-                    Text(
-                        stringResource(R.string.tags_explanation),
-                        style = TextStyle(
-                            fontSize = 16.sp,
-                            color = Color.White
-                        )
-                    )
-                },
-                colors = RichTooltipColors(
-                    containerColor = LocalTheme.colors.backgroundLight,
-                    contentColor = Color.White,
-                    titleContentColor = Color.White,
-                    actionContentColor = Color.White
-                )
-            ) {
-                Icon(
-                    modifier = Modifier
-                        .padding(horizontal = 8.dp)
-                        .size(24.dp)
-                        .background(color = LocalTheme.colors.tetrial, shape = CircleShape)
-                        .tooltipTrigger()
-                        .clip(CircleShape)
-                        .clickable(
-                            onClick = {
-                                coroutineScope.launch {
-                                    tooltipState.show()
-                                }
-                            },
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = rememberRipple()
-                        )
-                        .padding(4.dp),
-                    imageVector = Icons.Outlined.QuestionMark,
-                    contentDescription = null,
-                    tint = Colors.DARK_GREY
-                )
-            }
-        }
 
-        AnimatedVisibility(visible = categoryChips.isNotEmpty()) {
-            CustomChipGroup(
-                chips = categoryChips
-            )
-        }
-    }
-
-    ConstraintLayout(
-        modifier = modifier
-            .padding(vertical = 10.dp, horizontal = 12.dp)
-            .fillMaxWidth()
-    ) {
-        val (checkBox,
-            imgRightAction,
-            txtShortInformationHeader,
-            txtShortInformation,
-            txtLongInformationHeader,
-            txtLongInformation,
-            imgLongImage,
-            btnAddLongImage,
-            switchType
-        ) = createRefs()
-
-        AnimatedVisibility(
-            modifier = Modifier.constrainAs(checkBox) {
-                start.linkTo(parent.start, (-8).dp)
-                top.linkTo(parent.top, (-12).dp)
-            },
-            visible = showCheckbox
-        ) {
-            Checkbox(
-                checked = state.isChecked.value,
-                onCheckedChange = { isChecked ->
-                    state.isChecked.value = isChecked
-                },
-                colors = LocalTheme.styles.checkBoxColorsDefault
-            )
-        }
-
-        AnimatedVisibility(
-            modifier = Modifier
-                .constrainAs(imgRightAction) {
-                    end.linkTo(parent.end)
-                    top.linkTo(parent.top)
-                },
-            visible = showRightAction
-        ) {
-            Crossfade(
-                targetState = state.mode.value == InteractiveCardMode.EDIT,
-                label = "",
-                animationSpec = tween(durationMillis = DEFAULT_ANIMATION_LENGTH_SHORT)
-            ) { isClose ->
-                if(isClose) {
-                    MinimalisticIcon(
-                        imageVector = Icons.Outlined.Close,
-                        tint = LocalTheme.colors.secondary
-                    ) {
-                        state.mode.value = InteractiveCardMode.DATA_DISPLAY
-                    }
-                }else {
-                    MinimalisticIcon(
-                        imageVector = Icons.Outlined.Edit,
-                        tint = LocalTheme.colors.secondary
-                    ) {
-                        state.mode.value = InteractiveCardMode.EDIT
-                    }
+            AnimatedVisibility(visible = state.mode.value == InteractiveCardMode.EDIT) {
+                MinimalisticIcon(
+                    imageVector = Icons.Outlined.Close,
+                    tint = LocalTheme.colors.secondary
+                ) {
+                    state.mode.value = InteractiveCardMode.DATA_DISPLAY
                 }
             }
         }
@@ -430,18 +384,10 @@ private fun DataCard(
         AnimatedVisibility(
             modifier = Modifier
                 .fillMaxWidth()
-                .constrainAs(switchType) {
-                    top.linkTo(parent.top, 6.dp)
-                    linkTo(txtShortInformationHeader.start, txtShortInformationHeader.end)
-                    width = Dimension.fillToConstraints
-                },
+                .padding(top = 6.dp),
             visible = state.mode.value == InteractiveCardMode.EDIT
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 8.dp),
-            ) {
+            Column(modifier = Modifier.fillMaxWidth()) {
                 Text(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -471,99 +417,105 @@ private fun DataCard(
             }
         }
 
-        Text(
-            modifier = Modifier
-                .constrainAs(txtShortInformationHeader) {
-                    linkTo(
-                        if (showCheckbox) checkBox.end else parent.start,
-                        if (showRightAction) imgRightAction.start else parent.end,
-                        bias = 0f
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.Top
+        ) {
+            Row(verticalAlignment = Alignment.Top) {
+                AnimatedVisibility(visible = showCheckbox) {
+                    Checkbox(
+                        checked = state.isChecked.value,
+                        onCheckedChange = { isChecked ->
+                            state.isChecked.value = isChecked
+                        },
+                        colors = LocalTheme.styles.checkBoxColorsDefault
                     )
-                    top.linkTo(switchType.bottom, 8.dp)
-                    width = Dimension.fillToConstraints
-                },
-            text = stringResource(selectedFactType.value.getShortHeaderStringRes()),
-            fontSize = 12.sp,
-            color = LocalTheme.colors.secondary
-        )
-
-        val inputScope = rememberCoroutineScope()
-        Crossfade(
-            targetState = state.mode.value == InteractiveCardMode.EDIT,
-            modifier = Modifier
-                .animateContentSize()
-                .constrainAs(txtShortInformation) {
-                    linkTo(txtShortInformationHeader.start, txtShortInformationHeader.end)
-                    top.linkTo(txtShortInformationHeader.bottom, 2.dp)
-                    width = Dimension.fillToConstraints
-                },
-            label = "",
-            animationSpec = tween(durationMillis = DEFAULT_ANIMATION_LENGTH_SHORT)
-        ) { inEditMode ->
-            if(inEditMode) {
-                EditFieldInput(
-                    modifier = Modifier.fillMaxWidth(),
-                    prefix = if(selectedFactType.value == FactType.QUOTE) { { QuoteIcon() } }else null,
-                    suffix = if(selectedFactType.value == FactType.QUOTE) { { QuoteIcon() } }else null,
-                    value = data.shortKeyInformation,
-                    hint = stringResource(id = selectedFactType.value.getShortHintStringRes()),
-                    textStyle = TextStyle(
-                        color = LocalTheme.colors.primary,
-                        fontSize = 18.sp,
-                        textAlign = TextAlign.Start,
-                        fontStyle = if(selectedFactType.value == FactType.QUOTE) FontStyle.Italic else FontStyle.Normal
-                    ),
-                    minLines = 2,
-                    maxLines = 2
-                ) { output ->
-                    data.shortKeyInformation = output
-                    requestDataSave()
                 }
-            }else {
-                Crossfade(
-                    targetState = selectedFactType.value == FactType.QUOTE,
-                    label = "QuoteLayoutChange"
-                ) { isQuote ->
-                    if(isQuote) {
-                        Row(
-                            verticalAlignment = Alignment.Top
-                        ) {
-                            QuoteIcon()
-                            Text(
-                                modifier = Modifier.weight(1f),
-                                text = data.shortKeyInformation,
-                                style = TextStyle(
-                                    fontSize = 18.sp,
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        modifier = Modifier.padding(top = 8.dp),
+                        text = stringResource(selectedFactType.value.getShortHeaderStringRes()),
+                        fontSize = 12.sp,
+                        color = LocalTheme.colors.secondary
+                    )
+                    Crossfade(
+                        targetState = state.mode.value == InteractiveCardMode.EDIT,
+                        modifier = Modifier.animateContentSize(),
+                        label = "",
+                        animationSpec = tween(durationMillis = DEFAULT_ANIMATION_LENGTH_SHORT)
+                    ) { inEditMode ->
+                        if(inEditMode) {
+                            EditFieldInput(
+                                modifier = Modifier.fillMaxWidth(),
+                                prefix = if(selectedFactType.value == FactType.QUOTE) { { QuoteIcon() } }else null,
+                                suffix = if(selectedFactType.value == FactType.QUOTE) { { QuoteIcon() } }else null,
+                                value = data.shortKeyInformation,
+                                hint = stringResource(id = selectedFactType.value.getShortHintStringRes()),
+                                textStyle = TextStyle(
                                     color = LocalTheme.colors.primary,
-                                    fontStyle = FontStyle.Italic
+                                    fontSize = 18.sp,
+                                    textAlign = TextAlign.Start,
+                                    fontStyle = if(selectedFactType.value == FactType.QUOTE) FontStyle.Italic else FontStyle.Normal
                                 ),
-                                maxLines = 2,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                            QuoteIcon()
+                                minLines = 2,
+                                maxLines = 2
+                            ) { output ->
+                                data.shortKeyInformation = output
+                                requestDataSave()
+                            }
+                        }else {
+                            Crossfade(
+                                targetState = selectedFactType.value == FactType.QUOTE,
+                                label = "QuoteLayoutChange"
+                            ) { isQuote ->
+                                if(isQuote) {
+                                    Row(
+                                        verticalAlignment = Alignment.Top
+                                    ) {
+                                        QuoteIcon()
+                                        Text(
+                                            modifier = Modifier.weight(1f),
+                                            text = data.shortKeyInformation,
+                                            style = TextStyle(
+                                                fontSize = 18.sp,
+                                                color = LocalTheme.colors.primary,
+                                                fontStyle = FontStyle.Italic
+                                            ),
+                                            maxLines = 2,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                        QuoteIcon()
+                                    }
+                                }else {
+                                    Text(
+                                        text = data.shortKeyInformation,
+                                        style = TextStyle(
+                                            fontSize = 18.sp,
+                                            color = LocalTheme.colors.primary
+                                        ),
+                                        maxLines = 2,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                }
+                            }
                         }
-                    }else {
-                        Text(
-                            text = data.shortKeyInformation,
-                            style = TextStyle(
-                                fontSize = 18.sp,
-                                color = LocalTheme.colors.primary
-                            ),
-                            maxLines = 2,
-                            overflow = TextOverflow.Ellipsis
-                        )
                     }
+                }
+            }
+            AnimatedVisibility(state.mode.value == InteractiveCardMode.DATA_DISPLAY) {
+                MinimalisticIcon(
+                    imageVector = Icons.Outlined.Edit,
+                    tint = LocalTheme.colors.secondary
+                ) {
+                    state.mode.value = InteractiveCardMode.EDIT
                 }
             }
         }
 
         val longHeaderRes = selectedFactType.value.getLongHeaderStringRes()
         Text(
-            modifier = Modifier
-                .constrainAs(txtLongInformationHeader) {
-                    linkTo(txtShortInformationHeader.start, txtShortInformationHeader.end, bias = 0f)
-                    top.linkTo(txtShortInformation.bottom, 6.dp)
-                },
+            modifier = Modifier.padding(top = 6.dp),
             text = if(longHeaderRes != null) stringResource(longHeaderRes) else "",
             fontSize = 12.sp,
             color = LocalTheme.colors.secondary
@@ -572,12 +524,8 @@ private fun DataCard(
         Crossfade(
             targetState = data.type == FactType.LIST || data.type == FactType.BULLET_POINTS,
             modifier = Modifier
-                .animateContentSize()
-                .constrainAs(txtLongInformation) {
-                    linkTo(txtShortInformationHeader.start, txtShortInformationHeader.end)
-                    top.linkTo(txtLongInformationHeader.bottom, 2.dp)
-                    width = Dimension.fillToConstraints
-                },
+                .padding(top = 2.dp)
+                .animateContentSize(),
             label = "",
             animationSpec = tween(durationMillis = DEFAULT_ANIMATION_LENGTH_SHORT)
         ) { isListType ->
@@ -656,13 +604,9 @@ private fun DataCard(
         }
         EditableImageAsset(
             modifier = Modifier
-                .animateContentSize()
                 .wrapContentHeight()
-                .constrainAs(imgLongImage) {
-                    linkTo(txtShortInformationHeader.start, txtShortInformationHeader.end)
-                    top.linkTo(txtLongInformation.bottom, 6.dp)
-                    width = Dimension.fillToConstraints
-                },
+                .padding(top = 6.dp)
+                .animateContentSize(),
             asset = promptImage.value,
             isInEditMode = state.mode.value == InteractiveCardMode.EDIT,
             onUrlChange = { output ->
@@ -689,11 +633,8 @@ private fun DataCard(
         ) {
             ImageAction(
                 modifier = Modifier
-                    .animateContentSize()
-                    .constrainAs(btnAddLongImage) {
-                        linkTo(txtShortInformationHeader.start, txtShortInformationHeader.end)
-                        top.linkTo(imgLongImage.bottom, 4.dp)
-                    },
+                    .padding(top = 4.dp)
+                    .animateContentSize(),
                 leadingImageVector = Icons.Outlined.Image,
                 text = stringResource(id = R.string.button_add_prompt_image)
             ) {
@@ -725,7 +666,7 @@ interface FactCardCategoryUseCase {
     val categories: StateFlow<List<CategoryIO>?>
 
     /** Requests for a new category */
-    fun requestAddNewCategory(name: String)
+    fun requestAddNewCategory(category: CategoryIO)
 
     /** Makes a request for all existing categories */
     fun requestAllCategories()
@@ -737,9 +678,8 @@ interface FactCardCategoryUseCase {
 private fun Preview() {
     FactCard(
         data = FactIO(
-            shortKeyInformation = "Short key information",
-            longInformation = "This longInformation isn't correct, due to gramatical error",
-            promptImage = LargePathAsset(urlPath = "asdj")
+            shortKeyInformation = "Short key informationShort key informationShort key informationShort key informationShort key informationShort key information",
+            longInformation = "This longInformation isn't correct, due to gramatical error"
         ),
         requestDataSave = {},
         state = InteractiveCardState(
@@ -748,10 +688,14 @@ private fun Preview() {
         categoryUseCase = object: FactCardCategoryUseCase {
             override val categories: StateFlow<List<CategoryIO>?>
                 get() = MutableStateFlow(listOf(
-                    CategoryIO(name = "test")
+                    CategoryIO(name = "test"),
+                    CategoryIO(name = "test"),
+                    CategoryIO(name = "test"),
+                    CategoryIO(name = "test"),
+                    CategoryIO(name = "test"),
                 )).asStateFlow()
 
-            override fun requestAddNewCategory(name: String) {
+            override fun requestAddNewCategory(category: CategoryIO) {
 
             }
 

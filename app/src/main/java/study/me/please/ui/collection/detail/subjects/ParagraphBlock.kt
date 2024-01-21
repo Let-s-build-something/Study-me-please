@@ -61,9 +61,10 @@ fun ParagraphBlock(
     categories: List<CategoryIO>,
     viewModel: SubjectsViewModel,
     paragraph: ParagraphIO,
-    addNewCategory: (name: String) -> Unit,
+    addNewCategory: (name: String) -> CategoryIO,
     addContentVisible: MutableState<Boolean>,
     parentBridge: SubjectScreenBridge,
+    forceExpand: Boolean = false,
     onNewCategoryChosen: (category: CategoryIO) -> Unit
 ) {
     val coroutineScope = rememberCoroutineScope()
@@ -206,13 +207,13 @@ fun ParagraphBlock(
                     onValueChosen = onNewCategoryChosen,
                     hint = stringResource(R.string.subject_categorize_paragraph),
                     onEmptyStateClicked = { inputValue ->
-                        addNewCategory(inputValue)
+                        onNewCategoryChosen(addNewCategory(inputValue))
                     }
                 )
             }
         },
         // for performance reasons, we do not expand more complex paragraph by default
-        defaultValue = paragraph.isEmpty
+        defaultValue = paragraph.isEmpty || forceExpand
     ) {
         Column(
             modifier = Modifier
@@ -295,6 +296,7 @@ fun ParagraphBlock(
                             if(output.isBlank()) {
                                 nestedBulletPoints.removeAt(index)
                             }else {
+                                //CRASH HERE, change the logic
                                 nestedBulletPoints.removeAt(index)
                                 nestedBulletPoints.add(index, output)
                             }

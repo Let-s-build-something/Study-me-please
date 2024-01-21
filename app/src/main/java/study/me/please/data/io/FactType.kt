@@ -36,6 +36,10 @@ enum class FactType {
     /** Information about a specific date */
     DATE;
 
+    /** Whether this item should hold list of items */
+    val isListType: Boolean
+        get() = this == BULLET_POINTS || this == LIST
+
     /** Icon identification of this type */
     fun getIconImageVector() = when(this) {
         BULLET_POINTS -> Icons.AutoMirrored.Outlined.FormatListBulleted

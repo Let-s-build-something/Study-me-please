@@ -144,9 +144,8 @@ class CollectionDetailViewModel @Inject constructor(
         }
     }
 
-    override fun requestAddNewCategory(name: String) {
+    override fun requestAddNewCategory(category: CategoryIO) {
         viewModelScope.launch {
-            val category = CategoryIO(name = name)
             dataManager.categories.update { previousCategories ->
                 previousCategories?.toMutableList()?.apply {
                     add(category)

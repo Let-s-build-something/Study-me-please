@@ -7,14 +7,19 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredSize
+import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ArrowBackIosNew
 import androidx.compose.material.ripple.rememberRipple
@@ -51,7 +56,7 @@ fun ExpandableContent(
     contentColor: Color = LocalTheme.colors.secondary,
     defaultValue: Boolean = false,
     onExpansionChange: (isExpanded: Boolean) -> Unit = {},
-    collapsedContent: (@Composable RowScope.() -> Unit)? = null,
+    collapsedContent: (@Composable () -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit
 ) {
     var isExpanded by rememberSaveable { mutableStateOf(defaultValue) }
@@ -98,7 +103,7 @@ fun LineButton(
     arrowModifier: Modifier = Modifier,
     onClick: () -> Unit,
     arrowRotation: Float = 180f,
-    collapsedContent: (@Composable RowScope.() -> Unit)? = null,
+    collapsedContent: (@Composable () -> Unit)? = null,
     containerColor: Color = LocalTheme.colors.onBackgroundComponent,
     contentColor: Color = LocalTheme.colors.secondary
 ) {
@@ -116,21 +121,23 @@ fun LineButton(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        if(collapsedContent != null) {
-            collapsedContent()
-        }else {
-            Text(
-                text = text,
-                style = TextStyle(
-                    color = contentColor,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium
+        Box(modifier = Modifier.padding(end = 16.dp)) {
+            if(collapsedContent != null) {
+                collapsedContent()
+            }else {
+                Text(
+                    text = text,
+                    style = TextStyle(
+                        color = contentColor,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium
+                    )
                 )
-            )
+            }
         }
         Icon(
             modifier = arrowModifier
-                .size(18.dp)
+                .requiredSize(18.dp)
                 .rotate(arrowRotation),
             imageVector = Icons.Outlined.ArrowBackIosNew,
             contentDescription = null,
@@ -144,7 +151,7 @@ fun LineButton(
 private fun Preview() {
     Column {
         ExpandableContent(
-            text = "Click me to expand XYZ",
+            text = "Click me to expand XYZasdasdasdasdasdasdasdasdasdasdasdasdasdasdasdasdafgwsegdrthfth",
             containerColor = LocalTheme.colors.brandMainDark,
             contentColor = LocalTheme.colors.tetrial
         ) {

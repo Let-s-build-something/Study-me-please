@@ -1,7 +1,7 @@
 package study.me.please.ui.collection.detail.subjects
 
 import android.app.Activity
-import androidx.compose.ui.util.fastForEach
+import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import study.me.please.R
@@ -30,7 +30,15 @@ import javax.inject.Inject
 class QuestionGenerator @Inject constructor() {
 
     companion object {
+
+        /** Minimum amount of related information in order to generate a question */
         private const val MINIMUM_RELATED_DATA_TO_GENERATE = 3
+
+        /** Minimum amount of related items from other lists for generating a question for a list */
+        private const val MINIMUM_RELATED_ITEMS_TO_GENERATE_LIST = 1
+
+        /** Maximum amount of related items from other lists for generating a question for a list */
+        private const val MAXIMUM_RELATED_ITEMS_TO_GENERATE_LIST = 3
     }
 
     /**
@@ -183,8 +191,8 @@ class QuestionGenerator @Inject constructor() {
                         val relatedFacts = chunk.value
                             .filter {
                                 it.data.uid != iteratedFact.data.uid
-                                        && (generatingGoal.isParent.not()
-                                        || it.sortedCategoryUid.lastOrNull() != iteratedFact.sortedCategoryUid.lastOrNull())
+                                        /*&& (generatingGoal.isParent.not()
+                                        || it.sortedCategoryUid.lastOrNull() != iteratedFact.sortedCategoryUid.lastOrNull())*/
                             }
                             .map { fact ->
                                 fact to calculateWeights(
@@ -192,10 +200,16 @@ class QuestionGenerator @Inject constructor() {
                                     currentList = fact.sortedCategoryUid
                                 )
                             }
-                            .sortedByDescending { it.second }
+                            // first we sort by type, as that the priority, then by similarities
+                            .sortedWith(compareByDescending<Pair<FactToGenerate, Int>> {
+                                if(it.first.data.type == iteratedFact.data.type) 1 else 0
+                            }.thenByDescending { it.second })
                             .take(MINIMUM_RELATED_DATA_TO_GENERATE)
 
-                        if(relatedFacts.isNotEmpty()) {
+                        if(relatedFacts.isNotEmpty()
+                            && (iteratedFact.data.type.isListType.not()
+                                    || iteratedFact.data.textList.isNotEmpty())
+                        ) {
                             questions.add(
                                 generateQuestionFinal(
                                     activity = activity,
@@ -218,8 +232,8 @@ class QuestionGenerator @Inject constructor() {
                 leftovers.forEach { iteratedFact ->
                     val otherFacts = leftovers.filter {
                         it.data.uid != iteratedFact.data.uid
-                                && (generatingGoal.isParent.not()
-                                || it.sortedCategoryUid.lastOrNull() != iteratedFact.sortedCategoryUid.lastOrNull())
+                                /*&& (generatingGoal.isParent.not()
+                                || it.sortedCategoryUid.lastOrNull() != iteratedFact.sortedCategoryUid.lastOrNull())*/
                     }
                     val sameType = otherFacts.filter { it.data.type == iteratedFact.data.type }
                     val relatedFacts = if(sameType.size >= MINIMUM_RELATED_DATA_TO_GENERATE) {
@@ -230,7 +244,10 @@ class QuestionGenerator @Inject constructor() {
                             .take(MINIMUM_RELATED_DATA_TO_GENERATE.minus(sameType.size))
                     )
 
-                    if(relatedFacts.isNotEmpty()) {
+                    if(relatedFacts.isNotEmpty()
+                        && (iteratedFact.data.type.isListType.not()
+                                || iteratedFact.data.textList.isNotEmpty())
+                    ) {
                         questions.add(
                             generateQuestionFinal(
                                 activity = activity,
@@ -260,95 +277,155 @@ class QuestionGenerator @Inject constructor() {
         generatingGoal: FactGeneratingGoal,
         categories: List<CategoryIO>
     ): QuestionIO {
-        return QuestionIO(
-            answers = facts.map { mappingFact ->
-                QuestionAnswerIO(
-                    textList = if(generatingGoal == FactGeneratingGoal.SHORT_INFORMATION
-                        || generatingGoal == FactGeneratingGoal.SHORT_INFORMATION_PARENT_NAME_LONG
-                    ) mappingFact.data.textList
-                    else listOf(),
-                    text = when(generatingGoal) {
-                        FactGeneratingGoal.SHORT_INFORMATION_PARENT_NAME_LONG -> mappingFact.data.longInformation
-                        FactGeneratingGoal.SHORT_INFORMATION_PARENT_NAME_SHORT -> mappingFact.data.shortKeyInformation
-                        FactGeneratingGoal.SHORT_INFORMATION -> mappingFact.data.longInformation
-                        FactGeneratingGoal.LONG_INFORMATION -> mappingFact.data.shortKeyInformation
-                    },
-                    isCorrect = false
-                )
-            }.toMutableList().apply {
-                // we add the correct answer
-                add(
-                    QuestionAnswerIO(
-                        textList = if(generatingGoal == FactGeneratingGoal.SHORT_INFORMATION
-                            || generatingGoal == FactGeneratingGoal.SHORT_INFORMATION_PARENT_NAME_LONG
-                        ) promptFact.data.textList
-                        else listOf(),
-                        text = when(generatingGoal) {
-                            FactGeneratingGoal.SHORT_INFORMATION_PARENT_NAME_LONG -> promptFact.data.longInformation
-                            FactGeneratingGoal.SHORT_INFORMATION_PARENT_NAME_SHORT -> promptFact.data.shortKeyInformation
-                            FactGeneratingGoal.SHORT_INFORMATION -> promptFact.data.longInformation
-                            FactGeneratingGoal.LONG_INFORMATION -> promptFact.data.shortKeyInformation
-                        },
-                        isCorrect = true
-                    )
-                )
-            },
-            importedSource = ImportedSource(
-                type = ImportSourceType.FACT,
-                sourceUid = promptFact.data.uid
-            ),
-            prompt = when(generatingGoal) {
-                FactGeneratingGoal.SHORT_INFORMATION_PARENT_NAME_SHORT,
-                FactGeneratingGoal.SHORT_INFORMATION_PARENT_NAME_LONG -> {
-                    val previousCategory = if(promptFact.sortedCategoryUid.size > 1) {
-                        categories.find { category ->
-                            category.uid == allParagraphs.find {
-                                it.data.uid == promptFact.sortedCategoryUid.getOrNull(
-                                    promptFact.sortedCategoryUid.size.minus(2)
-                                )
-                            }?.data?.categoryUid
-                        }
-                    }else null
-                    val category = categories.find { category ->
-                        category.uid == allParagraphs.find { it.data.uid == promptFact.sortedCategoryUid.lastOrNull() }
-                            ?.data?.categoryUid
-                    }
-                    val subject = allSubjects.find { it.uid == promptFact.parentSubjectUid }
+        // list is different in that we try to list all items together with other options
+        return if(promptFact.data.type == FactType.LIST) {
+            if(generatingGoal == FactGeneratingGoal.SHORT_INFORMATION) {
+                // [Pair.first] - item, [Pair.second] - fact short key information
+                val relatedItems = facts.flatMap { mappingFact ->
+                    mappingFact.data.textList.map { it to mappingFact.data.shortKeyInformation }
+                        .ifEmpty { listOf(mappingFact.data.longInformation to mappingFact.data.shortKeyInformation) }
+                }.take((MINIMUM_RELATED_ITEMS_TO_GENERATE_LIST..MAXIMUM_RELATED_ITEMS_TO_GENERATE_LIST).random())
 
-                    activity.getString(
-                        if(generatingGoal == FactGeneratingGoal.SHORT_INFORMATION_PARENT_NAME_LONG) {
-                            R.string.question_generating_fact_parent_name_long
-                        }else R.string.question_generating_fact_parent_name_short,
-                        category?.name ?: "",
-                        category?.uid ?: "",
-                        subject?.name ?: "",
-                        subject?.uid ?: "",
-                        if(previousCategory != null) {
-                            activity.getString(
-                                R.string.question_generating_fact_parent_addition,
-                                previousCategory.name,
-                                previousCategory.uid
-                            )
-                        }else ""
-                    )
-                }
-                FactGeneratingGoal.SHORT_INFORMATION -> {
-                    activity.getString(
-                        R.string.question_generating_fact_short,
+                QuestionIO(
+                    answers = relatedItems.map { mappingItem ->
+                        QuestionAnswerIO(
+                            text = mappingItem.first,
+                            explanationMessage = mappingItem.second,
+                            isCorrect = false
+                        )
+                    }.toMutableList().apply {
+                        // we add the correct answer
+                        addAll(
+                            promptFact.data.textList.map { mappingItem ->
+                                QuestionAnswerIO(
+                                    text = mappingItem,
+                                    isCorrect = true
+                                )
+                            }
+                        )
+                    },
+                    importedSource = ImportedSource(
+                        type = ImportSourceType.FACT,
+                        sourceUid = promptFact.data.uid
+                    ),
+                    prompt = activity.getString(
+                        R.string.question_generating_fact_list,
                         promptFact.data.shortKeyInformation
                     )
-                }
-                FactGeneratingGoal.LONG_INFORMATION -> {
-                    activity.getString(
-                        R.string.question_generating_fact_long,
-                        promptFact.data.longInformation
+                )
+            }else {
+                QuestionIO(
+                    answers = facts.map { mappingFact ->
+                        QuestionAnswerIO(
+                            text = mappingFact.data.shortKeyInformation,
+                            isCorrect = false
+                        )
+                    }.toMutableList().apply {
+                        // we add the correct answer
+                        add(
+                            QuestionAnswerIO(
+                                text = promptFact.data.shortKeyInformation,
+                                isCorrect = true
+                            )
+                        )
+                    },
+                    importedSource = ImportedSource(
+                        type = ImportSourceType.FACT,
+                        sourceUid = promptFact.data.uid
+                    ),
+                    promptList = promptFact.data.textList,
+                    prompt = activity.getString(R.string.question_generating_fact_list_short_key)
+                )
+            }
+        }else {
+            QuestionIO(
+                answers = facts.map { mappingFact ->
+                    QuestionAnswerIO(
+                        textList = if(generatingGoal == FactGeneratingGoal.SHORT_INFORMATION
+                            //|| generatingGoal == FactGeneratingGoal.SHORT_INFORMATION_PARENT_NAME_LONG
+                        ) mappingFact.data.textList
+                        else listOf(),
+                        text = when(generatingGoal) {
+                            //FactGeneratingGoal.SHORT_INFORMATION_PARENT_NAME_LONG -> mappingFact.data.longInformation
+                            //FactGeneratingGoal.SHORT_INFORMATION_PARENT_NAME_SHORT -> mappingFact.data.shortKeyInformation
+                            FactGeneratingGoal.SHORT_INFORMATION -> mappingFact.data.longInformation
+                            FactGeneratingGoal.LONG_INFORMATION -> mappingFact.data.shortKeyInformation
+                        },
+                        isCorrect = false
                     )
-                }
-            },
-            promptList = if(generatingGoal == FactGeneratingGoal.LONG_INFORMATION) {
-                promptFact.data.textList
-            }else listOf()
-        )
+                }.toMutableList().apply {
+                    // we add the correct answer
+                    add(
+                        QuestionAnswerIO(
+                            textList = if(generatingGoal == FactGeneratingGoal.SHORT_INFORMATION
+                                //|| generatingGoal == FactGeneratingGoal.SHORT_INFORMATION_PARENT_NAME_LONG
+                            ) promptFact.data.textList
+                            else listOf(),
+                            text = when(generatingGoal) {
+                                //FactGeneratingGoal.SHORT_INFORMATION_PARENT_NAME_LONG -> promptFact.data.longInformation
+                                //FactGeneratingGoal.SHORT_INFORMATION_PARENT_NAME_SHORT -> promptFact.data.shortKeyInformation
+                                FactGeneratingGoal.SHORT_INFORMATION -> promptFact.data.longInformation
+                                FactGeneratingGoal.LONG_INFORMATION -> promptFact.data.shortKeyInformation
+                            },
+                            isCorrect = true
+                        )
+                    )
+                },
+                importedSource = ImportedSource(
+                    type = ImportSourceType.FACT,
+                    sourceUid = promptFact.data.uid
+                ),
+                prompt = when(generatingGoal) {
+                    /*FactGeneratingGoal.SHORT_INFORMATION_PARENT_NAME_SHORT,
+                    FactGeneratingGoal.SHORT_INFORMATION_PARENT_NAME_LONG -> {
+                        val previousCategory = if(promptFact.sortedCategoryUid.size > 1) {
+                            categories.find { category ->
+                                category.uid == allParagraphs.find {
+                                    it.data.uid == promptFact.sortedCategoryUid.getOrNull(
+                                        promptFact.sortedCategoryUid.size.minus(2)
+                                    )
+                                }?.data?.categoryUid
+                            }
+                        }else null
+                        val category = categories.find { category ->
+                            category.uid == allParagraphs.find { it.data.uid == promptFact.sortedCategoryUid.lastOrNull() }
+                                ?.data?.categoryUid
+                        }
+                        val subject = allSubjects.find { it.uid == promptFact.parentSubjectUid }
+
+                        activity.getString(
+                            if(generatingGoal == FactGeneratingGoal.SHORT_INFORMATION_PARENT_NAME_LONG) {
+                                R.string.question_generating_fact_parent_name_long
+                            }else R.string.question_generating_fact_parent_name_short,
+                            category?.name ?: "",
+                            subject?.name ?: "",
+                            if(previousCategory != null) {
+                                activity.getString(
+                                    R.string.question_generating_fact_parent_addition,
+                                    previousCategory.name
+                                )
+                            }else ""
+                        )
+                    }*/
+                    FactGeneratingGoal.SHORT_INFORMATION -> {
+                        activity.getString(
+                            R.string.question_generating_fact_short,
+                            promptFact.data.shortKeyInformation
+                        )
+                    }
+                    FactGeneratingGoal.LONG_INFORMATION -> {
+                        activity.getString(
+                            R.string.question_generating_fact_long,
+                            if(promptFact.data.type.isListType) ""
+                            else promptFact.data.longInformation
+                        )
+                    }
+                },
+                promptList = if(generatingGoal == FactGeneratingGoal.LONG_INFORMATION) {
+                    promptFact.data.textList
+                }else listOf()
+            )
+        }
     }
 
     /** Calculates weights of a [currentList] based on similarity to a [anchorList] */
@@ -382,21 +459,11 @@ class QuestionGenerator @Inject constructor() {
 
     /** What is the goal data by which we ask the question - what will be a prompt */
     private enum class FactGeneratingGoal {
-
-        /** Short information together with name(s) of the parent(s) to further specify */
-        SHORT_INFORMATION_PARENT_NAME_SHORT,
-
-        /** Long information together with name(s) of the parent(s) to further specify */
-        SHORT_INFORMATION_PARENT_NAME_LONG,
-
-        /** list of facts under specific paragraph */
+        /** Prompt is a short information */
         SHORT_INFORMATION,
-        /** list of paragraphs under specific paragraph */
-        LONG_INFORMATION;
 
-        /** Whether parent is centre of generating */
-        val isParent: Boolean
-            get() = this == SHORT_INFORMATION_PARENT_NAME_SHORT || this == SHORT_INFORMATION_PARENT_NAME_LONG
+        /** Prompt is a long information */
+        LONG_INFORMATION;
     }
 
 
@@ -417,12 +484,12 @@ class QuestionGenerator @Inject constructor() {
             when {
                 // only paragraphs that act as a form of a "fact" - have some paragraphs
                 generatingGoal == ParagraphGeneratingGoal.LIST_OF_CHILDREN_PARAGRAPHS
-                        && paragraph.data.paragraphs.none { it.isSeriousDataPoint } -> {
+                        && paragraph.data.paragraphs.count { it.isSeriousDataPoint } < 2 -> {
                     return@withContext null
                 }
                 // we need correct answers
                 generatingGoal == ParagraphGeneratingGoal.LIST_OF_CHILDREN_FACTS
-                        && paragraph.data.facts.isEmpty() -> {
+                        && (paragraph.data.facts.size < 2 || paragraph.data.isSeriousDataPoint.not()) -> {
                     return@withContext null
                 }
             }
@@ -460,7 +527,7 @@ class QuestionGenerator @Inject constructor() {
                                         textList = relatedParagraph.first.data.bulletPoints,
                                         explanationMessage = activity.getString(
                                             R.string.question_generating_explanation_paragraph,
-                                            relatedParagraph.first.data.uid
+                                            //relatedParagraph.first.data.uid
                                         )
                                     )
                                 }.toMutableList().apply {
@@ -470,7 +537,7 @@ class QuestionGenerator @Inject constructor() {
                                             textList = paragraph.data.bulletPoints,
                                             explanationMessage = activity.getString(
                                                 R.string.question_generating_explanation_paragraph,
-                                                paragraph.data.uid
+                                                //paragraph.data.uid
                                             )
                                         )
                                     )
@@ -502,7 +569,7 @@ class QuestionGenerator @Inject constructor() {
                                         text = relatedParagraph.first.data.localCategory?.name ?: "",
                                         explanationMessage = activity.getString(
                                             R.string.question_generating_explanation_paragraph,
-                                            relatedParagraph.first.data.uid
+                                            //relatedParagraph.first.data.uid
                                         )
                                     )
                                 }.toMutableList().apply {
@@ -512,7 +579,7 @@ class QuestionGenerator @Inject constructor() {
                                             text = paragraph.data.localCategory?.name ?: "",
                                             explanationMessage = activity.getString(
                                                 R.string.question_generating_explanation_paragraph,
-                                                paragraph.data.uid
+                                                //paragraph.data.uid
                                             )
                                         )
                                     )
@@ -548,7 +615,7 @@ class QuestionGenerator @Inject constructor() {
                                             text = childrenParagraph.localCategory?.name ?: "",
                                             explanationMessage = activity.getString(
                                                 R.string.question_generating_explanation_paragraph,
-                                                childrenParagraph.uid
+                                                //childrenParagraph.uid
                                             ),
                                             isCorrect = false
                                         )
@@ -560,7 +627,7 @@ class QuestionGenerator @Inject constructor() {
                                                     text = name,
                                                     explanationMessage = activity.getString(
                                                         R.string.question_generating_explanation_paragraph,
-                                                        correctParagraph.uid
+                                                        //correctParagraph.uid
                                                     ),
                                                     isCorrect = true
                                                 )
@@ -571,9 +638,9 @@ class QuestionGenerator @Inject constructor() {
                                 prompt = activity.getString(
                                     R.string.question_generating_children_items,
                                     paragraph.data.localCategory?.name ?: "",
-                                    paragraph.data.uid,
+                                    //paragraph.data.uid,
                                     subject?.name ?: "",
-                                    subject?.uid ?: ""
+                                    //subject?.uid ?: ""
                                 )
                             )
                         )
@@ -623,9 +690,9 @@ class QuestionGenerator @Inject constructor() {
                             prompt = activity.getString(
                                 R.string.question_generating_children_items,
                                 paragraph.data.localCategory?.name ?: "",
-                                paragraph.data.uid,
+                                //paragraph.data.uid,
                                 subject?.name ?: "",
-                                subject?.uid ?: ""
+                                //subject?.uid ?: ""
                             )
                         )
                         repeat(MINIMUM_RELATED_DATA_TO_GENERATE) {

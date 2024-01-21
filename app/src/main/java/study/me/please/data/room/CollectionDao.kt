@@ -5,6 +5,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import study.me.please.data.io.CollectionIO
+import java.util.Date
 
 /** Interface for communication with local Room database */
 @Dao
@@ -22,6 +23,16 @@ interface CollectionDao {
     /** Returns a single collection based on their identification [collectionUid] */
     @Query("SELECT * FROM ${AppRoomDatabase.ROOM_COLLECTION_TABLE} WHERE uid == :collectionUid LIMIT 1")
     suspend fun getCollectionByUid(collectionUid: String): CollectionIO?
+
+    /** Updates collection with new question id list */
+    @Query("UPDATE ${AppRoomDatabase.ROOM_COLLECTION_TABLE} " +
+            "SET questionUidList = :questionUidList WHERE uid == :collectionUid")
+    suspend fun updateCollectionQuestions(collectionUid: String, questionUidList: Set<String>)
+
+    /** Updates collection with new date modified */
+    @Query("UPDATE ${AppRoomDatabase.ROOM_COLLECTION_TABLE} " +
+            "SET date_modified = :dateModified WHERE uid == :collectionUid")
+    suspend fun updateCollectionDateModified(collectionUid: String, dateModified: Date?)
 
     /** Inserts or updates a new collection [collection] into the database */
     @Insert(onConflict = OnConflictStrategy.REPLACE)

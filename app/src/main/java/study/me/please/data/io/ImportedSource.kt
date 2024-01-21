@@ -9,6 +9,8 @@ data class ImportedSource (
     val type: ImportSourceType = ImportSourceType.NONE,
 
     /** identifier for source */
-    val sourceUid: String? = null
+    val sourceUid: String? = null,
 
+    /** Parent importing source */
+    //val parent: ImportedSource? = null TODO
 ): Serializable

@@ -125,7 +125,7 @@ fun CustomChipGroup(
                                 )
                             ),
                             text = chipState.chipText.value,
-                            selected = chipState.isChecked.value,
+                            checked = chipState.isChecked.value,
                             onClick = { onChipClicked() },
                             imageVector = chipState.icon.value
                         )
