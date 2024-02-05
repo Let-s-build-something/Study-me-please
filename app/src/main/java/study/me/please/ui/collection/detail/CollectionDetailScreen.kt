@@ -1,10 +1,10 @@
 package study.me.please.ui.collection.detail
 
-import android.util.Log
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,6 +22,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.FileUpload
 import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material.icons.outlined.Source
+import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
@@ -55,7 +56,7 @@ import study.me.please.R
 import study.me.please.base.LocalNavController
 import study.me.please.base.navigation.ActionBarIcon
 import study.me.please.base.navigation.NavigationComponent
-import study.me.please.base.navigation.NavigationDestination
+import study.me.please.base.navigation.NavigationScreen
 import study.me.please.data.io.CollectionIO
 import study.me.please.ui.collection.detail.facts.FactsList
 import study.me.please.ui.collection.detail.questions.QuestionsList
@@ -109,7 +110,6 @@ fun CollectionDetailScreen(
     }
 
     PullRefreshScreen(
-        modifier = Modifier.background(color = LocalTheme.colors.onBackgroundComponent),
         viewModel = viewModel,
         title = collectionTitle.value,
         subtitle = stringResource(id = R.string.collection),
@@ -119,7 +119,7 @@ fun CollectionDetailScreen(
                 imageVector = Icons.Outlined.PlayArrow,
                 onClick = {
                     navController?.navigate(
-                        NavigationDestination.SessionDetail.createRoute(
+                        NavigationScreen.SessionDetail.createRoute(
                             NavigationComponent.COLLECTION_UID_LIST to listOf(collectionDetail.value.uid),
                             NavigationComponent.TOOLBAR_TITLE to collectionDetail.value.name
                         )
@@ -127,11 +127,11 @@ fun CollectionDetailScreen(
                 }
             )
             ActionBarIcon(
-                text = stringResource(id = R.string.screen_subject),
+                text = stringResource(id = R.string.screen_units),
                 imageVector = Icons.Outlined.Source,
                 onClick = {
                     navController?.navigate(
-                        NavigationDestination.Subjects.createRoute(
+                        NavigationScreen.Units.createRoute(
                             NavigationComponent.COLLECTION_UID to collectionDetail.value.uid,
                             NavigationComponent.TOOLBAR_TITLE to collectionDetail.value.name
                         )
@@ -222,11 +222,16 @@ private fun ContentLayout(
         content = listOf(
             @Composable {
                 ExpandableContent(
+                    modifier = Modifier
+                        .clickable(
+                            onClick = { isBasicInfoExpanded = isBasicInfoExpanded.not() },
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = rememberRipple()
+                        )
+                        .verticalScroll(rememberScrollState())
+                        .fillMaxWidth(),
                     text = stringResource(R.string.collection_detail_basic_information),
-                    defaultValue = isExpandedByDefault,
-                    onExpansionChange = { isExpanded ->
-                        isBasicInfoExpanded = isExpanded
-                    }
+                    isExpanded = isBasicInfoExpanded
                 ) {
                     Column(
                         modifier = Modifier
@@ -283,10 +288,11 @@ private fun ContentLayout(
                         }
                     }
                 }
-            } to CollapsingBehavior.NONE,
+            } to CollapsingBehavior.ON_TOP,
             @Composable {
                 Box(
                     modifier = Modifier
+                        .verticalScroll(rememberScrollState())
                         .padding(top = LocalTheme.shapes.betweenItemsSpace)
                         .fillMaxWidth(),
                     contentAlignment = Alignment.Center

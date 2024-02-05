@@ -2,7 +2,6 @@ package study.me.please.hilt
 
 import android.content.Context
 import androidx.room.Room
-import study.me.please.data.room.AppDatabaseConverter
 import com.google.gson.Gson
 import dagger.Module
 import dagger.Provides
@@ -10,6 +9,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.components.ActivityRetainedComponent
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.android.scopes.ActivityRetainedScoped
+import study.me.please.data.room.AppDatabaseConverter
 import study.me.please.data.room.AppRoomDatabase
 
 /** Main module provider for accessing interfaces for local Room database */

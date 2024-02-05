@@ -1,9 +1,9 @@
-package study.me.please.ui.collection.detail.subjects
+package study.me.please.ui.units
 
 import study.me.please.data.io.subjects.ParagraphIO
 
 /** Communication bridge and main controller for SubjectScreen */
-interface SubjectScreenBridge {
+interface UnitScreenBridge {
     /*
     *//** Adds new bullet point at any layer, identified by [parentUid] *//*
     fun addBulletPoint(parentUid: String)
@@ -12,8 +12,8 @@ interface SubjectScreenBridge {
     fun removeBulletPoint(parentUid: String, index: Int)
 */
 
-    fun updateSubjectBulletPoints()
+    fun updateBulletPoints()
     fun updateParagraph(paragraph: ParagraphIO)
-    fun addSubjectParagraph()
-    fun addSubjectBulletPoint()
+    fun addParagraph()
+    fun addBulletPoint()
 }

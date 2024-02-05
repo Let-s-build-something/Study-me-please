@@ -1,13 +1,12 @@
-package study.me.please.ui.collection.detail.subjects
+package study.me.please.ui.units
 
 import com.squadris.squadris.utils.DateUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import study.me.please.data.io.BaseResponse
 import study.me.please.data.io.CollectionIO
 import study.me.please.data.io.QuestionIO
 import study.me.please.data.io.subjects.CategoryIO
-import study.me.please.data.io.subjects.SubjectIO
+import study.me.please.data.io.subjects.UnitIO
 import study.me.please.data.room.CategoryDao
 import study.me.please.data.room.CollectionDao
 import study.me.please.data.room.QuestionDao
@@ -23,14 +22,14 @@ class SubjectsRepository @Inject constructor(
 ) {
 
     /** Returns list of subjects based off of a collection uid [collectionUid] */
-    suspend fun getSubjectsByCollection(collectionUid: String): List<SubjectIO>? {
+    suspend fun getSubjectsByCollection(collectionUid: String): List<UnitIO>? {
         return withContext(Dispatchers.IO) {
             subjectsDao.getSubjectsByCollectionUid(collectionUid)
         }
     }
 
     /** Creates a new record of subject or replaces it if it already exists */
-    suspend fun updateSubject(subject: SubjectIO) {
+    suspend fun updateSubject(subject: UnitIO) {
         return withContext(Dispatchers.IO) {
             subjectsDao.insertSubject(subject)
         }

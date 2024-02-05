@@ -1,9 +1,8 @@
 package com.squadris.squadris.compose.theme
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.material3.CardElevation
 import androidx.compose.material3.CheckboxColors
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.SelectableChipBorder
 import androidx.compose.material3.SelectableChipColors
 import androidx.compose.material3.SwitchColors
 import androidx.compose.material3.TextFieldColors
@@ -37,11 +36,9 @@ interface ThemeStyle {
     @get:Composable
     val cardClickableElevation: CardElevation
 
-    @OptIn(ExperimentalMaterial3Api::class)
     @get:Composable
-    val chipBorderDefault: SelectableChipBorder
+    val chipBorderDefault: BorderStroke
 
-    @OptIn(ExperimentalMaterial3Api::class)
     @get:Composable
     val chipColorsDefault: SelectableChipColors
 
@@ -56,4 +53,8 @@ interface ThemeStyle {
     /** Medium, thin, category style for text */
     @get:Composable
     val category: TextStyle
+
+    /** Style for link text */
+    @get:Composable
+    val linkText: TextStyle
 }

@@ -30,7 +30,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
@@ -43,7 +42,7 @@ import study.me.please.R
 import study.me.please.base.LocalNavController
 import study.me.please.base.navigation.NavIconType
 import study.me.please.base.navigation.NavigationComponent
-import study.me.please.base.navigation.NavigationDestination
+import study.me.please.base.navigation.NavigationScreen
 import study.me.please.data.io.CollectionIO
 import study.me.please.data.io.session.SessionIO
 import study.me.please.ui.components.BasicAlertDialog
@@ -142,7 +141,7 @@ fun HomeScreen(
                     collections = collections.value,
                     onNavigationToDetail = { collection ->
                         navController?.navigate(
-                            NavigationDestination.CollectionDetail.createRoute(
+                            NavigationScreen.CollectionDetail.createRoute(
                                 NavigationComponent.COLLECTION_UID to collection.uid,
                                 NavigationComponent.TOOLBAR_TITLE to collection.name.ifEmpty {
                                     context.getString(R.string.screen_collection_detail_new)
@@ -153,19 +152,19 @@ fun HomeScreen(
                     onNavigationToLobby = { createNewItem ->
                         if(createNewItem) {
                             navController?.navigate(
-                                NavigationDestination.CollectionDetail.createRoute(
+                                NavigationScreen.CollectionDetail.createRoute(
                                     NavigationComponent.TOOLBAR_TITLE to context.getString(
                                         R.string.screen_collection_detail_new
                                     )
                                 )
                             )
                         }else {
-                            navController?.navigate(NavigationDestination.CollectionLobby.createRoute())
+                            navController?.navigate(NavigationScreen.CollectionLobby.createRoute())
                         }
                     },
                     onNavigationToSession = { collection ->
                         navController?.navigate(
-                            NavigationDestination.SessionPlay.createRoute(
+                            NavigationScreen.SessionPlay.createRoute(
                                 NavigationComponent.TOOLBAR_TITLE to collection.name,
                                 NavigationComponent.COLLECTION_UID to collection.uid
                             )
@@ -177,11 +176,11 @@ fun HomeScreen(
                     sessions = sessions.value,
                     configuration = configuration,
                     onNavigationToLobby = {
-                        navController?.navigate(NavigationDestination.SessionLobby.createRoute())
+                        navController?.navigate(NavigationScreen.SessionLobby.createRoute())
                     },
                     onNavigationToSession = { session ->
                         navController?.navigate(
-                            NavigationDestination.SessionPlay.createRoute(
+                            NavigationScreen.SessionPlay.createRoute(
                                 NavigationComponent.TOOLBAR_TITLE to session.name,
                                 NavigationComponent.SESSION_UID to session.uid
                             )
@@ -189,7 +188,7 @@ fun HomeScreen(
                     },
                     onNavigationToDetail = { session ->
                         navController?.navigate(
-                            NavigationDestination.SessionDetail.createRoute(
+                            NavigationScreen.SessionDetail.createRoute(
                                 NavigationComponent.SESSION_UID to session.uid,
                                 NavigationComponent.TOOLBAR_TITLE to session.name
                             )

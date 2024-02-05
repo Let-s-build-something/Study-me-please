@@ -12,7 +12,7 @@ import java.util.UUID
 
 /** Primary IO responsible for saving subjects */
 @Entity(tableName = ROOM_SUBJECT_TABLE)
-data class SubjectIO(
+data class UnitIO(
 
     /** unique identifier */
     @PrimaryKey
@@ -52,11 +52,25 @@ data class SubjectIO(
         get() = bulletPoints.isNotEmpty() && name.isNotEmpty()
 
     /** Updates this object with new subject [subject] */
-    fun updateTO(subject: SubjectIO) {
+    fun updateTO(subject: UnitIO) {
         this.categoryUids = subject.categoryUids
         this.bulletPoints = subject.bulletPoints
         this.paragraphs = subject.paragraphs
         this.facts = subject.facts
         this.name = subject.name
+    }
+
+    override fun toString(): String {
+        return super.toString() +
+                "{" +
+                "uid: $uid" +
+                "categoryUids: $categoryUids," +
+                "bulletPoints: $bulletPoints," +
+                "paragraphs: $paragraphs," +
+                "facts: $facts," +
+                "name: $name," +
+                "collectionUid: $collectionUid," +
+                "dateCreated: $dateCreated" +
+                "}"
     }
 }

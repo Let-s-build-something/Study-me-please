@@ -3,7 +3,7 @@ package study.me.please.data.io
 import java.io.Serializable
 
 /** Information about source of import */
-data class ImportedSource (
+data class ImportedSource(
 
     /** Question prompt for user */
     val type: ImportSourceType = ImportSourceType.NONE,
@@ -12,5 +12,5 @@ data class ImportedSource (
     val sourceUid: String? = null,
 
     /** Parent importing source */
-    //val parent: ImportedSource? = null TODO
+    val parent: ImportedSource? = null
 ): Serializable

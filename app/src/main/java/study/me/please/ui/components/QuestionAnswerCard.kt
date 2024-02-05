@@ -1,6 +1,7 @@
 package study.me.please.ui.components
 
 import android.annotation.SuppressLint
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.tween
@@ -13,6 +14,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Close
@@ -35,9 +38,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -46,8 +52,8 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import coil.compose.AsyncImagePainter
 import com.squadris.squadris.compose.components.DEFAULT_ANIMATION_LENGTH_SHORT
-import com.squadris.squadris.compose.components.input.EditFieldInput
 import com.squadris.squadris.compose.components.MinimalisticIcon
+import com.squadris.squadris.compose.components.input.EditFieldInput
 import com.squadris.squadris.compose.theme.LocalTheme
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.delay
@@ -213,9 +219,9 @@ private fun DataCard(
                 .animateContentSize()
                 .constrainAs(txtAnswerContainer) {
                     linkTo(
-                        if(state.mode.value == InteractiveCardMode.CHECKING) {
+                        if (state.mode.value == InteractiveCardMode.CHECKING) {
                             checkBox.end
-                        }else parent.start,
+                        } else parent.start,
                         imgRightAction.start
                     )
                     width = Dimension.fillToConstraints
@@ -233,28 +239,30 @@ private fun DataCard(
                 }
             )
 
-            MultiChoiceSwitch(
-                modifier = Modifier
-                    .padding(bottom = 2.dp)
-                    .fillMaxWidth(0.5f),
-                state = switchTypeState,
-                onItemCreation = { modifier, index, animatedColor ->
-                    listOf(
-                        FactType.DEFINITION,
-                        FactType.BULLET_POINTS
-                    ).getOrNull(index)?.getIconImageVector()?.let { imageVector ->
-                        MinimalisticIcon(
-                            modifier = modifier,
-                            indication = null,
-                            tint = animatedColor,
-                            imageVector = imageVector,
-                            onClick = {
-                                switchTypeState.selectedTabIndex.value = index
-                            }
-                        )
+            AnimatedVisibility(state.mode.value == InteractiveCardMode.EDIT) {
+                MultiChoiceSwitch(
+                    modifier = Modifier
+                        .padding(bottom = 2.dp)
+                        .fillMaxWidth(0.5f),
+                    state = switchTypeState,
+                    onItemCreation = { modifier, index, animatedColor ->
+                        listOf(
+                            FactType.DEFINITION,
+                            FactType.BULLET_POINTS
+                        ).getOrNull(index)?.getIconImageVector()?.let { imageVector ->
+                            MinimalisticIcon(
+                                modifier = modifier,
+                                indication = null,
+                                tint = animatedColor,
+                                imageVector = imageVector,
+                                onClick = {
+                                    switchTypeState.selectedTabIndex.value = index
+                                }
+                            )
+                        }
                     }
-                }
-            )
+                )
+            }
 
             Text(
                 modifier = Modifier.padding(bottom = 2.dp),
@@ -273,6 +281,9 @@ private fun DataCard(
                 animationSpec = tween(durationMillis = DEFAULT_ANIMATION_LENGTH_SHORT)
             ) { isList ->
                 if (isList) {
+                    val scope = rememberCoroutineScope()
+                    val focusManager = LocalFocusManager.current
+
                     val listItems = remember(data) {
                         mutableStateListOf(*data.textList.toTypedArray())
                     }
@@ -286,33 +297,48 @@ private fun DataCard(
                     Column(
                         verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .padding(4.dp)
-                                .fillMaxWidth(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            ComponentHeaderButton(
-                                onClick = {
-                                    listItems.add(0, " ")
-                                    selectedListIndex.intValue = listItems.size.minus(1)
-                                }
-                            )
+                        AnimatedVisibility(state.mode.value == InteractiveCardMode.EDIT) {
+                            Box(
+                                modifier = Modifier
+                                    .padding(4.dp)
+                                    .fillMaxWidth(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                ComponentHeaderButton(
+                                    onClick = {
+                                        listItems.add(0, "")
+                                        selectedListIndex.intValue = listItems.size.minus(1)
+                                    }
+                                )
+                            }
                         }
                         listItems.forEachIndexed { index, listItem ->
                             ListItemEditField(
                                 prefix = FactType.BULLET_POINT_PREFIX,
                                 value = listItem,
-                                onValueChange = { output ->
-                                    if (output.isBlank()) {
+                                onBackspaceKey = {
+                                    if(it.isEmpty()) {
+                                        if(index > 0) {
+                                            focusManager.moveFocus(FocusDirection.Up)
+                                        }
                                         listItems.removeAt(index)
-                                        selectedListIndex.intValue--
-                                    } else {
-                                        listItems.removeAt(index)
-                                        listItems.add(index, output)
-                                        data.textList = listItems.toList()
-                                        requestDataSave()
                                     }
+                                },
+                                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                                keyboardActions = KeyboardActions(
+                                    onNext = {
+                                        listItems.add(index + 1, "")
+                                        scope.launch {
+                                            delay(50)
+                                            focusManager.moveFocus(FocusDirection.Down)
+                                        }
+                                    }
+                                ),
+                                enabled = state.mode.value == InteractiveCardMode.EDIT,
+                                onValueChange = { output ->
+                                    listItems[index] = output
+                                    data.textList = listItems.toList()
+                                    requestDataSave()
                                 }
                             )
                         }
@@ -352,16 +378,21 @@ private fun DataCard(
             }
         }
 
-        Text(
+        AnimatedVisibility(
             modifier = Modifier
                 .constrainAs(txtExplanationHeader) {
                     start.linkTo(txtAnswerContainer.start)
                     top.linkTo(txtAnswerContainer.bottom, 4.dp)
                 },
-            text = stringResource(id = R.string.answer_field_explanation_header),
-            fontSize = 12.sp,
-            color = LocalTheme.colors.secondary
-        )
+            visible = state.mode.value == InteractiveCardMode.EDIT
+                    || data.explanationMessage.isNotEmpty()
+        ) {
+            Text(
+                text = stringResource(id = R.string.answer_field_explanation_header),
+                fontSize = 12.sp,
+                color = LocalTheme.colors.secondary
+            )
+        }
         Crossfade(
             targetState = state.mode.value == InteractiveCardMode.EDIT,
             modifier = Modifier
@@ -371,7 +402,8 @@ private fun DataCard(
                         txtAnswerContainer.start,
                         if (state.mode.value == InteractiveCardMode.EDIT) {
                             imgRightAction.start
-                        } else txtIsCorrect.start
+                        } else txtIsCorrect.start,
+                        endMargin = 4.dp
                     )
                     top.linkTo(txtExplanationHeader.bottom, 2.dp)
                     width = Dimension.fillToConstraints
@@ -396,6 +428,7 @@ private fun DataCard(
                 }
             }else {
                 Text(
+                    modifier = Modifier.fillMaxWidth(),
                     text = data.explanationMessage,
                     fontSize = 16.sp,
                     color = LocalTheme.colors.secondary,
@@ -496,7 +529,7 @@ private fun Preview() {
         ),
         requestDataSave = {},
         state = InteractiveCardState(
-            mode = mutableStateOf(InteractiveCardMode.EDIT)
+            mode = mutableStateOf(InteractiveCardMode.CHECKING)
         )
     )
 }

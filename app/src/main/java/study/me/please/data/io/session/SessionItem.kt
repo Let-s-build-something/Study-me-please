@@ -21,7 +21,7 @@ data class SessionItem(
     val data: QuestionIO? = null,
 
     /** whether this item's source is repetition */
-    val isRepetition: Boolean = false
+    var isRepetition: Boolean = false
 ) {
     /** unique identifier */
     @get:Ignore

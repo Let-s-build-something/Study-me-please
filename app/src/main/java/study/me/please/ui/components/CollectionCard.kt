@@ -40,6 +40,7 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -230,8 +231,10 @@ private fun DataCard(
                     }else end.linkTo(imgIcon.start, 6.dp)
                     width = Dimension.fillToConstraints
                 },
-            fontSize = 12.sp,
-            color = LocalTheme.colors.secondary,
+            style = TextStyle(
+                fontSize = 14.sp,
+                color = LocalTheme.colors.secondary,
+            ),
             minLines = 2,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis
@@ -330,7 +333,7 @@ fun OptionsModeLayout(
 @Composable
 private fun Preview() {
     CollectionCard(
-        data = CollectionIO(),
+        data = CollectionIO(name = "collection"),
         onNavigateToSession = {},
         onNavigateToDetail = {},
         state = rememberInteractiveCardState()

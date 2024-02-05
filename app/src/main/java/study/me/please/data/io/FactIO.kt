@@ -57,6 +57,44 @@ data class FactIO(
     var categoryUids: List<String> = listOf()
 ): Serializable {
 
+    override fun toString(): String {
+        return super.toString() +
+                "{" +
+                "uid: $uid," +
+                "shortKeyInformation: $shortKeyInformation," +
+                "shortKeyImage: $shortKeyImage," +
+                "longInformation: $longInformation," +
+                "textList: $textList," +
+                "longInformationImage: $longInformationImage," +
+                "promptImage: $promptImage," +
+                "type: $type," +
+                "dateCreated: $dateCreated," +
+                "categoryUids: $categoryUids" +
+                "}"
+    }
+
+    fun deepCopy(): FactIO {
+        return FactIO(
+            shortKeyInformation = shortKeyInformation,
+            shortKeyImage = shortKeyImage,
+            longInformation = longInformation,
+            textList = textList,
+            longInformationImage = longInformationImage,
+            promptImage = promptImage,
+            type = type,
+            dateCreated = dateCreated,
+            categoryUids = categoryUids
+        )
+    }
+
+    /** Whether there is not visible data */
+    @get:Ignore
+    val isEmpty: Boolean
+        get() = shortKeyInformation.isEmpty()
+                && longInformation.isEmpty()
+                && promptImage?.isEmpty != false
+                && (textList.isEmpty() || type.isListType.not())
+
     /**
      * Explanation of an image prompt, which is combination of both [shortKeyInformation] and [longInformation]
      */

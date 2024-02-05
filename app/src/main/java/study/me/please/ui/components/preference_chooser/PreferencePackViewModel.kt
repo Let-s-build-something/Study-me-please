@@ -26,7 +26,7 @@ interface PreferencePackViewModel {
     fun requestPreferencePackSave(preferencePack: SessionPreferencePack) {
         coroutineScope.launch {
             preferencePackRepository.savePreferencePack(preferencePack.also {
-                it.dateModified = DateUtils.now.time
+                it.dateModified = DateUtils.now.timeInMillis
             })
         }
     }

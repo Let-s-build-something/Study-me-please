@@ -7,43 +7,28 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.FormatQuote
 import androidx.compose.material.icons.outlined.Image
-import androidx.compose.material.icons.outlined.QuestionMark
-import androidx.compose.material.ripple.rememberRipple
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.RichTooltipBox
-import androidx.compose.material3.RichTooltipColors
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberRichTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -52,35 +37,27 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.zIndex
-import androidx.constraintlayout.compose.ConstraintLayout
-import androidx.constraintlayout.compose.Dimension
 import coil.compose.AsyncImagePainter
-import com.squadris.squadris.compose.components.ChipState
-import com.squadris.squadris.compose.components.CustomChipGroup
 import com.squadris.squadris.compose.components.DEFAULT_ANIMATION_LENGTH_SHORT
 import com.squadris.squadris.compose.components.MinimalisticIcon
-import com.squadris.squadris.compose.components.SimpleChip
 import com.squadris.squadris.compose.components.input.EditFieldInput
-import com.squadris.squadris.compose.theme.Colors
 import com.squadris.squadris.compose.theme.LocalTheme
-import kotlinx.coroutines.Dispatchers
+import com.squadris.squadris.compose.theme.StudyMeAppTheme
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import study.me.please.R
 import study.me.please.data.io.FactIO
 import study.me.please.data.io.FactType
@@ -90,13 +67,15 @@ import study.me.please.ui.collection.detail.questions.detail.INPUT_DELAYED_RESPO
 import study.me.please.ui.components.tab_switch.MultiChoiceSwitch
 import study.me.please.ui.components.tab_switch.TabSwitchState
 
+
 /** Card with the option of editing data inside */
 @Composable
 fun FactCard(
     modifier: Modifier = Modifier,
-    state: InteractiveCardState = rememberInteractiveCardState(),
+    mode: InteractiveCardMode = InteractiveCardMode.DATA_DISPLAY,
     data: FactIO?,
-    categoryUseCase: FactCardCategoryUseCase,
+    onClick: () -> Unit,
+    isReadOnly: Boolean = false,
     requestDataSave: (FactIO) -> Unit
 ) {
     Crossfade(targetState = data == null, label = "") { isShimmer ->
@@ -106,8 +85,35 @@ fun FactCard(
             ContentLayout(
                 modifier = modifier,
                 data = data,
-                state = state,
-                categoryUseCase = categoryUseCase,
+                isReadOnly = isReadOnly,
+                mode = mode,
+                requestDataSave = requestDataSave,
+                onClick = {
+                    onClick()
+                }
+            )
+        }
+    }
+}
+
+/** Card with the option of editing data inside */
+@Composable
+fun FactCard(
+    modifier: Modifier = Modifier,
+    state: InteractiveCardState = rememberInteractiveCardState(),
+    data: FactIO?,
+    isReadOnly: Boolean = false,
+    requestDataSave: (FactIO) -> Unit
+) {
+    Crossfade(targetState = data == null, label = "") { isShimmer ->
+        if(isShimmer) {
+            ShimmerLayout()
+        }else if(data != null) {
+            ContentLayout(
+                modifier = modifier,
+                data = data,
+                isReadOnly = isReadOnly,
+                mode = state.mode.value,
                 requestDataSave = requestDataSave,
                 onClick = {
                     when(state.mode.value) {
@@ -119,122 +125,49 @@ fun FactCard(
                         }
                         else -> {}
                     }
-                },
-                onLongClick = {
-                    state.isChecked.value = true
                 }
             )
         }
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun ContentLayout(
     modifier: Modifier,
     data: FactIO,
-    state: InteractiveCardState,
-    categoryUseCase: FactCardCategoryUseCase,
+    mode: InteractiveCardMode,
+    isReadOnly: Boolean = false,
     requestDataSave: (FactIO) -> Unit,
     onClick: () -> Unit,
-    onLongClick: () -> Unit
 ) {
-    Card(
+    DataCard(
         modifier = modifier
             .fillMaxWidth()
             .wrapContentHeight()
-            .clip(LocalTheme.shapes.componentShape)
-            .combinedClickable(
-                interactionSource = remember {
-                    MutableInteractionSource()
-                },
-                indication = rememberRipple(
-                    bounded = true
-                ),
-                onClick = onClick,
-                onLongClick = onLongClick
-            ),
-        elevation = LocalTheme.styles.cardClickableElevation,
-        shape = LocalTheme.shapes.componentShape,
-        colors = CardDefaults.cardColors(
-            containerColor = LocalTheme.colors.onBackgroundComponentContrast,
-            contentColor = LocalTheme.colors.onBackgroundComponentContrast
-        )
-    ) {
-        DataCard(
-            state = state,
-            data = data,
-            categoryUseCase = categoryUseCase,
-            requestDataSave = {
-                requestDataSave(data)
-            }
-        )
-    }
+            .clip(LocalTheme.shapes.componentShape),
+        mode = mode,
+        onClick = onClick,
+        data = data,
+        isReadOnly = isReadOnly,
+        requestDataSave = {
+            requestDataSave(data)
+        }
+    )
 }
 
 @Composable
 private fun DataCard(
     modifier: Modifier = Modifier,
-    state: InteractiveCardState,
-    categoryUseCase: FactCardCategoryUseCase,
+    mode: InteractiveCardMode,
+    isReadOnly: Boolean = false,
     requestDataSave: () -> Unit,
+    onClick: () -> Unit,
     data: FactIO
 ) {
-    val coroutineScope = rememberCoroutineScope()
+    val isInEdit = mode == InteractiveCardMode.EDIT && isReadOnly.not()
     val inputScope = rememberCoroutineScope()
-
-    val showAddNewCategory = remember { mutableStateOf(false) }
-
-    val categories = categoryUseCase.categories.collectAsState()
-    val chosenCategories = remember(data) {
-        mutableStateListOf(
-            *categories.value?.filter { data.categoryUids.contains(it.uid) }.orEmpty().toTypedArray()
-        )
-    }
-    val newCategories = remember(data) {
-        derivedStateOf {
-            categories.value.orEmpty().filter { chosenCategories.contains(it).not() }
-        }
-    }
-    val categoryChips = remember {
-        mutableStateListOf<ChipState>()
-    }
-
-    LaunchedEffect(chosenCategories.size) {
-        withContext(Dispatchers.Default) {
-            if(categories.value != null) {
-                data.categoryUids = chosenCategories.toList().map { it.uid }
-                requestDataSave()
-                categoryChips.clear()
-                categoryChips.addAll(chosenCategories.map { category ->
-                    ChipState(
-                        uid = category.uid,
-                        chipText = mutableStateOf(category.name),
-                        isChecked = mutableStateOf(false),
-                        isCheckable = false,
-                        onChipPressed = {
-                            if(state.mode.value == InteractiveCardMode.EDIT) {
-                                chosenCategories.removeIf { it.uid == category.uid }
-                            }
-                        }
-                    )
-                })
-            }
-        }
-    }
-    LaunchedEffect(categories.value) {
-        withContext(Dispatchers.Default) {
-            chosenCategories.clear()
-            chosenCategories.addAll(
-                categories.value?.filter { data.categoryUids.contains(it.uid) }.orEmpty()
-            )
-        }
-    }
-    LaunchedEffect(state.mode.value) {
-        if(state.mode.value != InteractiveCardMode.EDIT) {
-            showAddNewCategory.value = false
-        }
-    }
+    val scope = rememberCoroutineScope()
+    val focusManager = LocalFocusManager.current
 
     val selectedFactType = remember(data) { mutableStateOf(data.type) }
     val switchTypeState = TabSwitchState(
@@ -249,7 +182,6 @@ private fun DataCard(
         },
         scrollState = rememberScrollState()
     )
-    val showCheckbox = state.mode.value == InteractiveCardMode.CHECKING
 
     val promptImage = remember(data) { mutableStateOf(data.promptImage) }
     val selectedListIndex = remember(data) { mutableIntStateOf(-1) }
@@ -269,123 +201,35 @@ private fun DataCard(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(top = 6.dp, bottom = 6.dp, start = 12.dp, end = 8.dp),
+            .padding(top = 6.dp, bottom = 6.dp, start = 12.dp, end = 8.dp)
+            .then(
+                if (data.isEmpty && mode == InteractiveCardMode.DATA_DISPLAY) {
+                    Modifier.background(
+                        color = LocalTheme.colors.onBackgroundComponent,
+                        shape = LocalTheme.shapes.componentShape
+                    )
+                } else Modifier
+            ),
         horizontalAlignment = Alignment.Start
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.End
         ) {
-            Row(
-                modifier = Modifier.weight(1f),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                AnimatedVisibility(visible = state.mode.value == InteractiveCardMode.EDIT) {
-                    Crossfade(targetState = showAddNewCategory, label = "") { showInput ->
-                        if(showInput.value) {
-                            EditFieldItemPicker(
-                                modifier = Modifier
-                                    .padding(start = 8.dp, top = 4.dp)
-                                    .zIndex(1f),
-                                values = newCategories.value,
-                                defaultValue = "",
-                                onValueChosen = { chosenCategory ->
-                                    showAddNewCategory.value = false
-                                    chosenCategories.add(chosenCategory)
-                                },
-                                hint = stringResource(R.string.subject_categorize_paragraph),
-                                onEmptyStateClicked = { inputValue ->
-                                    val newCategory = CategoryIO(name = inputValue)
-                                    categoryUseCase.requestAddNewCategory(newCategory)
-                                    showAddNewCategory.value = false
-                                    chosenCategories.add(newCategory)
-                                },
-                                onFocusLost = {
-                                    showAddNewCategory.value = false
-                                }
-                            )
-                        }else {
-                            SimpleChip(
-                                text = stringResource(R.string.tags_add_new),
-                                checked = true,
-                                imageVector = Icons.Outlined.Add,
-                                onClick = {
-                                    showAddNewCategory.value = true
-                                },
-                                checkable = false
-                            )
-                        }
-                    }
-                }
-                AnimatedVisibility(
-                    visible = (categories.value?.size ?: 6) < 5 && state.mode.value == InteractiveCardMode.EDIT
-                ) {
-                    val tooltipState = rememberRichTooltipState(isPersistent = true)
-                    RichTooltipBox(
-                        tooltipState = tooltipState,
-                        text = {
-                            Text(
-                                stringResource(R.string.tags_explanation),
-                                style = TextStyle(
-                                    fontSize = 16.sp,
-                                    color = Color.White
-                                )
-                            )
-                        },
-                        colors = RichTooltipColors(
-                            containerColor = LocalTheme.colors.backgroundLight,
-                            contentColor = Color.White,
-                            titleContentColor = Color.White,
-                            actionContentColor = Color.White
-                        )
-                    ) {
-                        Icon(
-                            modifier = Modifier
-                                .padding(horizontal = 8.dp)
-                                .size(24.dp)
-                                .background(color = LocalTheme.colors.tetrial, shape = CircleShape)
-                                .tooltipTrigger()
-                                .clip(CircleShape)
-                                .clickable(
-                                    onClick = {
-                                        coroutineScope.launch {
-                                            tooltipState.show()
-                                        }
-                                    },
-                                    interactionSource = remember { MutableInteractionSource() },
-                                    indication = rememberRipple()
-                                )
-                                .padding(4.dp),
-                            imageVector = Icons.Outlined.QuestionMark,
-                            contentDescription = null,
-                            tint = Colors.DARK_GREY
-                        )
-                    }
-                }
-
-                AnimatedVisibility(visible = categoryChips.isNotEmpty()) {
-                    CustomChipGroup(
-                        chips = categoryChips
-                    )
-                }
-            }
-
-            AnimatedVisibility(visible = state.mode.value == InteractiveCardMode.EDIT) {
+            AnimatedVisibility(visible = isInEdit) {
                 MinimalisticIcon(
                     imageVector = Icons.Outlined.Close,
-                    tint = LocalTheme.colors.secondary
-                ) {
-                    state.mode.value = InteractiveCardMode.DATA_DISPLAY
-                }
+                    tint = LocalTheme.colors.secondary,
+                    onClick = onClick
+                )
             }
         }
-
         AnimatedVisibility(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = 6.dp),
-            visible = state.mode.value == InteractiveCardMode.EDIT
+            visible = isInEdit
         ) {
             Column(modifier = Modifier.fillMaxWidth()) {
                 Text(
@@ -422,193 +266,92 @@ private fun DataCard(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.Top
         ) {
-            Row(verticalAlignment = Alignment.Top) {
-                AnimatedVisibility(visible = showCheckbox) {
-                    Checkbox(
-                        checked = state.isChecked.value,
-                        onCheckedChange = { isChecked ->
-                            state.isChecked.value = isChecked
-                        },
-                        colors = LocalTheme.styles.checkBoxColorsDefault
-                    )
-                }
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        modifier = Modifier.padding(top = 8.dp),
-                        text = stringResource(selectedFactType.value.getShortHeaderStringRes()),
-                        fontSize = 12.sp,
-                        color = LocalTheme.colors.secondary
-                    )
-                    Crossfade(
-                        targetState = state.mode.value == InteractiveCardMode.EDIT,
-                        modifier = Modifier.animateContentSize(),
-                        label = "",
-                        animationSpec = tween(durationMillis = DEFAULT_ANIMATION_LENGTH_SHORT)
-                    ) { inEditMode ->
-                        if(inEditMode) {
-                            EditFieldInput(
-                                modifier = Modifier.fillMaxWidth(),
-                                prefix = if(selectedFactType.value == FactType.QUOTE) { { QuoteIcon() } }else null,
-                                suffix = if(selectedFactType.value == FactType.QUOTE) { { QuoteIcon() } }else null,
-                                value = data.shortKeyInformation,
-                                hint = stringResource(id = selectedFactType.value.getShortHintStringRes()),
-                                textStyle = TextStyle(
-                                    color = LocalTheme.colors.primary,
-                                    fontSize = 18.sp,
-                                    textAlign = TextAlign.Start,
-                                    fontStyle = if(selectedFactType.value == FactType.QUOTE) FontStyle.Italic else FontStyle.Normal
-                                ),
-                                minLines = 2,
-                                maxLines = 2
-                            ) { output ->
-                                data.shortKeyInformation = output
-                                requestDataSave()
-                            }
-                        }else {
-                            Crossfade(
-                                targetState = selectedFactType.value == FactType.QUOTE,
-                                label = "QuoteLayoutChange"
-                            ) { isQuote ->
-                                if(isQuote) {
-                                    Row(
-                                        verticalAlignment = Alignment.Top
-                                    ) {
-                                        QuoteIcon()
-                                        Text(
-                                            modifier = Modifier.weight(1f),
-                                            text = data.shortKeyInformation,
-                                            style = TextStyle(
-                                                fontSize = 18.sp,
-                                                color = LocalTheme.colors.primary,
-                                                fontStyle = FontStyle.Italic
-                                            ),
-                                            maxLines = 2,
-                                            overflow = TextOverflow.Ellipsis
-                                        )
-                                        QuoteIcon()
-                                    }
-                                }else {
-                                    Text(
-                                        text = data.shortKeyInformation,
-                                        style = TextStyle(
-                                            fontSize = 18.sp,
-                                            color = LocalTheme.colors.primary
-                                        ),
-                                        maxLines = 2,
-                                        overflow = TextOverflow.Ellipsis
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            AnimatedVisibility(state.mode.value == InteractiveCardMode.DATA_DISPLAY) {
-                MinimalisticIcon(
-                    imageVector = Icons.Outlined.Edit,
-                    tint = LocalTheme.colors.secondary
-                ) {
-                    state.mode.value = InteractiveCardMode.EDIT
-                }
-            }
-        }
-
-        val longHeaderRes = selectedFactType.value.getLongHeaderStringRes()
-        Text(
-            modifier = Modifier.padding(top = 6.dp),
-            text = if(longHeaderRes != null) stringResource(longHeaderRes) else "",
-            fontSize = 12.sp,
-            color = LocalTheme.colors.secondary
-        )
-
-        Crossfade(
-            targetState = data.type == FactType.LIST || data.type == FactType.BULLET_POINTS,
-            modifier = Modifier
-                .padding(top = 2.dp)
-                .animateContentSize(),
-            label = "",
-            animationSpec = tween(durationMillis = DEFAULT_ANIMATION_LENGTH_SHORT)
-        ) { isListType ->
-            if(isListType) {
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    AnimatedVisibility(
-                        modifier = Modifier
-                            .padding(4.dp)
-                            .fillMaxWidth(),
-                        visible = state.mode.value == InteractiveCardMode.EDIT
-                    ) {
-                        Box(
-                            modifier = Modifier.fillMaxWidth(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            ComponentHeaderButton(
-                                onClick = {
-                                    listItems.add(0, " ")
-                                    selectedListIndex.intValue = listItems.size.minus(1)
-                                }
-                            )
-                        }
-                    }
-                    listItems.forEachIndexed { index, listItem ->
-                        ListItemEditField(
-                            prefix = if(selectedFactType.value == FactType.BULLET_POINTS) {
-                                FactType.BULLET_POINT_PREFIX
-                            }else "${index.plus(1)}.\t\t",
-                            value = listItem,
-                            enabled = state.mode.value == InteractiveCardMode.EDIT,
-                            onValueChange = { output ->
-                                if(output.isBlank()) {
-                                    listItems.removeAt(index)
-                                    selectedListIndex.intValue--
-                                }else {
-                                    listItems.removeAt(index)
-                                    listItems.add(index, output)
-                                    data.textList = listItems.toList()
-                                    requestDataSave()
-                                }
-                            }
-                        )
-                    }
-                }
-            }else {
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(top = 8.dp)
+            ) {
                 Crossfade(
-                    targetState = state.mode.value == InteractiveCardMode.EDIT,
+                    targetState = isInEdit,
+                    modifier = Modifier.animateContentSize(),
                     label = "",
                     animationSpec = tween(durationMillis = DEFAULT_ANIMATION_LENGTH_SHORT)
                 ) { inEditMode ->
                     if(inEditMode) {
-                        val hint = selectedFactType.value.getLongHintStringRes()
                         EditFieldInput(
                             modifier = Modifier.fillMaxWidth(),
-                            value = data.longInformation,
-                            hint = if(hint != null) stringResource(hint) else "",
-                            minLines = 5,
-                            maxLines = 5
+                            prefix = if(selectedFactType.value == FactType.QUOTE) { { QuoteIcon() } }else null,
+                            suffix = if(selectedFactType.value == FactType.QUOTE) { { QuoteIcon() } }else null,
+                            value = data.shortKeyInformation,
+                            hint = stringResource(id = selectedFactType.value.getShortHintStringRes()),
+                            textStyle = TextStyle(
+                                color = LocalTheme.colors.primary,
+                                fontSize = 18.sp,
+                                textAlign = TextAlign.Start,
+                                fontStyle = if(selectedFactType.value == FactType.QUOTE) FontStyle.Italic else FontStyle.Normal
+                            ),
+                            minLines = 2,
+                            maxLines = 2
                         ) { output ->
-                            data.longInformation = output
+                            data.shortKeyInformation = output
                             requestDataSave()
                         }
                     }else {
-                        Text(
-                            text = data.longInformation,
-                            fontSize = 16.sp,
-                            color = LocalTheme.colors.secondary,
-                            maxLines = 5,
-                            overflow = TextOverflow.Ellipsis
-                        )
+                        Crossfade(
+                            targetState = selectedFactType.value == FactType.QUOTE,
+                            label = "QuoteLayoutChange"
+                        ) { isQuote ->
+                            if(isQuote) {
+                                Row(
+                                    verticalAlignment = Alignment.Top
+                                ) {
+                                    QuoteIcon()
+                                    Text(
+                                        modifier = Modifier.weight(1f),
+                                        text = data.shortKeyInformation,
+                                        style = TextStyle(
+                                            fontSize = 18.sp,
+                                            color = LocalTheme.colors.primary,
+                                            fontStyle = FontStyle.Italic
+                                        ),
+                                        maxLines = 2,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                    QuoteIcon()
+                                }
+                            }else {
+                                Text(
+                                    text = data.shortKeyInformation,
+                                    style = TextStyle(
+                                        fontSize = 18.sp,
+                                        color = LocalTheme.colors.primary
+                                    ),
+                                    maxLines = if(isReadOnly) Int.MAX_VALUE else 2,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+                        }
                     }
                 }
             }
+            AnimatedVisibility(
+                visible = mode == InteractiveCardMode.DATA_DISPLAY
+            ) {
+                MinimalisticIcon(
+                    imageVector = Icons.Outlined.Edit,
+                    tint = LocalTheme.colors.secondary,
+                    onClick = onClick
+                )
+            }
         }
+
         EditableImageAsset(
             modifier = Modifier
                 .wrapContentHeight()
-                .padding(top = 6.dp)
+                .padding(top = 4.dp)
                 .animateContentSize(),
             asset = promptImage.value,
-            isInEditMode = state.mode.value == InteractiveCardMode.EDIT,
+            isInEditMode = isInEdit,
             onUrlChange = { output ->
                 inputScope.coroutineContext.cancelChildren()
                 inputScope.launch {
@@ -629,16 +372,107 @@ private fun DataCard(
             }
         )
         AnimatedVisibility(
-            visible = state.mode.value == InteractiveCardMode.EDIT && promptImage.value == null
+            visible = isInEdit && promptImage.value == null
         ) {
             ImageAction(
-                modifier = Modifier
-                    .padding(top = 4.dp)
-                    .animateContentSize(),
                 leadingImageVector = Icons.Outlined.Image,
                 text = stringResource(id = R.string.button_add_prompt_image)
             ) {
                 promptImage.value = LargePathAsset()
+            }
+        }
+
+        Crossfade(
+            targetState = data.type == FactType.LIST || data.type == FactType.BULLET_POINTS,
+            modifier = Modifier
+                .padding(top = 8.dp)
+                .animateContentSize(),
+            label = "",
+            animationSpec = tween(durationMillis = DEFAULT_ANIMATION_LENGTH_SHORT)
+        ) { isListType ->
+            if(isListType) {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    AnimatedVisibility(
+                        modifier = Modifier
+                            .padding(4.dp)
+                            .fillMaxWidth(),
+                        visible = isInEdit
+                    ) {
+                        Box(
+                            modifier = Modifier.fillMaxWidth(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            ComponentHeaderButton(
+                                onClick = {
+                                    listItems.add(0, "")
+                                    selectedListIndex.intValue = listItems.size.minus(1)
+                                }
+                            )
+                        }
+                    }
+                    listItems.forEachIndexed { index, listItem ->
+                        ListItemEditField(
+                            prefix = if(selectedFactType.value == FactType.BULLET_POINTS) {
+                                FactType.BULLET_POINT_PREFIX
+                            }else "${index.plus(1)}.\t\t",
+                            onBackspaceKey = {
+                                if(it.isEmpty()) {
+                                    if(index > 0) {
+                                        focusManager.moveFocus(FocusDirection.Up)
+                                    }
+                                    listItems.removeAt(index)
+                                }
+                            },
+                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                            keyboardActions = KeyboardActions(
+                                onNext = {
+                                    listItems.add(index + 1, "")
+                                    scope.launch {
+                                        delay(50)
+                                        focusManager.moveFocus(FocusDirection.Down)
+                                    }
+                                }
+                            ),
+                            value = listItem,
+                            enabled = isInEdit,
+                            onValueChange = { output ->
+                                listItems[index] = output
+                                data.textList = listItems.toList()
+                                requestDataSave()
+                            }
+                        )
+                    }
+                }
+            }else {
+                Crossfade(
+                    targetState = isInEdit,
+                    label = "",
+                    animationSpec = tween(durationMillis = DEFAULT_ANIMATION_LENGTH_SHORT)
+                ) { inEditMode ->
+                    if(inEditMode) {
+                        val hint = selectedFactType.value.getLongHintStringRes()
+                        EditFieldInput(
+                            modifier = Modifier.fillMaxWidth(),
+                            value = data.longInformation,
+                            hint = if(hint != null) stringResource(hint) else "",
+                            minLines = 5,
+                            maxLines = 5
+                        ) { output ->
+                            data.longInformation = output
+                            requestDataSave()
+                        }
+                    }else {
+                        BulletPoint(
+                            text = data.longInformation,
+                            textStyle = LocalTheme.styles.category,
+                            maxLines = if(isReadOnly) Int.MAX_VALUE else 5,
+                            overflow = TextOverflow.Ellipsis,
+                            prefix = if(isReadOnly) "-" else null
+                        )
+                    }
+                }
             }
         }
     }
@@ -673,35 +507,22 @@ interface FactCardCategoryUseCase {
 }
 
 @SuppressLint("UnrememberedMutableState")
-@Preview
+@Preview(showBackground = true)
 @Composable
 private fun Preview() {
-    FactCard(
-        data = FactIO(
-            shortKeyInformation = "Short key informationShort key informationShort key informationShort key informationShort key informationShort key information",
-            longInformation = "This longInformation isn't correct, due to gramatical error"
-        ),
-        requestDataSave = {},
-        state = InteractiveCardState(
-            mode = mutableStateOf(InteractiveCardMode.EDIT)
-        ),
-        categoryUseCase = object: FactCardCategoryUseCase {
-            override val categories: StateFlow<List<CategoryIO>?>
-                get() = MutableStateFlow(listOf(
-                    CategoryIO(name = "test"),
-                    CategoryIO(name = "test"),
-                    CategoryIO(name = "test"),
-                    CategoryIO(name = "test"),
-                    CategoryIO(name = "test"),
-                )).asStateFlow()
-
-            override fun requestAddNewCategory(category: CategoryIO) {
-
-            }
-
-            override fun requestAllCategories() {
-
-            }
+    StudyMeAppTheme(isDarkTheme = true) {
+        Box(modifier = Modifier.background(LocalTheme.colors.backgroundLight)) {
+            FactCard(
+                data = FactIO(
+                    shortKeyInformation = "",
+                    longInformation = ""
+                ),
+                requestDataSave = {},
+                state = InteractiveCardState(
+                    mode = mutableStateOf(InteractiveCardMode.DATA_DISPLAY)
+                ),
+                isReadOnly = false
+            )
         }
-    )
+    }
 }

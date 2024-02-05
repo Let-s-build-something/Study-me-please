@@ -9,13 +9,13 @@ import androidx.navigation.navDeepLink
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 
-sealed class NavigationDestination(
+abstract class NavigationDestination(
 
     /** unique identifier for the scope of the whole navigation tree */
-    val identification: String,
+    open val identification: String,
 
     /** list of all arguments that can be passed into this destination */
-    val arguments: List<String> = listOf()
+    open val arguments: List<String> = listOf()
 ) {
     /** web url prefix for this app */
     protected val uriPrefix = ""
@@ -31,7 +31,7 @@ sealed class NavigationDestination(
         }
 
     /** List of all possible deep-links for this destination */
-    open val deepLink: List<NavDeepLink>
+    open val deepLinks: List<NavDeepLink>
         get() = mutableListOf<NavDeepLink>().apply {
             var route = uriPrefix.plus(identification)
             arguments.forEach {
@@ -55,7 +55,7 @@ sealed class NavigationDestination(
         }
 
     /** Assembles a route with given arguments */
-    fun createRoute(vararg argumentValues: Pair<String, Any?>): String {
+    open fun createRoute(vararg argumentValues: Pair<String, Any?>): String {
         var route = route
         argumentValues.forEach {
             route = route.replace(
@@ -79,67 +79,4 @@ sealed class NavigationDestination(
         }
         return route
     }
-
-    /** home page screen */
-    object Home: NavigationDestination(identification = "home")
-
-    /** screen for seeing and modifying app and user settings */
-    object Settings: NavigationDestination(identification = "settings")
-
-    /** list of all collections screen */
-    object CollectionLobby: NavigationDestination(identification = "collection_lobby")
-
-    /** list of all sessions screen */
-    object SessionLobby: NavigationDestination(identification = "session_lobby")
-
-    /** screen with concrete session detail */
-    object SessionDetail: NavigationDestination(
-        identification = "session_detail",
-        arguments = listOf(
-            NavigationComponent.COLLECTION_UID_LIST,
-            NavigationComponent.QUESTION_UID_LIST,
-            NavigationComponent.SESSION_UID,
-            NavigationComponent.TOOLBAR_TITLE
-        )
-    )
-
-    /** screen with concrete collection detail */
-    object CollectionDetail: NavigationDestination(
-        identification = "collection_detail",
-        arguments = listOf(
-            NavigationComponent.COLLECTION_UID,
-            NavigationComponent.TOOLBAR_TITLE
-        )
-    )
-
-    /** screen for session - questioning play-through */
-    object SessionPlay: NavigationDestination(
-        identification = "session_play",
-        arguments = listOf(
-            NavigationComponent.TOOLBAR_TITLE,
-            NavigationComponent.COLLECTION_UID,
-            NavigationComponent.SESSION_UID,
-            NavigationComponent.QUESTION_UID,
-            NavigationComponent.QUESTION_UID_LIST,
-            NavigationComponent.IS_TESTING_MODE
-        )
-    )
-
-    /** screen for editable question detail */
-    object QuestionDetail: NavigationDestination(
-        identification = "question_detail",
-        arguments = listOf(
-            NavigationComponent.TOOLBAR_TITLE,
-            NavigationComponent.QUESTION_UID
-        )
-    )
-
-    /** screen for subject detail with user's main notes for certain collection */
-    object Subjects: NavigationDestination(
-        identification = "subjects",
-        arguments = listOf(
-            NavigationComponent.TOOLBAR_TITLE,
-            NavigationComponent.COLLECTION_UID
-        )
-    )
 }

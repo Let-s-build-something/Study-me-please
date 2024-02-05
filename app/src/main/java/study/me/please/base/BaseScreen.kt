@@ -10,10 +10,14 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarVisuals
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -21,6 +25,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.navigation.NavController
+import com.squadris.squadris.compose.theme.Colors
 import com.squadris.squadris.compose.theme.LocalTheme
 import study.me.please.base.navigation.CustomizableAppBar
 
@@ -63,15 +68,17 @@ fun BaseScreen(
     val navController = LocalNavController.current
     val focusManager = LocalFocusManager.current
     val onBackPressedDispatcher = LocalOnBackPressedDispatcherOwner.current
-    val snackbarHostState = SnackbarHostState()
+
+    val previousSnackbarHostState = LocalSnackbarHost.current
+    val snackbarHostState = remember {
+        previousSnackbarHostState ?: SnackbarHostState()
+    }
 
     BackHandler(navController?.previousBackStackEntry != null) {
         if(onBackPressed()) navController?.popBackStack()
     }
 
-    CompositionLocalProvider(
-        LocalSnackbarHost provides (LocalSnackbarHost.current ?: snackbarHostState)
-    ) {
+    CompositionLocalProvider(LocalSnackbarHost provides snackbarHostState) {
         Scaffold(
             modifier = modifier
                 .pointerInput(Unit) {
@@ -80,7 +87,9 @@ fun BaseScreen(
                     })
                 },
             snackbarHost = {
-                SnackbarHost(snackbarHostState)
+                if(previousSnackbarHostState == null) {
+                    BaseSnackbarHost(hostState = snackbarHostState)
+                }
             },
             containerColor = containerColor,
             contentColor = contentColor,
@@ -105,3 +114,37 @@ fun BaseScreen(
         )
     }
 }
+
+/**
+ * Themed snackbar host with custom snackbar and possibility to display in error version
+ */
+@Composable
+fun BaseSnackbarHost(
+    modifier: Modifier = Modifier,
+    hostState: SnackbarHostState
+) {
+    SnackbarHost(
+        modifier = modifier,
+        hostState = hostState,
+        snackbar = { data ->
+            Snackbar(
+                data,
+                shape = LocalTheme.shapes.componentShape,
+                containerColor = if((data.visuals as? CustomSnackbarVisuals)?.isError == true) {
+                    Colors.RED_ERROR
+                }else LocalTheme.colors.brandMain,
+                contentColor = if((data.visuals as? CustomSnackbarVisuals)?.isError == true) {
+                    Color.White
+                }else LocalTheme.colors.tetrial
+            )
+        }
+    )
+}
+
+data class CustomSnackbarVisuals(
+    override val actionLabel: String?,
+    override val duration: SnackbarDuration,
+    override val message: String,
+    override val withDismissAction: Boolean,
+    val isError: Boolean = false
+): SnackbarVisuals

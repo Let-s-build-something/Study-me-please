@@ -40,7 +40,7 @@ data class SessionIO(
     /** What was the last time this session was played */
     @SerializedName("last_played")
     @ColumnInfo(name = "last_played")
-    val lastPlayed: Date = DateUtils.now.time,
+    val lastPlayed: Long = DateUtils.now.timeInMillis,
 
     /** all current collections in this session */
     val collectionUidList: MutableSet<String> = mutableSetOf(),

@@ -55,7 +55,7 @@ import study.me.please.R
 import study.me.please.base.LocalNavController
 import study.me.please.base.navigation.ActionBarIcon
 import study.me.please.base.navigation.NavigationComponent
-import study.me.please.base.navigation.NavigationDestination
+import study.me.please.base.navigation.NavigationScreen
 import study.me.please.data.io.CollectionIO
 import study.me.please.data.io.preferences.SessionPreferencePack
 import study.me.please.data.io.session.SessionIO
@@ -117,7 +117,7 @@ fun SessionDetailScreen(
                 imageVector = Icons.Outlined.PlayArrow,
                 onClick = {
                     navController?.navigate(
-                        NavigationDestination.SessionPlay.createRoute(
+                        NavigationScreen.SessionPlay.createRoute(
                             NavigationComponent.TOOLBAR_TITLE to sessionDetail.value?.name,
                             NavigationComponent.SESSION_UID to sessionDetail.value?.uid
                         )
@@ -138,14 +138,14 @@ fun SessionDetailScreen(
                 },
                 navigateToCollection = { collection ->
                     navController?.navigate(
-                        NavigationDestination.CollectionDetail.createRoute(
+                        NavigationScreen.CollectionDetail.createRoute(
                             NavigationComponent.COLLECTION_UID to collection.uid,
                             NavigationComponent.TOOLBAR_TITLE to collection.name
                         )
                     )
                 },
                 onAddCollection = {
-                    navController?.navigate(NavigationDestination.CollectionLobby.createRoute())
+                    navController?.navigate(NavigationScreen.CollectionLobby.createRoute())
                 },
                 onPreferencePackChosen = { preferencePack ->
                     sessionDetail.value?.apply {

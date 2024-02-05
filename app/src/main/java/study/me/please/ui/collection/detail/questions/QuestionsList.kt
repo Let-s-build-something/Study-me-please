@@ -55,7 +55,7 @@ import kotlinx.coroutines.launch
 import study.me.please.R
 import study.me.please.base.LocalNavController
 import study.me.please.base.navigation.NavigationComponent
-import study.me.please.base.navigation.NavigationDestination
+import study.me.please.base.navigation.NavigationScreen
 import study.me.please.data.io.QuestionIO
 import study.me.please.ui.collection.detail.CollectionDetailViewModel
 import study.me.please.ui.collection.detail.questions.detail.INPUT_DELAYED_RESPONSE_MILLIS
@@ -182,7 +182,7 @@ fun QuestionsList(viewModel: CollectionDetailViewModel) {
         }
         override fun addQuestion() {
             val newQuestion = viewModel.addNewQuestion()
-            navController?.navigate(NavigationDestination.QuestionDetail.createRoute(
+            navController?.navigate(NavigationScreen.QuestionDetail.createRoute(
                 NavigationComponent.QUESTION_UID to newQuestion.uid,
                 NavigationComponent.TOOLBAR_TITLE to newQuestion.prompt
             ))
@@ -202,7 +202,7 @@ fun QuestionsList(viewModel: CollectionDetailViewModel) {
             stopChecking()
         }
         override fun openQuestion(question: QuestionIO) {
-            navController?.navigate(NavigationDestination.QuestionDetail.createRoute(
+            navController?.navigate(NavigationScreen.QuestionDetail.createRoute(
                 NavigationComponent.QUESTION_UID to question.uid,
                 NavigationComponent.TOOLBAR_TITLE to question.prompt
             ))
@@ -366,7 +366,7 @@ fun QuestionsList(viewModel: CollectionDetailViewModel) {
                                 text = stringResource(id = R.string.button_start_session)
                             ) {
                                 navController?.navigate(
-                                    NavigationDestination.SessionPlay.createRoute(
+                                    NavigationScreen.SessionPlay.createRoute(
                                         NavigationComponent.TOOLBAR_TITLE to viewModel.collectionDetail.value.name,
                                         NavigationComponent.QUESTION_UID_LIST to controller.selectedQuestionUids.toList()
                                     )

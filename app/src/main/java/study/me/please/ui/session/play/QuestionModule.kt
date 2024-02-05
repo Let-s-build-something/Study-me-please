@@ -84,6 +84,8 @@ data class QuestionModule(
     /** Called whenever a question is requested to be repeated in the backstack */
     fun repeatQuestion(currentItem: SessionItem?) {
         currentItem?.historyItem?.wasRepeated = true
+        // we don't want to allow user to repeat it again
+        currentItem?.isRepetition = true
         (currentItem?.data ?: currentItem?.historyItem?.questionIO)?.let { questionIO ->
             injectQuestion(
                 question = questionIO,

@@ -32,12 +32,12 @@ data class CollectionIO(
     /** what date was this collection created */
     @SerializedName("date_created")
     @ColumnInfo(name = "date_created")
-    var dateCreated: Date? = null,
+    var dateCreated: Long? = null,
 
     /** last time this data object was modified */
     @SerializedName("date_modified")
     @ColumnInfo(name = "date_modified")
-    var dateModified: Date? = DateUtils.now.time,
+    var dateModified: Long? = DateUtils.now.timeInMillis,
 
     /** unique identifier */
     @PrimaryKey

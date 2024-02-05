@@ -12,14 +12,14 @@ import study.me.please.data.io.ImportedSource
 import study.me.please.data.io.LargePathAsset
 import study.me.please.data.io.QuestionAnswerIO
 import study.me.please.data.io.QuestionIO
-import study.me.please.data.io.session.SessionAnswerValidation
-import study.me.please.data.io.session.SessionHistoryItem
 import study.me.please.data.io.preferences.SessionPreference
 import study.me.please.data.io.preferences.SessionPreferencePack
 import study.me.please.data.io.session.QuestionItem
+import study.me.please.data.io.session.SessionAnswerValidation
+import study.me.please.data.io.session.SessionHistoryItem
 import study.me.please.data.io.subjects.CategoryIO
 import study.me.please.data.io.subjects.ParagraphIO
-import study.me.please.data.io.subjects.SubjectIO
+import study.me.please.data.io.subjects.UnitIO
 import study.me.please.ui.session.play.QuestionModule
 import java.util.Date
 import javax.inject.Inject
@@ -28,21 +28,21 @@ import javax.inject.Inject
 @ProvidedTypeConverter
 class AppDatabaseConverter @Inject constructor(private val gson: Gson) {
 
-    /** Converts [SubjectIO] object to string */
+    /** Converts [UnitIO] object to string */
     @TypeConverter
-    fun fromSubjectIO(value: SubjectIO): String {
+    fun fromSubjectIO(value: UnitIO): String {
         return gson.toJson(
             value,
-            TypeToken.getParameterized(SubjectIO::class.java).type
+            TypeToken.getParameterized(UnitIO::class.java).type
         )
     }
 
-    /** Converts string to [SubjectIO] object */
+    /** Converts string to [UnitIO] object */
     @TypeConverter
-    fun toSubjectIO(value: String): SubjectIO {
+    fun toSubjectIO(value: String): UnitIO {
         return gson.fromJson(
             value,
-            TypeToken.getParameterized(SubjectIO::class.java).type
+            TypeToken.getParameterized(UnitIO::class.java).type
         )
     }
 
@@ -228,7 +228,7 @@ class AppDatabaseConverter @Inject constructor(private val gson: Gson) {
 
     /** Converts [ParagraphIO] object array to string */
     @TypeConverter
-    fun fromParticleIOList(value: List<ParagraphIO>): String {
+    fun fromParagraphIOList(value: List<ParagraphIO>): String {
         return gson.toJson(
             value,
             TypeToken.getParameterized(List::class.java, ParagraphIO::class.java).type

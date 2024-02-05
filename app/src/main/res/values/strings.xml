@@ -8,7 +8,7 @@
     <string name="screen_account_title">My business</string>
     <string name="screen_session_lobby_title">My sessions</string>
     <string name="screen_collection_detail_new">New collection</string>
-    <string name="screen_subject">Subjects</string>
+    <string name="screen_units">Units</string>
     <string name="navigate_back">Back</string>
     <string name="navigate_close">Close</string>
 
@@ -46,12 +46,12 @@
     <string name="questions_list_chip_is_invalid">is invalid</string>
 
     <string name="subjects_button_generate">Generate questions</string>
-    <string name="subjects_delete_dialog_title">Subject deletion</string>
+    <string name="subjects_delete_dialog_title">Unit deletion</string>
     <string name="subjects_delete_dialog_content">
         You\'ve spent time on this, are you sure you want permanently delete "%1$s"?
     </string>
-    <string name="subject_heading_hint">Subject name</string>
-    <string name="subject_heading_prefix">Subject</string>
+    <string name="subject_heading_hint">Unit name</string>
+    <string name="subject_heading_prefix">Unit</string>
     <string name="subject_subheading_hint">Subheading</string>
     <string name="subject_add_bullet_point">Bullet point</string>
     <string name="subject_add_fact">Fact</string>
@@ -141,6 +141,11 @@
         You\'ve spent time on this, are you sure you want permanently delete the selected (%1$d) facts?
     </string>
 
+    <string name="generic_delete_dialog_title">Deletion</string>
+    <string name="generic_delete_dialog_description">
+        You\'ve spent time on this, are you sure you want permanently delete it?
+    </string>
+
     <string name="session_detail_default_toolbar">New session</string>
     <string name="session_lobby_screen_empty_text">No knowledge growth…yet!:(</string>
     <string name="session_lobby_screen_delete_title">Session deletion</string>
@@ -148,6 +153,7 @@
         You\'ve spent time on this, are you sure you want permanently delete the selected (%1$d) sessions?
     </string>
     <string name="session_play_repeated_snackbar">Well done! You will learn this one better soon. We will make sure:)</string>
+    <string name="session_play_see_more">See more</string>
 
     <string name="add_new_collection">I collect questions, since I have no answers. Yet.</string>
     <string name="collection_empty_error">There are no collections…yet! But you can start right now:).</string>
@@ -198,41 +204,38 @@
 
     <string name="question_generating_bulletin_name">Describe <b>\"%1$s\"</b></string>
     <string name="question_generating_bulletin_points">What best describes:</string>
-    <string name="question_generating_fact_parent_name_short">
+    <string name="question_generating_fact_list">Choose all items of <b>\"%1$s\"</b>?</string>
+    <string name="question_generating_fact_list_short_key">What are following items related to?</string>
+    <string name="question_generating_fact_image">What best describes:</string>
+
+    <!--<string name="question_generating_fact_parent_name_short">
         What is one of the <b>%1$s</b> (%2$s, %3$s)?
     </string>
     <string name="question_generating_fact_parent_name_long">
         What best describes one of the <b>%1$s</b> (%2$s, %3$s)?
     </string>
     <string name="question_generating_fact_parent_addition">, under <b>%1$s</b></string>
-
     <string name="question_generating_fact_short">What is <b>\"%1$s\"?</b></string>
     <string name="question_generating_fact_long">What best describes: <b>\"%1$s\"</b>?</string>
-    <string name="question_generating_fact_list">Choose all items of <b>\"%1$s\"</b>?</string>
-    <string name="question_generating_fact_list_short_key">What are following items related to?</string>
     <string name="question_generating_explanation_paragraph">Show full paragraph</string>
     <string name="question_generating_children_items">
         Pick related information to the <b>%1$s</b> (<b>%2$s</b>).
-    </string>
+    </string>-->
 
-    <!---
 
     <string name="question_generating_fact_parent_name_short">
-        What is one of the <b><![CDATA[<a href="/paragraph/%2$s">%1$s</a>]]></b>%5$s (<![CDATA[<a href="/subject/%4$s">%3$s</a>]]>)?
+        What is one of the <b><![CDATA[<a href="/paragraph/%2$s">%1$s</a>]]></b>%5$s (<![CDATA[<a href="/units/%4$s">%3$s</a>]]>)?
     </string>
     <string name="question_generating_fact_parent_name_long">
-        What best describes one of the <b><![CDATA[<a href="/paragraph/%2$s">%1$s</a>]]></b>%5$s (<![CDATA[<a href="/subject/%4$s">%3$s</a>]]>)?
+        What best describes one of the <b><![CDATA[<a href="/paragraph/%2$s">%1$s</a>]]></b>%5$s (<![CDATA[<a href="/units/%4$s">%3$s</a>]]>)?
     </string>
     <string name="question_generating_fact_parent_addition">, under <b><![CDATA[<a href="/paragraph/%2$s">%1$s</a>]]></b></string>
 
     <string name="question_generating_fact_short">What is <b>\"%1$s\"?</b></string>
     <string name="question_generating_fact_long">What best describes: <b>\"%1$s\"</b>?</string>
-    <string name="question_generating_explanation_paragraph"><![CDATA[<a href="/paragraph/%1$s">Show full paragraph</a>]]></string>
     <string name="question_generating_children_items">
-        Pick related information to the <b><![CDATA[<a href="/paragraph/%2$s">%1$s</a>]]></b> (<b><![CDATA[<a href="/subject/%4$s">%3$s</a>]]></b>).
+        Pick related information to the <b><![CDATA[<a href="/paragraph/%2$s">%1$s</a>]]></b> (<b><![CDATA[<a href="/units/%4$s">%3$s</a>]]></b>).
     </string>
-
-    -->
 
 
     <!--- =================================== COMPONENTS ======================================= -->
@@ -287,6 +290,7 @@
     <string name="button_leave">Leave</string>
     <string name="button_skip_to_front">Skip to front</string>
     <string name="button_delete">Delete</string>
+    <string name="button_archive">Archive</string>
     <string name="button_select_all">Select all</string>
     <string name="button_deselect">Deselect all</string>
     <string name="button_cancel">Cancel</string>
@@ -302,4 +306,8 @@
     <string name="expand_content_description">Expand</string>
     <string name="collapse_content_description">Collapse</string>
     <string name="accessibility_add_content">Add new content</string>
+    <string name="accessibility_add_bullet_point">Add a bullet point</string>
+    <string name="accessibility_add_fact">Add a fact</string>
+    <string name="accessibility_add_paragraph">Add a paragraph</string>
+    <string name="accessibility_delete">Delete</string>
 </resources>

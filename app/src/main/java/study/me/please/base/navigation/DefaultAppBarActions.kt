@@ -10,7 +10,6 @@ import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import study.me.please.R
 
 /**
@@ -20,20 +19,20 @@ import study.me.please.R
 @Composable
 fun DefaultAppBarActions(
     isUserSignedIn: Boolean = false,
-    currentRoute: String? = NavigationDestination.Home.route,
+    currentRoute: String? = NavigationScreen.Home.route,
     actionNavigation: (screen: String) -> Unit = {}
 ) {
     // first action
     when(currentRoute) {
         // lobby destinations
-        NavigationDestination.Home.route,
-        NavigationDestination.Settings.route -> {
-            if(currentRoute != NavigationDestination.Settings.route) {
+        NavigationScreen.Home.route,
+        NavigationScreen.Settings.route -> {
+            if(currentRoute != NavigationScreen.Settings.route) {
                 ActionBarIcon(
                     text = stringResource(id = R.string.screen_settings_title),
                     imageVector = Icons.Outlined.Settings,
                     onClick = {
-                        actionNavigation(NavigationDestination.Settings.route)
+                        actionNavigation(NavigationScreen.Settings.route)
                     }
                 )
             }
@@ -58,21 +57,21 @@ fun DefaultAppBarActions(
     }
     // second action
     when(currentRoute) {
-        NavigationDestination.SessionLobby.route -> {
+        NavigationScreen.SessionLobby.route -> {
             ActionBarIcon(
                 text = stringResource(id = R.string.screen_collection_title),
                 imageVector = Icons.Outlined.Inventory2,
                 onClick = {
-                    actionNavigation.invoke(NavigationDestination.CollectionLobby.route)
+                    actionNavigation.invoke(NavigationScreen.CollectionLobby.route)
                 }
             )
         }
-        NavigationDestination.CollectionLobby.route -> {
+        NavigationScreen.CollectionLobby.route -> {
             ActionBarIcon(
                 text = stringResource(id = R.string.screen_sessions_title),
                 imageVector = Icons.Outlined.PlayArrow,
                 onClick = {
-                    actionNavigation.invoke(NavigationDestination.SessionLobby.route)
+                    actionNavigation.invoke(NavigationScreen.SessionLobby.route)
                 }
             )
         }

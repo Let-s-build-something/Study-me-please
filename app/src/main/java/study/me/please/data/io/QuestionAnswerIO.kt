@@ -21,6 +21,9 @@ data class QuestionAnswerIO (
     @SerializedName("explanation_message")
     var explanationMessage: String = "",
 
+    /** list of explanations */
+    var explanationList: List<String> = listOf(),
+
     /** unique identifier */
     @PrimaryKey
     val uid: String = UUID.randomUUID().toString(),
@@ -34,7 +37,10 @@ data class QuestionAnswerIO (
     var isCorrect: Boolean = false,
 
     /** Whether the prompt is list mode */
-    var isListAnswer: Boolean = textList.isNotEmpty()
+    var isListAnswer: Boolean = textList.isNotEmpty(),
+
+    /** The source route of this item */
+    val importedSource: ImportedSource? = null
 ): Serializable {
 
     /** whether this object has no important data */

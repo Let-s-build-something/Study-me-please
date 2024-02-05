@@ -62,7 +62,7 @@ data class QuestionIO (
     val type: QuestionPromptType = QuestionPromptType.TEXT_QUESTION,
 
     /** source of importation if any */
-    var importedSource: ImportedSource = ImportedSource(),
+    var importedSource: ImportedSource? = null,
 
     /** date of creation of this data object */
     @SerializedName("date_created")

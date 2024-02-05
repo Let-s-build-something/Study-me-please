@@ -1,26 +1,32 @@
 package study.me.please.data.io.subjects
 
+import androidx.room.Entity
 import androidx.room.Ignore
+import androidx.room.PrimaryKey
 import study.me.please.data.io.FactIO
+import study.me.please.data.room.AppRoomDatabase
 import java.io.Serializable
 import java.util.UUID
 
 /** Object identified by category, containing facts */
+@Entity(tableName = AppRoomDatabase.ROOM_PARAGRAPH_TABLE)
 data class ParagraphIO(
+
     /** unique identifier */
+    @PrimaryKey
     val uid: String = UUID.randomUUID().toString(),
 
     /** By what category this object is identified */
     var categoryUid: String? = null,
 
     /** Basic text information about this paragraph */
-    var bulletPoints: List<String> = listOf(),
+    var bulletPoints: MutableList<String> = mutableListOf(),
 
     /** Further categorized content */
-    var paragraphs: List<ParagraphIO> = listOf(),
+    var paragraphs: MutableList<ParagraphIO> = mutableListOf(),
 
     /** Non-categorized, standalone content */
-    var facts: List<FactIO> = listOf()
+    var facts: MutableList<FactIO> = mutableListOf()
 ): Serializable {
 
     /** Whether this data can be taken seriously */
@@ -41,5 +47,16 @@ data class ParagraphIO(
         bulletPoints = newTO.bulletPoints
         paragraphs = newTO.paragraphs
         facts = newTO.facts
+    }
+
+    override fun toString(): String {
+        return super.toString() +
+                "{" +
+                "uid: $uid," +
+                "categoryUid: $categoryUid," +
+                "bulletPoints: $bulletPoints," +
+                "paragraphs: $paragraphs," +
+                "facts: $facts" +
+                "}"
     }
 }

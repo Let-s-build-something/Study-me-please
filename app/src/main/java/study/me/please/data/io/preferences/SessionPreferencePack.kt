@@ -51,7 +51,7 @@ data class SessionPreferencePack (
     /** last time this data object was modified */
     @SerializedName("date_modified")
     @ColumnInfo(name = "date_modified")
-    var dateModified: Date? = DateUtils.now.time
+    var dateModified: Long? = DateUtils.now.timeInMillis
 
 ): Serializable {
 

@@ -1,20 +1,18 @@
 package study.me.please.data.room
 
-import androidx.room.AutoMigration
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
-import androidx.room.migration.Migration
-import androidx.sqlite.db.SupportSQLiteDatabase
 import study.me.please.data.io.CollectionIO
 import study.me.please.data.io.FactIO
 import study.me.please.data.io.LargePathAsset
 import study.me.please.data.io.QuestionAnswerIO
 import study.me.please.data.io.QuestionIO
-import study.me.please.data.io.session.SessionIO
 import study.me.please.data.io.preferences.SessionPreferencePack
+import study.me.please.data.io.session.SessionIO
 import study.me.please.data.io.subjects.CategoryIO
-import study.me.please.data.io.subjects.SubjectIO
+import study.me.please.data.io.subjects.ParagraphIO
+import study.me.please.data.io.subjects.UnitIO
 import study.me.please.ui.session.play.QuestionModule
 
 @Database(
@@ -27,10 +25,11 @@ import study.me.please.ui.session.play.QuestionModule
         SessionIO::class,
         QuestionModule::class,
         FactIO::class,
-        SubjectIO::class,
-        CategoryIO::class
+        UnitIO::class,
+        CategoryIO::class,
+        ParagraphIO::class
     ],
-    version = 2,
+    version = 3,
     exportSchema = true
 )
 @TypeConverters(AppDatabaseConverter::class)
@@ -88,10 +87,13 @@ abstract class AppRoomDatabase: RoomDatabase() {
         /** Identification of table for [QuestionIO] */
         const val ROOM_QUESTION_TABLE = "ROOM_QUESTION_TABLE"
 
+        /** Identification of table for [ParagraphIO] */
+        const val ROOM_PARAGRAPH_TABLE = "ROOM_PARAGRAPH_TABLE"
+
         /** Identification of table for [FactIO] */
         const val ROOM_FACT_TABLE = "ROOM_FACT_TABLE"
 
-        /** Identification of table for [SubjectIO] */
+        /** Identification of table for [UnitIO] */
         const val ROOM_SUBJECT_TABLE = "ROOM_SUBJECT_TABLE"
 
         /** Identification of table for [CategoryIO] */

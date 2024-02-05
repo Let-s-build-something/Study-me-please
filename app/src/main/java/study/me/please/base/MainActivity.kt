@@ -5,11 +5,9 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Snackbar
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.mutableStateOf
@@ -25,12 +23,12 @@ import com.squadris.squadris.ext.isTablet
 import dagger.hilt.android.AndroidEntryPoint
 import study.me.please.base.navigation.NavigationComponent
 import study.me.please.base.navigation.NavigationComponent.getArgument
-import study.me.please.base.navigation.NavigationDestination
+import study.me.please.base.navigation.NavigationScreen
 import study.me.please.hilt.SharedPreferencesModule
 import study.me.please.ui.collection.CollectionLobbyScreen
 import study.me.please.ui.collection.detail.CollectionDetailScreen
 import study.me.please.ui.collection.detail.questions.detail.QuestionDetailScreen
-import study.me.please.ui.collection.detail.subjects.SubjectsHostScreen
+import study.me.please.ui.units.SubjectsHostScreen
 import study.me.please.ui.home.HomeScreen
 import study.me.please.ui.session.play.SessionScreen
 import study.me.please.ui.session.detail.SessionDetailScreen
@@ -43,6 +41,7 @@ class MainActivity: ComponentActivity(), BackboneChannel {
 
     private val settingsViewModel: SettingsViewModel by viewModels()
 
+    @OptIn(ExperimentalFoundationApi::class)
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -56,21 +55,11 @@ class MainActivity: ComponentActivity(), BackboneChannel {
                     true
                 )
             ) }
-            val snackbarHostState = SnackbarHostState()
+            val snackbarHostState = remember { SnackbarHostState() }
 
             Scaffold(
                 snackbarHost = {
-                    SnackbarHost(
-                        hostState = snackbarHostState,
-                        snackbar = { data ->
-                            Snackbar(
-                                data,
-                                shape = LocalTheme.shapes.componentShape,
-                                containerColor = LocalTheme.colors.brandMain,
-                                contentColor = LocalTheme.colors.tetrial
-                            )
-                        }
-                    )
+                    BaseSnackbarHost(hostState = snackbarHostState)
                 }
             ) { _ ->
                 StudyMeAppTheme(isDarkTheme = isDarkTheme.value) {
@@ -81,23 +70,24 @@ class MainActivity: ComponentActivity(), BackboneChannel {
                         LocalNavController provides navController,
                         LocalIsTablet provides isTablet,
                         LocalActivity provides this,
-                        LocalSnackbarHost provides snackbarHostState
+                        LocalSnackbarHost provides snackbarHostState,
+                        //LocalOverscrollConfiguration provides null,
                     ) {
                         NavHost(
                             modifier = Modifier.background(color = LocalTheme.colors.backgroundLight),
                             navController = navController,
-                            startDestination = NavigationDestination.Home.route
+                            startDestination = NavigationScreen.Home.route
                         ) {
-                            composable(NavigationDestination.Home.route) {
+                            composable(NavigationScreen.Home.route) {
                                 HomeScreen()
                             }
-                            composable(NavigationDestination.CollectionLobby.route) { backStackEntry ->
+                            composable(NavigationScreen.CollectionLobby.route) { backStackEntry ->
                                 CollectionLobbyScreen()
                                 backStackEntry.arguments?.remove(
                                     NavigationComponent.CREATE_NEW_ITEM
                                 )
                             }
-                            composable(NavigationDestination.Settings.route) {
+                            composable(NavigationScreen.Settings.route) {
                                 SettingsScreen(
                                     isDarkTheme = isDarkTheme.value,
                                     viewModel = settingsViewModel
@@ -105,14 +95,14 @@ class MainActivity: ComponentActivity(), BackboneChannel {
                                     isDarkTheme.value = newValue
                                 }
                             }
-                            composable(NavigationDestination.SessionLobby.route) { backStackEntry ->
+                            composable(NavigationScreen.SessionLobby.route) { backStackEntry ->
                                 SessionLobbyScreen(
                                     createNewItem = backStackEntry.getArgument(NavigationComponent.CREATE_NEW_ITEM).toBoolean()
                                 )
                             }
                             composable(
-                                NavigationDestination.SessionDetail.route,
-                                arguments = NavigationDestination.SessionDetail.navArguments
+                                NavigationScreen.SessionDetail.route,
+                                arguments = NavigationScreen.SessionDetail.navArguments
                             ) { backStackEntry ->
                                 SessionDetailScreen(
                                     title = backStackEntry.getArgument(NavigationComponent.TOOLBAR_TITLE),
@@ -122,8 +112,8 @@ class MainActivity: ComponentActivity(), BackboneChannel {
                                 )
                             }
                             composable(
-                                NavigationDestination.CollectionDetail.route,
-                                arguments = NavigationDestination.CollectionDetail.navArguments
+                                NavigationScreen.CollectionDetail.route,
+                                arguments = NavigationScreen.CollectionDetail.navArguments
                             ) { backStackEntry ->
                                 CollectionDetailScreen(
                                     title = backStackEntry.getArgument(NavigationComponent.TOOLBAR_TITLE),
@@ -131,8 +121,8 @@ class MainActivity: ComponentActivity(), BackboneChannel {
                                 )
                             }
                             composable(
-                                NavigationDestination.SessionPlay.route,
-                                arguments = NavigationDestination.SessionPlay.navArguments
+                                NavigationScreen.SessionPlay.route,
+                                arguments = NavigationScreen.SessionPlay.navArguments
                             ) { backStackEntry ->
                                 SessionScreen(
                                     title = backStackEntry.getArgument(NavigationComponent.TOOLBAR_TITLE),
@@ -146,8 +136,8 @@ class MainActivity: ComponentActivity(), BackboneChannel {
                                 backStackEntry.arguments?.remove(NavigationComponent.COLLECTION_UID)
                             }
                             composable(
-                                NavigationDestination.QuestionDetail.route,
-                                arguments = NavigationDestination.QuestionDetail.navArguments
+                                NavigationScreen.QuestionDetail.route,
+                                arguments = NavigationScreen.QuestionDetail.navArguments
                             ) { backStackEntry ->
                                 backStackEntry.getArgument(NavigationComponent.QUESTION_UID)?.let { uid ->
                                     QuestionDetailScreen(
@@ -157,8 +147,8 @@ class MainActivity: ComponentActivity(), BackboneChannel {
                                 }
                             }
                             composable(
-                                NavigationDestination.Subjects.route,
-                                arguments = NavigationDestination.Subjects.navArguments
+                                NavigationScreen.Units.route,
+                                arguments = NavigationScreen.Units.navArguments
                             ) { backStackEntry ->
                                 backStackEntry.getArgument(NavigationComponent.COLLECTION_UID)?.let { collectionUid ->
                                     SubjectsHostScreen(

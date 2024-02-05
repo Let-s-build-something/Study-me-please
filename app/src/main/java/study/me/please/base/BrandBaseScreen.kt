@@ -9,7 +9,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.navigation.compose.currentBackStackEntryAsState
 import study.me.please.base.navigation.DefaultAppBarActions
 import study.me.please.base.navigation.NavIconType
-import study.me.please.base.navigation.NavigationDestination
+import study.me.please.base.navigation.NavigationScreen
 
 /**
  * Most simple screen for implementing bussiness level logic
@@ -50,7 +50,7 @@ fun BrandBaseScreen(
         contentColor = contentColor,
         onNavigationIconClick = if(navIconType == NavIconType.HOME) {
             {
-                navController?.popBackStack(NavigationDestination.Home.route, inclusive = false)
+                navController?.popBackStack(NavigationScreen.Home.route, inclusive = false)
             }
         } else null,
         floatingActionButtonPosition = floatingActionButtonPosition,

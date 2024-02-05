@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Clear
 import androidx.compose.material3.Text
@@ -67,6 +69,8 @@ fun EditFieldInput(
     suffix: @Composable (() -> Unit)? = null,
     minLines: Int = 1,
     maxLines: Int = 1,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+    keyboardActions: KeyboardActions = KeyboardActions.Default,
     enabled: Boolean = true,
     onTextLayout: (TextLayoutResult) -> Unit = {},
     paddingValues: PaddingValues = TextFieldDefaults.contentPaddingWithoutLabel(),
@@ -112,6 +116,8 @@ fun EditFieldInput(
         suffix = suffix,
         isError = isError,
         onTextLayout = onTextLayout,
+        keyboardActions = keyboardActions,
+        keyboardOptions = keyboardOptions,
         minLines = minLines,
         paddingValues = paddingValues,
         singleLine = maxLines == 1,

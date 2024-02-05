@@ -1,18 +1,23 @@
 package study.me.please.ui.session.play
 
 import android.annotation.SuppressLint
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -25,6 +30,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -34,6 +41,7 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -42,6 +50,7 @@ import com.squadris.squadris.compose.theme.Colors
 import com.squadris.squadris.compose.theme.LocalTheme
 import kotlinx.coroutines.launch
 import study.me.please.R
+import study.me.please.base.LocalNavController
 import study.me.please.base.LocalSnackbarHost
 import study.me.please.base.navigation.NavIconType
 import study.me.please.data.io.LargePathAsset
@@ -49,11 +58,14 @@ import study.me.please.data.io.QuestionAnswerIO
 import study.me.please.data.io.QuestionIO
 import study.me.please.data.io.preferences.SessionPreferencePack
 import study.me.please.data.io.session.SessionItem
+import study.me.please.ui.components.BulletPoint
 import study.me.please.ui.components.ComponentHeaderButton
 import study.me.please.ui.components.EditableImageAsset
+import study.me.please.ui.components.HtmlClickableText
 import study.me.please.ui.components.OutlinedButton
 
 /** Screen for the Session play prompt */
+@OptIn(ExperimentalFoundationApi::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun PromptLayout(
@@ -66,8 +78,13 @@ fun PromptLayout(
 ) {
     val screenMode = if(sessionItem.isHistory) SessionScreenMode.LOCKED else sessionItem.mode.value
     val question = sessionItem.question
+    val isFinished = remember {
+        derivedStateOf {
+            screenMode == SessionScreenMode.LOCKED
+        }
+    }
     val answers = remember(index) {
-        if(sessionItem.isHistory || sessionItem.mode.value == SessionScreenMode.LOCKED) {
+        if(isFinished.value) {
             sessionItem.question?.answers
         }else sessionItem.question?.answers?.shuffled()
     }
@@ -75,40 +92,14 @@ fun PromptLayout(
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
     val snackbarHost = LocalSnackbarHost.current
+    val navController = LocalNavController.current
 
     Scaffold(
         contentColor = Color.Transparent,
         containerColor = Color.Transparent,
         floatingActionButton = {
-            Column(horizontalAlignment = Alignment.End) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 val nextItem = state.module.getStepAt(index.plus(1))
-
-                AnimatedVisibility(
-                    // current item is locked, yet next one isn't
-                    visible = (nextItem?.isHistory == false && nextItem.mode.value != SessionScreenMode.LOCKED)
-                            && (sessionItem.isHistory || sessionItem.mode.value == SessionScreenMode.LOCKED),
-                    enter = slideInHorizontally (initialOffsetX = { it }),
-                    exit = slideOutHorizontally (targetOffsetX = { -it.times(4) }),
-                ) {
-                    FloatingActionButton(
-                        modifier = Modifier.padding(bottom = 8.dp),
-                        containerColor = LocalTheme.colors.tetrial,
-                        contentColor = LocalTheme.colors.brandMain,
-                        onClick = {
-                            stepForward()
-                        }
-                    ) {
-                        NavIconType.BACK.imageVector?.let { icon ->
-                            Icon(
-                                modifier = Modifier
-                                    .size(32.dp)
-                                    .rotate(180f),
-                                imageVector = icon.first,
-                                contentDescription = icon.second
-                            )
-                        }
-                    }
-                }
 
                 if(sessionPreferencePack.repeatOnMistake.value) {
                     val actualItem = state.module.getStepAt(index)
@@ -134,32 +125,118 @@ fun PromptLayout(
                         )
                     }
                 }
+
+                Spacer(modifier = Modifier.width(16.dp))
+
+                AnimatedVisibility(
+                    // current item is locked, yet next one isn't
+                    visible = (nextItem?.isHistory == false && nextItem.mode.value != SessionScreenMode.LOCKED)
+                            && isFinished.value,
+                    enter = slideInHorizontally (initialOffsetX = { it }),
+                    exit = slideOutHorizontally (targetOffsetX = { -it.times(4) }),
+                ) {
+                    FloatingActionButton(
+                        modifier = Modifier.padding(bottom = 8.dp),
+                        containerColor = LocalTheme.colors.tetrial,
+                        contentColor = LocalTheme.colors.brandMain,
+                        onClick = {
+                            stepForward()
+                        }
+                    ) {
+                        NavIconType.BACK.imageVector?.let { icon ->
+                            Icon(
+                                modifier = Modifier
+                                    .size(32.dp)
+                                    .rotate(180f),
+                                imageVector = icon.first,
+                                contentDescription = icon.second
+                            )
+                        }
+                    }
+                }
             }
         }
     ) {
+        val promptStyle = TextStyle(
+            color = LocalTheme.colors.primary,
+            fontWeight = FontWeight.Medium,
+            fontSize = 22.sp
+        )
+        val count = remember(question) { mutableIntStateOf(1) }
+        val isLocked = remember {
+            derivedStateOf {
+                sessionItem.isHistory || sessionItem.mode.value == SessionScreenMode.LOCKED
+            }
+        }
+
         LazyColumn(
             modifier = modifier
                 .padding(horizontal = 24.dp)
                 .fillMaxSize()
         ) {
+            if(question?.promptList.isNullOrEmpty().not()) {
+                item {
+                    Spacer(modifier = Modifier.height(18.dp))
+                }
+                question?.promptList
+                    ?.take(if(isFinished.value) question.promptList.size else count.intValue)
+                    ?.forEach { prompt ->
+                        item {
+                            BulletPoint(
+                                modifier = Modifier
+                                    .animateItemPlacement()
+                                    .fillMaxWidth()
+                                    .wrapContentHeight()
+                                    .padding(
+                                        bottom = 6.dp
+                                    ),
+                                text = prompt,
+                                textStyle = promptStyle
+                            )
+                        }
+                    }
+                item {
+                    AnimatedVisibility(
+                        isFinished.value.not() && count.intValue < question?.promptList.orEmpty().size
+                    ) {
+                        ComponentHeaderButton(
+                            modifier = modifier,
+                            text = stringResource(R.string.session_play_see_more),
+                            onClick = {
+                                count.intValue++
+                            }
+                        )
+                    }
+                }
+            }else {
+                item {
+                    HtmlClickableText(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .wrapContentHeight()
+                            .padding(
+                                top = 18.dp,
+                                bottom = 12.dp
+                            ),
+                        text = question?.prompt ?: "",
+                        style = promptStyle,
+                        maxLines = 100,
+                        softWrap = true,
+                        linkStyle = if(isFinished.value) LocalTheme.styles.linkText.copy(
+                            fontSize = promptStyle.fontSize,
+                            fontWeight = promptStyle.fontWeight
+                        ) else promptStyle,
+                        onLinkClick = { uri ->
+                            if(isFinished.value) {
+                                navController?.handleDeepLink(
+                                    Intent(Intent.ACTION_VIEW, Uri.parse(uri))
+                                )
+                            }
+                        }
+                    )
+                }
+            }
             item {
-                Text(
-                    text = question?.prompt ?: "",
-                    fontSize = 22.sp,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .wrapContentHeight()
-                        .padding(
-                            top = 18.dp,
-                            end = 12.dp,
-                            bottom = 12.dp
-                        ),
-                    color = LocalTheme.colors.primary,
-                    fontWeight = FontWeight.Medium,
-                    maxLines = 100,
-                    softWrap = true,
-                    lineHeight = 24.sp
-                )
                 EditableImageAsset(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -203,7 +280,25 @@ fun PromptLayout(
                             )
                     }else Modifier,
                     thenModifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                    text = answer.text,
+                    text = if(answer.textList.isEmpty()) answer.text else null,
+                    content = { textStyle ->
+                        if(answer.textList.isNotEmpty()) {
+                            Column(modifier = Modifier.fillMaxWidth()) {
+                                answer.textList.forEach { text ->
+                                    BulletPoint(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .wrapContentHeight()
+                                            .padding(
+                                                bottom = 6.dp
+                                            ),
+                                        text = text,
+                                        textStyle = textStyle
+                                    )
+                                }
+                            }
+                        }
+                    },
                     trailingIcon = if(showResult) {
                         if(validation?.isCorrect == true) {
                             Icons.Outlined.Check
@@ -260,12 +355,26 @@ private fun PromptPreview() {
     Box(modifier = Modifier.background(LocalTheme.colors.backgroundLight)) {
         val question = QuestionIO(
             prompt = "Some random prompt",
+            promptList = listOf(
+                "bullet point",
+                "bullet point",
+                "bullet point",
+                "bullet point",
+                "bullet point",
+                "bullet point",
+                "bullet point",
+            ),
             textExplanation = "Text explanation",
             imageExplanationUrl = LargePathAsset(
                 urlPath = "https://www.imgonline.com.ua/examples/bee-on-daisy-mini.jpg"
             ),
             answers = mutableListOf(
-                QuestionAnswerIO(text = "Answer 1", isCorrect = false),
+                QuestionAnswerIO(
+                    isCorrect = false,
+                    textList = listOf(
+                        "answer 1", "answer 2", "answer 3"
+                    )
+                ),
                 QuestionAnswerIO(text = "Answer 2", isCorrect = true),
                 QuestionAnswerIO(text = "Answer 3", isCorrect = false),
                 QuestionAnswerIO(text = "Answer 4", isCorrect = false),
@@ -274,13 +383,13 @@ private fun PromptPreview() {
         )
         PromptLayout(
             sessionItem = SessionItem(
-                isHistory = false,
+                isHistory = true,
                 data = question
             ),
             state = SessionScreenState(
                 QuestionModule(),
                 sessionPreferencePack = mutableStateOf(SessionPreferencePack()),
-                requestSave = {}
+                requestSave = {},
             ),
             sessionPreferencePack = SessionPreferencePack(),
             stepForward = {},

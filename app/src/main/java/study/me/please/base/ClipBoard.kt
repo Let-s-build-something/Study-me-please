@@ -9,6 +9,7 @@ import study.me.please.data.io.CollectionIO
 import study.me.please.data.io.FactIO
 import study.me.please.data.io.QuestionAnswerIO
 import study.me.please.data.io.QuestionIO
+import study.me.please.data.io.subjects.ParagraphIO
 import java.util.UUID
 
 sealed class ClipBoard<T: Any>(protected val list: SnapshotStateList<T> = mutableStateListOf()) {
@@ -80,6 +81,20 @@ sealed class ClipBoard<T: Any>(protected val list: SnapshotStateList<T> = mutabl
 
     class FactClipBoard: ClipBoard<FactIO>() {
         override suspend fun copyItems(items: List<FactIO>) {
+            withContext(Dispatchers.Default) {
+                list.addAll(
+                    items.map {
+                        it.copy(
+                            uid = UUID.randomUUID().toString()
+                        )
+                    }
+                )
+            }
+        }
+    }
+
+    class ParagraphsClipBoard: ClipBoard<ParagraphIO>() {
+        override suspend fun copyItems(items: List<ParagraphIO>) {
             withContext(Dispatchers.Default) {
                 list.addAll(
                     items.map {

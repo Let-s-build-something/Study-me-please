@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.requiredWidth
@@ -25,6 +26,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -38,10 +40,11 @@ import study.me.please.R
 fun OutlinedButton(
     modifier: Modifier = Modifier,
     thenModifier: Modifier = Modifier,
-    text: String,
+    text: String? = null,
     isActivated: Boolean = true,
     enabled: Boolean = true,
     trailingIcon: ImageVector? = null,
+    content: @Composable RowScope.(TextStyle) -> Unit = {},
     activeColor: Color = LocalTheme.colors.primary,
     inactiveColor: Color = LocalTheme.colors.secondary,
     onClick: () -> Unit
@@ -65,11 +68,17 @@ fun OutlinedButton(
             .then(thenModifier),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(
-            text = text,
+        val textStyle = TextStyle(
             color = color,
             fontSize = 14.sp
         )
+        content(textStyle)
+        if(text != null) {
+            Text(
+                text = text,
+                style = textStyle
+            )
+        }
         trailingIcon?.let { icon ->
             Icon(
                 modifier = Modifier

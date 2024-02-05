@@ -1,6 +1,5 @@
-package study.me.please.ui.collection.detail.subjects
+package study.me.please.ui.units
 
-import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -17,6 +16,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.LibraryAdd
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.SecondaryScrollableTabRow
 import androidx.compose.material3.TabRowDefaults
 import androidx.compose.runtime.Composable
@@ -48,13 +48,11 @@ import study.me.please.base.LocalActivity
 import study.me.please.base.LocalSnackbarHost
 import study.me.please.base.navigation.ActionBarIcon
 import study.me.please.base.navigation.NavIconType
-import study.me.please.data.io.subjects.SubjectIO
-import study.me.please.ui.collection.detail.subjects.SubjectsViewModel.Companion.FAILED_INSERT
+import study.me.please.data.io.subjects.UnitIO
 import study.me.please.ui.components.BasicAlertDialog
 import study.me.please.ui.components.ButtonState
 import study.me.please.ui.components.ComponentHeaderButton
-import study.me.please.ui.components.collapsing_layout.CollapsingBehavior
-import study.me.please.ui.components.collapsing_layout.CollapsingLayout
+import study.me.please.ui.units.UnitsViewModel.Companion.FAILED_INSERT
 
 private const val ADD_NEW_SUBJECT_UID = "add_new_subject_uid"
 private const val SEARCH_TEXT_UID = "search_text_uid"
@@ -64,12 +62,12 @@ private const val SEARCH_TEXT_UID = "search_text_uid"
  *
  * This screen is the centre and beginning for any new learning subject
  */
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun SubjectsHostScreen(
     collectionUid: String,
     toolbarTitle: String? = "",
-    viewModel: SubjectsViewModel = hiltViewModel()
+    viewModel: UnitsViewModel = hiltViewModel()
 ) {
     val subjects = viewModel.subjects.collectAsState(initial = listOf())
     val filter = viewModel.filter.collectAsState()
@@ -147,7 +145,7 @@ fun SubjectsHostScreen(
 
     BrandBaseScreen(
         title = toolbarTitle,
-        subtitle = stringResource(R.string.screen_subject),
+        subtitle = stringResource(R.string.screen_units),
         navIconType = NavIconType.CLOSE,
         actionIcons = {
             ActionBarIcon(
@@ -206,127 +204,118 @@ fun SubjectsHostScreen(
                     }
                 }
 
-                CollapsingLayout(
-                    modifier = Modifier.fillMaxSize(),
-                    state = viewModel.collapsingLayoutState,
-                    content = listOf(
-                        @Composable {
-                            SecondaryScrollableTabRow(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(top = 4.dp),
-                                selectedTabIndex = currentPagerIndex.intValue.plus(1),
-                                indicator = @Composable { tabPositions ->
-                                    tabPositions.getOrNull(currentPagerIndex.intValue.plus(1))?.let { position ->
-                                        if(pagerState.pageCount != 0) {
-                                            TabRowDefaults.SecondaryIndicator(
-                                                modifier = Modifier
-                                                    .customTabIndicatorOffset(position, horizontalPadding = 16.dp),
-                                                color = LocalTheme.colors.brandMain
-                                            )
+                HorizontalPager(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .pointerInput(Unit) {
+                            detectTapGestures(onTap = {
+                                checkedSubjects.clear()
+                            })
+                        },
+                    state = pagerState,
+                    // causes crashes if 0
+                    beyondBoundsPageCount = 2
+                ) { index ->
+                    subjects.value?.getOrNull(index)?.let { subject ->
+                        UnitScreen(
+                            unit = subject,
+                            viewModel = viewModel,
+                            filtersContent = {
+                                SecondaryScrollableTabRow(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(top = 4.dp),
+                                    selectedTabIndex = currentPagerIndex.intValue.plus(1),
+                                    indicator = @Composable { tabPositions ->
+                                        tabPositions.getOrNull(currentPagerIndex.intValue.plus(1))?.let { position ->
+                                            if(pagerState.pageCount != 0) {
+                                                TabRowDefaults.SecondaryIndicator(
+                                                    modifier = Modifier
+                                                        .customTabIndicatorOffset(position, horizontalPadding = 16.dp),
+                                                    color = LocalTheme.colors.brandMain
+                                                )
+                                            }
                                         }
-                                    }
-                                },
-                                divider = {},
-                                containerColor = Color.Transparent
-                            ) {
-                                listOf(SubjectIO(collectionUid = SEARCH_TEXT_UID))
-                                    .plus(subjects.value.orEmpty())
-                                    .plus(SubjectIO(collectionUid = ADD_NEW_SUBJECT_UID))
-                                    .forEachIndexed { index, subject ->
-                                        val modifier = Modifier
-                                            .padding(horizontal = 4.dp)
-                                            .wrapContentHeight()
+                                    },
+                                    divider = {},
+                                    containerColor = Color.Transparent
+                                ) {
+                                    listOf(UnitIO(collectionUid = SEARCH_TEXT_UID))
+                                        .plus(subjects.value.orEmpty())
+                                        .plus(UnitIO(collectionUid = ADD_NEW_SUBJECT_UID))
+                                        .forEachIndexed { index, subject ->
+                                            val modifier = Modifier
+                                                .padding(horizontal = 4.dp)
+                                                .wrapContentHeight()
 
-                                        when(subject.collectionUid) {
-                                            SEARCH_TEXT_UID -> {
-                                                SearchChip(
-                                                    modifier = Modifier.fillMaxHeight(),
-                                                    isChecked = isSearchChipChecked,
-                                                    text = filter.value.textFilter,
-                                                    onSearchOutput = { output ->
-                                                        viewModel.filter.update {
-                                                            SubjectsFilter(output)
-                                                        }
-                                                    },
-                                                    onClick = {
-                                                        isSearchChipChecked.value = true
-                                                    }
-                                                )
-                                            }
-                                            ADD_NEW_SUBJECT_UID -> {
-                                                ComponentHeaderButton(
-                                                    modifier = modifier,
-                                                    onClick = {
-                                                        viewModel.addNewSubject(
-                                                            collectionUid = collectionUid,
-                                                            prefix = context.getString(R.string.subject_heading_prefix)
-                                                        )
-                                                    }
-                                                )
-                                            }
-                                            else -> {
-                                                ComponentHeaderButton(
-                                                    modifier = modifier,
-                                                    startIconVector = null,
-                                                    text = subject.name,
-                                                    onClick = {
-                                                        if(checkedSubjects.size > 0) {
-                                                            if(checkedSubjects.contains(subject.uid)) {
-                                                                checkedSubjects.remove(subject.uid)
-                                                            }else checkedSubjects.add(subject.uid)
-                                                        }else {
-                                                            coroutineScope.launch {
-                                                                pagerState.animateScrollToPage(index.minus(1))
+                                            when(subject.collectionUid) {
+                                                SEARCH_TEXT_UID -> {
+                                                    SearchChip(
+                                                        modifier = Modifier.fillMaxHeight(),
+                                                        isChecked = isSearchChipChecked,
+                                                        text = filter.value.textFilter,
+                                                        onSearchOutput = { output ->
+                                                            viewModel.filter.update {
+                                                                SubjectsFilter(output)
                                                             }
+                                                        },
+                                                        onClick = {
+                                                            isSearchChipChecked.value = true
                                                         }
-                                                    },
-                                                    extraContent = {
-                                                        AnimatedVisibility(visible = checkedSubjects.size > 0) {
-                                                            Checkbox(
-                                                                modifier = Modifier
-                                                                    .align(Alignment.CenterVertically)
-                                                                    .padding(end = 4.dp),
-                                                                checked = checkedSubjects.contains(subject.uid),
-                                                                onCheckedChange = { isChecked ->
-                                                                    if(isChecked) {
-                                                                        checkedSubjects.add(subject.uid)
-                                                                    }else checkedSubjects.remove(subject.uid)
-                                                                },
-                                                                colors = LocalTheme.styles.checkBoxColorsDefault
+                                                    )
+                                                }
+                                                ADD_NEW_SUBJECT_UID -> {
+                                                    ComponentHeaderButton(
+                                                        modifier = modifier,
+                                                        onClick = {
+                                                            viewModel.addNewSubject(
+                                                                collectionUid = collectionUid,
+                                                                prefix = context.getString(R.string.subject_heading_prefix)
                                                             )
                                                         }
-                                                    }
-                                                )
+                                                    )
+                                                }
+                                                else -> {
+                                                    ComponentHeaderButton(
+                                                        modifier = modifier,
+                                                        startIconVector = null,
+                                                        text = subject.name,
+                                                        onClick = {
+                                                            if(checkedSubjects.size > 0) {
+                                                                if(checkedSubjects.contains(subject.uid)) {
+                                                                    checkedSubjects.remove(subject.uid)
+                                                                }else checkedSubjects.add(subject.uid)
+                                                            }else {
+                                                                coroutineScope.launch {
+                                                                    pagerState.animateScrollToPage(index.minus(1))
+                                                                }
+                                                            }
+                                                        },
+                                                        extraContent = {
+                                                            AnimatedVisibility(visible = checkedSubjects.size > 0) {
+                                                                Checkbox(
+                                                                    modifier = Modifier
+                                                                        .align(Alignment.CenterVertically)
+                                                                        .padding(end = 4.dp),
+                                                                    checked = checkedSubjects.contains(subject.uid),
+                                                                    onCheckedChange = { isChecked ->
+                                                                        if(isChecked) {
+                                                                            checkedSubjects.add(subject.uid)
+                                                                        }else checkedSubjects.remove(subject.uid)
+                                                                    },
+                                                                    colors = LocalTheme.styles.checkBoxColorsDefault
+                                                                )
+                                                            }
+                                                        }
+                                                    )
+                                                }
                                             }
                                         }
-                                    }
-                            }
-                        } to CollapsingBehavior.ALWAYS,
-                        @Composable {
-                            HorizontalPager(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .weight(1f)
-                                    .pointerInput(Unit) {
-                                        detectTapGestures(onTap = {
-                                            checkedSubjects.clear()
-                                        })
-                                    },
-                                state = pagerState,
-                                // causes crashes if 0
-                                beyondBoundsPageCount = 2
-                            ) { index ->
-                                subjects.value?.getOrNull(index)?.let { subject ->
-                                    SubjectScreen(
-                                        subject = subject,
-                                        viewModel = viewModel
-                                    )
                                 }
                             }
-                        } to CollapsingBehavior.NONE
-                    )
-                )
+                        )
+                    }
+                }
             }else {
                 //TODO shimmerlayout
             }

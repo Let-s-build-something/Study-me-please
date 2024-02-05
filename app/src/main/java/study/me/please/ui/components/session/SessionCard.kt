@@ -10,8 +10,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
@@ -25,6 +28,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ColorFilter
@@ -131,81 +135,54 @@ private fun ContentLayout(
     session: SessionIO,
     state: InteractiveCardState
 ) {
-    ConstraintLayout(
+    Column(
         modifier = modifier
             .fillMaxWidth()
             .wrapContentHeight()
             .animateContentSize()
             .padding(vertical = 8.dp, horizontal = 12.dp)
     ) {
-        val (checkBox, imgMode, txtName, txtQuestionCount) = createRefs()
-        AnimatedVisibility(
-            modifier = Modifier.constrainAs(checkBox) {
-                start.linkTo(parent.start, (-8).dp)
-                top.linkTo(parent.top, (-12).dp)
-            },
-            visible = state.mode.value == InteractiveCardMode.CHECKING
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.Top
         ) {
-            Checkbox(
-                checked = state.isChecked.value,
-                enabled = state.isEnabled.value,
-                onCheckedChange = { isChecked ->
-                    state.isChecked.value = isChecked
-                },
-                colors = LocalTheme.styles.checkBoxColorsDefault
-            )
-        }
-        Image(
-            modifier = Modifier
-                .size(LocalTheme.shapes.iconSizeMedium)
-                .background(
-                    color = LocalTheme.colors.brandMain,
-                    shape = LocalTheme.shapes.circularActionShape
+            AnimatedVisibility(
+                visible = state.mode.value == InteractiveCardMode.CHECKING
+            ) {
+                Checkbox(
+                    modifier = Modifier.offset(x = -(12).dp),
+                    checked = state.isChecked.value,
+                    enabled = state.isEnabled.value,
+                    onCheckedChange = { isChecked ->
+                        state.isChecked.value = isChecked
+                    },
+                    colors = LocalTheme.styles.checkBoxColorsDefault
                 )
-                .padding(8.dp)
-                .constrainAs(imgMode) {
-                    start.linkTo(
-                        if (state.mode.value == InteractiveCardMode.CHECKING) {
-                            checkBox.end
-                        } else parent.start
+            }
+            Image(
+                modifier = Modifier
+                    .size(LocalTheme.shapes.iconSizeMedium)
+                    .background(
+                        color = LocalTheme.colors.brandMain,
+                        shape = LocalTheme.shapes.circularActionShape
                     )
-                    top.linkTo(parent.top)
-                },
-            imageVector = (session.estimatedMode ?: QuestionMode.LEARNING).icon,
-            contentDescription = (session.estimatedMode ?: QuestionMode.LEARNING).icon.name,
-            colorFilter = ColorFilter.tint(color = LocalTheme.colors.tetrial)
-        )
-        Text(
-            modifier = Modifier
-                .constrainAs(txtName) {
-                    linkTo(
-                        imgMode.end,
-                        txtQuestionCount.start,
-                        startMargin = 6.dp,
-                        endMargin = 6.dp
-                    )
-                    top.linkTo(imgMode.top)
-                    width = Dimension.fillToConstraints
-                },
-            text = session.name,
-            color = LocalTheme.colors.primary,
-            fontSize = 18.sp,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        )
-        Text(
-            modifier = Modifier
-                .constrainAs(txtQuestionCount) {
-                    end.linkTo(parent.end)
-                    top.linkTo(parent.top)
-                },
-            text = stringResource(
-                id = R.string.session_card_x_questions,
-                session.questionCount
-            ),
-            color = LocalTheme.colors.secondary,
-            fontSize = 16.sp
-        )
+                    .padding(8.dp),
+                imageVector = (session.estimatedMode ?: QuestionMode.LEARNING).icon,
+                contentDescription = (session.estimatedMode ?: QuestionMode.LEARNING).icon.name,
+                colorFilter = ColorFilter.tint(color = LocalTheme.colors.tetrial)
+            )
+            Text(
+                modifier = Modifier
+                    .padding(horizontal = 6.dp)
+                    .fillMaxWidth(),
+                text = session.name,
+                color = LocalTheme.colors.primary,
+                fontSize = 18.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+
+        }
         /*Text(
             modifier = Modifier
                 .constrainAs(txtCollections) {
@@ -246,7 +223,7 @@ private fun Preview() {
         ).apply {
             questionCount = 13
         },
-        state = InteractiveCardState(mode = mutableStateOf(InteractiveCardMode.DATA_DISPLAY))
+        state = InteractiveCardState(mode = mutableStateOf(InteractiveCardMode.CHECKING))
     ) {
 
     }

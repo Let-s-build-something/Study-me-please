@@ -1,36 +1,31 @@
-package study.me.please.ui.collection.detail.subjects
+package study.me.please.ui.units
 
 import android.app.Activity
 import android.util.Log
 import androidx.lifecycle.viewModelScope
-import com.squadris.squadris.utils.DateUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import study.me.please.base.BaseViewModel
 import study.me.please.base.GeneralClipBoard
 import study.me.please.data.io.BaseResponse
+import study.me.please.data.io.FactIO
 import study.me.please.data.io.QuestionIO
 import study.me.please.data.io.subjects.CategoryIO
 import study.me.please.data.io.subjects.ParagraphIO
-import study.me.please.data.io.subjects.SubjectIO
+import study.me.please.data.io.subjects.UnitIO
 import study.me.please.ui.components.FactCardCategoryUseCase
-import study.me.please.ui.components.collapsing_layout.CollapsingLayoutState
 import javax.inject.Inject
 
 /** Communication bridge between UI and DB */
 @HiltViewModel
-class SubjectsViewModel @Inject constructor(
+class UnitsViewModel @Inject constructor(
     private val repository: SubjectsRepository,
     val clipBoard: GeneralClipBoard,
     private val questionGenerator: QuestionGenerator
@@ -42,7 +37,7 @@ class SubjectsViewModel @Inject constructor(
     }
 
     /** List of all subjects related to a collection */
-    private val _subjectsList = MutableStateFlow<List<SubjectIO>?>(null)
+    private val _subjectsList = MutableStateFlow<List<UnitIO>?>(null)
 
     /** List of all categories */
     private val _categories = MutableStateFlow<List<CategoryIO>?>(null)
@@ -65,7 +60,11 @@ class SubjectsViewModel @Inject constructor(
     /** List of all categories */
     override val categories = _categories.asStateFlow()
 
-    val collapsingLayoutState = CollapsingLayoutState()
+    /** uid of an element that is requested to be removed from its paragraph */
+    val elementUidToRemove = MutableStateFlow<String?>(null)
+
+    var dragAndDroppedFact: FactIO? = null
+    var dragAndDroppedParagraph: ParagraphIO? = null
 
     /** Generates questions and saves them right after that */
     fun generateQuestions(
@@ -97,11 +96,35 @@ class SubjectsViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Iterates through the given source paragraph [sourceUid] and checks,
+     * whether [targetUid] is a child of it
+     */
+    fun isNestedOfParagraph(
+        sourceParagraph: ParagraphIO?,
+        targetUid: String
+    ): Boolean {
+        if(sourceParagraph == null) return false
+
+        sourceParagraph.paragraphs.forEach { paragraph ->
+            Log.d("kostka_test", "sourceUid: ${sourceParagraph.uid}, targetUid: $targetUid, currentUid: ${paragraph.uid}")
+            if(paragraph.uid == targetUid) return true
+            if(isNestedOfParagraph(
+                sourceParagraph = paragraph,
+                targetUid = targetUid
+            )) return true
+        }
+        return false
+    }
+
     /** Makes a request to return subjects */
     fun requestSubjectsList(collectionUid: String) {
         viewModelScope.launch {
             _categories.value = repository.getAllCategories()
-            _subjectsList.value = repository.getSubjectsByCollection(collectionUid) ?: listOf()
+            val res = repository.getSubjectsByCollection(collectionUid)
+            _subjectsList.value = if(res.isNullOrEmpty()) {
+                listOf(UnitIO(collectionUid = collectionUid))
+            }else res
             _subjectsList.value?.forEach {
                 it.paragraphs.forEach { paragraph ->
                     paragraph.localCategory = _categories.value?.find { category ->
@@ -115,6 +138,34 @@ class SubjectsViewModel @Inject constructor(
     override fun requestAllCategories() {
         viewModelScope.launch {
             _categories.value = repository.getAllCategories()
+        }
+    }
+
+    /** Copies a fact by its uid */
+    fun copyFactByUid(paragraphs: List<ParagraphIO>, uid: String) {
+        viewModelScope.launch {
+            paragraphs.forEach { paragraph ->
+                paragraph.facts.forEach { fact ->
+                    if(fact.uid == uid) {
+                        clipBoard.facts.copyItems(listOf(fact))
+                        return@launch
+                    }
+                }
+                copyFactByUid(paragraph.paragraphs, uid = uid)
+            }
+        }
+    }
+
+    /** Copies a paragraph by its uid */
+    fun copyParagraphByUid(paragraphs: List<ParagraphIO>, uid: String) {
+        viewModelScope.launch {
+            paragraphs.forEach { paragraph ->
+                if(paragraph.uid == uid) {
+                    clipBoard.paragraphs.copyItems(listOf(paragraph))
+                    return@launch
+                }
+                copyFactByUid(paragraph.paragraphs, uid = uid)
+            }
         }
     }
 
@@ -135,14 +186,14 @@ class SubjectsViewModel @Inject constructor(
         viewModelScope.launch {
             _subjectsList.update { previousSubjects ->
                 previousSubjects?.toMutableList()?.apply {
-                    add(SubjectIO(collectionUid = collectionUid, name = "$prefix ${this.size.plus(1)}"))
+                    add(UnitIO(collectionUid = collectionUid, name = "$prefix ${this.size.plus(1)}"))
                 }
             }
         }
     }
 
     /** Updates specific subject */
-    fun updateSubject(subject: SubjectIO) {
+    fun updateUnit(subject: UnitIO) {
         viewModelScope.launch {
             _subjectsList.value?.apply {
                 find { it.uid == subject.uid }?.updateTO(subject)
@@ -162,7 +213,7 @@ class SubjectsViewModel @Inject constructor(
     }
 
     /** Updates specific subject */
-    fun updateParagraph(subject: SubjectIO, newParagraph: ParagraphIO) {
+    fun updateParagraph(subject: UnitIO, newParagraph: ParagraphIO) {
         viewModelScope.launch {
             subject.paragraphs.forEach { paragraph ->
                 iterateFurther(paragraph, newParagraph)

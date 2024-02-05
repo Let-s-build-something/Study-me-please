@@ -131,8 +131,8 @@ class CollectionDetailViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.Default) {
             if(collection.isNotEmpty) {
                 repository.saveCollection(collection = collection.apply {
-                    dateModified = DateUtils.now.time
-                    if(collection.dateCreated == null) dateCreated = DateUtils.now.time
+                    dateModified = DateUtils.now.timeInMillis
+                    if(collection.dateCreated == null) dateCreated = DateUtils.now.timeInMillis
                 })
             }
         }
@@ -195,13 +195,12 @@ class CollectionDetailViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.Default) {
             // we shouldn't be here at all, return error
             if(facts.size < QUESTION_GENERATION_MINIMUM_FACTS) {
-                Log.e("collection_view_model", "NOT_ENOUGH_FACTS, size: ${facts.size}")
                 questionGenerationResponse.emit(
                     QuestionGenerationResponse(errorType = ErrorType.NOT_ENOUGH_FACTS)
                 )
             }
 
-            val existingQuestions = dataManager.collectionQuestions.value.map { it.importedSource.sourceUid }
+            val existingQuestions = dataManager.collectionQuestions.value.mapNotNull { it.importedSource?.sourceUid }
             val newQuestions = mutableListOf<QuestionIO>()
             val factsToGenerate = facts.filter {
                 selectedFactUids.contains(it.uid)
@@ -502,12 +501,12 @@ class CollectionDetailViewModel @Inject constructor(
             clipBoard.forEach {
                 requestFactSave(it)
             }
+            requestCollectionSave(dataManager.collectionDetail.value.apply {
+                factUidList.addAll(clipBoard.map { it.uid })
+            })
             dataManager.collectionFacts.update {
                 it.toMutableList().apply { addAll(0, clipBoard) }
             }
-            requestCollectionSave(dataManager.collectionDetail.value.apply {
-                questionUidList.addAll(clipBoard.map { it.uid })
-            })
         }
     }
 
@@ -518,6 +517,9 @@ class CollectionDetailViewModel @Inject constructor(
             clipBoard.forEach {
                 requestQuestionSave(it)
             }
+            requestCollectionSave(dataManager.collectionDetail.value.apply {
+                questionUidList.addAll(clipBoard.map { it.uid })
+            })
             dataManager.collectionQuestions.update {
                 it.toMutableList().apply { addAll(0, clipBoard) }
             }

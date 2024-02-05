@@ -1,10 +1,7 @@
 package study.me.please.ui.collection.detail.questions.detail
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
@@ -21,6 +18,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Image
@@ -37,14 +37,15 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImagePainter
-import com.squadris.squadris.compose.components.DEFAULT_ANIMATION_LENGTH_SHORT
-import com.squadris.squadris.compose.components.MinimalisticIcon
 import com.squadris.squadris.compose.components.input.EditFieldInput
 import com.squadris.squadris.compose.theme.LocalTheme
 import kotlinx.coroutines.Dispatchers
@@ -56,7 +57,7 @@ import study.me.please.base.LocalNavController
 import study.me.please.base.navigation.ActionBarIcon
 import study.me.please.base.navigation.NavIconType
 import study.me.please.base.navigation.NavigationComponent
-import study.me.please.base.navigation.NavigationDestination
+import study.me.please.base.navigation.NavigationScreen
 import study.me.please.data.io.FactType
 import study.me.please.data.io.LargePathAsset
 import study.me.please.data.io.QuestionAnswerIO
@@ -253,7 +254,7 @@ fun QuestionDetailScreen(
                 imageVector = Icons.Outlined.PlayArrow,
                 onClick = {
                     navController?.navigate(
-                        NavigationDestination.SessionPlay.createRoute(
+                        NavigationScreen.SessionPlay.createRoute(
                             NavigationComponent.TOOLBAR_TITLE to question.value?.prompt,
                             NavigationComponent.IS_TESTING_MODE to true,
                             NavigationComponent.QUESTION_UID to question.value?.uid
@@ -277,8 +278,14 @@ fun QuestionDetailScreen(
             state = viewModel.collapsingLayoutState,
             content = listOf(
                 @Composable {
-                    Column(modifier = Modifier.fillMaxWidth()) {
+                    Column(
+                        modifier = Modifier
+                            .verticalScroll(rememberScrollState())
+                            .fillMaxWidth()
+                    ) {
                         Spacer(modifier = Modifier.height(8.dp))
+                        val scope = rememberCoroutineScope()
+                        val focusManager = LocalFocusManager.current
 
                         val listItems = remember(question.value) {
                             mutableStateListOf(*question.value?.promptList?.toTypedArray().orEmpty())
@@ -304,7 +311,7 @@ fun QuestionDetailScreen(
                             ) {
                                 ComponentHeaderButton(
                                     onClick = {
-                                        listItems.add(0, " ")
+                                        listItems.add(0, "")
                                         selectedListIndex.intValue = listItems.size.minus(1)
                                     }
                                 )
@@ -313,16 +320,28 @@ fun QuestionDetailScreen(
                                 ListItemEditField(
                                     prefix = FactType.BULLET_POINT_PREFIX,
                                     value = listItem,
-                                    onValueChange = { output ->
-                                        if (output.isBlank()) {
+                                    onBackspaceKey = {
+                                        if(it.isEmpty()) {
+                                            if(index > 0) {
+                                                focusManager.moveFocus(FocusDirection.Up)
+                                            }
                                             listItems.removeAt(index)
-                                            selectedListIndex.intValue--
-                                        } else {
-                                            listItems.removeAt(index)
-                                            listItems.add(index, output)
-                                            question.value?.promptList = listItems.toList()
-                                            bridge.updateQuestion()
                                         }
+                                    },
+                                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                                    keyboardActions = KeyboardActions(
+                                        onNext = {
+                                            listItems.add(index + 1, "")
+                                            scope.launch {
+                                                delay(50)
+                                                focusManager.moveFocus(FocusDirection.Down)
+                                            }
+                                        }
+                                    ),
+                                    onValueChange = { output ->
+                                        listItems[index] = output
+                                        question.value?.promptList = listItems.toList()
+                                        bridge.updateQuestion()
                                     }
                                 )
                             }

@@ -1,11 +1,11 @@
 package com.squadris.squadris.compose.theme
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CardElevation
 import androidx.compose.material3.CheckboxColors
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChipDefaults
-import androidx.compose.material3.SelectableChipBorder
 import androidx.compose.material3.SelectableChipColors
 import androidx.compose.material3.SwitchColors
 import androidx.compose.material3.SwitchDefaults
@@ -102,8 +102,7 @@ class AppThemeStyle: ThemeStyle {
             disabledElevation = minimumElevation
         )
 
-    @OptIn(ExperimentalMaterial3Api::class)
-    override val chipBorderDefault: SelectableChipBorder
+    override val chipBorderDefault: BorderStroke
         @Composable get() = FilterChipDefaults.filterChipBorder(
             borderColor = Color.Transparent,
             selectedBorderColor = Color.Transparent,
@@ -111,6 +110,8 @@ class AppThemeStyle: ThemeStyle {
             disabledSelectedBorderColor = Color.Transparent,
             borderWidth = 0.dp,
             selectedBorderWidth = 0.dp,
+            enabled = true,
+            selected = false
         )
 
     @OptIn(ExperimentalMaterial3Api::class)
@@ -141,6 +142,14 @@ class AppThemeStyle: ThemeStyle {
         @Composable
         get() = TextStyle(
             color = LocalTheme.colors.secondary,
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Normal
+        )
+
+    override val linkText: TextStyle
+        @Composable
+        get() = TextStyle(
+            color = LocalTheme.colors.brandMainDark,
             fontSize = 16.sp,
             fontWeight = FontWeight.Medium
         )

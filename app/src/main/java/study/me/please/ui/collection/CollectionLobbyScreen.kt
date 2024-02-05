@@ -5,14 +5,10 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.systemBars
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
@@ -61,7 +57,7 @@ import study.me.please.base.LocalNavController
 import study.me.please.base.navigation.NavigationComponent
 import study.me.please.base.navigation.NavigationComponent.COLLECTION_UID
 import study.me.please.base.navigation.NavigationComponent.TOOLBAR_TITLE
-import study.me.please.base.navigation.NavigationDestination
+import study.me.please.base.navigation.NavigationScreen
 import study.me.please.ui.components.AddToSessionCollectionSheet
 import study.me.please.ui.components.BasicAlertDialog
 import study.me.please.ui.components.ButtonState
@@ -234,7 +230,7 @@ fun CollectionLobbyScreen(
                         text = stringResource(id = R.string.button_start_session)
                     ) {
                         navController?.navigate(
-                            NavigationDestination.SessionDetail.createRoute(
+                            NavigationScreen.SessionDetail.createRoute(
                                 NavigationComponent.COLLECTION_UID_LIST to selectedCollectionUids,
                                 TOOLBAR_TITLE to toolbarText
                             )
@@ -243,17 +239,14 @@ fun CollectionLobbyScreen(
                     }
                 },
                 state = bottomSheetState
-            ) { modalPaddingValues ->
+            ) { _ ->
                 LazyColumn(
                     modifier = Modifier
-                        .padding(modalPaddingValues)
                         .pointerInput(Unit) {
                             detectTapGestures(onTap = {
                                 stopChecking()
                             })
-                        }
-                        .windowInsetsPadding(WindowInsets.systemBars)
-                        .windowInsetsPadding(WindowInsets.ime),
+                        },
                     verticalArrangement = Arrangement.spacedBy(LocalTheme.shapes.betweenItemsSpace)
                 ) {
                     if(collections.isNotEmpty()) {
@@ -265,7 +258,7 @@ fun CollectionLobbyScreen(
                                 text = stringResource(id = R.string.add_new_collection)
                             ) {
                                 navController?.navigate(
-                                    NavigationDestination.CollectionDetail.createRoute(
+                                    NavigationScreen.CollectionDetail.createRoute(
                                         TOOLBAR_TITLE to context.getString(R.string.screen_collection_detail_new)
                                     )
                                 )
@@ -294,7 +287,7 @@ fun CollectionLobbyScreen(
                                     data = collection,
                                     onNavigateToDetail = {
                                         navController?.navigate(
-                                            NavigationDestination.CollectionDetail.createRoute(
+                                            NavigationScreen.CollectionDetail.createRoute(
                                                 COLLECTION_UID to collection.uid,
                                                 TOOLBAR_TITLE to collection.name.ifEmpty {
                                                     context.getString(R.string.screen_collection_detail_new)
@@ -304,7 +297,7 @@ fun CollectionLobbyScreen(
                                     },
                                     onNavigateToSession = {
                                         navController?.navigate(
-                                            NavigationDestination.SessionDetail.createRoute(
+                                            NavigationScreen.SessionDetail.createRoute(
                                                 NavigationComponent.COLLECTION_UID_LIST to listOf(collection.uid),
                                                 TOOLBAR_TITLE to context.getString(R.string.session_detail_default_toolbar)
                                             )

@@ -65,6 +65,7 @@ fun EditFieldItemPicker(
     onValueChosen: (category: CategoryIO) -> Unit,
     onFocusLost: () -> Unit = {},
     hint: String,
+    enabled: Boolean = true,
     textStyle: TextStyle = LocalTheme.styles.subheading,
     onEmptyStateClicked: (inputValue: String) -> Unit = {}
 ) {
@@ -141,6 +142,7 @@ fun EditFieldItemPicker(
             textStyle = textStyle,
             isUnfocusedTransparent = true,
             hint = hint,
+            enabled = enabled,
             maxLines = 1,
             minLines = 1,
             paddingValues = PaddingValues(horizontal = 8.dp),
@@ -148,6 +150,7 @@ fun EditFieldItemPicker(
                 inputValue = output
             }
         )
+        //TODO richtooltip
         AnimatedVisibility(visible = isFocused && inputValue.isNotEmpty()) {
             LazyColumn(
                 modifier = Modifier

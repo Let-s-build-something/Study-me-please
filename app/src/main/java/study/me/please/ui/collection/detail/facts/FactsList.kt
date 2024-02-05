@@ -408,8 +408,7 @@ fun FactsList(
                     state = (interactiveStates.getOrNull(index) ?: rememberInteractiveCardState()),
                     requestDataSave = {
                         viewModel.requestFactSave(it)
-                    },
-                    categoryUseCase = viewModel
+                    }
                 )
             }
             item {

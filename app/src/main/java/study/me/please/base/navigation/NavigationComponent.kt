@@ -28,6 +28,18 @@ object NavigationComponent {
     /** toolbar title */
     const val TOOLBAR_TITLE = "toolbarTitle"
 
+    /** Whether is screen is embedded into already existing screen or not */
+    const val IS_EMBEDDED = "isEmbedded"
+
+    /** Notepad paragraph identifier */
+    const val PARAGRAPH_UID = "paragraphUid"
+
+    /** Notepad unit identifier */
+    const val UNIT_UID = "UnitUid"
+
+    /** The [ImportedSource] for displaying specific paragraph - this provides it with additional context */
+    const val PARAGRAPH_SOURCE = "paragraphSource"
+
     /** whether new item should be create the moment screen opens */
     const val CREATE_NEW_ITEM = "createNewItem"
 
