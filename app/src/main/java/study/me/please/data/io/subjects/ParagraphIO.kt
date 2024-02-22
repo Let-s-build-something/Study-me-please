@@ -1,7 +1,6 @@
 package study.me.please.data.io.subjects
 
 import androidx.room.Entity
-import androidx.room.Ignore
 import androidx.room.PrimaryKey
 import study.me.please.data.io.FactIO
 import study.me.please.data.room.AppRoomDatabase
@@ -38,7 +37,6 @@ data class ParagraphIO(
         get() = bulletPoints.isEmpty() && paragraphs.isEmpty() && facts.isEmpty()
 
     /** Locally saved category associated with this paragraph */
-    @Ignore
     var localCategory: CategoryIO? = null
 
     /** Updates this object with new object */
@@ -47,6 +45,7 @@ data class ParagraphIO(
         bulletPoints = newTO.bulletPoints
         paragraphs = newTO.paragraphs
         facts = newTO.facts
+        localCategory = newTO.localCategory
     }
 
     override fun toString(): String {

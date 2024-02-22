@@ -15,5 +15,6 @@ interface UnitScreenBridge {
     fun updateBulletPoints()
     fun updateParagraph(paragraph: ParagraphIO)
     fun addParagraph()
+    suspend fun removeParagraph(uid: String)
     fun addBulletPoint()
 }

@@ -1,7 +1,6 @@
 package study.me.please.ui.units
 
 import android.app.Activity
-import android.util.Log
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -78,7 +77,6 @@ class UnitsViewModel @Inject constructor(
                 activity = activity,
                 subjects = _subjectsList.value?.filter { checkedSubjectUids.contains(it.uid) }.orEmpty(),
                 allSubject = _subjectsList.value.orEmpty(),
-                categories = categories.value.orEmpty(),
                 excludedList = repository.getAllQuestions(collectionUid = collectionUid)
                     ?.map { it.uid }
                     .orEmpty()
@@ -107,7 +105,6 @@ class UnitsViewModel @Inject constructor(
         if(sourceParagraph == null) return false
 
         sourceParagraph.paragraphs.forEach { paragraph ->
-            Log.d("kostka_test", "sourceUid: ${sourceParagraph.uid}, targetUid: $targetUid, currentUid: ${paragraph.uid}")
             if(paragraph.uid == targetUid) return true
             if(isNestedOfParagraph(
                 sourceParagraph = paragraph,
@@ -125,13 +122,6 @@ class UnitsViewModel @Inject constructor(
             _subjectsList.value = if(res.isNullOrEmpty()) {
                 listOf(UnitIO(collectionUid = collectionUid))
             }else res
-            _subjectsList.value?.forEach {
-                it.paragraphs.forEach { paragraph ->
-                    paragraph.localCategory = _categories.value?.find { category ->
-                        category.uid == paragraph.categoryUid
-                    }
-                }
-            }
         }
     }
 
@@ -223,6 +213,7 @@ class UnitsViewModel @Inject constructor(
                 find { it.uid == subject.uid }?.updateTO(subject)
             }
             repository.updateSubject(subject)
+            repository.updateParagraph(newParagraph)
         }
     }
 

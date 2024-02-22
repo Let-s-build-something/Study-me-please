@@ -1,6 +1,7 @@
 package study.me.please.ui.units
 
 import android.app.Activity
+import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import study.me.please.R
@@ -11,7 +12,6 @@ import study.me.please.data.io.ImportSourceType
 import study.me.please.data.io.ImportedSource
 import study.me.please.data.io.QuestionAnswerIO
 import study.me.please.data.io.QuestionIO
-import study.me.please.data.io.subjects.CategoryIO
 import study.me.please.data.io.subjects.ParagraphIO
 import study.me.please.data.io.subjects.UnitIO
 import javax.inject.Inject
@@ -48,8 +48,7 @@ class QuestionGenerator @Inject constructor() {
         activity: Activity,
         subjects: List<UnitIO>,
         allSubject: List<UnitIO>,
-        excludedList: List<String>,
-        categories: List<CategoryIO>
+        excludedList: List<String>
     ): BaseResponse<List<QuestionIO>> {
         return withContext(Dispatchers.Default) {
 
@@ -83,17 +82,13 @@ class QuestionGenerator @Inject constructor() {
 
                 // iterates further into all depths
                 fun iterateFurther(paragraph: ParagraphIO, parentCategoryUid: List<String>) {
-                    val paragraphCategory = categories.find { category -> category.uid == paragraph.categoryUid }
-
-                    if(paragraphCategory != null) {
+                    if(paragraph.localCategory != null) {
                         paragraphs.add(
                             ParagraphToGenerate(
-                            data = paragraph.apply {
-                                localCategory = paragraphCategory
-                            },
-                            parentSubjectUid = subject.uid,
-                            sortedCategoryUid = parentCategoryUid.plus(paragraph.uid)
-                        )
+                                data = paragraph,
+                                parentUnitUid = subject.uid,
+                                sortedCategoryUid = parentCategoryUid
+                            )
                         )
                     }
                     paragraph.facts.filter {
@@ -102,8 +97,8 @@ class QuestionGenerator @Inject constructor() {
                         facts.add(
                             FactToGenerate(
                                 data = iteratedFact,
-                                parentSubjectUid = subject.uid,
-                                sortedCategoryUid = parentCategoryUid.plus(paragraph.uid)
+                                parentUnitUid = subject.uid,
+                                sortedCategoryUid = parentCategoryUid
                             )
                         )
                     }
@@ -325,10 +320,7 @@ class QuestionGenerator @Inject constructor() {
                             )
                         )
                     },
-                    importedSource = ImportedSource(
-                        type = ImportSourceType.FACT,
-                        sourceUid = promptFact.data.uid
-                    ),
+                    importedSource = promptFact.makeImportedSourceRoute(),
                     promptList = promptFact.data.textList,
                     prompt = activity.getString(R.string.question_generating_fact_list_short_key)
                 )
@@ -337,11 +329,15 @@ class QuestionGenerator @Inject constructor() {
             QuestionIO(
                 answers = facts.map { mappingFact ->
                     QuestionAnswerIO(
-                        textList = if(generatingGoal == FactGeneratingGoal.SHORT_INFORMATION) {
+                        textList = if(generatingGoal == FactGeneratingGoal.SHORT_INFORMATION
+                            && mappingFact.data.type.isListType
+                        ) {
                             mappingFact.data.textList
                         }else listOf(),
                         text = when(generatingGoal) {
-                            FactGeneratingGoal.SHORT_INFORMATION -> mappingFact.data.longInformation
+                            FactGeneratingGoal.SHORT_INFORMATION -> {
+                                if(mappingFact.data.type.isListType) "" else mappingFact.data.longInformation
+                            }
                             FactGeneratingGoal.LONG_INFORMATION -> mappingFact.data.shortKeyInformation
                             FactGeneratingGoal.IMAGE_PROMPT -> mappingFact.data.shortKeyInformation
                         },
@@ -495,8 +491,8 @@ class QuestionGenerator @Inject constructor() {
                                     QuestionAnswerIO(
                                         isCorrect = false,
                                         text = relatedParagraph.first.data.localCategory?.name ?: "",
-                                        explanationList = paragraph.data.bulletPoints,
-                                        importedSource = paragraph.makeImportedSourceRoute()
+                                        explanationList = relatedParagraph.first.data.bulletPoints,
+                                        importedSource = relatedParagraph.first.makeImportedSourceRoute()
                                     )
                                 }.toMutableList().apply {
                                     add(
@@ -524,7 +520,7 @@ class QuestionGenerator @Inject constructor() {
                     // if there are no related paragraphs
                     if(relatedChildrenParagraphs.isEmpty()) return@withContext listOf()
 
-                    val subject = subjects.find { it.uid == paragraph.parentSubjectUid }
+                    val subject = subjects.find { it.uid == paragraph.parentUnitUid }
 
                     listOf(
                         QuestionIO(
@@ -571,7 +567,7 @@ class QuestionGenerator @Inject constructor() {
                     // if there are no related facts
                     if(relatedFacts.isEmpty()) return@withContext null
 
-                    val subject = subjects.find { it.uid == paragraph.parentSubjectUid }
+                    val subject = subjects.find { it.uid == paragraph.parentUnitUid }
 
                     listOf(
                         QuestionIO(
@@ -771,27 +767,31 @@ class QuestionGenerator @Inject constructor() {
 
     private data class FactToGenerate(
         val data: FactIO,
-        val parentSubjectUid: String,
+        val parentUnitUid: String,
         val sortedCategoryUid: List<String>
     ) {
 
         /** Creates imported source route from this paragraph */
         fun makeImportedSourceRoute(): ImportedSource {
             var currentImportedSource = ImportedSource(
-                sourceUid = parentSubjectUid,
+                sourceUid = parentUnitUid,
                 type = ImportSourceType.UNIT
             )
-
-            sortedCategoryUid.asReversed().forEach { categoryId ->
+            sortedCategoryUid.forEach { categoryId ->
                 val newImportedSource = ImportedSource(
                     sourceUid = categoryId,
-                    type = ImportSourceType.FACT,
+                    type = ImportSourceType.PARAGRAPH,
                     parent = currentImportedSource
                 )
                 currentImportedSource = newImportedSource
             }
 
-            return currentImportedSource
+            Log.d("kostka_test", "currentImportedSource: $currentImportedSource, sortedCategoryUid: $sortedCategoryUid")
+            return ImportedSource(
+                sourceUid = data.uid,
+                type = ImportSourceType.FACT,
+                parent = currentImportedSource
+            )
         }
     }
 
@@ -800,14 +800,14 @@ class QuestionGenerator @Inject constructor() {
      */
     private data class ParagraphToGenerate(
         val data: ParagraphIO,
-        val parentSubjectUid: String,
+        val parentUnitUid: String,
         val sortedCategoryUid: List<String>
     ) {
 
         /** Creates imported source route from this paragraph */
         fun makeImportedSourceRoute(): ImportedSource {
             var currentImportedSource = ImportedSource(
-                sourceUid = parentSubjectUid,
+                sourceUid = parentUnitUid,
                 type = ImportSourceType.UNIT
             )
 

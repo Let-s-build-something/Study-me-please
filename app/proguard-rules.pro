@@ -40,4 +40,12 @@
 -keep class * implements com.google.gson.JsonSerializer
 -keep class * implements com.google.gson.JsonDeserializer
 
+-keepclassmembers enum * { *; }
+-keep class com.google.code.gson.* { *; }
+-keep class study.me.please.data.* { *; }
+-keepattributes *Annotation*, Signature, Exception
+-keepclassmembers,allowobfuscation class * {
+  @com.google.gson.annotations.SerializedName <fields>;
+}
+
 ##---------------End: proguard configuration for Gson  ----------

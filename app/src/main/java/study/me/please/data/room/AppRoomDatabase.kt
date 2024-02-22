@@ -94,7 +94,7 @@ abstract class AppRoomDatabase: RoomDatabase() {
         const val ROOM_FACT_TABLE = "ROOM_FACT_TABLE"
 
         /** Identification of table for [UnitIO] */
-        const val ROOM_SUBJECT_TABLE = "ROOM_SUBJECT_TABLE"
+        const val ROOM_UNIT_TABLE = "ROOM_SUBJECT_TABLE"
 
         /** Identification of table for [CategoryIO] */
         const val ROOM_CATEGORY_TABLE = "ROOM_SUBJECTS_TABLE"

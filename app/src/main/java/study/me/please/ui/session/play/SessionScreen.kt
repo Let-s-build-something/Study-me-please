@@ -4,6 +4,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.MutatePriority
 import androidx.compose.foundation.gestures.stopScroll
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -32,6 +33,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.squadris.squadris.compose.theme.LocalTheme
+import com.squadris.squadris.ext.brandShimmerEffect
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
@@ -279,6 +281,10 @@ fun SessionScreen(
             }
         }
     }else {
-        //TODO ShmmerLayout
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .brandShimmerEffect()
+        )
     }
 }

@@ -143,7 +143,7 @@ fun EditFieldItemPicker(
             isUnfocusedTransparent = true,
             hint = hint,
             enabled = enabled,
-            maxLines = 1,
+            maxLines = 3,
             minLines = 1,
             paddingValues = PaddingValues(horizontal = 8.dp),
             onValueChange = { output ->

@@ -6,12 +6,12 @@ import androidx.room.PrimaryKey
 import com.google.gson.annotations.SerializedName
 import com.squadris.squadris.utils.DateUtils
 import study.me.please.data.io.FactIO
-import study.me.please.data.room.AppRoomDatabase.Companion.ROOM_SUBJECT_TABLE
+import study.me.please.data.room.AppRoomDatabase.Companion.ROOM_UNIT_TABLE
 import java.io.Serializable
 import java.util.UUID
 
 /** Primary IO responsible for saving subjects */
-@Entity(tableName = ROOM_SUBJECT_TABLE)
+@Entity(tableName = ROOM_UNIT_TABLE)
 data class UnitIO(
 
     /** unique identifier */
@@ -44,7 +44,10 @@ data class UnitIO(
     /** date of creation of this data object */
     @SerializedName("date_created")
     @ColumnInfo("date_created")
-    val dateCreated: Long = DateUtils.now.timeInMillis
+    val dateCreated: Long = DateUtils.now.timeInMillis,
+
+    /** list of all collapsed paragraphs - they are expanded by default */
+    var collapsedParagraphs: List<String> = listOf()
 ): Serializable {
 
     /** Whether this data can be taken seriously */

@@ -210,7 +210,8 @@ private fun DataCard(
                     )
                 } else Modifier
             ),
-        horizontalAlignment = Alignment.Start
+        horizontalAlignment = Alignment.Start,
+        verticalArrangement = Arrangement.Top
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -264,7 +265,7 @@ private fun DataCard(
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.Top
+            verticalAlignment = Alignment.Bottom
         ) {
             Column(
                 modifier = Modifier
@@ -335,7 +336,7 @@ private fun DataCard(
                 }
             }
             AnimatedVisibility(
-                visible = mode == InteractiveCardMode.DATA_DISPLAY
+                visible = mode == InteractiveCardMode.DATA_DISPLAY && isReadOnly.not()
             ) {
                 MinimalisticIcon(
                     imageVector = Icons.Outlined.Edit,
@@ -375,6 +376,7 @@ private fun DataCard(
             visible = isInEdit && promptImage.value == null
         ) {
             ImageAction(
+                modifier = Modifier.padding(bottom = 8.dp),
                 leadingImageVector = Icons.Outlined.Image,
                 text = stringResource(id = R.string.button_add_prompt_image)
             ) {
@@ -385,7 +387,6 @@ private fun DataCard(
         Crossfade(
             targetState = data.type == FactType.LIST || data.type == FactType.BULLET_POINTS,
             modifier = Modifier
-                .padding(top = 8.dp)
                 .animateContentSize(),
             label = "",
             animationSpec = tween(durationMillis = DEFAULT_ANIMATION_LENGTH_SHORT)
@@ -469,7 +470,7 @@ private fun DataCard(
                             textStyle = LocalTheme.styles.category,
                             maxLines = if(isReadOnly) Int.MAX_VALUE else 5,
                             overflow = TextOverflow.Ellipsis,
-                            prefix = if(isReadOnly) "-" else null
+                            prefix = if(data.longInformation.isNotEmpty()) "-" else null
                         )
                     }
                 }
@@ -514,14 +515,15 @@ private fun Preview() {
         Box(modifier = Modifier.background(LocalTheme.colors.backgroundLight)) {
             FactCard(
                 data = FactIO(
-                    shortKeyInformation = "",
-                    longInformation = ""
+                    shortKeyInformation = "short key information",
+                    longInformation = "",
+                    type = FactType.LIST,
+                    textList = listOf("item 1", "item 2", "item 3")
                 ),
+                onClick = {},
                 requestDataSave = {},
-                state = InteractiveCardState(
-                    mode = mutableStateOf(InteractiveCardMode.DATA_DISPLAY)
-                ),
-                isReadOnly = false
+                mode = InteractiveCardMode.DATA_DISPLAY,
+                isReadOnly = true
             )
         }
     }

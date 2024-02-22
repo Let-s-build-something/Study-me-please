@@ -2,11 +2,11 @@
   "formatVersion": 1,
   "database": {
     "version": 2,
-    "identityHash": "ee2f93812d51e815d0c3baf146975361",
+    "identityHash": "c4a904d5388dc8d480685c5b7d9ae42f",
     "entities": [
       {
         "tableName": "ROOM_COLLECTION_TABLE",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`defaultPreference` TEXT NOT NULL, `name` TEXT NOT NULL, `description` TEXT NOT NULL, `icon` TEXT, `date_created` TEXT, `date_modified` TEXT, `uid` TEXT NOT NULL, `questionUidList` TEXT NOT NULL, `factUidList` TEXT NOT NULL, `subjectUid` TEXT NOT NULL, PRIMARY KEY(`uid`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`defaultPreference` TEXT NOT NULL, `name` TEXT NOT NULL, `description` TEXT NOT NULL, `icon` TEXT, `date_created` INTEGER, `date_modified` INTEGER, `uid` TEXT NOT NULL, `questionUidList` TEXT NOT NULL, `factUidList` TEXT NOT NULL, `subjectUid` TEXT NOT NULL, PRIMARY KEY(`uid`))",
         "fields": [
           {
             "fieldPath": "defaultPreference",
@@ -35,13 +35,13 @@
           {
             "fieldPath": "dateCreated",
             "columnName": "date_created",
-            "affinity": "TEXT",
+            "affinity": "INTEGER",
             "notNull": false
           },
           {
             "fieldPath": "dateModified",
             "columnName": "date_modified",
-            "affinity": "TEXT",
+            "affinity": "INTEGER",
             "notNull": false
           },
           {
@@ -290,7 +290,7 @@
       },
       {
         "tableName": "ROOM_SESSION_PREFERENCE_PACK_TABLE",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`uid` TEXT NOT NULL, `name` TEXT NOT NULL, `waitForCorrectAnswer` TEXT NOT NULL, `manualValidation` TEXT NOT NULL, `repeatOnMistake` TEXT NOT NULL, `date_modified` TEXT, PRIMARY KEY(`uid`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`uid` TEXT NOT NULL, `name` TEXT NOT NULL, `waitForCorrectAnswer` TEXT NOT NULL, `manualValidation` TEXT NOT NULL, `repeatOnMistake` TEXT NOT NULL, `date_modified` INTEGER, PRIMARY KEY(`uid`))",
         "fields": [
           {
             "fieldPath": "uid",
@@ -325,7 +325,7 @@
           {
             "fieldPath": "dateModified",
             "columnName": "date_modified",
-            "affinity": "TEXT",
+            "affinity": "INTEGER",
             "notNull": false
           }
         ],
@@ -340,7 +340,7 @@
       },
       {
         "tableName": "ROOM_SESSION_TABLE",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`name` TEXT NOT NULL, `uid` TEXT NOT NULL, `preferencePackUid` TEXT NOT NULL, `estimatedMode` TEXT, `last_played` TEXT NOT NULL, `collectionUidList` TEXT NOT NULL, `questionUidList` TEXT NOT NULL, `questionCount` INTEGER NOT NULL, `q_module_sessionUid` TEXT, `q_module_questionsStack` TEXT, `q_module_uid` TEXT, `q_module_history` TEXT, `q_module_currentIndex` INTEGER, PRIMARY KEY(`uid`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`name` TEXT NOT NULL, `uid` TEXT NOT NULL, `preferencePackUid` TEXT NOT NULL, `estimatedMode` TEXT, `last_played` INTEGER NOT NULL, `collectionUidList` TEXT NOT NULL, `questionUidList` TEXT NOT NULL, `questionCount` INTEGER NOT NULL, `q_module_sessionUid` TEXT, `q_module_questionsStack` TEXT, `q_module_uid` TEXT, `q_module_history` TEXT, `q_module_currentIndex` INTEGER, PRIMARY KEY(`uid`))",
         "fields": [
           {
             "fieldPath": "name",
@@ -369,7 +369,7 @@
           {
             "fieldPath": "lastPlayed",
             "columnName": "last_played",
-            "affinity": "TEXT",
+            "affinity": "INTEGER",
             "notNull": true
           },
           {
@@ -550,7 +550,7 @@
       },
       {
         "tableName": "ROOM_SUBJECT_TABLE",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`uid` TEXT NOT NULL, `categoryUids` TEXT NOT NULL, `bulletPoints` TEXT NOT NULL, `paragraphs` TEXT NOT NULL, `facts` TEXT NOT NULL, `name` TEXT NOT NULL, `collection_uid` TEXT NOT NULL, `date_created` INTEGER NOT NULL, PRIMARY KEY(`uid`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`uid` TEXT NOT NULL, `categoryUids` TEXT NOT NULL, `bulletPoints` TEXT NOT NULL, `paragraphs` TEXT NOT NULL, `facts` TEXT NOT NULL, `name` TEXT NOT NULL, `collection_uid` TEXT NOT NULL, `date_created` INTEGER NOT NULL, `collapsedParagraphs` TEXT NOT NULL, PRIMARY KEY(`uid`))",
         "fields": [
           {
             "fieldPath": "uid",
@@ -599,6 +599,12 @@
             "columnName": "date_created",
             "affinity": "INTEGER",
             "notNull": true
+          },
+          {
+            "fieldPath": "collapsedParagraphs",
+            "columnName": "collapsedParagraphs",
+            "affinity": "TEXT",
+            "notNull": true
           }
         ],
         "primaryKey": {
@@ -641,12 +647,62 @@
         },
         "indices": [],
         "foreignKeys": []
+      },
+      {
+        "tableName": "ROOM_PARAGRAPH_TABLE",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`uid` TEXT NOT NULL, `categoryUid` TEXT, `bulletPoints` TEXT NOT NULL, `paragraphs` TEXT NOT NULL, `facts` TEXT NOT NULL, `localCategory` TEXT, PRIMARY KEY(`uid`))",
+        "fields": [
+          {
+            "fieldPath": "uid",
+            "columnName": "uid",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "categoryUid",
+            "columnName": "categoryUid",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "bulletPoints",
+            "columnName": "bulletPoints",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "paragraphs",
+            "columnName": "paragraphs",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "facts",
+            "columnName": "facts",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "localCategory",
+            "columnName": "localCategory",
+            "affinity": "TEXT",
+            "notNull": false
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "uid"
+          ]
+        },
+        "indices": [],
+        "foreignKeys": []
       }
     ],
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'ee2f93812d51e815d0c3baf146975361')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'c4a904d5388dc8d480685c5b7d9ae42f')"
     ]
   }
 }

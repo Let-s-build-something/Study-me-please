@@ -6,6 +6,7 @@ import kotlinx.coroutines.withContext
 import study.me.please.data.io.CollectionIO
 import study.me.please.data.io.QuestionIO
 import study.me.please.data.io.subjects.CategoryIO
+import study.me.please.data.io.subjects.ParagraphIO
 import study.me.please.data.io.subjects.UnitIO
 import study.me.please.data.room.CategoryDao
 import study.me.please.data.room.CollectionDao
@@ -28,10 +29,17 @@ class SubjectsRepository @Inject constructor(
         }
     }
 
-    /** Creates a new record of subject or replaces it if it already exists */
+    /** Creates a new record of a subject or replaces it if it already exists */
     suspend fun updateSubject(subject: UnitIO) {
         return withContext(Dispatchers.IO) {
             subjectsDao.insertSubject(subject)
+        }
+    }
+
+    /** Creates a new record of a paragraph or replaces it if it already exists */
+    suspend fun updateParagraph(paragraph: ParagraphIO) {
+        return withContext(Dispatchers.IO) {
+            subjectsDao.insertParagraph(paragraph)
         }
     }
 

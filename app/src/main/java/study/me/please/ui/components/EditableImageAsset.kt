@@ -91,6 +91,7 @@ fun EditableImageAsset(
                     modifier = Modifier
                         .animateContentSize()
                         .wrapContentHeight()
+                        .padding(bottom = 6.dp)
                         .fillMaxWidth(),
                     model = if(asset.isLocal) {
                         asset.localUri
@@ -121,7 +122,7 @@ fun EditableImageAsset(
             if(isInEditMode) {
                 EditFieldInput(
                     modifier = Modifier
-                        .padding(top = 4.dp)
+                        .padding(top = 4.dp, bottom = 6.dp)
                         .fillMaxWidth()
                         .wrapContentHeight(),
                     value = (if(asset.isLocal) {

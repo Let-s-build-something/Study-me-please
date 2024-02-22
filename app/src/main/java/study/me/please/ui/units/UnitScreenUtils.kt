@@ -162,5 +162,6 @@ val paragraphBlockMockDataState = ParagraphBlockState(
             uid = "2"
         )
     },
-    updateParagraph = {}
+    updateParagraph = {},
+    selectedFact = mutableStateOf(null)
 )

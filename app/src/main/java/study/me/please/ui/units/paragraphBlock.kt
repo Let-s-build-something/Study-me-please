@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridScope
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -30,11 +31,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
@@ -69,10 +68,10 @@ import androidx.compose.ui.zIndex
 import com.squadris.squadris.compose.theme.Colors
 import com.squadris.squadris.compose.theme.LocalTheme
 import com.squadris.squadris.compose.theme.StudyMeAppTheme
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -93,7 +92,8 @@ import java.util.UUID
 
 data class ParagraphBlockState(
     val parentLayer: Int,
-    val categories: State<List<CategoryIO>?>,
+    val categories: State<List<CategoryIO>?> = mutableStateOf(listOf()),
+    val selectedFact: MutableState<String?>,
     val clipBoard: GeneralClipBoard?,
     val paragraph: ParagraphIO,
     val isReadOnly: Boolean = false,
@@ -106,8 +106,6 @@ data class ParagraphBlockState(
         EMPTY_SPACE,
         PARAGRAPH
     }
-
-    val selectedFact = MutableStateFlow<String?>(null)
 
     val nestedBulletPoints = mutableStateListOf(*paragraph.bulletPoints.toTypedArray())
     val nestedFacts = mutableStateListOf(*paragraph.facts.toTypedArray())
@@ -127,7 +125,7 @@ data class ParagraphBlockState(
 
     override fun addNewBulletPoint(index: Int, bulletPoint: String?) {
         nestedBulletPoints.add(index, bulletPoint ?: "")
-        paragraph.bulletPoints.add(index, bulletPoint ?: "")
+        paragraph.bulletPoints = nestedBulletPoints
         updateParagraph(paragraph)
     }
 
@@ -142,7 +140,7 @@ data class ParagraphBlockState(
         paragraph.facts.apply {
             add(index, newFact)
             removeIf {
-                it.uid == uid
+                it.uid == fact?.uid
             }
         }
         updateParagraph(paragraph)
@@ -150,10 +148,12 @@ data class ParagraphBlockState(
         nestedFacts.apply {
             add(index, newFact)
             removeIf {
-                it.uid == uid
+                it.uid == fact?.uid
             }
         }
-        selectedFact.value = newFact.uid
+        if(fact == null) {
+            selectedFact.value = newFact.uid
+        }
         Log.d("kostka_test", "facts: ${nestedFacts.map { it.uid }}")
     }
 
@@ -187,31 +187,29 @@ data class ParagraphBlockState(
     }
 
     override fun requestFactDeletion(uid: String): Boolean {
-        val res = paragraph.facts.removeIf {
+        val res = nestedFacts.removeIf {
             it.uid == uid
         }
         if(res) {
             Log.d("kostka_test", "removed fact, uid: $uid")
-            updateParagraph(paragraph)
-
-            nestedFacts.removeIf {
+            paragraph.facts.removeIf {
                 it.uid == uid
             }
+            updateParagraph(paragraph)
         }
         return res
     }
 
     override fun requestParagraphDeletion(uid: String): Boolean {
-        val res = paragraph.paragraphs.removeIf {
+        val res = nestedParagraphs.removeIf {
             it.uid == uid
         }
         if(res) {
             Log.d("kostka_test", "removed paragraph, uid: $uid")
-            updateParagraph(paragraph)
-
-            nestedParagraphs.removeIf {
+            paragraph.paragraphs.removeIf {
                 it.uid == uid
             }
+            updateParagraph(paragraph)
         }
         return res
     }
@@ -222,9 +220,12 @@ data class ParagraphBlockState(
 fun LazyGridScope.paragraphBlock(
     state: ParagraphBlockState,
     screenWidthDp: Int,
+    isLandscape: Boolean,
     notLastLayers: List<Int> = listOf(),
+    generalScope: CoroutineScope? = null,
     addContentVisible: MutableState<Boolean> = mutableStateOf(false),
     unitsViewModel: UnitsViewModel? = null,
+    dragAndDropTarget: MutableState<String> = mutableStateOf(""),
     collapsedParagraphs: SnapshotStateList<String> = mutableStateListOf(),
     addNewCategory: ((name: String) -> CategoryIO)?,
     onNewCategoryChosen: (category: CategoryIO) -> Unit
@@ -246,19 +247,14 @@ fun LazyGridScope.paragraphBlock(
             identifier: String,
             content: @Composable ColumnScope.() -> Unit
         ) {
-            val scope = rememberCoroutineScope()
-            val entered = remember {
-                mutableStateOf(false)
-            }
-
             val cancelableScope = rememberCoroutineScope()
             if(type == ParagraphBlockState.ElementType.PARAGRAPH && collapsedParagraphs.contains(identifier)) {
-                LaunchedEffect(entered.value) {
+                LaunchedEffect(dragAndDropTarget.value == identifier) {
                     cancelableScope.coroutineContext.cancelChildren()
 
                     // if paragraph is collapsed and we hold above it for 1 second,
                     // the paragraph should expand
-                    if(isExpanded.value.not() && entered.value) {
+                    if(isExpanded.value.not() && dragAndDropTarget.value == identifier) {
                         cancelableScope.launch {
                             delay(1000)
                             if(collapsedParagraphs.contains(paragraph.uid)) {
@@ -289,10 +285,10 @@ fun LazyGridScope.paragraphBlock(
                         },
                         target = object: DragAndDropTarget {
                             override fun onDrop(event: DragAndDropEvent): Boolean {
-                                val clipData = event.toAndroidDragEvent().clipData
-                                Log.d("kostka_test", "clipData: $clipData")
-                                val firstMimeType = event.mimeTypes().firstOrNull()
-                                scope.launch(Dispatchers.Default) {
+                                generalScope?.launch(Dispatchers.Default) {
+                                    val clipData = event.toAndroidDragEvent().clipData
+                                    val firstMimeType = event.mimeTypes().firstOrNull()
+                                    Log.d("kostka_test", "clipData: $clipData, firstMimeType: $firstMimeType")
                                     if (clipData != null) {
                                         for (i in 0 until clipData.itemCount) {
                                             ParagraphBlockState.ElementType
@@ -301,6 +297,7 @@ fun LazyGridScope.paragraphBlock(
                                                     it.name == firstMimeType
                                                 }
                                                 ?.let {
+                                                    Log.d("kostka_test", "element from clipdata: $it")
                                                     val uid = clipData.getItemAt(i).text.toString()
                                                     when (it) {
                                                         ParagraphBlockState.ElementType.BULLET_POINT -> {
@@ -358,24 +355,24 @@ fun LazyGridScope.paragraphBlock(
                                         }
                                     }
                                 }
-                                entered.value = false
+                                dragAndDropTarget.value = ""
                                 return true
                             }
 
                             override fun onEntered(event: DragAndDropEvent) {
                                 super.onEntered(event)
-                                entered.value = true
+                                dragAndDropTarget.value = identifier
                             }
 
                             override fun onExited(event: DragAndDropEvent) {
                                 super.onExited(event)
-                                entered.value = false
+                                dragAndDropTarget.value = ""
                             }
                         }
                     )
             ) {
                 if(type == ParagraphBlockState.ElementType.PARAGRAPH) content()
-                AnimatedVisibility(visible = entered.value) {
+                AnimatedVisibility(visible = dragAndDropTarget.value == identifier) {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -439,7 +436,10 @@ fun LazyGridScope.paragraphBlock(
             }
         )
 
-        item(key = paragraph.uid) {
+        item(
+            key = paragraph.uid,
+            span = { GridItemSpan(if(isLandscape) 2 else 1) }
+        ) {
             val identification = getLayerIdentification(parentLayer)
 
             LaunchedEffect(Unit) {
@@ -448,9 +448,11 @@ fun LazyGridScope.paragraphBlock(
                         if(elementUid != null) {
                             if(requestParagraphDeletion(elementUid)) {
                                 unitsViewModel.elementUidToRemove.emit(null)
+                                addContentVisible.value = false
                             }
                             if(requestFactDeletion(elementUid)) {
                                 unitsViewModel.elementUidToRemove.emit(null)
+                                addContentVisible.value = false
                             }
                         }
                     }
@@ -458,6 +460,7 @@ fun LazyGridScope.paragraphBlock(
             }
 
             DropTargetContainer(
+                modifier = Modifier.animateItemPlacement(),
                 type = ParagraphBlockState.ElementType.PARAGRAPH,
                 padding = paddingStart,
                 identifier = paragraph.uid
@@ -482,7 +485,7 @@ fun LazyGridScope.paragraphBlock(
                         .animateItemPlacement()
                         .padding(start = paddingStart)
                         .then(
-                            if (parentLayer >= 0) Modifier
+                            if(parentLayer >= 0) Modifier
                                 .drawSegmentedBorder(
                                     borderOrder = BorderOrder.Start,
                                     screenWidthDp = screenWidthDp,
@@ -550,7 +553,7 @@ fun LazyGridScope.paragraphBlock(
                 modifier = Modifier
                     .padding(start = paddingStart)
                     .drawSegmentedBorder(
-                        borderOrder = if (nestedParagraphs.isNotEmpty()) BorderOrder.Center else BorderOrder.None,
+                        borderOrder = if(nestedParagraphs.isNotEmpty()) BorderOrder.Center else BorderOrder.None,
                         screenWidthDp = screenWidthDp,
                         notLastLayers = notLastLayers,
                         parentLayer = parentLayer
@@ -568,7 +571,7 @@ fun LazyGridScope.paragraphBlock(
                     nestedBulletPoints.forEachIndexed { index, point ->
                         DropTargetContainer(
                             type = ParagraphBlockState.ElementType.BULLET_POINT,
-                            identifier = index.toString()
+                            identifier = "${paragraph.uid}_$index"
                         ) {
                             ListItemEditField(
                                 prefix = FactType.BULLET_POINT_PREFIX,
@@ -604,12 +607,11 @@ fun LazyGridScope.paragraphBlock(
 
         items(
             items = if(isExpanded.value) nestedFacts else listOf(),
-            key = { fact -> fact.uid },
+            key = { fact -> fact.uid }
         ) { fact ->
-            val selectedFact = state.selectedFact.collectAsState()
-
             DropTargetContainer(
                 modifier = Modifier
+                    .animateItemPlacement()
                     .fillMaxWidth()
                     .padding(start = paddingStart)
                     .drawSegmentedBorder(
@@ -635,7 +637,6 @@ fun LazyGridScope.paragraphBlock(
                             uid = fact.uid,
                             fact = fact
                         )
-                        .animateItemPlacement()
                         .fillMaxWidth()
                         .padding(bottom = 8.dp),
                     data = fact,
@@ -645,8 +646,7 @@ fun LazyGridScope.paragraphBlock(
                         updateParagraph(paragraph)
                     },
                     onClick = {
-                        state.selectedFact.value = if(selectedFact.value == fact.uid) null
-                            else fact.uid
+                        state.selectedFact.value = if(selectedFact.value == fact.uid) null else fact.uid
                     },
                     mode = when {
                         selectedFact.value == fact.uid -> InteractiveCardMode.EDIT
@@ -666,7 +666,8 @@ fun LazyGridScope.paragraphBlock(
                         paragraph = nestedParagraph,
                         parentLayer = parentLayer.plus(1),
                         clipBoard = clipBoard,
-                        updateParagraph = updateParagraph
+                        updateParagraph = updateParagraph,
+                        selectedFact = selectedFact
                     ),
                     collapsedParagraphs = collapsedParagraphs,
                     addNewCategory = addNewCategory,
@@ -681,7 +682,10 @@ fun LazyGridScope.paragraphBlock(
                     notLastLayers = notLastLayers.toMutableList().apply {
                         if(index != nestedParagraphs.lastIndex) add(parentLayer.plus(1))
                     },
-                    screenWidthDp = screenWidthDp
+                    screenWidthDp = screenWidthDp,
+                    isLandscape = isLandscape,
+                    dragAndDropTarget = dragAndDropTarget,
+                    generalScope = generalScope
                 )
             }
         }
@@ -844,6 +848,7 @@ private fun Preview() {
                     addNewCategory = null,
                     screenWidthDp = screenWidth,
                     onNewCategoryChosen = {},
+                    isLandscape = true
                 )
             }
         }

@@ -1,5 +1,6 @@
 package study.me.please.ui.session.play
 
+import android.util.Log
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
@@ -9,8 +10,8 @@ import kotlinx.coroutines.launch
 import study.me.please.base.BaseViewModel
 import study.me.please.data.io.CollectionIO
 import study.me.please.data.io.QuestionIO
-import study.me.please.data.io.session.SessionIO
 import study.me.please.data.io.preferences.SessionPreferencePack
+import study.me.please.data.io.session.SessionIO
 import study.me.please.ui.components.preference_chooser.PreferencePackDataManager
 import study.me.please.ui.components.preference_chooser.PreferencePackRepository
 import study.me.please.ui.components.preference_chooser.PreferencePackViewModel
@@ -53,7 +54,6 @@ class SessionViewModel @Inject constructor(
         preferencePackUid: String?
     ) {
         viewModelScope.launch {
-            dataManager.currentQuestionUids
             val questions = mutableListOf<QuestionIO>()
             repository.getCollectionByUid(collectionUid)?.let { collectionDetail ->
                 dataManager.collection.value = collectionDetail
@@ -93,15 +93,16 @@ class SessionViewModel @Inject constructor(
                 }
             }
             // in case there is no preference pack, happens only while testing modules
-            if(dataManager.session.value == null
+            dataManager.preferencePack.value = if(dataManager.session.value == null
                 && (dataManager.preferencePack.value == null
                 || dataManager.preferencePacks.value?.isEmpty() == true)
             ) {
-                dataManager.preferencePack.value = SessionPreferencePack()
+                SessionPreferencePack()
             }else if(dataManager.preferencePacks.value?.isNotEmpty() == true) {
-                dataManager.preferencePack.value = dataManager.preferencePacks.value
-                    ?.firstOrNull() ?: SessionPreferencePack()
-            }
+                dataManager.preferencePacks.value?.firstOrNull() ?: SessionPreferencePack()
+            }else SessionPreferencePack()
+
+            Log.d("kostka_test", "questions: $questions")
             dataManager.questions.value = questions
         }
     }

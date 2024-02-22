@@ -85,7 +85,7 @@ fun ListItemEditField(
         prefix = {
             Box(
                 modifier = Modifier.fillMaxHeight(),
-                contentAlignment = Alignment.Center
+                contentAlignment = if(fieldLineCount > 1) Alignment.TopStart else Alignment.Center
             ) {
                 Text(
                     text = prefix,

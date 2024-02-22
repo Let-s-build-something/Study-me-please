@@ -7,9 +7,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.withContext
 import study.me.please.data.io.QuestionAnswerIO
 import study.me.please.data.io.QuestionIO
+import study.me.please.data.io.preferences.SessionPreferencePack
 import study.me.please.data.io.session.SessionAnswerValidation
 import study.me.please.data.io.session.SessionHistoryItem
-import study.me.please.data.io.preferences.SessionPreferencePack
 import study.me.please.data.io.session.SessionItem
 import java.util.Calendar
 
@@ -79,6 +79,8 @@ data class SessionScreenState(
                 }
             }
             if(item.mode.value == SessionScreenMode.LOCKED) {
+                requestSave()
+
                 // if we are not in history
                 if(liveIndex.value >= module.history.size.minus(1)) {
                     module.onQuestionAnswered(
@@ -93,7 +95,6 @@ data class SessionScreenState(
                     )
                 }
             }
-            requestSave()
         }
     }
 

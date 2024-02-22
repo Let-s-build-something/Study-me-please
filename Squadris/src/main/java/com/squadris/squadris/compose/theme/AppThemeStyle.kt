@@ -24,8 +24,8 @@ class AppThemeStyle: ThemeStyle {
     override val textFieldColors: TextFieldColors
         @Composable get() {
             return TextFieldDefaults.colors(
-                focusedContainerColor = LocalTheme.colors.onBackgroundComponentContrast,
-                unfocusedContainerColor = LocalTheme.colors.onBackgroundComponentContrast,
+                focusedContainerColor = LocalTheme.colors.onBackgroundComponent,
+                unfocusedContainerColor = LocalTheme.colors.onBackgroundComponent,
                 unfocusedIndicatorColor = Color.Transparent,
                 focusedIndicatorColor = Color.Transparent,
                 disabledTextColor = LocalTheme.colors.disabled,
@@ -33,7 +33,7 @@ class AppThemeStyle: ThemeStyle {
                 unfocusedTextColor = LocalTheme.colors.secondary,
                 cursorColor = LocalTheme.colors.secondary,
                 disabledIndicatorColor = Color.Transparent,
-                errorContainerColor = LocalTheme.colors.onBackgroundComponentContrast,
+                errorContainerColor = LocalTheme.colors.onBackgroundComponent,
                 errorIndicatorColor = Color.Transparent,
                 errorTextColor = Colors.RED_ERROR,
                 errorTrailingIconColor = Colors.RED_ERROR

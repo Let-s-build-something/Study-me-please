@@ -63,8 +63,7 @@ object DatabaseServicesModule {
         appContext,
         AppRoomDatabase::class.java,
         AppRoomDatabase.ROOM_DATABASE_NAME
-    ).fallbackToDestructiveMigration()
-        .addTypeConverter(AppDatabaseConverter(gson))
+    ).addTypeConverter(AppDatabaseConverter(gson))
         .build()
 
     /** Singleton instance of a Gson converter, since it's a costly initiated, it's faster this way */

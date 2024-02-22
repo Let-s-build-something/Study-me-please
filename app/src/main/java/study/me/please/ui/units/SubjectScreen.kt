@@ -3,6 +3,7 @@ package study.me.please.ui.units
 import android.annotation.SuppressLint
 import android.content.ClipData
 import android.content.res.Configuration
+import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.Animatable
 import androidx.compose.animation.AnimatedVisibility
@@ -29,6 +30,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -48,6 +50,7 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -74,6 +77,8 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -85,7 +90,9 @@ import com.squadris.squadris.compose.theme.Colors
 import com.squadris.squadris.compose.theme.LocalTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import study.me.please.R
 import study.me.please.base.LocalIsTablet
 import study.me.please.data.io.FactType
@@ -94,8 +101,8 @@ import study.me.please.data.io.subjects.ParagraphIO
 import study.me.please.data.io.subjects.UnitIO
 import study.me.please.ui.components.BasicAlertDialog
 import study.me.please.ui.components.ButtonState
-import study.me.please.ui.components.ComponentHeaderButton
 import study.me.please.ui.components.ListItemEditField
+import java.util.UUID
 
 private const val MAX_LENGTH_SHORT_TEXT = 42
 
@@ -119,7 +126,7 @@ fun UnitScreen(
     val lazyGridState = rememberLazyGridState()
     val screenWidth = configuration.screenWidthDp
 
-    val isLandScape = configuration.layoutDirection == Configuration.ORIENTATION_LANDSCAPE
+    val isLandscape = configuration.layoutDirection == Configuration.ORIENTATION_LANDSCAPE
             || LocalIsTablet.current
 
     val addContentVisible = rememberSaveable { mutableStateOf(false) }
@@ -127,10 +134,19 @@ fun UnitScreen(
     val unitBulletPoints = remember {
         mutableStateListOf(*unit.bulletPoints.toTypedArray())
     }
+    val selectedFact = remember {
+        mutableStateOf<String?>(null)
+    }
     val nestedParagraphs = remember(unit) {
         mutableStateListOf(*unit.paragraphs.toTypedArray())
     }
-    val collapsedParagraphs = remember { mutableStateListOf<String>() }
+    val collapsedParagraphs = remember {
+        mutableStateListOf(*unit.collapsedParagraphs.toTypedArray())
+    }
+
+    LaunchedEffect(collapsedParagraphs.size) {
+        unit.collapsedParagraphs = collapsedParagraphs
+    }
 
     val bridge = remember {
         object: UnitScreenBridge {
@@ -145,9 +161,25 @@ fun UnitScreen(
                 addContentVisible.value = false
                 nestedParagraphs.add(0, ParagraphIO())
             }
+            override suspend fun removeParagraph(uid: String) {
+                if(nestedParagraphs.removeIf { it.uid == uid }) {
+                    viewModel.elementUidToRemove.emit(null)
+                    addContentVisible.value = false
+                }
+            }
             override fun addBulletPoint() {
                 addContentVisible.value = false
                 unitBulletPoints.add(0, "")
+            }
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.elementUidToRemove.collectLatest { elementUid ->
+            withContext(Dispatchers.Default) {
+                if(elementUid != null) {
+                    bridge.removeParagraph(elementUid)
+                }
             }
         }
     }
@@ -218,6 +250,7 @@ fun UnitScreen(
                 text = stringResource(id = R.string.button_confirm)
             ) {
                 showDeleteDialog.value?.let { uid ->
+                    Log.d("kostka_test", "elementUidToRemove: $uid")
                     scope.launch {
                         viewModel.elementUidToRemove.emit(uid)
                     }
@@ -234,6 +267,9 @@ fun UnitScreen(
 
     val dragAndDropStarted = remember {
         mutableStateOf(false)
+    }
+    val dragAndDropTarget = rememberSaveable  {
+        mutableStateOf("")
     }
     val xOffset: Float by animateFloatAsState(
         with(localDensity) {
@@ -415,19 +451,22 @@ fun UnitScreen(
                                 horizontalArrangement = Arrangement.SpaceAround
                             ) {
                                 DragAndDropSourceButton(
+                                    modifier = Modifier.weight(1f, fill = false),
                                     elementType = ParagraphBlockState.ElementType.BULLET_POINT,
                                     imageVector = Icons.AutoMirrored.Outlined.FormatListBulleted,
                                     contentDescription = stringResource(R.string.accessibility_add_bullet_point)
                                 )
                                 DragAndDropSourceButton(
+                                    modifier = Modifier.weight(1f, fill = false),
                                     elementType = ParagraphBlockState.ElementType.PARAGRAPH,
                                     imageVector = Icons.Outlined.Category,
-                                    contentDescription = stringResource(R.string.accessibility_add_bullet_point)
+                                    contentDescription = stringResource(R.string.accessibility_add_paragraph)
                                 )
                                 DragAndDropSourceButton(
+                                    modifier = Modifier.weight(1f, fill = false),
                                     elementType = ParagraphBlockState.ElementType.FACT,
                                     imageVector = Icons.AutoMirrored.Outlined.ShortText,
-                                    contentDescription = stringResource(R.string.accessibility_add_paragraph)
+                                    contentDescription = stringResource(R.string.accessibility_add_fact)
                                 )
                             }
                         }else {
@@ -467,13 +506,16 @@ fun UnitScreen(
                     }
                     .animateContentSize(),
                 state = lazyGridState,
-                columns = GridCells.Fixed(if(isLandScape) 2 else 1),
-                horizontalArrangement = if(isLandScape) Arrangement.spacedBy(4.dp) else Arrangement.Start
+                columns = GridCells.Fixed(if(isLandscape) 2 else 1),
+                horizontalArrangement = if(isLandscape) Arrangement.spacedBy(4.dp) else Arrangement.Start
             ) {
-                item(span = { GridItemSpan(if(isLandScape) 2 else 1) }) {
+                item(span = { GridItemSpan(if(isLandscape) 2 else 1) }) {
                     filtersContent()
                 }
-                item(span = { GridItemSpan(if(isLandScape) 2 else 1) }) {
+                item(
+                    span = { GridItemSpan(if(isLandscape) 2 else 1) },
+                    contentType = UUID.randomUUID().toString()
+                ) {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -483,16 +525,12 @@ fun UnitScreen(
                             modifier = Modifier
                                 .padding(start = 16.dp)
                                 .widthIn(min = TextFieldDefaults.MinWidth)
-                                .height(with(localDensity) {
-                                    LocalTheme.styles.heading.fontSize.value.sp
-                                        .toDp()
-                                        .plus(16.dp)
-                                }),
+                                .wrapContentHeight(),
                             value = unit.name,
                             textStyle = LocalTheme.styles.heading,
                             isUnfocusedTransparent = true,
                             hint = stringResource(id = R.string.subject_heading_prefix),
-                            maxLines = 1,
+                            maxLines = 4,
                             minLines = 1,
                             paddingValues = PaddingValues(horizontal = 8.dp),
                             maxLength = MAX_LENGTH_SHORT_TEXT,
@@ -502,95 +540,95 @@ fun UnitScreen(
                             }
                         )
 
-                        AnimatedVisibility(visible = nestedParagraphs.isEmpty()) {
-                            val started = remember { mutableStateOf(false) }
-                            val entered = remember { mutableStateOf(false) }
+                        val started = remember { mutableStateOf(false) }
 
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(40.dp)
-                                    .dragAndDropTarget(
-                                        shouldStartDragAndDrop = { startEvent ->
-                                            startEvent
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .animateContentSize()
+                                .height(if(started.value) 40.dp else 0.dp)
+                                .dragAndDropTarget(
+                                    shouldStartDragAndDrop = { startEvent ->
+                                        startEvent
+                                            .mimeTypes()
+                                            .contains(ParagraphBlockState.ElementType.PARAGRAPH.name)
+                                                || startEvent
+                                            .mimeTypes()
+                                            .contains(ParagraphBlockState.ElementType.BULLET_POINT.name)
+                                    },
+                                    target = object : DragAndDropTarget {
+                                        override fun onDrop(event: DragAndDropEvent): Boolean {
+                                            val clipData = event.toAndroidDragEvent().clipData
+                                            val firstMimeType = event
                                                 .mimeTypes()
-                                                .contains(ParagraphBlockState.ElementType.PARAGRAPH.name)
-                                                    || startEvent
-                                                .mimeTypes()
-                                                .contains(ParagraphBlockState.ElementType.BULLET_POINT.name)
-                                        },
-                                        target = object : DragAndDropTarget {
-                                            override fun onDrop(event: DragAndDropEvent): Boolean {
-                                                val clipData = event.toAndroidDragEvent().clipData
-                                                val firstMimeType = event.mimeTypes().firstOrNull()
+                                                .firstOrNull()
 
-                                                scope.launch(Dispatchers.Default) {
-                                                    if (clipData != null) {
-                                                        for (i in 0 until clipData.itemCount) {
-                                                            ParagraphBlockState.ElementType
-                                                                .values()
-                                                                .find {
-                                                                    it.name == firstMimeType
-                                                                }
-                                                                ?.let {
-                                                                    when (it) {
-                                                                        ParagraphBlockState.ElementType.BULLET_POINT -> {
-                                                                            bridge.addBulletPoint()
-                                                                            addContentVisible.value =
-                                                                                false
-                                                                        }
-
-                                                                        ParagraphBlockState.ElementType.PARAGRAPH -> {
-                                                                            bridge.addParagraph()
-                                                                            //clipData.getItemAt(i).text
-                                                                            addContentVisible.value =
-                                                                                false
-                                                                        }
-
-                                                                        else -> {}
+                                            scope.launch(Dispatchers.Default) {
+                                                if (clipData != null) {
+                                                    for (i in 0 until clipData.itemCount) {
+                                                        ParagraphBlockState.ElementType
+                                                            .values()
+                                                            .find {
+                                                                it.name == firstMimeType
+                                                            }
+                                                            ?.let {
+                                                                when (it) {
+                                                                    ParagraphBlockState.ElementType.BULLET_POINT -> {
+                                                                        bridge.addBulletPoint()
+                                                                        addContentVisible.value =
+                                                                            false
                                                                     }
+
+                                                                    ParagraphBlockState.ElementType.PARAGRAPH -> {
+                                                                        bridge.addParagraph()
+                                                                        //clipData.getItemAt(i).text
+                                                                        addContentVisible.value =
+                                                                            false
+                                                                    }
+
+                                                                    else -> {}
                                                                 }
-                                                        }
+                                                            }
                                                     }
                                                 }
-                                                entered.value = false
-                                                return true
                                             }
-
-                                            override fun onEntered(event: DragAndDropEvent) {
-                                                super.onEntered(event)
-                                                entered.value = true
-                                            }
-
-                                            override fun onExited(event: DragAndDropEvent) {
-                                                super.onExited(event)
-                                                entered.value = false
-                                            }
-
-                                            override fun onStarted(event: DragAndDropEvent) {
-                                                super.onStarted(event)
-                                                started.value = true
-                                            }
-
-                                            override fun onEnded(event: DragAndDropEvent) {
-                                                super.onEnded(event)
-                                                started.value = false
-                                            }
+                                            dragAndDropTarget.value = ""
+                                            return true
                                         }
-                                    )
-                                    .then(
-                                        if (entered.value) {
-                                            Modifier.background(
-                                                color = LocalTheme.colors.brandMain,
-                                            )
-                                        } else if (started.value) {
-                                            Modifier.background(
-                                                color = LocalTheme.colors.tetrial,
-                                            )
-                                        } else Modifier
-                                    )
-                            )
-                        }
+
+                                        override fun onEntered(event: DragAndDropEvent) {
+                                            super.onEntered(event)
+                                            dragAndDropTarget.value = unit.uid
+                                        }
+
+                                        override fun onExited(event: DragAndDropEvent) {
+                                            super.onExited(event)
+                                            dragAndDropTarget.value = ""
+                                        }
+
+                                        override fun onStarted(event: DragAndDropEvent) {
+                                            super.onStarted(event)
+                                            started.value = true
+                                        }
+
+                                        override fun onEnded(event: DragAndDropEvent) {
+                                            super.onEnded(event)
+                                            started.value = false
+                                        }
+                                    }
+                                )
+                                .then(
+                                    if (dragAndDropTarget.value == unit.uid) {
+                                        Modifier.background(
+                                            color = LocalTheme.colors.brandMain,
+                                        )
+                                    } else if (started.value) {
+                                        Modifier.background(
+                                            color = LocalTheme.colors.tetrial,
+                                        )
+                                    } else Modifier
+                                )
+                        )
                     }
                 }
                 itemsIndexed(unitBulletPoints) { index, point ->
@@ -630,6 +668,8 @@ fun UnitScreen(
                     paragraphBlock(
                         unitsViewModel = viewModel,
                         collapsedParagraphs = collapsedParagraphs,
+                        generalScope = scope,
+                        dragAndDropTarget = dragAndDropTarget,
                         state = ParagraphBlockState(
                             categories = categories,
                             paragraph = paragraph,
@@ -637,7 +677,8 @@ fun UnitScreen(
                             clipBoard = viewModel.clipBoard,
                             updateParagraph = { updatedParagraph ->
                                 bridge.updateParagraph(updatedParagraph)
-                            }
+                            },
+                            selectedFact = selectedFact
                         ),
                         addNewCategory = { name ->
                             val newCategory = CategoryIO(name = name)
@@ -652,7 +693,8 @@ fun UnitScreen(
                                 categoryUid = chosenCategory.uid
                                 bridge.updateParagraph(this)
                             }
-                        }
+                        },
+                        isLandscape = isLandscape
                     )
                 }
                 item {
@@ -710,7 +752,9 @@ private fun RowScope.DragAndDropTargetBox(
 
                     override fun onDrop(event: DragAndDropEvent): Boolean {
                         val clipData = event.toAndroidDragEvent().clipData
-                        val firstMimeType = event.mimeTypes().firstOrNull()
+                        val firstMimeType = event
+                            .mimeTypes()
+                            .firstOrNull()
                         scope.launch(Dispatchers.Default) {
                             if (clipData != null) {
                                 for (i in 0 until clipData.itemCount) {
@@ -751,12 +795,13 @@ private fun RowScope.DragAndDropTargetBox(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun DragAndDropSourceButton(
+    modifier: Modifier = Modifier,
     imageVector: ImageVector,
     contentDescription: String,
     elementType: ParagraphBlockState.ElementType
 ) {
     Box(
-        modifier = Modifier
+        modifier = modifier
             .dragAndDropSource {
                 detectTapGestures(
                     onLongPress = {
@@ -783,40 +828,29 @@ private fun DragAndDropSourceButton(
                 .shadow(
                     elevation = LocalTheme.styles.actionElevation,
                     shape = FloatingActionButtonDefaults.shape
-                )
-                .size(56.dp),
+                ),
             contentAlignment = Alignment.Center
         ) {
-            Icon(
-                modifier = Modifier.size(32.dp),
-                imageVector = imageVector,
-                tint = LocalTheme.colors.brandMainDark,
-                contentDescription = contentDescription
-            )
+            Row(
+                modifier = Modifier.padding(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    modifier = Modifier.padding(end = 4.dp),
+                    style = TextStyle(
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = LocalTheme.colors.brandMainDark
+                    ),
+                    text = contentDescription
+                )
+                Icon(
+                    modifier = Modifier.size(32.dp),
+                    imageVector = imageVector,
+                    tint = LocalTheme.colors.brandMainDark,
+                    contentDescription = contentDescription
+                )
+            }
         }
     }
-}
-
-@Composable
-fun ButtonAddBulletPoint(
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit
-) {
-    ComponentHeaderButton(
-        modifier = modifier,
-        text = stringResource(R.string.subject_add_bullet_point),
-        onClick = onClick
-    )
-}
-
-@Composable
-fun ButtonAddParagraph(
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit
-) {
-    ComponentHeaderButton(
-        modifier = modifier,
-        text = stringResource(R.string.subject_add_paragraph),
-        onClick = onClick
-    )
 }

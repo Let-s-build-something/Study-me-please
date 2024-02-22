@@ -46,9 +46,9 @@ class AppDatabaseConverter @Inject constructor(private val gson: Gson) {
         )
     }
 
-    /** Converts [CollectionIO] object to string */
+    /** Converts [CategoryIO] object to string */
     @TypeConverter
-    fun fromCategoryIO(value: CategoryIO): String {
+    fun fromCategoryIO(value: CategoryIO?): String? {
         return gson.toJson(
             value,
             TypeToken.getParameterized(CategoryIO::class.java).type
@@ -57,7 +57,7 @@ class AppDatabaseConverter @Inject constructor(private val gson: Gson) {
 
     /** Converts string to [CategoryIO] object */
     @TypeConverter
-    fun toCategoryIO(value: String): CategoryIO {
+    fun toCategoryIO(value: String?): CategoryIO? {
         return gson.fromJson(
             value,
             TypeToken.getParameterized(CategoryIO::class.java).type
@@ -161,7 +161,7 @@ class AppDatabaseConverter @Inject constructor(private val gson: Gson) {
 
     /** Converts string to [ImportedSource] */
     @TypeConverter
-    fun toImportedSource(value: String): ImportedSource {
+    fun toImportedSource(value: String?): ImportedSource? {
         return gson.fromJson(
             value,
             TypeToken.getParameterized(ImportedSource::class.java).type

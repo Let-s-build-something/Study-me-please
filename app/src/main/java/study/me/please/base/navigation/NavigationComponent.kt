@@ -1,5 +1,6 @@
 package study.me.please.base.navigation
 
+import android.os.Build
 import androidx.navigation.NavBackStackEntry
 import java.net.URLDecoder
 import java.nio.charset.StandardCharsets
@@ -28,17 +29,14 @@ object NavigationComponent {
     /** toolbar title */
     const val TOOLBAR_TITLE = "toolbarTitle"
 
-    /** Whether is screen is embedded into already existing screen or not */
-    const val IS_EMBEDDED = "isEmbedded"
-
     /** Notepad paragraph identifier */
     const val PARAGRAPH_UID = "paragraphUid"
 
+    /** Notepad fact identifier */
+    const val FACT_UID = "factUid"
+
     /** Notepad unit identifier */
     const val UNIT_UID = "UnitUid"
-
-    /** The [ImportedSource] for displaying specific paragraph - this provides it with additional context */
-    const val PARAGRAPH_SOURCE = "paragraphSource"
 
     /** whether new item should be create the moment screen opens */
     const val CREATE_NEW_ITEM = "createNewItem"
@@ -47,7 +45,11 @@ object NavigationComponent {
     fun NavBackStackEntry.getArgument(identifier: String): String? {
         val rawValue = arguments?.getString(identifier)
         return if(rawValue == "") ""
-        else if(rawValue != null) URLDecoder.decode(rawValue, StandardCharsets.UTF_8)
+        else if(rawValue != null) if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            URLDecoder.decode(rawValue, StandardCharsets.UTF_8)
+        } else {
+            URLDecoder.decode(rawValue, "UTF-8")
+        }
         else null
     }
 }

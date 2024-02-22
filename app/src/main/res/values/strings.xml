@@ -173,6 +173,7 @@
 
     <string name="screen_settings_text_theme">Dark and darker</string>
 
+    <string name="session_show_paragraph">Show paragraph</string>
     <string name="session_leave_dialog_title">Leave this session</string>
     <string name="session_leave_dialog_content">Are you sure you want to leave this running session?</string>
 
@@ -306,8 +307,8 @@
     <string name="expand_content_description">Expand</string>
     <string name="collapse_content_description">Collapse</string>
     <string name="accessibility_add_content">Add new content</string>
-    <string name="accessibility_add_bullet_point">Add a bullet point</string>
-    <string name="accessibility_add_fact">Add a fact</string>
-    <string name="accessibility_add_paragraph">Add a paragraph</string>
+    <string name="accessibility_add_bullet_point">bulletin</string>
+    <string name="accessibility_add_fact">fact</string>
+    <string name="accessibility_add_paragraph">paragraph</string>
     <string name="accessibility_delete">Delete</string>
 </resources>

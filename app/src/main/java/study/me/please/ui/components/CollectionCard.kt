@@ -8,19 +8,21 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Edit
-import androidx.compose.material.icons.outlined.Memory
 import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Card
@@ -46,12 +48,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.max
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
-import com.squadris.squadris.compose.theme.LocalTheme
 import com.squadris.squadris.compose.theme.Colors
+import com.squadris.squadris.compose.theme.LocalTheme
 import study.me.please.R
 import study.me.please.data.io.CollectionIO
 
@@ -124,13 +125,16 @@ fun CollectionCard(
                         )
                     }else if(data != null) {
                         DataCard(
-                            modifier = Modifier.onGloballyPositioned { coordinates ->
-                                cardHeight = with(localDensity) { coordinates.size.height.toDp() }
-                            }.then(
-                                if(maxNameLength != null) {
-                                    Modifier.wrapContentWidth()
-                                }else Modifier.fillMaxWidth()
-                            ),
+                            modifier = Modifier
+                                .onGloballyPositioned { coordinates ->
+                                    cardHeight =
+                                        with(localDensity) { coordinates.size.height.toDp() }
+                                }
+                                .then(
+                                    if (maxNameLength != null) {
+                                        Modifier.wrapContentWidth()
+                                    } else Modifier.fillMaxWidth()
+                                ),
                             maxNameLength = maxNameLength,
                             clipToName = clipToName,
                             data = data,
@@ -260,8 +264,9 @@ fun OptionsModeLayout(
         val itemModifier = Modifier
             .weight(1f)
             .fillMaxSize()
+            .aspectRatio(1f)
 
-        Icon(
+        Box(
             modifier = itemModifier
                 .padding(
                     start = 12.dp,
@@ -282,11 +287,18 @@ fun OptionsModeLayout(
                     onCancelClick()
                 }
                 .padding(4.dp),
-            imageVector = Icons.Outlined.Close,
-            contentDescription = stringResource(id = R.string.close_content_description),
-            tint = Colors.DARK_BLUE_70
-        )
-        Icon(
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                modifier = Modifier
+                    .sizeIn(maxHeight = 38.dp, maxWidth = 38.dp)
+                    .aspectRatio(1f),
+                imageVector = Icons.Outlined.Close,
+                contentDescription = stringResource(id = R.string.close_content_description),
+                tint = Colors.DARK_BLUE_70
+            )
+        }
+        Box(
             modifier = itemModifier
                 .padding(vertical = 12.dp, horizontal = 6.dp)
                 .background(
@@ -299,11 +311,18 @@ fun OptionsModeLayout(
                     onEditOptionPressed()
                 }
                 .padding(4.dp),
-            imageVector = Icons.Outlined.Edit,
-            contentDescription = stringResource(id = R.string.edit_content_description),
-            tint = Colors.DARK_BLUE_70
-        )
-        Icon(
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                modifier = Modifier
+                    .sizeIn(maxHeight = 38.dp, maxWidth = 38.dp)
+                    .aspectRatio(1f),
+                imageVector = Icons.Outlined.Edit,
+                contentDescription = stringResource(id = R.string.edit_content_description),
+                tint = Colors.DARK_BLUE_70
+            )
+        }
+        Box(
             modifier = itemModifier
                 .padding(end = 12.dp, top = 12.dp, bottom = 12.dp)
                 .background(
@@ -320,10 +339,17 @@ fun OptionsModeLayout(
                     onPlayOptionPressed()
                 }
                 .padding(4.dp),
-            imageVector = Icons.Outlined.PlayArrow,
-            contentDescription = stringResource(id = R.string.play_content_description),
-            tint = Colors.DARK_BLUE_70
-        )
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                modifier = Modifier
+                    .sizeIn(maxHeight = 38.dp, maxWidth = 38.dp)
+                    .aspectRatio(1f),
+                imageVector = Icons.Outlined.PlayArrow,
+                contentDescription = stringResource(id = R.string.play_content_description),
+                tint = Colors.DARK_BLUE_70
+            )
+        }
         //TODO buttons icons and transparent color background which looses the
         //TODO transparency after pressing
     }

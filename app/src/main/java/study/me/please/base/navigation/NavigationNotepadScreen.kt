@@ -10,21 +10,18 @@ sealed class NavigationNotepadScreen(
     object Paragraph: NavigationNotepadScreen(
         identification = "paragraph",
         arguments = listOf(
-            NavigationComponent.IS_EMBEDDED,
             NavigationComponent.PARAGRAPH_UID,
-            NavigationComponent.PARAGRAPH_SOURCE
+            NavigationComponent.FACT_UID
         )
     ) {
         /** Creates a route for navigation */
         fun makeRoute(
-            isEmbedded: Boolean,
             paragraphUid: String?,
-            importedSource: String?
+            factUid: String? = null
         ): String {
             return super.createRoute(
-                NavigationComponent.IS_EMBEDDED to isEmbedded.toString(),
                 NavigationComponent.PARAGRAPH_UID to paragraphUid,
-                NavigationComponent.PARAGRAPH_SOURCE to importedSource
+                NavigationComponent.FACT_UID to factUid
             )
         }
     }
@@ -33,7 +30,6 @@ sealed class NavigationNotepadScreen(
     object Unit: NavigationNotepadScreen(
         identification = "unit",
         arguments = listOf(
-            NavigationComponent.IS_EMBEDDED,
             NavigationComponent.UNIT_UID
         )
     ) {
@@ -43,7 +39,6 @@ sealed class NavigationNotepadScreen(
             unitUid: String
         ): String {
             return super.createRoute(
-                NavigationComponent.IS_EMBEDDED to isEmbedded.toString(),
                 NavigationComponent.UNIT_UID to unitUid,
             )
         }
