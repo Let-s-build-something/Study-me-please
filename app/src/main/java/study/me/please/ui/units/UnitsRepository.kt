@@ -15,7 +15,7 @@ import study.me.please.data.room.SubjectDao
 import javax.inject.Inject
 
 /** Proxy for calling network end points */
-class SubjectsRepository @Inject constructor(
+class UnitsRepository @Inject constructor(
     private val subjectsDao: SubjectDao,
     private val categoryDao: CategoryDao,
     private val collectionDao: CollectionDao,
@@ -54,6 +54,13 @@ class SubjectsRepository @Inject constructor(
     suspend fun getCategoriesBy(query: String): List<CategoryIO>? {
         return withContext(Dispatchers.IO) {
             categoryDao.getCategoriesByNameLike(query)
+        }
+    }
+
+    /** Returns all categories similiar to the given [query] */
+    suspend fun getParagraphsBy(uidList: List<String>): List<ParagraphIO>? {
+        return withContext(Dispatchers.IO) {
+            subjectsDao.getParagraphsByUidList(uidList)
         }
     }
 

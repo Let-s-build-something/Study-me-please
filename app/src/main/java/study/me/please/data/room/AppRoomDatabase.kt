@@ -3,6 +3,8 @@ package study.me.please.data.room
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import study.me.please.data.io.CollectionIO
 import study.me.please.data.io.FactIO
 import study.me.please.data.io.LargePathAsset
@@ -29,7 +31,7 @@ import study.me.please.ui.session.play.QuestionModule
         CategoryIO::class,
         ParagraphIO::class
     ],
-    version = 3,
+    version = 4,
     exportSchema = true
 )
 @TypeConverters(AppDatabaseConverter::class)
@@ -47,6 +49,12 @@ abstract class AppRoomDatabase: RoomDatabase() {
     abstract fun categoryDbDao(): CategoryDao
 
     companion object {
+
+        val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE $ROOM_UNIT_TABLE ADD COLUMN paragraphUidList TEXT NOT NULL DEFAULT ''")
+            }
+        }
 
         /*val MIGRATION_3_4 = object : Migration(3, 4) {
             override fun migrate(database: SupportSQLiteDatabase) {

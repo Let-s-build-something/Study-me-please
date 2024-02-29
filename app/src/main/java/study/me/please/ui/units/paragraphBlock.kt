@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridScope
@@ -270,25 +271,34 @@ fun LazyGridScope.paragraphBlock(
                     .fillMaxWidth()
                     .dragAndDropTarget(
                         shouldStartDragAndDrop = { startEvent ->
+                            val uid = unitsViewModel?.dragAndDroppedParagraph
+                                ?: unitsViewModel?.dragAndDroppedFact
+
                             // restrict paragraph to be not injected into its child
                             val sourceParagraph = unitsViewModel?.dragAndDroppedParagraph
                             startEvent
                                 .mimeTypes()
                                 .contains(type.name)
+                                    && uid != identifier
                                     && (type != ParagraphBlockState.ElementType.PARAGRAPH
                                     || (sourceParagraph == null
-                                        || (sourceParagraph.uid != identifier && !unitsViewModel.isNestedOfParagraph(
-                                            sourceParagraph = sourceParagraph,
-                                            targetUid = identifier
-                                        )))
+                                    || (sourceParagraph.uid != identifier && !unitsViewModel.isNestedOfParagraph(
+                                sourceParagraph = sourceParagraph,
+                                targetUid = identifier
+                            )))
                                     )
                         },
-                        target = object: DragAndDropTarget {
+                        target = object : DragAndDropTarget {
                             override fun onDrop(event: DragAndDropEvent): Boolean {
                                 generalScope?.launch(Dispatchers.Default) {
                                     val clipData = event.toAndroidDragEvent().clipData
-                                    val firstMimeType = event.mimeTypes().firstOrNull()
-                                    Log.d("kostka_test", "clipData: $clipData, firstMimeType: $firstMimeType")
+                                    val firstMimeType = event
+                                        .mimeTypes()
+                                        .firstOrNull()
+                                    Log.d(
+                                        "kostka_test",
+                                        "clipData: $clipData, firstMimeType: $firstMimeType"
+                                    )
                                     if (clipData != null) {
                                         for (i in 0 until clipData.itemCount) {
                                             ParagraphBlockState.ElementType
@@ -297,7 +307,10 @@ fun LazyGridScope.paragraphBlock(
                                                     it.name == firstMimeType
                                                 }
                                                 ?.let {
-                                                    Log.d("kostka_test", "element from clipdata: $it")
+                                                    Log.d(
+                                                        "kostka_test",
+                                                        "element from clipdata: $it"
+                                                    )
                                                     val uid = clipData.getItemAt(i).text.toString()
                                                     when (it) {
                                                         ParagraphBlockState.ElementType.BULLET_POINT -> {
@@ -306,6 +319,7 @@ fun LazyGridScope.paragraphBlock(
                                                             addNewBulletPoint()
                                                             addContentVisible.value = false
                                                         }
+
                                                         ParagraphBlockState.ElementType.FACT -> {
                                                             val index =
                                                                 if (type == ParagraphBlockState.ElementType.FACT) {
@@ -316,18 +330,24 @@ fun LazyGridScope.paragraphBlock(
                                                                         .coerceAtLeast(0)
                                                                 } else 0
                                                             Log.d("kostka_test", "new fact - $uid")
+                                                            val isNotNested =
+                                                                nestedFacts.none { fact -> fact.uid == uid }
                                                             addNewFact(
                                                                 index = index,
                                                                 fact = unitsViewModel?.dragAndDroppedFact,
                                                                 uid = uid
                                                             )
                                                             // remove from only other paragraphs
-                                                            if(nestedFacts.none { fact -> fact.uid == uid }) {
-                                                                unitsViewModel?.elementUidToRemove?.emit(uid)
+                                                            if (isNotNested) {
+                                                                unitsViewModel?.elementUidToRemove?.emit(
+                                                                    uid
+                                                                )
                                                             }
-                                                            unitsViewModel?.dragAndDroppedFact = null
+                                                            unitsViewModel?.dragAndDroppedFact =
+                                                                null
                                                             addContentVisible.value = false
                                                         }
+
                                                         ParagraphBlockState.ElementType.PARAGRAPH -> {
                                                             val index =
                                                                 if (type == ParagraphBlockState.ElementType.PARAGRAPH) {
@@ -337,18 +357,24 @@ fun LazyGridScope.paragraphBlock(
                                                                         }
                                                                         .coerceAtLeast(0)
                                                                 } else 0
+                                                            val isNotNested =
+                                                                nestedParagraphs.none { fact -> fact.uid == uid }
                                                             addNewParagraph(
                                                                 index = index,
                                                                 paragraph = unitsViewModel?.dragAndDroppedParagraph,
                                                                 uid = uid
                                                             )
                                                             // remove from only other paragraphs
-                                                            if(nestedParagraphs.none { fact -> fact.uid == uid }) {
-                                                                unitsViewModel?.elementUidToRemove?.emit(uid)
+                                                            if (isNotNested) {
+                                                                unitsViewModel?.elementUidToRemove?.emit(
+                                                                    uid
+                                                                )
                                                             }
-                                                            unitsViewModel?.dragAndDroppedParagraph = null
+                                                            unitsViewModel?.dragAndDroppedParagraph =
+                                                                null
                                                             addContentVisible.value = false
                                                         }
+
                                                         else -> {}
                                                     }
                                                 }
@@ -438,6 +464,7 @@ fun LazyGridScope.paragraphBlock(
 
         item(
             key = paragraph.uid,
+            contentType = { paragraph.uid },
             span = { GridItemSpan(if(isLandscape) 2 else 1) }
         ) {
             val identification = getLayerIdentification(parentLayer)
@@ -446,14 +473,12 @@ fun LazyGridScope.paragraphBlock(
                 unitsViewModel?.elementUidToRemove?.collectLatest { elementUid ->
                     withContext(Dispatchers.Default) {
                         if(elementUid != null) {
-                            if(requestParagraphDeletion(elementUid)) {
-                                unitsViewModel.elementUidToRemove.emit(null)
-                                addContentVisible.value = false
+                            Log.d("kostka_test", "paragraphBlock, elementUidToRemove: $elementUid")
+                            nestedParagraphs.removeIf {
+                                it.uid == elementUid
                             }
-                            if(requestFactDeletion(elementUid)) {
-                                unitsViewModel.elementUidToRemove.emit(null)
-                                addContentVisible.value = false
-                            }
+                            unitsViewModel.elementUidToRemove.emit(null)
+                            addContentVisible.value = false
                         }
                     }
                 }
@@ -485,7 +510,7 @@ fun LazyGridScope.paragraphBlock(
                         .animateItemPlacement()
                         .padding(start = paddingStart)
                         .then(
-                            if(parentLayer >= 0) Modifier
+                            if (parentLayer >= 0) Modifier
                                 .drawSegmentedBorder(
                                     borderOrder = BorderOrder.Start,
                                     screenWidthDp = screenWidthDp,
@@ -516,6 +541,7 @@ fun LazyGridScope.paragraphBlock(
 
                             EditFieldItemPicker(
                                 modifier = Modifier
+                                    .wrapContentWidth()
                                     .padding(start = 8.dp)
                                     .zIndex(1f),
                                 enabled = isReadOnly.not(),
@@ -532,20 +558,7 @@ fun LazyGridScope.paragraphBlock(
                             )
                         }
                     }
-                ) {
-                    AnimatedVisibility(
-                        modifier = Modifier
-                            .drawSegmentedBorder(
-                                borderOrder = if (nestedParagraphs.isNotEmpty()) BorderOrder.Center else BorderOrder.None,
-                                screenWidthDp = screenWidthDp,
-                                notLastLayers = notLastLayers,
-                                parentLayer = parentLayer
-                            ),
-                        visible = nestedFacts.size == 0 && nestedBulletPoints.size == 0
-                    ) {
-                        Spacer(modifier = Modifier.height(42.dp))
-                    }
-                }
+                ) {}
             }
         }
         item {
@@ -553,7 +566,7 @@ fun LazyGridScope.paragraphBlock(
                 modifier = Modifier
                     .padding(start = paddingStart)
                     .drawSegmentedBorder(
-                        borderOrder = if(nestedParagraphs.isNotEmpty()) BorderOrder.Center else BorderOrder.None,
+                        borderOrder = if (nestedParagraphs.isNotEmpty()) BorderOrder.Center else BorderOrder.None,
                         screenWidthDp = screenWidthDp,
                         notLastLayers = notLastLayers,
                         parentLayer = parentLayer
@@ -568,17 +581,25 @@ fun LazyGridScope.paragraphBlock(
                 ) {
                     Spacer(modifier = Modifier.height(8.dp))
 
+                    val isIrremovable = nestedBulletPoints.size <= 1
+
                     nestedBulletPoints.forEachIndexed { index, point ->
                         DropTargetContainer(
                             type = ParagraphBlockState.ElementType.BULLET_POINT,
                             identifier = "${paragraph.uid}_$index"
                         ) {
                             ListItemEditField(
+                                modifier = Modifier.padding(bottom = 2.dp),
                                 prefix = FactType.BULLET_POINT_PREFIX,
                                 value = point,
+                                hint = stringResource(
+                                    if(isIrremovable) {
+                                        R.string.list_item_first_bulletin_hint
+                                    }else R.string.list_item_bulletin_hint
+                                ),
                                 enabled = isReadOnly.not(),
                                 onBackspaceKey = {
-                                    if(it.isEmpty()) {
+                                    if(it.isEmpty() && isIrremovable.not()) {
                                         if(index > 0) {
                                             focusManager.moveFocus(FocusDirection.Up)
                                         }
@@ -601,6 +622,7 @@ fun LazyGridScope.paragraphBlock(
                             )
                         }
                     }
+                    Spacer(modifier = Modifier.height(12.dp))
                 }
             }
         }
@@ -609,6 +631,21 @@ fun LazyGridScope.paragraphBlock(
             items = if(isExpanded.value) nestedFacts else listOf(),
             key = { fact -> fact.uid }
         ) { fact ->
+            LaunchedEffect(Unit) {
+                unitsViewModel?.elementUidToRemove?.collectLatest { elementUid ->
+                    withContext(Dispatchers.Default) {
+                        if(elementUid == fact.uid) {
+                            Log.d("kostka_test", "fact, elementUidToRemove: $elementUid")
+                            nestedFacts.removeIf {
+                                it.uid == elementUid
+                            }
+                            unitsViewModel.elementUidToRemove.emit(null)
+                            addContentVisible.value = false
+                        }
+                    }
+                }
+            }
+
             DropTargetContainer(
                 modifier = Modifier
                     .animateItemPlacement()

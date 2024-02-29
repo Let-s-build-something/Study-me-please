@@ -15,6 +15,10 @@ interface SubjectDao {
     @Query("SELECT * FROM ${AppRoomDatabase.ROOM_UNIT_TABLE} WHERE collection_uid == :collectionUid ORDER BY date_created ASC")
     suspend fun getSubjectsByCollectionUid(collectionUid: String): List<UnitIO>?
 
+    /** returns all paragraph that are contained in given list */
+    @Query("SELECT * FROM ${AppRoomDatabase.ROOM_PARAGRAPH_TABLE} WHERE uid IN (:uidList)")
+    suspend fun getParagraphsByUidList(uidList: List<String>): List<ParagraphIO>?
+
     /** Removes subjects from the database by its identification [subjectUid] */
     @Query("DELETE FROM ${AppRoomDatabase.ROOM_UNIT_TABLE} WHERE uid == :subjectUid")
     suspend fun deleteSubject(subjectUid: String)

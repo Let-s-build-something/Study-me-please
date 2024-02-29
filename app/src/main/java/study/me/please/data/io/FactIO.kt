@@ -7,6 +7,8 @@ import androidx.room.Ignore
 import androidx.room.PrimaryKey
 import com.google.gson.annotations.SerializedName
 import com.squadris.squadris.utils.DateUtils
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import study.me.please.R
 import study.me.please.data.room.AppRoomDatabase
 import java.io.Serializable
@@ -94,6 +96,12 @@ data class FactIO(
                 && longInformation.isEmpty()
                 && promptImage?.isEmpty != false
                 && (textList.isEmpty() || type.isListType.not())
+
+    /** Whether this data can be taken seriously */
+    suspend fun isSeriousDataPoint() = withContext(Dispatchers.Default) {
+        (textList.any { it.isNotBlank() } || longInformation.isNotBlank())
+                && shortKeyInformation.isNotBlank()
+    }
 
     /**
      * Explanation of an image prompt, which is combination of both [shortKeyInformation] and [longInformation]

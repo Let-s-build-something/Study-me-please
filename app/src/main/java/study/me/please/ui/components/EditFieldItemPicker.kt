@@ -24,6 +24,7 @@ import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
@@ -122,12 +123,17 @@ fun EditFieldItemPicker(
 
     var previousFocusState = false
     Column(modifier = modifier) {
+        val lineCount = remember {
+            mutableStateOf<Int?>(null)
+        }
+
         EditFieldInput(
             modifier = Modifier
-                .widthIn(min = 40.dp)
+                .widthIn(min = TextFieldDefaults.MinWidth)
                 .height(with(localDensity) {
                     textStyle.fontSize.value.sp
                         .toDp()
+                        .times(lineCount.value ?: 1)
                         .plus(16.dp)
                 })
                 .onFocusEvent { state ->
@@ -141,8 +147,18 @@ fun EditFieldItemPicker(
             value = inputValue,
             textStyle = textStyle,
             isUnfocusedTransparent = true,
+            onTextLayout = { result ->
+                if(result.didOverflowWidth) {
+                    lineCount.value = result.lineCount
+                        .plus(1)
+                        .coerceAtMost(3)
+                }else {
+                    lineCount.value = result.lineCount.coerceAtMost(3)
+                }
+            },
             hint = hint,
             enabled = enabled,
+            // only if needed, so it doesn't get pushed up
             maxLines = 3,
             minLines = 1,
             paddingValues = PaddingValues(horizontal = 8.dp),

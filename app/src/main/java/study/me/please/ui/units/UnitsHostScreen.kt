@@ -256,7 +256,7 @@ fun SubjectsHostScreen(
                                                         text = filter.value.textFilter,
                                                         onSearchOutput = { output ->
                                                             viewModel.filter.update {
-                                                                SubjectsFilter(output)
+                                                                UnitsFilter(output)
                                                             }
                                                         },
                                                         onClick = {

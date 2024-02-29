@@ -24,10 +24,14 @@ data class UnitIO(
     /**
      * Text-based points ideally specific to this subject, non-specificity should be handled by quantity
      */
-    var bulletPoints: MutableList<String> = mutableListOf(),
+    var bulletPoints: MutableList<String> = mutableListOf(""),
 
     /** Categorized content */
+    @Deprecated("should be ignored by Room")
     var paragraphs: List<ParagraphIO> = listOf(),
+
+    /** list of paragraph unique identifiers */
+    var paragraphUidList: MutableList<String> = mutableListOf(),
 
     /** Non-categorized, standalone content */
     @Deprecated("Current UI doesn't make sense to have facts under subject")
@@ -59,6 +63,8 @@ data class UnitIO(
         this.categoryUids = subject.categoryUids
         this.bulletPoints = subject.bulletPoints
         this.paragraphs = subject.paragraphs
+        this.paragraphUidList = subject.paragraphUidList
+        this.collapsedParagraphs = subject.collapsedParagraphs
         this.facts = subject.facts
         this.name = subject.name
     }

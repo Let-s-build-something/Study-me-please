@@ -30,7 +30,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -56,6 +55,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -178,6 +178,8 @@ fun UnitScreen(
         viewModel.elementUidToRemove.collectLatest { elementUid ->
             withContext(Dispatchers.Default) {
                 if(elementUid != null) {
+                    viewModel.requestObjectRemoval(unit, elementUid)
+                    addContentVisible.value = false
                     bridge.removeParagraph(elementUid)
                 }
             }
@@ -188,8 +190,11 @@ fun UnitScreen(
         bridge.updateBulletPoints()
     }
     LaunchedEffect(nestedParagraphs.size) {
-        unit.paragraphs = nestedParagraphs
-        viewModel.updateUnit(unit)
+        with(Dispatchers.Default) {
+            unit.paragraphs = nestedParagraphs
+            unit.paragraphUidList = nestedParagraphs.map { it.uid }.toMutableList()
+            viewModel.updateUnit(unit)
+        }
     }
 
     BackHandler(addContentVisible.value) {
@@ -255,6 +260,7 @@ fun UnitScreen(
                         viewModel.elementUidToRemove.emit(uid)
                     }
                 }
+                viewModel.dragAndDroppedFact = null
                 showDeleteDialog.value = null
             },
             dismissButtonState = ButtonState(
@@ -503,8 +509,7 @@ fun UnitScreen(
                             focusManager.clearFocus()
                             addContentVisible.value = false
                         })
-                    }
-                    .animateContentSize(),
+                    },
                 state = lazyGridState,
                 columns = GridCells.Fixed(if(isLandscape) 2 else 1),
                 horizontalArrangement = if(isLandscape) Arrangement.spacedBy(4.dp) else Arrangement.Start
@@ -521,12 +526,24 @@ fun UnitScreen(
                             .fillMaxWidth()
                             .padding(vertical = 8.dp)
                     ) {
+                        val lineCount = remember {
+                            mutableIntStateOf(1)
+                        }
+
                         EditFieldInput(
                             modifier = Modifier
                                 .padding(start = 16.dp)
                                 .widthIn(min = TextFieldDefaults.MinWidth)
-                                .wrapContentHeight(),
+                                .height(with(localDensity) {
+                                    LocalTheme.styles.heading.fontSize.value.sp
+                                        .toDp()
+                                        .times(lineCount.intValue)
+                                        .plus(16.dp)
+                                }),
                             value = unit.name,
+                            onTextLayout = { result ->
+                                lineCount.intValue = result.lineCount
+                            },
                             textStyle = LocalTheme.styles.heading,
                             isUnfocusedTransparent = true,
                             hint = stringResource(id = R.string.subject_heading_prefix),
@@ -546,7 +563,7 @@ fun UnitScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .animateContentSize()
-                                .height(if(started.value) 40.dp else 0.dp)
+                                .height(if (started.value) 40.dp else 0.dp)
                                 .dragAndDropTarget(
                                     shouldStartDragAndDrop = { startEvent ->
                                         startEvent
@@ -632,15 +649,23 @@ fun UnitScreen(
                     }
                 }
                 itemsIndexed(unitBulletPoints) { index, point ->
+                    val isIrremovable = unitBulletPoints.size == 1
+
                     Box(
                         modifier = Modifier.fillMaxWidth(),
                         contentAlignment = Alignment.CenterStart
                     ) {
                         ListItemEditField(
+                            modifier = Modifier.padding(bottom = 2.dp),
                             prefix = FactType.BULLET_POINT_PREFIX,
                             value = point,
+                            hint = stringResource(
+                                if(isIrremovable) {
+                                    R.string.list_item_first_bulletin_hint
+                                }else R.string.list_item_bulletin_hint
+                            ),
                             onBackspaceKey = {
-                                if(it.isEmpty()) {
+                                if(it.isEmpty() && isIrremovable.not()) {
                                     if(index > 0) {
                                         focusManager.moveFocus(FocusDirection.Up)
                                     }

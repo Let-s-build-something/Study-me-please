@@ -11,6 +11,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.android.scopes.ActivityRetainedScoped
 import study.me.please.data.room.AppDatabaseConverter
 import study.me.please.data.room.AppRoomDatabase
+import study.me.please.data.room.AppRoomDatabase.Companion.MIGRATION_3_4
 
 /** Main module provider for accessing interfaces for local Room database */
 @Module
@@ -64,6 +65,7 @@ object DatabaseServicesModule {
         AppRoomDatabase::class.java,
         AppRoomDatabase.ROOM_DATABASE_NAME
     ).addTypeConverter(AppDatabaseConverter(gson))
+        .addMigrations(MIGRATION_3_4)
         .build()
 
     /** Singleton instance of a Gson converter, since it's a costly initiated, it's faster this way */

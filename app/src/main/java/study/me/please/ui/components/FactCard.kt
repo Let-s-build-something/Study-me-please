@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalMaterial3Api::class)
-
 package study.me.please.ui.components
 
 import android.annotation.SuppressLint
@@ -24,7 +22,6 @@ import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.FormatQuote
 import androidx.compose.material.icons.outlined.Image
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -38,6 +35,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
@@ -168,6 +166,9 @@ private fun DataCard(
     val inputScope = rememberCoroutineScope()
     val scope = rememberCoroutineScope()
     val focusManager = LocalFocusManager.current
+    val focusRequester = remember {
+        FocusRequester()
+    }
 
     val selectedFactType = remember(data) { mutableStateOf(data.type) }
     val switchTypeState = TabSwitchState(
@@ -184,13 +185,17 @@ private fun DataCard(
     )
 
     val promptImage = remember(data) { mutableStateOf(data.promptImage) }
-    val selectedListIndex = remember(data) { mutableIntStateOf(-1) }
     val listItems = remember { mutableStateListOf<String>() }
 
+    LaunchedEffect(mode) {
+        if(mode == InteractiveCardMode.EDIT && data.shortKeyInformation.isBlank()) {
+            focusRequester.requestFocus()
+        }
+    }
     LaunchedEffect(selectedFactType.value) {
         if(selectedFactType.value == FactType.BULLET_POINTS || selectedFactType.value == FactType.LIST) {
             listItems.clear()
-            listItems.addAll(data.textList)
+            listItems.addAll(data.textList.ifEmpty { listOf("") })
         }
     }
     LaunchedEffect(listItems.size) {
@@ -281,16 +286,18 @@ private fun DataCard(
                     if(inEditMode) {
                         EditFieldInput(
                             modifier = Modifier.fillMaxWidth(),
+                            focusRequester = focusRequester,
                             prefix = if(selectedFactType.value == FactType.QUOTE) { { QuoteIcon() } }else null,
                             suffix = if(selectedFactType.value == FactType.QUOTE) { { QuoteIcon() } }else null,
                             value = data.shortKeyInformation,
-                            hint = stringResource(id = selectedFactType.value.getShortHintStringRes()),
+                            hint = stringResource(selectedFactType.value.getShortHintStringRes()),
                             textStyle = TextStyle(
                                 color = LocalTheme.colors.primary,
                                 fontSize = 18.sp,
                                 textAlign = TextAlign.Start,
                                 fontStyle = if(selectedFactType.value == FactType.QUOTE) FontStyle.Italic else FontStyle.Normal
                             ),
+                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
                             minLines = 2,
                             maxLines = 2
                         ) { output ->
@@ -395,31 +402,16 @@ private fun DataCard(
                 Column(
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    AnimatedVisibility(
-                        modifier = Modifier
-                            .padding(4.dp)
-                            .fillMaxWidth(),
-                        visible = isInEdit
-                    ) {
-                        Box(
-                            modifier = Modifier.fillMaxWidth(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            ComponentHeaderButton(
-                                onClick = {
-                                    listItems.add(0, "")
-                                    selectedListIndex.intValue = listItems.size.minus(1)
-                                }
-                            )
-                        }
-                    }
+                    val isIrremovable = listItems.size <= 1
+
                     listItems.forEachIndexed { index, listItem ->
                         ListItemEditField(
+                            modifier = Modifier.padding(bottom = 2.dp),
                             prefix = if(selectedFactType.value == FactType.BULLET_POINTS) {
                                 FactType.BULLET_POINT_PREFIX
                             }else "${index.plus(1)}.\t\t",
                             onBackspaceKey = {
-                                if(it.isEmpty()) {
+                                if(it.isEmpty() && isIrremovable.not()) {
                                     if(index > 0) {
                                         focusManager.moveFocus(FocusDirection.Up)
                                     }
@@ -435,6 +427,11 @@ private fun DataCard(
                                         focusManager.moveFocus(FocusDirection.Down)
                                     }
                                 }
+                            ),
+                            hint = stringResource(
+                                if(selectedFactType.value == FactType.LIST) {
+                                    R.string.list_item_generic_hint
+                                }else R.string.list_item_bulletin_hint
                             ),
                             value = listItem,
                             enabled = isInEdit,
@@ -522,8 +519,8 @@ private fun Preview() {
                 ),
                 onClick = {},
                 requestDataSave = {},
-                mode = InteractiveCardMode.DATA_DISPLAY,
-                isReadOnly = true
+                mode = InteractiveCardMode.EDIT,
+                isReadOnly = false
             )
         }
     }

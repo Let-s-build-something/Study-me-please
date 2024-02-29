@@ -434,20 +434,20 @@ class AppDatabaseConverter @Inject constructor(private val gson: Gson) {
 
     /** Converts list of strings to string */
     @TypeConverter
-    fun fromStringList(value: List<String>): String {
+    fun fromStringList(value: MutableList<String>): String {
         return gson.toJson(
             value,
-            TypeToken.getParameterized(List::class.java, String::class.java).type
+            TypeToken.getParameterized(MutableList::class.java, String::class.java).type
         )
     }
 
     /** Converts string to list of strings */
     @TypeConverter
-    fun toStringList(value: String): List<String> {
+    fun toStringList(value: String): MutableList<String> {
         return gson.fromJson(
             value,
-            TypeToken.getParameterized(List::class.java, String::class.java).type
-        )
+            TypeToken.getParameterized(MutableList::class.java, String::class.java).type
+        ) ?: mutableListOf()
     }
 
     /** Converts date to string */

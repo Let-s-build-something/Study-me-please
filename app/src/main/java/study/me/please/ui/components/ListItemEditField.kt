@@ -39,6 +39,8 @@ fun ListItemEditField(
     value: String,
     enabled: Boolean = true,
     prefix: String,
+    maxLines: Int = 20,
+    hint: String = stringResource(R.string.list_item_generic_hint),
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
     onBackspaceKey: (output: String) -> Unit = {},
@@ -74,6 +76,7 @@ fun ListItemEditField(
                         onBackspaceKey(value)
                         true
                     }
+
                     else -> false
                 }
             },
@@ -81,7 +84,7 @@ fun ListItemEditField(
         keyboardOptions = keyboardOptions,
         keyboardActions = keyboardActions,
         enabled = enabled,
-        hint = stringResource(R.string.list_item_generic_hint),
+        hint = hint,
         prefix = {
             Box(
                 modifier = Modifier.fillMaxHeight(),
@@ -96,9 +99,12 @@ fun ListItemEditField(
         textStyle = LocalTheme.styles.category,
         isUnfocusedTransparent = true,
         minLines = 1,
-        maxLines = 20,
+        maxLines = maxLines,
         onTextLayout = { result ->
             fieldLineCount = result.lineCount
+            if(result.didOverflowWidth) {
+                fieldLineCount++
+            }
         },
         paddingValues = PaddingValues(horizontal = 8.dp),
         onValueChange = {

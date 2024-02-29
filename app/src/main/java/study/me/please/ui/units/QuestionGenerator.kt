@@ -81,35 +81,39 @@ class QuestionGenerator @Inject constructor() {
                 }
 
                 // iterates further into all depths
-                fun iterateFurther(paragraph: ParagraphIO, parentCategoryUid: List<String>) {
-                    if(paragraph.localCategory != null) {
-                        paragraphs.add(
-                            ParagraphToGenerate(
-                                data = paragraph,
-                                parentUnitUid = subject.uid,
-                                sortedCategoryUid = parentCategoryUid
-                            )
-                        )
-                    }
-                    paragraph.facts.filter {
-                        excludedList.contains(it.uid).not()
-                    }.forEach { iteratedFact ->
-                        facts.add(
-                            FactToGenerate(
-                                data = iteratedFact,
-                                parentUnitUid = subject.uid,
-                                sortedCategoryUid = parentCategoryUid
-                            )
-                        )
-                    }
+                suspend fun iterateFurther(paragraph: ParagraphIO, parentCategoryUid: List<String>) {
+                    withContext(Dispatchers.Default) {
 
-                    paragraph.paragraphs.filter {
-                        excludedList.contains(it.uid).not()
-                    }.forEach { iteratedParagraph ->
-                        iterateFurther(
-                            paragraph = iteratedParagraph,
-                            parentCategoryUid = parentCategoryUid.plus(iteratedParagraph.uid)
-                        )
+                        if(paragraph.localCategory != null) {
+                            paragraphs.add(
+                                ParagraphToGenerate(
+                                    data = paragraph,
+                                    parentUnitUid = subject.uid,
+                                    sortedCategoryUid = parentCategoryUid
+                                )
+                            )
+                        }
+                        paragraph.facts.filter {
+                            excludedList.contains(it.uid).not()
+                                    && it.isSeriousDataPoint()
+                        }.forEach { iteratedFact ->
+                            facts.add(
+                                FactToGenerate(
+                                    data = iteratedFact,
+                                    parentUnitUid = subject.uid,
+                                    sortedCategoryUid = parentCategoryUid
+                                )
+                            )
+                        }
+
+                        paragraph.paragraphs.filter {
+                            excludedList.contains(it.uid).not()
+                        }.forEach { iteratedParagraph ->
+                            iterateFurther(
+                                paragraph = iteratedParagraph,
+                                parentCategoryUid = parentCategoryUid.plus(iteratedParagraph.uid)
+                            )
+                        }
                     }
                 }
 
@@ -412,12 +416,12 @@ class QuestionGenerator @Inject constructor() {
             when {
                 // only paragraphs that act as a form of a "fact" - have some paragraphs
                 generatingGoal == ParagraphGeneratingGoal.LIST_OF_CHILDREN_PARAGRAPHS
-                        && paragraph.data.paragraphs.count { it.isSeriousDataPoint } < 2 -> {
+                        && paragraph.data.paragraphs.count { it.isSeriousDataPoint() } < 2 -> {
                     return@withContext null
                 }
                 // we need correct answers
                 generatingGoal == ParagraphGeneratingGoal.LIST_OF_CHILDREN_FACTS
-                        && (paragraph.data.facts.size < 2 || paragraph.data.isSeriousDataPoint.not()) -> {
+                        && (paragraph.data.facts.size < 2 || paragraph.data.isSeriousDataPoint().not()) -> {
                     return@withContext null
                 }
             }
@@ -437,10 +441,10 @@ class QuestionGenerator @Inject constructor() {
 
             when(generatingGoal) {
                 ParagraphGeneratingGoal.BULLET_POINTS_NAME -> {
-                    if(paragraph.data.isSeriousDataPoint.not()) return@withContext null
+                    if(paragraph.data.isSeriousDataPoint().not()) return@withContext null
                     val chosenParagraphs = relatedParagraphs
                         .filter {
-                            it.first.data.isSeriousDataPoint
+                            it.first.data.isSeriousDataPoint()
                                     && it.first.data.uid != paragraph.data.uid
                         }
 
@@ -474,10 +478,10 @@ class QuestionGenerator @Inject constructor() {
                     )
                 }
                 ParagraphGeneratingGoal.BULLET_POINTS_VALUES -> {
-                    if(paragraph.data.isSeriousDataPoint.not()) return@withContext null
+                    if(paragraph.data.isSeriousDataPoint().not()) return@withContext null
                     val chosenParagraphs = relatedParagraphs
                         .filter {
-                            it.first.data.isSeriousDataPoint
+                            it.first.data.isSeriousDataPoint()
                                     && it.first.data.uid != paragraph.data.uid
                         }
 
@@ -510,10 +514,10 @@ class QuestionGenerator @Inject constructor() {
                 }
                 ParagraphGeneratingGoal.LIST_OF_CHILDREN_PARAGRAPHS -> {
                     val correctParagraphs = paragraph.data.paragraphs
-                        .filter { it.isSeriousDataPoint }
+                        .filter { it.isSeriousDataPoint() }
 
                     val relatedChildrenParagraphs = relatedParagraphs
-                        .filter { it.first.data.isSeriousDataPoint }
+                        .filter { it.first.data.isSeriousDataPoint() }
                         .filter { related -> correctParagraphs.none { it.uid == related.first.data.uid }  }
                         .take(correctParagraphs.size)
                         .flatMap { data -> data.first.data.paragraphs.map { it to data.first } }

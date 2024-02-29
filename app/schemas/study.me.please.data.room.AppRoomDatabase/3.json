@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 3,
-    "identityHash": "c4a904d5388dc8d480685c5b7d9ae42f",
+    "identityHash": "59e9cac21059602ff7a8e70ff8687caf",
     "entities": [
       {
         "tableName": "ROOM_COLLECTION_TABLE",
@@ -550,7 +550,7 @@
       },
       {
         "tableName": "ROOM_SUBJECT_TABLE",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`uid` TEXT NOT NULL, `categoryUids` TEXT NOT NULL, `bulletPoints` TEXT NOT NULL, `paragraphs` TEXT NOT NULL, `facts` TEXT NOT NULL, `name` TEXT NOT NULL, `collection_uid` TEXT NOT NULL, `date_created` INTEGER NOT NULL, `collapsedParagraphs` TEXT NOT NULL, PRIMARY KEY(`uid`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`uid` TEXT NOT NULL, `categoryUids` TEXT NOT NULL, `bulletPoints` TEXT NOT NULL, `paragraphs` TEXT NOT NULL, `paragraphUidList` TEXT NOT NULL, `facts` TEXT NOT NULL, `name` TEXT NOT NULL, `collection_uid` TEXT NOT NULL, `date_created` INTEGER NOT NULL, `collapsedParagraphs` TEXT NOT NULL, PRIMARY KEY(`uid`))",
         "fields": [
           {
             "fieldPath": "uid",
@@ -573,6 +573,12 @@
           {
             "fieldPath": "paragraphs",
             "columnName": "paragraphs",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "paragraphUidList",
+            "columnName": "paragraphUidList",
             "affinity": "TEXT",
             "notNull": true
           },
@@ -702,7 +708,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'c4a904d5388dc8d480685c5b7d9ae42f')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '59e9cac21059602ff7a8e70ff8687caf')"
     ]
   }
 }

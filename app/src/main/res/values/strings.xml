@@ -72,6 +72,8 @@
     <string name="subject_generating_success">You\'ve successfully generated %1$d questions.</string>
 
     <string name="list_item_generic_hint">item</string>
+    <string name="list_item_bulletin_hint">bullet point</string>
+    <string name="list_item_first_bulletin_hint">add a description</string>
 
     <string name="facts_list_add_new">Add a fact</string>
     <string name="facts_list_generate_questions">Generate questions</string>
