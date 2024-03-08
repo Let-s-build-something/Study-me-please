@@ -99,6 +99,12 @@ data class FactIO(
 
     /** Whether this data can be taken seriously */
     suspend fun isSeriousDataPoint() = withContext(Dispatchers.Default) {
+        (hasTextData() || promptImage?.isEmpty == false)
+                && shortKeyInformation.isNotBlank()
+    }
+
+    /** Whether this data can be taken seriously */
+    suspend fun hasTextData() = withContext(Dispatchers.Default) {
         (textList.any { it.isNotBlank() } || longInformation.isNotBlank())
                 && shortKeyInformation.isNotBlank()
     }

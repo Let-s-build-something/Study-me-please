@@ -8,6 +8,9 @@ import java.util.UUID
 data class SessionHistoryItem(
 
     /** question information */
+    @Deprecated("This should not be carried with it, only an UID and saved within question table." +
+            " TODO consider how questions will be saved if they will no longer be the primary source for Examinations (Units will)" +
+            " POSSIBLE SOLUTION: having ImportedSource together with generatingGoal is the same as having the question!")
     val questionIO: QuestionIO?,
 
     /** index of this question */

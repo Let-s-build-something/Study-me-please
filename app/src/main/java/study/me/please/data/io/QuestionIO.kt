@@ -2,7 +2,6 @@ package study.me.please.data.io
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
-import androidx.room.Ignore
 import androidx.room.PrimaryKey
 import com.google.gson.annotations.SerializedName
 import com.squadris.squadris.utils.DateUtils
@@ -10,7 +9,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import study.me.please.data.room.AppRoomDatabase
 import java.io.Serializable
-import java.util.Date
 import java.util.UUID
 
 /** question prompt */
@@ -68,4 +66,10 @@ data class QuestionIO (
     @SerializedName("date_created")
     @ColumnInfo("date_created")
     val dateCreated: Long = DateUtils.now.timeInMillis
-): Serializable
+): Serializable {
+
+    /** Whether this data can be taken seriously */
+    suspend fun isSeriousDataPoint(): Boolean = withContext(Dispatchers.Default) {
+        (prompt.isNotBlank() || promptList.any { it.isNotBlank() }) && answers.none { it.isEmpty }
+    }
+}

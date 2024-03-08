@@ -32,6 +32,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.squadris.squadris.compose.components.DEFAULT_ANIMATION_LENGTH_SHORT
@@ -45,6 +46,7 @@ fun ExpandableContent(
     containerColor: Color = LocalTheme.colors.onBackgroundComponent,
     contentColor: Color = LocalTheme.colors.secondary,
     isExpanded: Boolean = false,
+    collapsedPadding: Dp = 0.dp,
     shape: Shape = RectangleShape,
     collapsedContent: (@Composable () -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit
@@ -58,11 +60,10 @@ fun ExpandableContent(
     }
 
     Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .animateContentSize()
+        modifier = modifier.animateContentSize()
     ) {
         LineButton(
+            modifier = Modifier.padding(collapsedPadding),
             containerColor = containerColor,
             contentColor = contentColor,
             arrowModifier = Modifier.graphicsLayer {
@@ -93,14 +94,15 @@ fun LineButton(
     contentColor: Color = LocalTheme.colors.secondary
 ) {
     Row(
-        modifier = modifier
+        modifier = Modifier
             .clip(shape)
             .background(
                 color = containerColor,
                 shape = shape
             )
             .fillMaxWidth()
-            .padding(horizontal = 6.dp, vertical = 4.dp),
+            .padding(horizontal = 6.dp, vertical = 4.dp)
+            .then(modifier),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {

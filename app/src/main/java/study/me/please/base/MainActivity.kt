@@ -1,6 +1,7 @@
 package study.me.please.base
 
 import android.annotation.SuppressLint
+import android.database.CursorWindow
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -28,13 +29,15 @@ import study.me.please.hilt.SharedPreferencesModule
 import study.me.please.ui.collection.CollectionLobbyScreen
 import study.me.please.ui.collection.detail.CollectionDetailScreen
 import study.me.please.ui.collection.detail.questions.detail.QuestionDetailScreen
-import study.me.please.ui.units.SubjectsHostScreen
 import study.me.please.ui.home.HomeScreen
-import study.me.please.ui.session.play.SessionScreen
 import study.me.please.ui.session.detail.SessionDetailScreen
 import study.me.please.ui.session.lobby.SessionLobbyScreen
+import study.me.please.ui.session.play.SessionScreen
 import study.me.please.ui.settings.SettingsScreen
 import study.me.please.ui.settings.SettingsViewModel
+import study.me.please.ui.units.SubjectsHostScreen
+import java.lang.reflect.Field
+
 
 @AndroidEntryPoint
 class MainActivity: ComponentActivity(), BackboneChannel {
@@ -45,6 +48,13 @@ class MainActivity: ComponentActivity(), BackboneChannel {
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        try {
+            val field: Field = CursorWindow::class.java.getDeclaredField("sCursorWindowSize")
+            field.isAccessible = true
+            field.set(null, 100 * 1024 * 1024) //the 100MB is the new size
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
         setContent {

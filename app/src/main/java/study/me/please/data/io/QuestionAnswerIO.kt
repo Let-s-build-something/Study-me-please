@@ -46,9 +46,8 @@ data class QuestionAnswerIO (
     /** whether this object has no important data */
     @get:Ignore
     val isEmpty: Boolean
-        get() = text.isEmpty()
-            && explanationMessage.isEmpty()
-            && imageExplanation?.isEmpty != false
+        get() = text.isBlank()
+                && textList.none { it.isNotBlank() }
 
     /** Updates this object with new question */
     fun updateTO(answer: QuestionAnswerIO) {

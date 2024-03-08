@@ -1,6 +1,6 @@
 package study.me.please.ui.units.detail
 
-import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
+import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
@@ -14,13 +14,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.navigation.compose.ComposeNavigator
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.unit.Velocity
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.squadris.squadris.compose.components.MinimalisticIcon
 import com.squadris.squadris.compose.theme.LocalTheme
-import study.me.please.base.LocalNavController
 import study.me.please.base.navigation.NavigationComponent
 import study.me.please.base.navigation.NavigationNotepadScreen
 import study.me.please.data.io.ImportSourceType
@@ -36,7 +39,6 @@ fun ParagraphLayoutContainer(
     importedSource: ImportedSource? = null,
     onCloseRequest: () -> Unit
 ) {
-    val localNavController = LocalNavController.current
     val navController = rememberNavController()
 
     val currentImportedSource = remember {
@@ -47,11 +49,22 @@ fun ParagraphLayoutContainer(
         )
     }
 
-    val onBackPressedDispatcher = LocalOnBackPressedDispatcherOwner.current
-
     CollapsingLayout(
         modifier = modifier
             .background(LocalTheme.colors.backgroundLight)
+            .nestedScroll(object: NestedScrollConnection {
+                override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset = Offset.Zero
+                override suspend fun onPreFling(available: Velocity): Velocity = Velocity.Zero
+                override suspend fun onPostFling(
+                    consumed: Velocity,
+                    available: Velocity
+                ): Velocity = Velocity.Zero
+                override fun onPostScroll(
+                    consumed: Offset,
+                    available: Offset,
+                    source: NestedScrollSource
+                ): Offset = Offset.Zero
+            })
             .animateContentSize(),
         content = listOf(
             @Composable {
@@ -88,8 +101,6 @@ fun ParagraphLayoutContainer(
                     navController = navController,
                     startDestination = NavigationNotepadScreen.Paragraph.route
                 ) {
-                    this.provider.addNavigator("composable", ComposeNavigator())
-
                     composable(
                         NavigationNotepadScreen.Paragraph.route,
                         deepLinks = NavigationNotepadScreen.Paragraph.deepLinks,

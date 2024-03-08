@@ -24,8 +24,8 @@ class AppThemeStyle: ThemeStyle {
     override val textFieldColors: TextFieldColors
         @Composable get() {
             return TextFieldDefaults.colors(
-                focusedContainerColor = LocalTheme.colors.onBackgroundComponent,
-                unfocusedContainerColor = LocalTheme.colors.onBackgroundComponent,
+                focusedContainerColor = LocalTheme.colors.onBackgroundComponentContrast,
+                unfocusedContainerColor = LocalTheme.colors.onBackgroundComponentContrast,
                 unfocusedIndicatorColor = Color.Transparent,
                 focusedIndicatorColor = Color.Transparent,
                 disabledTextColor = LocalTheme.colors.disabled,
@@ -33,7 +33,7 @@ class AppThemeStyle: ThemeStyle {
                 unfocusedTextColor = LocalTheme.colors.secondary,
                 cursorColor = LocalTheme.colors.secondary,
                 disabledIndicatorColor = Color.Transparent,
-                errorContainerColor = LocalTheme.colors.onBackgroundComponent,
+                errorContainerColor = LocalTheme.colors.onBackgroundComponentContrast,
                 errorIndicatorColor = Color.Transparent,
                 errorTextColor = Colors.RED_ERROR,
                 errorTrailingIconColor = Colors.RED_ERROR
@@ -43,7 +43,7 @@ class AppThemeStyle: ThemeStyle {
     override val textFieldColorsOnFocus: TextFieldColors
         @Composable get() {
             return TextFieldDefaults.colors(
-                focusedContainerColor = LocalTheme.colors.onBackgroundComponent,
+                focusedContainerColor = LocalTheme.colors.onBackgroundComponentContrast,
                 unfocusedContainerColor = Color.Transparent,
                 unfocusedIndicatorColor = Color.Transparent,
                 focusedIndicatorColor = Color.Transparent,
@@ -53,7 +53,7 @@ class AppThemeStyle: ThemeStyle {
                 unfocusedTextColor = LocalTheme.colors.secondary,
                 cursorColor = LocalTheme.colors.secondary,
                 disabledIndicatorColor = Color.Transparent,
-                errorContainerColor = LocalTheme.colors.onBackgroundComponent,
+                errorContainerColor = LocalTheme.colors.onBackgroundComponentContrast,
                 errorIndicatorColor = Color.Transparent,
                 errorTextColor = Colors.RED_ERROR,
                 errorTrailingIconColor = Colors.RED_ERROR,

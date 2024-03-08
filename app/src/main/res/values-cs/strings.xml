@@ -1,0 +1,242 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Study me, please</string>
+    <string name="home_screen_title">Domů</string>
+    <string name="screen_sessions_title">Testy</string>
+    <string name="screen_collection_title">Kolekce</string>
+    <string name="screen_register_title">Jsem nový</string>
+    <string name="screen_settings_title">Šatna</string>
+    <string name="screen_account_title">Můj byznys</string>
+    <string name="screen_session_lobby_title">Moje testy</string>
+    <string name="screen_collection_detail_new">Nová kolekce</string>
+    <string name="screen_units">Kapitoly</string>
+    <string name="navigate_back">Zpět</string>
+    <string name="navigate_close">Zavřít</string>
+    <string name="home_screen_sessions_empty_action">Čas trénovat</string>
+    <string name="collection_detail_start_session">Do testu</string>
+    <string name="collection_detail_basic_information">Základní informace</string>
+    <string name="collection_detail_page_questions">Otázky</string>
+    <string name="collection_detail_page_facts">Fakta</string>
+    <string name="collection_detail_add_question">Pančeli, mám otázku</string>
+    <string name="collection_detail_save">Uložit mojí zlost</string>
+    <string name="collection_detail_name_hint">Název</string>
+    <string name="collection_detail_description_hint">Popis</string>
+    <string name="collection_detail_questions_heading">Otázky</string>
+    <string name="collection_detail_new_response">Vlastní</string>
+    <string name="collection_detail_old_response">Náhodný</string>
+    <string name="collection_detail_no_old_response">V kolekci nejsou žádné jiné</string>
+    <string name="question_answers">Odpovědi</string>
+    <string name="question_edit_field_prompt_hint">Ptej se…</string>
+    <string name="question_edit_field_prompt_header">Podnět</string>
+    <string name="question_edit_field_prompt_image">Podnětový obrázek</string>
+    <string name="question_edit_field_explanation_image">Vysvětlující obrázek</string>
+    <string name="question_field_explanation_header">Vysvětlení</string>
+    <string name="question_edit_field_hint_explanation">Bližší vysvětlení ke správné otázce</string>
+    <string name="answer_edit_field_hint_content">Odpověď je…nemám tucha</string>
+    <string name="home_screen_collections_empty_action">Pojďme sbírat motýly do kolekce</string>
+    <string name="answer_edit_field_hint_explanation">Vysvětlení této odpovědi</string>
+    <string name="answer_field_content_header">Textová odpověd</string>
+    <string name="answer_field_content_header_list">List odpovědí</string>
+    <string name="answer_field_explanation_header">Vysvětlení</string>
+    <string name="answer_is_correct_ticked">Správná odpověď</string>
+    <string name="answer_is_correct_not_ticked">Nesprávná odpověď</string>
+    <string name="questions_list_chip_has_image">má obrázek</string>
+    <string name="questions_list_chip_is_invalid">je špatně</string>
+    <string name="subjects_button_generate">Generovat otázky</string>
+    <string name="subjects_delete_dialog_title">Smazání kapitoly</string>
+    <string name="subject_heading_hint">Název kapitoly</string>
+    <string name="subject_heading_prefix">Kapitola</string>
+    <string name="subject_subheading_hint">Podnadpis</string>
+    <string name="subject_add_bullet_point">Odrážka</string>
+    <string name="subject_add_fact">Fakt</string>
+    <string name="subject_add_paragraph">Paragraf</string>
+    <string name="subject_categorize_paragraph">pojmenuj paragraf</string>
+    <string name="edit_field_item_picked_create">Vytvořit nový</string>
+    <string name="subject_paragraph_section_heading">Paragrafy</string>
+    <string name="subject_facts_section_heading">Fakta</string>
+    <string name="subject_bullet_points_section_heading">Odrážky</string>
+    <string name="subject_generating_error_no_data">Není tu dost dat na vygenerování, musíš si prvně napsat poznámky</string>
+    <string name="subject_generating_error_generic">Neznámá chyba, #sorry jako</string>
+    <string name="subject_generating_error_update_failed">Nešlo aktualizovat kolekci s novými otázky, zkus odejít a znovu přijít do téhle kolekce, případně restartovat aplikaci.</string>
+    <string name="subject_generating_success">Úspěšně jste vygenerovaly %1$d otázek.</string>
+    <string name="list_item_generic_hint">bod</string>
+    <string name="list_item_bulletin_hint">odrážka</string>
+    <string name="list_item_first_bulletin_hint">přidat popis</string>
+    <string name="facts_list_add_new">Přidat fakt</string>
+    <string name="facts_list_generate_questions">Vygenerovat otázky</string>
+    <string name="facts_field_short_information_header">Krátká klíčová informace</string>
+    <string name="facts_field_long_information_header">Dlouhá informace</string>
+    <string name="facts_type_bullet_points">Odrážky</string>
+    <string name="facts_type_definition">Definice</string>
+    <string name="facts_type_person">Osoba</string>
+    <string name="facts_type_date">Datum</string>
+    <string name="facts_type_list">Seřazený list</string>
+    <string name="facts_type_quote">Citát</string>
+    <string name="facts_type_long_fact_header">Vysvětlení informace</string>
+    <string name="facts_type_long_definition_header">Definice</string>
+    <string name="facts_type_short_definition_prompt">Co to je %1$s?</string>
+    <string name="fact_delete_dialog_title">Odstranění faktu</string>
+
+
+    <string name="subjects_delete_dialog_content">
+        Tohle vám asi chvilku trvalo udělat, jste si jistí, že chcete permanentně smazat "%1$s"?
+    </string>
+    <string name="fact_delete_dialog_description">
+        Tohle vám asi chvilku trvalo udělat, jste si jistí, že chcete permanentně smazat vybraných %1$d faktů?
+    </string>
+
+    <string name="generic_delete_dialog_title">Smazání</string>
+    <string name="generic_delete_dialog_description">
+        Tohle vám asi chvilku trvalo udělat, jste si jistí, že to chcete permanentně smazat?
+    </string>
+
+    <string name="session_detail_default_toolbar">Nový test</string>
+    <string name="session_lobby_screen_empty_text">Zatím netrénuješ znalosti…zatím!</string>
+    <string name="session_lobby_screen_delete_title">Smazání testu</string>
+    <string name="session_lobby_screen_delete_text">
+        Tohle vám asi chvilku trvalo udělat, jste si jistí, že chcete permanentne smazat vybraných %1$d testů?
+    </string>
+    <string name="session_play_repeated_snackbar">
+        Supr dupr! Tohle se brzo naučíš. My se o to postaráme:)
+    </string>
+    <string name="session_play_see_more">Více</string>
+
+    <string name="add_new_collection">
+        Sbírám otázky, jelikož nemám otázky. Zatím!
+    </string>
+    <string name="collection_empty_error">
+        Nejsou tu žádné kolce…zatím! Ale můžeš začít hned teď:)
+    </string>
+    <string name="collection_delete_dialog_title">Smazání kolekcí</string>
+    <string name="collection_delete_dialog_description">
+        Tohle vám asi chvilku trvalo udělat, jste si jistí, že chcete permanentne smazat vybraných %1$d kolekcí?
+    </string>
+    <string name="question_detail_new_answer">Vytvořit odpověď</string>
+    <string name="question_delete_dialog_title">Smazání otázek</string>
+    <string name="question_delete_dialog_description">
+        Tohle vám asi chvilku trvalo udělat, jste si jistí, že chcete permanentne smazat vybraných %1$d otázek?
+    </string>
+    <string name="answer_delete_dialog_title">Smazání odpovědí</string>
+    <string name="answer_delete_dialog_description">
+        Tohle vám asi chvilku trvalo udělat, jste si jistí, že chcete permanentne smazat vybraných %1$d odpovědí?
+    </string>
+
+    <string name="screen_settings_text_theme">Tmavý a tmavší</string>
+
+    <string name="session_show_paragraph">Ukázat paragraf</string>
+    <string name="session_leave_dialog_title">Opustit tenhle test</string>
+    <string name="session_leave_dialog_content">
+        Opravdu chceš odejít z tohoto probíhajícího testu?
+    </string>
+
+    <string name="leave_app_dialog_title">Zavření aplikace</string>
+    <string name="leave_app_dialog_content">
+        Opravdu chceš tuhle aplikaci zavřít? :(
+    </string>
+
+    <string name="question">Otázka</string>
+    <string name="collection">Kolekce</string>
+
+    <string name="preference_chooser_preferences_show">Změnit nastavení</string>
+    <string name="preference_chooser_preferences_hide">Zavřít nastavení</string>
+    <string name="preference_chooser_field_name_hint">Název preference</string>
+    <string name="preference_chooser_preferences_header">Tvoje preference</string>
+    <string name="preference_chooser_studying_header">Studování</string>
+    <string name="preference_chooser_practicing_header">Cvičení</string>
+    <string name="preference_chooser_examination_header">Testy</string>
+    <string name="preference_chooser_add_new">Vytvořit</string>
+    <string name="preference_wait_for_correct_answer_desc">
+        Opravovat moje chyby odkud nevyberu správnou
+    </string>
+    <string name="preference_validate_manually_desc">
+        Manuální oprava chyb, jakmile si vyberu odpovědi
+    </string>
+    <string name="preference_repeat_on_mistake_desc">
+        Jestli by měly být otázky opakovaný po udělání chyby
+    </string>
+
+    <!--- ============================== QUESTION GENERATING =================================== -->
+
+    <string name="question_generating_bulletin_name">Vysvětli <b>\"%1$s\"</b></string>
+    <string name="question_generating_bulletin_points">Co nejlépe vystihuje:</string>
+    <string name="question_generating_fact_list">Vyber všechny z <b>\"%1$s\" (%2$s)</b>?</string>
+    <string name="question_generating_fact_list_short_key">Čeho se tohle týká?</string>
+    <string name="question_generating_fact_image">Co nejlépe vystihuje:</string>
+
+
+    <!--<string name="question_generating_fact_parent_name_short">
+        What is one of the <b><![CDATA[<a href="/paragraph/%2$s">%1$s</a>]]></b>%5$s (<![CDATA[<a href="/units/%4$s">%3$s</a>]]>)?
+    </string>
+    <string name="question_generating_fact_parent_name_long">
+        What best describes one of the <b><![CDATA[<a href="/paragraph/%2$s">%1$s</a>]]></b>%5$s (<![CDATA[<a href="/units/%4$s">%3$s</a>]]>)?
+    </string>
+    <string name="question_generating_fact_parent_addition">, under <b><![CDATA[<a href="/paragraph/%2$s">%1$s</a>]]></b></string>-->
+
+    <string name="question_generating_fact_short">Co je/jsou <b>\"%1$s\" (%2$s)?</b></string>
+    <string name="question_generating_fact_long">Co nejlépe vysvětluje: <b>\"%1$s\" (%2$s)</b>?</string>
+    <string name="question_generating_children_items">
+        Vyběr relevantní informaci k <b><![CDATA[<a href="/paragraph/%2$s">%1$s</a>]]></b> (<b><![CDATA[<a href="/units/%4$s">%3$s</a>]]></b>).
+    </string>
+
+
+    <!--- =================================== COMPONENTS ======================================= -->
+    <string name="image_field_url_hint">URL cesta k obrázku.</string>
+    <string name="image_field_url_error_formats">
+        Došlo k chybě, podporované formáty jsou: PNG, JPG, WebP, GIF, BMP, HEIF, AVIF and SVG.
+        (Tvoje URL adresa musí končit na ".png", ".jpg", atd.)
+    </string>
+    <string name="image_field_local_value">Obrázek ze souboru</string>
+
+    <!--- == STATISTICS == -->
+    <string name="statistics_time_spent_total">Ztrávili jste %1$szodpovídání %2$d z %3$d otázek.</string>
+    <string name="statistics_time_spent_average">Průměrně, odpovídáte během %1$s</string>
+    <string name="statistics_success_rate">Známka: %1$s (%2$s\%%)</string>
+    <string name="statistics_ratio_time_success">Time/success ratio: %1$s</string>
+    <string name="statistics_progress_percentage">%1$s \%% zodpovězeno</string>
+
+    <!--- =================================== BUTTONS ========================================== -->
+    <string name="button_add">Přidat</string>
+    <string name="button_add_to">Přidat do</string>
+    <string name="button_add_image">Přidat obrázek</string>
+    <string name="button_add_prompt_image">Přidat podnětový obrázek</string>
+    <string name="button_add_explanation_image">Přidat vysvětlující obrázek</string>
+    <string name="button_change_image">Změnit obrázek</string>
+    <string name="button_import">Importovat</string>
+    <string name="button_export">Exportovat</string>
+    <string name="button_scan">Skenovat</string>
+    <string name="button_start_session">Začít test</string>
+    <string name="button_copy">Koprívovat</string>
+    <string name="button_paste">Vložit</string>
+    <string name="button_dismiss">Zrušit</string>
+    <string name="button_confirm">Potvrdit</string>
+    <string name="button_play">Začít</string>
+    <string name="button_statistics">Statistiky</string>
+    <string name="button_test_play">Zkusit test</string>
+    <string name="button_preferences">Nastavení</string>
+    <string name="button_continue">Pokračovat</string>
+    <string name="button_validate">Opravit</string>
+    <string name="button_repeat">Opakovat tuhle otázku</string>
+    <string name="button_leave">Opustit</string>
+    <string name="button_skip_to_front">Zpátky dopředu</string>
+    <string name="button_delete">Smazat</string>
+    <string name="button_archive">Archivovat</string>
+    <string name="button_select_all">Vybrat vše</string>
+    <string name="button_deselect">Odvybrat vše</string>
+    <string name="button_cancel">Zrušit</string>
+
+
+    <!--- ============================= ACCESSIBILITY ==================================== -->
+    <string name="btn_clear_content_description">Clear</string>
+    <string name="add_new_content_description">Add new item</string>
+    <string name="image_icon_content_description">Icon</string>
+    <string name="close_content_description">Close</string>
+    <string name="play_content_description">Play</string>
+    <string name="edit_content_description">Edit</string>
+    <string name="expand_content_description">Expand</string>
+    <string name="collapse_content_description">Collapse</string>
+    <string name="accessibility_add_content">Add new content</string>
+    <string name="accessibility_add_bullet_point">bulletin</string>
+    <string name="accessibility_add_fact">fact</string>
+    <string name="accessibility_add_paragraph">paragraph</string>
+    <string name="accessibility_delete">Delete</string>
+</resources>

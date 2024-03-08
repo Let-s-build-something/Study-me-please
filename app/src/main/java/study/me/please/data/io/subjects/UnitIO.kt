@@ -5,6 +5,8 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.google.gson.annotations.SerializedName
 import com.squadris.squadris.utils.DateUtils
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import study.me.please.data.io.FactIO
 import study.me.please.data.room.AppRoomDatabase.Companion.ROOM_UNIT_TABLE
 import java.io.Serializable
@@ -55,8 +57,9 @@ data class UnitIO(
 ): Serializable {
 
     /** Whether this data can be taken seriously */
-    val isSeriousDataPoint: Boolean
-        get() = bulletPoints.isNotEmpty() && name.isNotEmpty()
+    suspend fun isSeriousDataPoint(): Boolean = withContext(Dispatchers.Default) {
+        bulletPoints.any { it.isNotBlank() } && name.isNotEmpty()
+    }
 
     /** Updates this object with new subject [subject] */
     fun updateTO(subject: UnitIO) {

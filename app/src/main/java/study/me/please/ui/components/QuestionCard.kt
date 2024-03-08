@@ -92,8 +92,8 @@ private fun ContentLayout(
         elevation = LocalTheme.styles.cardClickableElevation,
         shape = LocalTheme.shapes.componentShape,
         colors = CardDefaults.cardColors(
-            containerColor = LocalTheme.colors.onBackgroundComponentContrast,
-            contentColor = LocalTheme.colors.onBackgroundComponentContrast
+            containerColor = LocalTheme.colors.onBackgroundComponent,
+            contentColor = LocalTheme.colors.onBackgroundComponent
         )
     ) {
         Crossfade(

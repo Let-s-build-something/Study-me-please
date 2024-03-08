@@ -243,7 +243,7 @@ fun QuestionDetailScreen(
     }
 
     PullRefreshScreen(
-        modifier = Modifier.background(color = LocalTheme.colors.onBackgroundComponent),
+        modifier = Modifier.background(color = LocalTheme.colors.backgroundLight),
         viewModel = viewModel,
         title = livePrompt.value ?: toolbarTitle,
         subtitle = stringResource(R.string.question),

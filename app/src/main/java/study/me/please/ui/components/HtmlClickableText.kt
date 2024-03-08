@@ -48,6 +48,10 @@ fun HtmlClickableText(
                 val endIndex = spanned.getSpanEnd(span)
 
                 when(span) {
+                    is URLSpan -> {
+                        addStyle(style = linkStyle.toSpanStyle(), start = startIndex, end = endIndex)
+                        addStringAnnotation(tag = LINK_TAG, annotation = span.url, start = startIndex, end = endIndex)
+                    }
                     is StyleSpan -> {
                         span.toSpanStyle()?.let { addStyle(style = it, start = startIndex, end = endIndex) }
                     }
@@ -56,10 +60,6 @@ fun HtmlClickableText(
                     }
                     is StrikethroughSpan -> {
                         addStyle(SpanStyle(textDecoration = TextDecoration.LineThrough), start = startIndex, end = endIndex)
-                    }
-                    is URLSpan -> {
-                        addStyle(style = linkStyle.toSpanStyle(), start = startIndex, end = endIndex)
-                        addStringAnnotation(tag = LINK_TAG, annotation = span.url, start = startIndex, end = endIndex)
                     }
                 }
             }

@@ -210,7 +210,7 @@ private fun DataCard(
             .then(
                 if (data.isEmpty && mode == InteractiveCardMode.DATA_DISPLAY) {
                     Modifier.background(
-                        color = LocalTheme.colors.onBackgroundComponent,
+                        color = LocalTheme.colors.onBackgroundComponentContrast,
                         shape = LocalTheme.shapes.componentShape
                     )
                 } else Modifier

@@ -1,6 +1,7 @@
 package study.me.please.ui.units.detail
 
 import android.content.res.Configuration
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -37,6 +38,7 @@ fun ParagraphLayout(
 
     val paragraph = viewModel.paragraph.collectAsState()
 
+    Log.d("kostka_test", "paragraphUid: $paragraphUid")
     LaunchedEffect(Unit) {
         paragraphUid?.let { uid ->
             viewModel.requestParagraph(uid)
@@ -61,6 +63,7 @@ fun ParagraphLayout(
                 *paragraph.value?.paragraphs?.map { it.uid }?.toTypedArray().orEmpty()
             )
         }
+        Log.d("kostka_test", "paragraph: ${safeParagraph.localCategory}")
 
         LazyVerticalGrid(
             modifier = modifier.fillMaxWidth(),
@@ -77,7 +80,11 @@ fun ParagraphLayout(
                     updateParagraph = {},
                     selectedFact = mutableStateOf(null)
                 ),
-                collapsedParagraphs = collapsedParagraphs,
+                collapsedParagraphs = collapsedParagraphs.apply {
+                    if(collapsedParagraphs.contains(safeParagraph.uid)) {
+                        collapsedParagraphs.remove(safeParagraph.uid)
+                    }
+                },
                 addNewCategory = null,
                 onNewCategoryChosen = {},
                 screenWidthDp = screenWidth,

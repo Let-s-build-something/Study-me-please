@@ -10,7 +10,6 @@ import study.me.please.data.io.QuestionMode
 import study.me.please.data.room.AppRoomDatabase
 import study.me.please.ui.session.play.QuestionModule
 import java.io.Serializable
-import java.util.Date
 import java.util.UUID
 
 /**
@@ -35,6 +34,7 @@ data class SessionIO(
     /** saved question module for control and history of questioning */
     @SerializedName("question_module")
     @Embedded(prefix = "q_module_")
+    @Deprecated("Should be replaced by questionModuleUid and request the data externally")
     var questionModule: QuestionModule? = null,
 
     /** What was the last time this session was played */

@@ -17,13 +17,14 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridScope
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -91,131 +92,6 @@ import study.me.please.ui.components.InteractiveCardMode
 import study.me.please.ui.components.ListItemEditField
 import java.util.UUID
 
-data class ParagraphBlockState(
-    val parentLayer: Int,
-    val categories: State<List<CategoryIO>?> = mutableStateOf(listOf()),
-    val selectedFact: MutableState<String?>,
-    val clipBoard: GeneralClipBoard?,
-    val paragraph: ParagraphIO,
-    val isReadOnly: Boolean = false,
-    val updateParagraph: (ParagraphIO) -> Unit,
-): ParagraphBlockBridge {
-
-    enum class ElementType {
-        FACT,
-        BULLET_POINT,
-        EMPTY_SPACE,
-        PARAGRAPH
-    }
-
-    val nestedBulletPoints = mutableStateListOf(*paragraph.bulletPoints.toTypedArray())
-    val nestedFacts = mutableStateListOf(*paragraph.facts.toTypedArray())
-    val nestedParagraphs = mutableStateListOf(*paragraph.paragraphs.toTypedArray())
-
-    override fun removeBulletPoint(index: Int) {
-        nestedBulletPoints.removeAt(index)
-        paragraph.bulletPoints = nestedBulletPoints
-        updateParagraph(paragraph)
-    }
-
-    override fun updateBulletPoint(index: Int, output: String) {
-        nestedBulletPoints[index] = output
-        paragraph.bulletPoints = nestedBulletPoints
-        updateParagraph(paragraph)
-    }
-
-    override fun addNewBulletPoint(index: Int, bulletPoint: String?) {
-        nestedBulletPoints.add(index, bulletPoint ?: "")
-        paragraph.bulletPoints = nestedBulletPoints
-        updateParagraph(paragraph)
-    }
-
-    override fun addNewFact(
-        index: Int,
-        fact: FactIO?,
-        uid: String?
-    ) {
-        val newFact = fact?.deepCopy() ?: FactIO()
-        Log.d("kostka_test", "adding new fact: ${newFact.uid} (${fact?.uid}), facts: ${nestedFacts.map { it.uid }}")
-        // update source of truth first
-        paragraph.facts.apply {
-            add(index, newFact)
-            removeIf {
-                it.uid == fact?.uid
-            }
-        }
-        updateParagraph(paragraph)
-
-        nestedFacts.apply {
-            add(index, newFact)
-            removeIf {
-                it.uid == fact?.uid
-            }
-        }
-        if(fact == null) {
-            selectedFact.value = newFact.uid
-        }
-        Log.d("kostka_test", "facts: ${nestedFacts.map { it.uid }}")
-    }
-
-    override fun addNewParagraph(
-        index: Int,
-        paragraph: ParagraphIO?,
-        uid: String?
-    ) {
-        val newParagraph = paragraph?.copy(uid = UUID.randomUUID().toString()) ?: ParagraphIO()
-        // update source of truth first
-        this.paragraph.paragraphs.apply {
-            add(index, newParagraph)
-            removeIf {
-                it.uid == uid
-            }
-        }
-        updateParagraph(this.paragraph)
-
-        nestedParagraphs.apply {
-            add(index, newParagraph)
-            removeIf {
-                it.uid == uid
-            }
-        }
-    }
-
-    override fun requestFactsPaste() {
-        nestedFacts.addAll(0, clipBoard?.facts?.paste().orEmpty())
-        paragraph.facts = nestedFacts
-        updateParagraph(paragraph)
-    }
-
-    override fun requestFactDeletion(uid: String): Boolean {
-        val res = nestedFacts.removeIf {
-            it.uid == uid
-        }
-        if(res) {
-            Log.d("kostka_test", "removed fact, uid: $uid")
-            paragraph.facts.removeIf {
-                it.uid == uid
-            }
-            updateParagraph(paragraph)
-        }
-        return res
-    }
-
-    override fun requestParagraphDeletion(uid: String): Boolean {
-        val res = nestedParagraphs.removeIf {
-            it.uid == uid
-        }
-        if(res) {
-            Log.d("kostka_test", "removed paragraph, uid: $uid")
-            paragraph.paragraphs.removeIf {
-                it.uid == uid
-            }
-            updateParagraph(paragraph)
-        }
-        return res
-    }
-}
-
 /** Block of a paragraph under a subject */
 @OptIn(ExperimentalFoundationApi::class)
 fun LazyGridScope.paragraphBlock(
@@ -269,132 +145,136 @@ fun LazyGridScope.paragraphBlock(
             Column(
                 modifier = modifier
                     .fillMaxWidth()
-                    .dragAndDropTarget(
-                        shouldStartDragAndDrop = { startEvent ->
-                            val uid = unitsViewModel?.dragAndDroppedParagraph
-                                ?: unitsViewModel?.dragAndDroppedFact
+                    .then(
+                        if(isReadOnly.not()) {
+                            Modifier.dragAndDropTarget(
+                                shouldStartDragAndDrop = { startEvent ->
+                                    val uid = unitsViewModel?.dragAndDroppedParagraph
+                                        ?: unitsViewModel?.dragAndDroppedFact
 
-                            // restrict paragraph to be not injected into its child
-                            val sourceParagraph = unitsViewModel?.dragAndDroppedParagraph
-                            startEvent
-                                .mimeTypes()
-                                .contains(type.name)
-                                    && uid != identifier
-                                    && (type != ParagraphBlockState.ElementType.PARAGRAPH
-                                    || (sourceParagraph == null
-                                    || (sourceParagraph.uid != identifier && !unitsViewModel.isNestedOfParagraph(
-                                sourceParagraph = sourceParagraph,
-                                targetUid = identifier
-                            )))
-                                    )
-                        },
-                        target = object : DragAndDropTarget {
-                            override fun onDrop(event: DragAndDropEvent): Boolean {
-                                generalScope?.launch(Dispatchers.Default) {
-                                    val clipData = event.toAndroidDragEvent().clipData
-                                    val firstMimeType = event
+                                    // restrict paragraph to be not injected into its child
+                                    val sourceParagraph = unitsViewModel?.dragAndDroppedParagraph
+                                    startEvent
                                         .mimeTypes()
-                                        .firstOrNull()
-                                    Log.d(
-                                        "kostka_test",
-                                        "clipData: $clipData, firstMimeType: $firstMimeType"
-                                    )
-                                    if (clipData != null) {
-                                        for (i in 0 until clipData.itemCount) {
-                                            ParagraphBlockState.ElementType
-                                                .values()
-                                                .find {
-                                                    it.name == firstMimeType
-                                                }
-                                                ?.let {
-                                                    Log.d(
-                                                        "kostka_test",
-                                                        "element from clipdata: $it"
-                                                    )
-                                                    val uid = clipData.getItemAt(i).text.toString()
-                                                    when (it) {
-                                                        ParagraphBlockState.ElementType.BULLET_POINT -> {
-                                                            // there's no drag and drop of existing bullet point
-                                                            // so we always create a new one
-                                                            addNewBulletPoint()
-                                                            addContentVisible.value = false
+                                        .contains(type.name)
+                                            && uid != identifier
+                                            && (type != ParagraphBlockState.ElementType.PARAGRAPH
+                                            || (sourceParagraph == null
+                                            || (sourceParagraph.uid != identifier && !unitsViewModel.isNestedOfParagraph(
+                                                    sourceParagraph = sourceParagraph,
+                                                    targetUid = identifier
+                                                )))
+                                            )
+                                },
+                                target = object : DragAndDropTarget {
+                                    override fun onDrop(event: DragAndDropEvent): Boolean {
+                                        generalScope?.launch(Dispatchers.Default) {
+                                            val clipData = event.toAndroidDragEvent().clipData
+                                            val firstMimeType = event
+                                                .mimeTypes()
+                                                .firstOrNull()
+                                            Log.d(
+                                                "kostka_test",
+                                                "clipData: $clipData, firstMimeType: $firstMimeType"
+                                            )
+                                            if (clipData != null) {
+                                                for (i in 0 until clipData.itemCount) {
+                                                    ParagraphBlockState.ElementType
+                                                        .values()
+                                                        .find {
+                                                            it.name == firstMimeType
                                                         }
-
-                                                        ParagraphBlockState.ElementType.FACT -> {
-                                                            val index =
-                                                                if (type == ParagraphBlockState.ElementType.FACT) {
-                                                                    nestedFacts
-                                                                        .indexOfFirst { fact ->
-                                                                            fact.uid == identifier
-                                                                        }
-                                                                        .coerceAtLeast(0)
-                                                                } else 0
-                                                            Log.d("kostka_test", "new fact - $uid")
-                                                            val isNotNested =
-                                                                nestedFacts.none { fact -> fact.uid == uid }
-                                                            addNewFact(
-                                                                index = index,
-                                                                fact = unitsViewModel?.dragAndDroppedFact,
-                                                                uid = uid
+                                                        ?.let {
+                                                            Log.d(
+                                                                "kostka_test",
+                                                                "element from clipdata: $it"
                                                             )
-                                                            // remove from only other paragraphs
-                                                            if (isNotNested) {
-                                                                unitsViewModel?.elementUidToRemove?.emit(
-                                                                    uid
-                                                                )
-                                                            }
-                                                            unitsViewModel?.dragAndDroppedFact =
-                                                                null
-                                                            addContentVisible.value = false
-                                                        }
+                                                            val uid = clipData.getItemAt(i).text.toString()
+                                                            when (it) {
+                                                                ParagraphBlockState.ElementType.BULLET_POINT -> {
+                                                                    // there's no drag and drop of existing bullet point
+                                                                    // so we always create a new one
+                                                                    addNewBulletPoint()
+                                                                    addContentVisible.value = false
+                                                                }
 
-                                                        ParagraphBlockState.ElementType.PARAGRAPH -> {
-                                                            val index =
-                                                                if (type == ParagraphBlockState.ElementType.PARAGRAPH) {
-                                                                    nestedParagraphs
-                                                                        .indexOfFirst { paragraph ->
-                                                                            paragraph.uid == identifier
-                                                                        }
-                                                                        .coerceAtLeast(0)
-                                                                } else 0
-                                                            val isNotNested =
-                                                                nestedParagraphs.none { fact -> fact.uid == uid }
-                                                            addNewParagraph(
-                                                                index = index,
-                                                                paragraph = unitsViewModel?.dragAndDroppedParagraph,
-                                                                uid = uid
-                                                            )
-                                                            // remove from only other paragraphs
-                                                            if (isNotNested) {
-                                                                unitsViewModel?.elementUidToRemove?.emit(
-                                                                    uid
-                                                                )
-                                                            }
-                                                            unitsViewModel?.dragAndDroppedParagraph =
-                                                                null
-                                                            addContentVisible.value = false
-                                                        }
+                                                                ParagraphBlockState.ElementType.FACT -> {
+                                                                    val index =
+                                                                        if (type == ParagraphBlockState.ElementType.FACT) {
+                                                                            nestedFacts
+                                                                                .indexOfFirst { fact ->
+                                                                                    fact.uid == identifier
+                                                                                }
+                                                                                .coerceAtLeast(0)
+                                                                        } else 0
+                                                                    Log.d("kostka_test", "new fact - $uid")
+                                                                    val isNotNested =
+                                                                        nestedFacts.none { fact -> fact.uid == uid }
+                                                                    addNewFact(
+                                                                        index = index,
+                                                                        fact = unitsViewModel?.dragAndDroppedFact,
+                                                                        uid = uid
+                                                                    )
+                                                                    // remove from only other paragraphs
+                                                                    if (isNotNested) {
+                                                                        unitsViewModel?.elementUidToRemove?.emit(
+                                                                            uid
+                                                                        )
+                                                                    }
+                                                                    unitsViewModel?.dragAndDroppedFact =
+                                                                        null
+                                                                    addContentVisible.value = false
+                                                                }
 
-                                                        else -> {}
-                                                    }
+                                                                ParagraphBlockState.ElementType.PARAGRAPH -> {
+                                                                    val index =
+                                                                        if (type == ParagraphBlockState.ElementType.PARAGRAPH) {
+                                                                            nestedParagraphs
+                                                                                .indexOfFirst { paragraph ->
+                                                                                    paragraph.uid == identifier
+                                                                                }
+                                                                                .coerceAtLeast(0)
+                                                                        } else 0
+                                                                    val isNotNested =
+                                                                        nestedParagraphs.none { fact -> fact.uid == uid }
+                                                                    addNewParagraph(
+                                                                        index = index,
+                                                                        paragraph = unitsViewModel?.dragAndDroppedParagraph,
+                                                                        uid = uid
+                                                                    )
+                                                                    // remove from only other paragraphs
+                                                                    if (isNotNested) {
+                                                                        unitsViewModel?.elementUidToRemove?.emit(
+                                                                            uid
+                                                                        )
+                                                                    }
+                                                                    unitsViewModel?.dragAndDroppedParagraph =
+                                                                        null
+                                                                    addContentVisible.value = false
+                                                                }
+
+                                                                else -> {}
+                                                            }
+                                                        }
                                                 }
+                                            }
                                         }
+                                        dragAndDropTarget.value = ""
+                                        return true
+                                    }
+
+                                    override fun onEntered(event: DragAndDropEvent) {
+                                        super.onEntered(event)
+                                        dragAndDropTarget.value = identifier
+                                    }
+
+                                    override fun onExited(event: DragAndDropEvent) {
+                                        super.onExited(event)
+                                        dragAndDropTarget.value = ""
                                     }
                                 }
-                                dragAndDropTarget.value = ""
-                                return true
-                            }
-
-                            override fun onEntered(event: DragAndDropEvent) {
-                                super.onEntered(event)
-                                dragAndDropTarget.value = identifier
-                            }
-
-                            override fun onExited(event: DragAndDropEvent) {
-                                super.onExited(event)
-                                dragAndDropTarget.value = ""
-                            }
-                        }
+                            )
+                        }else Modifier
                     )
             ) {
                 if(type == ParagraphBlockState.ElementType.PARAGRAPH) content()
@@ -428,37 +308,39 @@ fun LazyGridScope.paragraphBlock(
             paragraph: ParagraphIO? = null
         ) = composed(
             factory = {
-                val density = LocalDensity.current
-                val rectColor = LocalTheme.colors.onBackgroundComponent
-                val cornerRadius = with(density) {
-                    LocalTheme.shapes.componentCornerRadius.toPx()
-                }
-
-                dragAndDropSource(
-                    drawDragDecoration = {
-                        drawRoundRect(
-                            color = rectColor,
-                            cornerRadius = CornerRadius(cornerRadius, cornerRadius)
-                        )
+                if(isReadOnly.not()) {
+                    val density = LocalDensity.current
+                    val rectColor = LocalTheme.colors.onBackgroundComponent
+                    val cornerRadius = with(density) {
+                        LocalTheme.shapes.componentCornerRadius.toPx()
                     }
-                ) {
-                    detectTapGestures(
-                        onLongPress = {
-                            unitsViewModel?.dragAndDroppedFact = fact
-                            unitsViewModel?.dragAndDroppedParagraph = paragraph
-                            startTransfer(
-                                DragAndDropTransferData(
-                                    ClipData(
-                                        "",
-                                        arrayOf(elementType.name, ParagraphBlockState.ElementType.PARAGRAPH.name),
-                                        ClipData.Item(uid)
+
+                    dragAndDropSource(
+                        drawDragDecoration = {
+                            drawRoundRect(
+                                color = rectColor,
+                                cornerRadius = CornerRadius(cornerRadius, cornerRadius)
+                            )
+                        }
+                    ) {
+                        detectTapGestures(
+                            onLongPress = {
+                                unitsViewModel?.dragAndDroppedFact = fact
+                                unitsViewModel?.dragAndDroppedParagraph = paragraph
+                                startTransfer(
+                                    DragAndDropTransferData(
+                                        ClipData(
+                                            "",
+                                            arrayOf(elementType.name, ParagraphBlockState.ElementType.PARAGRAPH.name),
+                                            ClipData.Item(uid)
+                                        )
                                     )
                                 )
-                            )
-                        },
-                        onTap = { onClick() }
-                    )
-                }
+                            },
+                            onTap = { onClick() }
+                        )
+                    }
+                }else Modifier
             }
         )
 
@@ -492,6 +374,8 @@ fun LazyGridScope.paragraphBlock(
             ) {
                 ExpandableContent(
                     modifier = Modifier
+                        .padding(start = paddingStart)
+                        .fillMaxWidth()
                         .dragSource(
                             onClick = {
                                 if (isExpanded.value.not()) {
@@ -508,7 +392,6 @@ fun LazyGridScope.paragraphBlock(
                             paragraph = paragraph
                         )
                         .animateItemPlacement()
-                        .padding(start = paddingStart)
                         .then(
                             if (parentLayer >= 0) Modifier
                                 .drawSegmentedBorder(
@@ -561,7 +444,9 @@ fun LazyGridScope.paragraphBlock(
                 ) {}
             }
         }
-        item {
+        item(
+            span = { GridItemSpan(if(isLandscape) 2 else 1) }
+        ) {
             AnimatedVisibility(
                 modifier = Modifier
                     .padding(start = paddingStart)
@@ -627,10 +512,10 @@ fun LazyGridScope.paragraphBlock(
             }
         }
 
-        items(
+        itemsIndexed(
             items = if(isExpanded.value) nestedFacts else listOf(),
-            key = { fact -> fact.uid }
-        ) { fact ->
+            key = { _, fact -> fact.uid }
+        ) { index, fact ->
             LaunchedEffect(Unit) {
                 unitsViewModel?.elementUidToRemove?.collectLatest { elementUid ->
                     withContext(Dispatchers.Default) {
@@ -650,14 +535,26 @@ fun LazyGridScope.paragraphBlock(
                 modifier = Modifier
                     .animateItemPlacement()
                     .fillMaxWidth()
-                    .padding(start = paddingStart)
-                    .drawSegmentedBorder(
-                        borderOrder = if (nestedParagraphs.isNotEmpty()) {
-                            BorderOrder.Center
-                        } else BorderOrder.None,
-                        screenWidthDp = screenWidthDp,
-                        notLastLayers = notLastLayers,
-                        parentLayer = parentLayer
+                    .padding(
+                        start = if(isLandscape) {
+                            if(index % 2 == 0) paddingStart.div(2) else 0.dp
+                        } else paddingStart,
+                        end = if(isLandscape && index % 2 != 0) paddingStart.div(2) else 0.dp
+                    )
+                    .offset(
+                        x = if(isLandscape) paddingStart.div(2) else 0.dp
+                    )
+                    .then(
+                        if(isLandscape && index % 2 == 0) {
+                            Modifier.drawSegmentedBorder(
+                                borderOrder = if (nestedParagraphs.isNotEmpty()) {
+                                    BorderOrder.Center
+                                } else BorderOrder.None,
+                                screenWidthDp = screenWidthDp,
+                                notLastLayers = notLastLayers,
+                                parentLayer = parentLayer
+                            )
+                        }else Modifier
                     ),
                 type = ParagraphBlockState.ElementType.FACT,
                 identifier = fact.uid
@@ -889,5 +786,130 @@ private fun Preview() {
                 )
             }
         }
+    }
+}
+
+data class ParagraphBlockState(
+    val parentLayer: Int,
+    val categories: State<List<CategoryIO>?> = mutableStateOf(listOf()),
+    val selectedFact: MutableState<String?>,
+    val clipBoard: GeneralClipBoard?,
+    val paragraph: ParagraphIO,
+    val isReadOnly: Boolean = false,
+    val updateParagraph: (ParagraphIO) -> Unit,
+): ParagraphBlockBridge {
+
+    enum class ElementType {
+        FACT,
+        BULLET_POINT,
+        EMPTY_SPACE,
+        PARAGRAPH
+    }
+
+    val nestedBulletPoints = mutableStateListOf(*paragraph.bulletPoints.toTypedArray())
+    val nestedFacts = mutableStateListOf(*paragraph.facts.toTypedArray())
+    val nestedParagraphs = mutableStateListOf(*paragraph.paragraphs.toTypedArray())
+
+    override fun removeBulletPoint(index: Int) {
+        nestedBulletPoints.removeAt(index)
+        paragraph.bulletPoints = nestedBulletPoints
+        updateParagraph(paragraph)
+    }
+
+    override fun updateBulletPoint(index: Int, output: String) {
+        nestedBulletPoints[index] = output
+        paragraph.bulletPoints = nestedBulletPoints
+        updateParagraph(paragraph)
+    }
+
+    override fun addNewBulletPoint(index: Int, bulletPoint: String?) {
+        nestedBulletPoints.add(index, bulletPoint ?: "")
+        paragraph.bulletPoints = nestedBulletPoints
+        updateParagraph(paragraph)
+    }
+
+    override fun addNewFact(
+        index: Int,
+        fact: FactIO?,
+        uid: String?
+    ) {
+        val newFact = fact?.deepCopy() ?: FactIO()
+        Log.d("kostka_test", "adding new fact: ${newFact.uid} (${fact?.uid}), facts: ${nestedFacts.map { it.uid }}")
+        // update source of truth first
+        paragraph.facts.apply {
+            add(index, newFact)
+            removeIf {
+                it.uid == fact?.uid
+            }
+        }
+        updateParagraph(paragraph)
+
+        nestedFacts.apply {
+            add(index, newFact)
+            removeIf {
+                it.uid == fact?.uid
+            }
+        }
+        if(fact == null) {
+            selectedFact.value = newFact.uid
+        }
+        Log.d("kostka_test", "facts: ${nestedFacts.map { it.uid }}")
+    }
+
+    override fun addNewParagraph(
+        index: Int,
+        paragraph: ParagraphIO?,
+        uid: String?
+    ) {
+        val newParagraph = paragraph?.copy(uid = UUID.randomUUID().toString()) ?: ParagraphIO()
+        // update source of truth first
+        this.paragraph.paragraphs.apply {
+            add(index, newParagraph)
+            removeIf {
+                it.uid == uid
+            }
+        }
+        updateParagraph(this.paragraph)
+
+        nestedParagraphs.apply {
+            add(index, newParagraph)
+            removeIf {
+                it.uid == uid
+            }
+        }
+    }
+
+    override fun requestFactsPaste() {
+        nestedFacts.addAll(0, clipBoard?.facts?.paste().orEmpty())
+        paragraph.facts = nestedFacts
+        updateParagraph(paragraph)
+    }
+
+    override fun requestFactDeletion(uid: String): Boolean {
+        val res = nestedFacts.removeIf {
+            it.uid == uid
+        }
+        if(res) {
+            Log.d("kostka_test", "removed fact, uid: $uid")
+            paragraph.facts.removeIf {
+                it.uid == uid
+            }
+            updateParagraph(paragraph)
+        }
+        return res
+    }
+
+    override fun requestParagraphDeletion(uid: String): Boolean {
+        val res = nestedParagraphs.removeIf {
+            it.uid == uid
+        }
+        if(res) {
+            Log.d("kostka_test", "removed paragraph, uid: $uid")
+            paragraph.paragraphs.removeIf {
+                it.uid == uid
+            }
+            updateParagraph(paragraph)
+        }
+        return res
     }
 }

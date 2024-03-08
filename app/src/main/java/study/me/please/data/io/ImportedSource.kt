@@ -13,4 +13,10 @@ data class ImportedSource(
 
     /** Parent importing source */
     val parent: ImportedSource? = null
-): Serializable
+): Serializable {
+
+    /** Finds first paragraph uid */
+    fun findParagraphUid(): String? {
+        return if(type == ImportSourceType.PARAGRAPH) sourceUid else parent?.findParagraphUid()
+    }
+}

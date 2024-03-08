@@ -20,13 +20,13 @@ object DarkAppColors: BaseColors {
 
     override val tetrial: Color = Colors.TETRIAL
 
-    override val backgroundLight: Color = Colors.DARK_GREY
+    override val backgroundLight: Color = Colors.NIGHT
 
     override val onBackGroundLight: Color = Colors.PRIMARY_8
 
-    override val onBackgroundComponent: Color = Colors.ON_DARK_BACKGROUND
+    override val onBackgroundComponent: Color = Colors.EERIE_BLACK
 
-    override val onBackgroundComponentContrast: Color = Colors.TETRIAL_16_ON_DARK_COMPONENT
+    override val onBackgroundComponentContrast: Color = Colors.NIGHT_EERIE_BLACK
 
     override val shimmer: Color = Colors.TETRIAL_16
     override val overShimmer: Color = Colors.TETRIAL_24

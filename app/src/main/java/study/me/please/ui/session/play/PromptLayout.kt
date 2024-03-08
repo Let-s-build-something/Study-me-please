@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -184,13 +185,13 @@ fun PromptLayout(
                 .padding(horizontal = 24.dp)
                 .fillMaxSize()
         ) {
-            if(promptList.isNullOrEmpty().not()) {
+            if(promptList?.any { it.isNotBlank() } == true) {
                 item {
                     Spacer(modifier = Modifier.height(18.dp))
                 }
                 promptList
-                    ?.take(if(isFinished.value) promptList.size else count.intValue)
-                    ?.forEach { prompt ->
+                    .take(if(isFinished.value) promptList.size else count.intValue)
+                    .forEach { prompt ->
                         item {
                             BulletPoint(
                                 modifier = Modifier
@@ -207,7 +208,7 @@ fun PromptLayout(
                     }
                 item {
                     AnimatedVisibility(
-                        isFinished.value.not() && count.intValue < promptList.orEmpty().size
+                        isFinished.value.not() && count.intValue < promptList.size
                     ) {
                         ComponentHeaderButton(
                             modifier = modifier,
@@ -247,15 +248,21 @@ fun PromptLayout(
                 }
             }
             item {
-                EditableImageAsset(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(8.dp),
-                    asset = question?.imagePromptUrl
-                )
-                if(screenMode == SessionScreenMode.LOCKED) {
+                AnimatedVisibility(
+                    visible = question?.imagePromptUrl?.isEmpty == false
+                            || (question?.imageExplanationUrl?.isEmpty == false && screenMode == SessionScreenMode.LOCKED)
+                ) {
+                    EditableImageAsset(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp),
+                        asset = question?.imagePromptUrl
+                    )
+                }
+                AnimatedVisibility(visible = screenMode == SessionScreenMode.LOCKED) {
                     if(question?.textExplanation.isNullOrEmpty().not()) {
                         Text(
+                            modifier = Modifier.fillMaxWidth(),
                             text = question?.textExplanation ?: "",
                             color = LocalTheme.colors.secondary,
                             fontSize = 14.sp
@@ -271,6 +278,53 @@ fun PromptLayout(
                     }
                 }
             }
+            if(question?.importedSource != null
+                && question.importedSource?.type != ImportSourceType.UNIT
+            ) {
+                item {
+                    AnimatedVisibility(visible = screenMode == SessionScreenMode.LOCKED) {
+                        val isParagraphVisible = remember {
+                            mutableStateOf(false)
+                        }
+                        Crossfade(
+                            modifier = Modifier.animateContentSize(),
+                            targetState = isParagraphVisible.value,
+                            label = ""
+                        ) { paragraphVisible ->
+                            if(paragraphVisible) {
+                                val localConfiguration = LocalConfiguration.current
+
+                                ParagraphLayoutContainer(
+                                    modifier = Modifier
+                                        .heightIn(max = localConfiguration.screenHeightDp.times(0.5).dp),
+                                    importedSource = question.importedSource,
+                                    onCloseRequest = {
+                                        isParagraphVisible.value = false
+                                    }
+                                )
+                            }else {
+                                Column(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalAlignment = Alignment.End
+                                ) {
+                                    ComponentHeaderButton(
+                                        modifier = Modifier.align(Alignment.End),
+                                        startIconVector = Icons.Outlined.Category,
+                                        text = stringResource(R.string.session_show_paragraph),
+                                        onClick = {
+                                            isParagraphVisible.value = true
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            item {
+                Spacer(modifier = Modifier.height(16.dp))
+            }
 
             items(
                 answers.orEmpty(),
@@ -278,6 +332,7 @@ fun PromptLayout(
             ) { answer ->
                 val validation = (sessionItem.historyItem?.answers ?: sessionItem.validations).find { it.uid == answer.uid }
                 val showResult = validation != null
+                val isListQuestion = answer.textList.any { it.isNotBlank() }
 
                 OutlinedButton(
                     modifier = (if(showResult) {
@@ -291,9 +346,9 @@ fun PromptLayout(
                     }else Modifier)
                         .fillMaxWidth(),
                     thenModifier = Modifier.padding(horizontal = 6.dp, vertical = 6.dp),
-                    text = if(answer.textList.isEmpty()) answer.text else null,
+                    text = if(isListQuestion) null else answer.text,
                     content = { textStyle ->
-                        if(answer.textList.isNotEmpty()) {
+                        if(isListQuestion) {
                             Column(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -336,10 +391,6 @@ fun PromptLayout(
                     inactiveColor = if(showResult) Color.White else LocalTheme.colors.secondary
                 )
                 if(screenMode == SessionScreenMode.LOCKED) {
-                    val isParagraphVisible = remember {
-                        mutableStateOf(false)
-                    }
-
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -384,42 +435,12 @@ fun PromptLayout(
                                 asset = answer.imageExplanation
                             )
                         }
-                        if(answer.importedSource != null
-                            && answer.importedSource.type != ImportSourceType.UNIT
-                        ) {
-                            Crossfade(
-                                modifier = Modifier.align(Alignment.End),
-                                targetState = isParagraphVisible.value,
-                                label = ""
-                            ) { paragraphVisible ->
-                                if(paragraphVisible) {
-                                    val localConfiguration = LocalConfiguration.current
-
-                                    ParagraphLayoutContainer(
-                                        modifier = Modifier
-                                            .height(localConfiguration.screenHeightDp.times(0.4).dp),
-                                        importedSource = answer.importedSource,
-                                        onCloseRequest = {
-                                            isParagraphVisible.value = false
-                                        }
-                                    )
-                                }else {
-                                    ComponentHeaderButton(
-                                        startIconVector = Icons.Outlined.Category,
-                                        text = stringResource(R.string.session_show_paragraph),
-                                        onClick = {
-                                            isParagraphVisible.value = true
-                                        }
-                                    )
-                                }
-                            }
-                        }
                     }
                 }
                 Spacer(modifier = Modifier.height(16.dp))
             }
             item {
-                Spacer(modifier = Modifier.height(48.dp))
+                Spacer(modifier = Modifier.height(96.dp))
             }
         }
     }

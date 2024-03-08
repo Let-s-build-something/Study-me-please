@@ -1,6 +1,5 @@
 package study.me.please.ui.collection.detail
 
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -14,8 +13,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -24,17 +21,13 @@ import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material.icons.outlined.Source
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ClipboardManager
 import androidx.compose.ui.platform.LocalClipboardManager
@@ -44,7 +37,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
-import com.squadris.squadris.compose.components.DEFAULT_ANIMATION_LENGTH_SHORT
 import com.squadris.squadris.compose.components.input.EditFieldInput
 import com.squadris.squadris.compose.theme.LocalTheme
 import com.squadris.squadris.ext.brandShimmerEffect
@@ -58,15 +50,12 @@ import study.me.please.base.navigation.ActionBarIcon
 import study.me.please.base.navigation.NavigationComponent
 import study.me.please.base.navigation.NavigationScreen
 import study.me.please.data.io.CollectionIO
-import study.me.please.ui.collection.detail.facts.FactsList
 import study.me.please.ui.collection.detail.questions.QuestionsList
 import study.me.please.ui.components.ExpandableContent
 import study.me.please.ui.components.ImageAction
 import study.me.please.ui.components.collapsing_layout.CollapsingBehavior
 import study.me.please.ui.components.collapsing_layout.CollapsingLayout
 import study.me.please.ui.components.pull_refresh.PullRefreshScreen
-import study.me.please.ui.components.tab_switch.MultiChoiceSwitch
-import study.me.please.ui.components.tab_switch.rememberTabSwitchState
 
 const val REQUEST_DATA_SAVE_DELAY = 500L
 
@@ -163,24 +152,6 @@ private fun ContentLayout(
     val collectionDetail = viewModel.collectionDetail.collectAsState()
 
     val coroutineScope = rememberCoroutineScope()
-    val contentPagerState = rememberPagerState { 2 }
-    val contentSwitchState = rememberTabSwitchState(
-        tabs = mutableListOf(
-            stringResource(id = R.string.collection_detail_page_questions),
-            stringResource(id = R.string.collection_detail_page_facts)
-        ),
-        selectedTabIndex = remember(collectionDetail) {
-            mutableIntStateOf(contentPagerState.currentPage)
-        },
-        onSelectionChange = { page ->
-            coroutineScope.launch {
-                contentPagerState.animateScrollToPage(
-                    page,
-                    animationSpec = tween(DEFAULT_ANIMATION_LENGTH_SHORT)
-                )
-            }
-        }
-    )
     val clipboardManager: ClipboardManager = LocalClipboardManager.current
 
     val bridge = remember(collectionDetail.value.uid) {
@@ -200,20 +171,13 @@ private fun ContentLayout(
         }
     }
 
-    LaunchedEffect(contentPagerState) {
-        snapshotFlow { contentPagerState.currentPage }.collect { page ->
-            contentSwitchState.selectedTabIndex.value = page
-        }
-    }
-
     val itemModifier = Modifier
         .padding(horizontal = 4.dp, vertical = 4.dp)
         .wrapContentHeight()
         .fillMaxWidth()
 
     val isExpandedByDefault = collectionDetail.value.name.isEmpty()
-            || (collectionDetail.value.factUidList.size <= 3
-                && collectionDetail.value.questionUidList.size <= 3)
+            || collectionDetail.value.questionUidList.size <= 3
     var isBasicInfoExpanded by remember { mutableStateOf(isExpandedByDefault) }
 
     CollapsingLayout(
@@ -230,6 +194,7 @@ private fun ContentLayout(
                         )
                         .verticalScroll(rememberScrollState())
                         .fillMaxWidth(),
+                    collapsedPadding = 8.dp,
                     text = stringResource(R.string.collection_detail_basic_information),
                     isExpanded = isBasicInfoExpanded
                 ) {
@@ -290,43 +255,7 @@ private fun ContentLayout(
                 }
             } to CollapsingBehavior.ON_TOP,
             @Composable {
-                Box(
-                    modifier = Modifier
-                        .verticalScroll(rememberScrollState())
-                        .padding(top = LocalTheme.shapes.betweenItemsSpace)
-                        .fillMaxWidth(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    MultiChoiceSwitch(
-                        modifier = Modifier
-                            .wrapContentHeight()
-                            .fillMaxWidth(0.75f),
-                        state = contentSwitchState
-                    )
-                }
-            } to CollapsingBehavior.NONE,
-            @Composable {
-                HorizontalPager(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 8.dp),
-                    state = contentPagerState,
-                    beyondBoundsPageCount = 2,
-                    key = { it }
-                ) { index ->
-                    if(index == PAGE_INDEX_QUESTIONS) {
-                        QuestionsList(viewModel = viewModel)
-                    }else if(index == PAGE_INDEX_FACTS) {
-                        FactsList(
-                            viewModel = viewModel,
-                            onPageChange = {
-                                coroutineScope.launch {
-                                    contentPagerState.scrollToPage(0)
-                                }
-                            }
-                        )
-                    }
-                }
+                QuestionsList(viewModel = viewModel)
             } to CollapsingBehavior.NONE,
         )
     )

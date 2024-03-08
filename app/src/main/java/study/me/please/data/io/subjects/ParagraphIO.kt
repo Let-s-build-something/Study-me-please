@@ -32,8 +32,7 @@ data class ParagraphIO(
 
     /** Whether this data can be taken seriously */
     suspend fun isSeriousDataPoint() = withContext(Dispatchers.Default) {
-        bulletPoints.any { it.isNotBlank() }
-                && categoryUid.isNullOrEmpty().not()
+        bulletPoints.any { it.isNotBlank() } && categoryUid.isNullOrEmpty().not()
     }
 
     /** Whether this data is empty or not */

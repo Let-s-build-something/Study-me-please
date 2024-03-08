@@ -1,12 +1,12 @@
 <resources>
     <string name="app_name">Study me, please</string>
     <string name="home_screen_title">Home</string>
-    <string name="screen_sessions_title">Sessions</string>
+    <string name="screen_sessions_title">Examinations</string>
     <string name="screen_collection_title">Collections</string>
     <string name="screen_register_title">I\'m new</string>
     <string name="screen_settings_title">Changing room</string>
     <string name="screen_account_title">My business</string>
-    <string name="screen_session_lobby_title">My sessions</string>
+    <string name="screen_session_lobby_title">My exams</string>
     <string name="screen_collection_detail_new">New collection</string>
     <string name="screen_units">Units</string>
     <string name="navigate_back">Back</string>
@@ -15,7 +15,7 @@
     <string name="home_screen_collections_empty_action">Let\'s start collecting</string>
     <string name="home_screen_sessions_empty_action">Time to practice</string>
 
-    <string name="collection_detail_start_session">To session</string>
+    <string name="collection_detail_start_session">To exam</string>
     <string name="collection_detail_basic_information">Basic information</string>
     <string name="collection_detail_page_questions">Questions</string>
     <string name="collection_detail_page_facts">Facts</string>
@@ -61,9 +61,7 @@
     <string name="subject_paragraph_section_heading">Paragraphs</string>
     <string name="subject_facts_section_heading">Facts</string>
     <string name="subject_bullet_points_section_heading">Bullet points</string>
-    <string name="subject_generating_error_no_data">
-        There is not enough data to generate anything, you gotta write something down first.
-    </string>
+    <string name="subject_generating_error_no_data">"         There is not enough data to generate anything, you gotta write something down first.     "</string>
     <string name="subject_generating_error_generic">Unknown error</string>
     <string name="subject_generating_error_update_failed">
         We were not able to update selected collection with the new questions.
@@ -79,8 +77,8 @@
     <string name="facts_list_generate_questions">Generate questions</string>
     <string name="facts_field_short_information_header">Short key information</string>
     <string name="facts_field_long_information_header">Long key information</string>
-    <string name="tags_add_new">Add tag</string>
-    <string name="tags_explanation">Tags are a way of categorizing your facts and connecting them between each-other</string>
+    <string name="tags_add_new" translatable="false">Add tag</string>
+    <string name="tags_explanation" translatable="false">Tags are a way of categorizing your facts and connecting them between each-other</string>
 
     <string name="facts_type_bullet_points">Bullet points</string>
     <string name="facts_type_definition">Definition</string>
@@ -90,53 +88,53 @@
     <string name="facts_type_quote">Quote</string>
 
     <!-- short information -->
-    <string name="facts_type_short_bullet_point_hint">The French orchestra</string>
-    <string name="facts_type_short_definition_hint">Social loafing</string>
-    <string name="facts_type_short_person_hint">Keanu Reeves</string>
-    <string name="facts_type_short_date_hint">Nov 17, 1989 - Dec 29, 1989</string>
-    <string name="facts_type_short_list_hint">List of doubts</string>
-    <string name="facts_type_short_quote_hint">Don\'t rely on your ability to predict, trust in your ability to damage control</string>
+    <string name="facts_type_short_bullet_point_hint" translatable="false">The French orchestra</string>
+    <string name="facts_type_short_definition_hint" translatable="false">Social loafing</string>
+    <string name="facts_type_short_person_hint" translatable="false">Keanu Reeves</string>
+    <string name="facts_type_short_date_hint" translatable="false">Nov 17, 1989 - Dec 29, 1989</string>
+    <string name="facts_type_short_list_hint" translatable="false">List of doubts</string>
+    <string name="facts_type_short_quote_hint" translatable="false">Don\'t rely on your ability to predict, trust in your ability to damage control</string>
 
     <string name="facts_type_long_fact_header">Information explanation</string>
     <string name="facts_type_long_definition_header">Definition</string>
-    <string name="facts_type_long_fact_hint">How would you explain the information?</string>
-    <string name="facts_type_long_definition_hint">Explain the definition</string>
-    <string name="facts_type_long_person_header">Information about the person</string>
-    <string name="facts_type_long_list_header">Explanation of the list</string>
-    <string name="facts_type_long_person_hint">What information is relevant about the person?</string>
-    <string name="facts_type_long_date_header">Date explanation</string>
-    <string name="facts_type_long_date_hint">What happened on that date or what is it related to?</string>
-    <string name="facts_type_long_quote_header">Quote explanation</string>
-    <string name="facts_type_long_quote_hint">Who/what is the quote related to?</string>
+    <string name="facts_type_long_fact_hint" translatable="false">How would you explain the information?</string>
+    <string name="facts_type_long_definition_hint" translatable="false">Explain the definition</string>
+    <string name="facts_type_long_person_header" translatable="false">Information about the person</string>
+    <string name="facts_type_long_list_header" translatable="false">Explanation of the list</string>
+    <string name="facts_type_long_person_hint" translatable="false">What information is relevant about the person?</string>
+    <string name="facts_type_long_date_header" translatable="false">Date explanation</string>
+    <string name="facts_type_long_date_hint" translatable="false">What happened on that date or what is it related to?</string>
+    <string name="facts_type_long_quote_header" translatable="false">Quote explanation</string>
+    <string name="facts_type_long_quote_hint" translatable="false">Who/what is the quote related to?</string>
     <!-- long information -->
-    <string name="facts_type_short_fact_header">What is the information?</string>
-    <string name="facts_type_short_definition_header">What are we defining?</string>
-    <string name="facts_type_short_person_header">Who is the person?</string>
-    <string name="facts_type_short_date_header">What is the date?</string>
-    <string name="facts_type_short_quote_header">What is the quote?</string>
-    <string name="facts_type_short_bullet_point_header">What are we describing?</string>
-    <string name="facts_type_short_list_header">How do we call following list?</string>
+    <string name="facts_type_short_fact_header" translatable="false">What is the information?</string>
+    <string name="facts_type_short_definition_header" translatable="false">What are we defining?</string>
+    <string name="facts_type_short_person_header" translatable="false">Who is the person?</string>
+    <string name="facts_type_short_date_header" translatable="false">What is the date?</string>
+    <string name="facts_type_short_quote_header" translatable="false">What is the quote?</string>
+    <string name="facts_type_short_bullet_point_header" translatable="false">What are we describing?</string>
+    <string name="facts_type_short_list_header" translatable="false">How do we call following list?</string>
     <!-- prompts -->
-    <string name="facts_information_generic_prompt">To who/what is the following %1$s related to?\n%2$s</string>
+    <string name="facts_information_generic_prompt" translatable="false">To who/what is the following %1$s related to?\n%2$s</string>
     <!-- short prompts -->
-    <string name="facts_type_short_fact_prompt">How would you explain %1$s?</string>
+    <string name="facts_type_short_fact_prompt" translatable="false">How would you explain %1$s?</string>
     <string name="facts_type_short_definition_prompt">What is %1$s?</string>
-    <string name="facts_type_short_person_prompt">What information is relevant about %1$s?</string>
-    <string name="facts_type_short_date_prompt">What happened on %1$s or what is it related to?</string>
-    <string name="facts_type_short_quote_prompt">Who/what is the quote "%1$s" related to?</string>
-    <string name="facts_type_short_list_prompt">TODO list</string>
+    <string name="facts_type_short_person_prompt" translatable="false">What information is relevant about %1$s?</string>
+    <string name="facts_type_short_date_prompt" translatable="false">What happened on %1$s or what is it related to?</string>
+    <string name="facts_type_short_quote_prompt" translatable="false">Who/what is the quote "%1$s" related to?</string>
+    <string name="facts_type_short_list_prompt" translatable="false">TODO list</string>
     <!-- long prompts -->
-    <string name="facts_type_long_fact_prompt">What is the explanation "%1$s" related to?</string>
-    <string name="facts_type_long_definition_prompt">What defines "%1$s"?</string>
-    <string name="facts_type_long_person_prompt">Who could be best described by "%1$s"?</string>
-    <string name="facts_type_long_date_prompt">To what date is following information "%1$s" related to?</string>
-    <string name="facts_type_long_quote_prompt">What quote is relevant to %1$s?</string>
+    <string name="facts_type_long_fact_prompt" translatable="false">What is the explanation "%1$s" related to?</string>
+    <string name="facts_type_long_definition_prompt" translatable="false">What defines "%1$s"?</string>
+    <string name="facts_type_long_person_prompt" translatable="false">Who could be best described by "%1$s"?</string>
+    <string name="facts_type_long_date_prompt" translatable="false">To what date is following information "%1$s" related to?</string>
+    <string name="facts_type_long_quote_prompt" translatable="false">What quote is relevant to %1$s?</string>
     <!-- image prompts -->
-    <string name="facts_type_image_definition_prompt">To what is following image related to?</string>
-    <string name="facts_type_image_fact_prompt">To what information is following image related to?</string>
-    <string name="facts_type_image_person_prompt">To who is following image related to?</string>
-    <string name="facts_type_image_date_prompt">To what date is following image related to?</string>
-    <string name="facts_type_image_quote_prompt">To who/what is following image related to?</string>
+    <string name="facts_type_image_definition_prompt" translatable="false">To what is following image related to?</string>
+    <string name="facts_type_image_fact_prompt" translatable="false">To what information is following image related to?</string>
+    <string name="facts_type_image_person_prompt" translatable="false">To who is following image related to?</string>
+    <string name="facts_type_image_date_prompt" translatable="false">To what date is following image related to?</string>
+    <string name="facts_type_image_quote_prompt" translatable="false">To who/what is following image related to?</string>
 
     <string name="fact_delete_dialog_title">Fact deletion</string>
     <string name="fact_delete_dialog_description">
@@ -207,7 +205,7 @@
 
     <string name="question_generating_bulletin_name">Describe <b>\"%1$s\"</b></string>
     <string name="question_generating_bulletin_points">What best describes:</string>
-    <string name="question_generating_fact_list">Choose all items of <b>\"%1$s\"</b>?</string>
+    <string name="question_generating_fact_list">Choose all items of <b>\"%1$s\" (%2$s)</b>?</string>
     <string name="question_generating_fact_list_short_key">What are following items related to?</string>
     <string name="question_generating_fact_image">What best describes:</string>
 
@@ -226,16 +224,16 @@
     </string>-->
 
 
-    <string name="question_generating_fact_parent_name_short">
+    <!--<string name="question_generating_fact_parent_name_short">
         What is one of the <b><![CDATA[<a href="/paragraph/%2$s">%1$s</a>]]></b>%5$s (<![CDATA[<a href="/units/%4$s">%3$s</a>]]>)?
     </string>
     <string name="question_generating_fact_parent_name_long">
         What best describes one of the <b><![CDATA[<a href="/paragraph/%2$s">%1$s</a>]]></b>%5$s (<![CDATA[<a href="/units/%4$s">%3$s</a>]]>)?
     </string>
-    <string name="question_generating_fact_parent_addition">, under <b><![CDATA[<a href="/paragraph/%2$s">%1$s</a>]]></b></string>
+    <string name="question_generating_fact_parent_addition">, under <b><![CDATA[<a href="/paragraph/%2$s">%1$s</a>]]></b></string>-->
 
-    <string name="question_generating_fact_short">What is <b>\"%1$s\"?</b></string>
-    <string name="question_generating_fact_long">What best describes: <b>\"%1$s\"</b>?</string>
+    <string name="question_generating_fact_short">What is/are <b>\"%1$s\" (%2$s)?</b></string>
+    <string name="question_generating_fact_long">What best describes: <b>\"%1$s\" (%2$s)</b>?</string>
     <string name="question_generating_children_items">
         Pick related information to the <b><![CDATA[<a href="/paragraph/%2$s">%1$s</a>]]></b> (<b><![CDATA[<a href="/units/%4$s">%3$s</a>]]></b>).
     </string>
@@ -248,25 +246,21 @@
         (Your URL address has to have appendix such as ".png", ".jpg")
     </string>
     <string name="image_field_local_value">Local image</string>
-    <string name="session_card_x_questions">%1$d questions</string>
 
     <!--- == STATISTICS == -->
-    <string name="statistics_time_spent_total">You\'ve spent %1$sanswering %2$d questions.</string>
+    <string name="statistics_time_spent_total">You\'ve spent %1$sanswering %2$d out of %3$d questions.</string>
     <string name="statistics_time_spent_average">On average, you answer within %1$s</string>
     <string name="statistics_success_rate">Grade: %1$s (%2$s\%%)</string>
     <string name="statistics_ratio_time_success">Time/success ratio: %1$s</string>
-    <string name="statistics_questions_count">%1$s question answered.</string>
-    <string name="statistics_questions_count_multiple">%1$s questions answered.</string>
-    <string name="statistics_graph_response_time_header">Response time</string>
-    <string name="statistics_graph_success_ratio_header">Success ratio</string>
+    <string name="statistics_progress_percentage">%1$s \%% answered</string>
 
-    <string name="grade_a1">A+</string>
-    <string name="grade_a2">A</string>
-    <string name="grade_b1">B+</string>
-    <string name="grade_b2">B</string>
-    <string name="grade_c1">C+</string>
-    <string name="grade_c2">C</string>
-    <string name="grade_d">D</string>
+    <string name="grade_a1" translatable="false">A+</string>
+    <string name="grade_a2" translatable="false">A</string>
+    <string name="grade_b1" translatable="false">B+</string>
+    <string name="grade_b2" translatable="false">B</string>
+    <string name="grade_c1" translatable="false">C+</string>
+    <string name="grade_c2" translatable="false">C</string>
+    <string name="grade_d" translatable="false">D</string>
 
     <!--- =================================== BUTTONS ========================================== -->
     <string name="button_add">Add</string>

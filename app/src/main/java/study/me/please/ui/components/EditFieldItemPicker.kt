@@ -24,7 +24,6 @@ import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
@@ -129,7 +128,7 @@ fun EditFieldItemPicker(
 
         EditFieldInput(
             modifier = Modifier
-                .widthIn(min = TextFieldDefaults.MinWidth)
+                .widthIn(min = 40.dp)
                 .height(with(localDensity) {
                     textStyle.fontSize.value.sp
                         .toDp()

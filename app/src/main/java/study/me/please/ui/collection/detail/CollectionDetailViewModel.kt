@@ -1,14 +1,12 @@
 package study.me.please.ui.collection.detail
 
 import android.content.Context
-import android.util.Log
 import androidx.lifecycle.viewModelScope
 import com.squadris.squadris.utils.DateUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
@@ -23,8 +21,8 @@ import study.me.please.data.io.ImportSourceType
 import study.me.please.data.io.ImportedSource
 import study.me.please.data.io.QuestionAnswerIO
 import study.me.please.data.io.QuestionIO
-import study.me.please.data.io.session.SessionIO
 import study.me.please.data.io.clip_board.CollectionExport
+import study.me.please.data.io.session.SessionIO
 import study.me.please.data.io.subjects.CategoryIO
 import study.me.please.ui.collection.RefreshableViewModel
 import study.me.please.ui.collection.detail.facts.FactsFilter
@@ -79,8 +77,9 @@ class CollectionDetailViewModel @Inject constructor(
         withContext(Dispatchers.Default) {
             collections.filter { question ->
                 (filter.text.isEmpty() || (question.prompt.lowercase().contains(filter.text.lowercase())
-                            || question.textExplanation.lowercase().contains(filter.text.lowercase())))
-                        && (filter.isInvalid.not() || (question.answers.any { it.isCorrect }.not() || question.prompt.isEmpty()))
+                            || question.textExplanation.lowercase().contains(filter.text.lowercase()))
+                            || question.promptList.any { it.lowercase().contains(filter.text.lowercase()) })
+                        && (filter.isInvalid.not() || (question.answers.any { it.isCorrect }.not() || question.isSeriousDataPoint().not()))
                         && (filter.hasImage.not() || (question.imagePromptUrl?.isEmpty == false
                             || question.imageExplanationUrl?.isEmpty == false
                             || question.answers.any { answer -> answer.imageExplanation?.isEmpty == false }))

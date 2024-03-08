@@ -1,6 +1,5 @@
 package study.me.please.ui.session.play
 
-import android.util.Log
 import androidx.room.Entity
 import androidx.room.Ignore
 import androidx.room.PrimaryKey
@@ -110,6 +109,7 @@ data class QuestionModule(
         }else {
             val newItem = questionsStack.getOrNull(index.minus(history.size))
             questions.find { it.uid == newItem?.uid }?.copy()?.let { question ->
+
                 SessionItem(
                     isHistory = false,
                     data = question,
