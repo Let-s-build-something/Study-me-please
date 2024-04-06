@@ -1,6 +1,7 @@
 package study.me.please.data.io.subjects
 
 import androidx.room.Entity
+import androidx.room.Ignore
 import androidx.room.PrimaryKey
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -23,16 +24,62 @@ data class ParagraphIO(
     /** Basic text information about this paragraph */
     var bulletPoints: MutableList<String> = mutableListOf(""),
 
+    /** list of paragraph unique identifiers */
+    var paragraphUidList: MutableList<String> = mutableListOf(),
+
+    /** list of fact unique identifiers */
+    var factUidList: MutableList<String> = mutableListOf(),
+): Serializable {
+
     /** Further categorized content */
-    var paragraphs: MutableList<ParagraphIO> = mutableListOf(),
+    @Ignore
+    var paragraphs: MutableList<ParagraphIO> = mutableListOf()
 
     /** Non-categorized, standalone content */
+    @Ignore
     var facts: MutableList<FactIO> = mutableListOf()
-): Serializable {
+
+    /** Makes a full copy with a new UID */
+    fun deepCopy() = ParagraphIO(
+        uid = UUID.randomUUID().toString(),
+        categoryUid = categoryUid,
+        bulletPoints = bulletPoints,
+        paragraphUidList = paragraphUidList,
+        factUidList = factUidList
+    ).apply {
+        paragraphs = this@ParagraphIO.paragraphs
+        facts = this@ParagraphIO.facts
+    }
 
     /** Whether this data can be taken seriously */
     suspend fun isSeriousDataPoint() = withContext(Dispatchers.Default) {
         bulletPoints.any { it.isNotBlank() } && categoryUid.isNullOrEmpty().not()
+    }
+
+    /** attempts to remove a paragraph */
+    fun removeParagraph(uid: String): Boolean {
+        return paragraphUidList.remove(uid).also {
+            if(it) paragraphs.removeIf { data -> data.uid == uid }
+        }
+    }
+
+    /** adds a paragraph */
+    fun addParagraph(index: Int, paragraph: ParagraphIO) {
+        paragraphUidList.add(index, paragraph.uid)
+        paragraphs.add(index, paragraph)
+    }
+
+    /** adds a fact */
+    fun addFact(index: Int, fact: FactIO) {
+        factUidList.add(index, fact.uid)
+        facts.add(index, fact)
+    }
+
+    /** attempts to remove a fact */
+    fun removeFact(uid: String): Boolean {
+        return factUidList.remove(uid).also {
+            if(it) facts.removeIf { data -> data.uid == uid }
+        }
     }
 
     /** Whether this data is empty or not */
@@ -46,6 +93,8 @@ data class ParagraphIO(
     fun updateTO(newTO: ParagraphIO) {
         categoryUid = newTO.categoryUid
         bulletPoints = newTO.bulletPoints
+        paragraphUidList = newTO.paragraphUidList
+        factUidList = newTO.factUidList
         paragraphs = newTO.paragraphs
         facts = newTO.facts
         localCategory = newTO.localCategory
@@ -58,6 +107,8 @@ data class ParagraphIO(
                 "categoryUid: $categoryUid," +
                 "bulletPoints: $bulletPoints," +
                 "paragraphs: $paragraphs," +
+                "paragraphUidList: $paragraphUidList," +
+                "factUidList: $factUidList" +
                 "facts: $facts" +
                 "}"
     }

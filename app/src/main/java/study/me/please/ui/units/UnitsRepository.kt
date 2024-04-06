@@ -4,12 +4,14 @@ import com.squadris.squadris.utils.DateUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import study.me.please.data.io.CollectionIO
+import study.me.please.data.io.FactIO
 import study.me.please.data.io.QuestionIO
 import study.me.please.data.io.subjects.CategoryIO
 import study.me.please.data.io.subjects.ParagraphIO
 import study.me.please.data.io.subjects.UnitIO
 import study.me.please.data.room.CategoryDao
 import study.me.please.data.room.CollectionDao
+import study.me.please.data.room.FactDao
 import study.me.please.data.room.QuestionDao
 import study.me.please.data.room.SubjectDao
 import javax.inject.Inject
@@ -18,6 +20,7 @@ import javax.inject.Inject
 class UnitsRepository @Inject constructor(
     private val subjectsDao: SubjectDao,
     private val categoryDao: CategoryDao,
+    private val factsDao: FactDao,
     private val collectionDao: CollectionDao,
     private val questionDao: QuestionDao
 ) {
@@ -30,9 +33,9 @@ class UnitsRepository @Inject constructor(
     }
 
     /** Creates a new record of a subject or replaces it if it already exists */
-    suspend fun updateSubject(subject: UnitIO) {
+    suspend fun updateUnit(subject: UnitIO) {
         return withContext(Dispatchers.IO) {
-            subjectsDao.insertSubject(subject)
+            subjectsDao.insertUnit(subject)
         }
     }
 
@@ -43,10 +46,24 @@ class UnitsRepository @Inject constructor(
         }
     }
 
+    /** Removes a paragraph from the DB */
+    suspend fun deleteParagraph(paragraphUid: String) {
+        return withContext(Dispatchers.IO) {
+            subjectsDao.deleteParagraph(paragraphUid)
+        }
+    }
+
+    /** Removes a subject from the DB */
+    suspend fun deleteFact(factUid: String) {
+        return withContext(Dispatchers.IO) {
+            factsDao.deleteFacts(listOf(factUid))
+        }
+    }
+
     /** Deletes subject from the DB */
     suspend fun deleteSubject(subjectUid: String) {
         return withContext(Dispatchers.IO) {
-            subjectsDao.deleteSubject(subjectUid)
+            subjectsDao.deleteUnit(subjectUid)
         }
     }
 
@@ -61,6 +78,20 @@ class UnitsRepository @Inject constructor(
     suspend fun getParagraphsBy(uidList: List<String>): List<ParagraphIO>? {
         return withContext(Dispatchers.IO) {
             subjectsDao.getParagraphsByUidList(uidList)
+        }
+    }
+
+    /** Returns all facts similar to the given list of uids */
+    suspend fun getFactsBy(uidList: List<String>): List<FactIO>? {
+        return withContext(Dispatchers.IO) {
+            factsDao.getFactsByUid(uidList)
+        }
+    }
+
+    /** updates a specific fact */
+    suspend fun updateFact(fact: FactIO) {
+        return withContext(Dispatchers.IO) {
+            factsDao.insertFact(fact)
         }
     }
 

@@ -1,23 +1,15 @@
 package study.me.please.hilt
 
 import android.content.Context
-import androidx.compose.ui.platform.LocalContext
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKeys
-import study.me.please.StudyMePleaseRestApi
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.components.ActivityRetainedComponent
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.android.scopes.ActivityRetainedScoped
-import okhttp3.OkHttpClient
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
-import study.me.please.StudyMePlease
-import java.util.concurrent.TimeUnit
 import javax.inject.Named
-import javax.inject.Singleton
 
 @Module
 @InstallIn(ActivityRetainedComponent::class)

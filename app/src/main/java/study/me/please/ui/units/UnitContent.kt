@@ -8,7 +8,6 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.animation.Animatable
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
-import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -38,7 +37,6 @@ import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.FormatListBulleted
 import androidx.compose.material.icons.automirrored.outlined.ShortText
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Archive
@@ -72,6 +70,9 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
@@ -95,13 +96,17 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import study.me.please.R
 import study.me.please.base.LocalIsTablet
+import study.me.please.data.io.FactIO
 import study.me.please.data.io.FactType
 import study.me.please.data.io.subjects.CategoryIO
 import study.me.please.data.io.subjects.ParagraphIO
 import study.me.please.data.io.subjects.UnitIO
 import study.me.please.ui.components.BasicAlertDialog
 import study.me.please.ui.components.ButtonState
+import study.me.please.ui.components.FactCard
+import study.me.please.ui.components.InteractiveCardMode
 import study.me.please.ui.components.ListItemEditField
+import study.me.please.ui.units.UnitsViewModel.ElementToDrag
 import java.util.UUID
 
 private const val MAX_LENGTH_SHORT_TEXT = 42
@@ -112,7 +117,7 @@ private const val MAX_LENGTH_SHORT_TEXT = 42
 @OptIn(ExperimentalFoundationApi::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun UnitScreen(
+fun UnitContent(
     unit: UnitIO,
     filtersContent: @Composable () -> Unit,
     viewModel: UnitsViewModel = hiltViewModel()
@@ -131,16 +136,26 @@ fun UnitScreen(
 
     val addContentVisible = rememberSaveable { mutableStateOf(false) }
     val showDeleteDialog = remember { mutableStateOf<String?>(null) }
-    val unitBulletPoints = remember {
+    val dragAndDropStarted = remember {
+        mutableStateOf(false)
+    }
+    val dragAndDropTarget = rememberSaveable  {
+        mutableStateOf("")
+    }
+
+    val unitBulletPoints = remember(unit.bulletPoints) {
         mutableStateListOf(*unit.bulletPoints.toTypedArray())
     }
-    val selectedFact = remember {
+    val selectedFact = rememberSaveable(unit.facts) {
         mutableStateOf<String?>(null)
     }
-    val nestedParagraphs = remember(unit) {
+    val nestedParagraphs = remember(unit.paragraphs) {
         mutableStateListOf(*unit.paragraphs.toTypedArray())
     }
-    val collapsedParagraphs = remember {
+    val nestedFacts = remember(unit.facts) {
+        mutableStateListOf(*unit.facts.toTypedArray())
+    }
+    val collapsedParagraphs = remember(unit.collapsedParagraphs) {
         mutableStateListOf(*unit.collapsedParagraphs.toTypedArray())
     }
 
@@ -148,30 +163,84 @@ fun UnitScreen(
         unit.collapsedParagraphs = collapsedParagraphs
     }
 
+
     val bridge = remember {
-        object: UnitScreenBridge {
-            override fun updateBulletPoints() {
+        object: ParagraphBlockBridge {
+            override fun addFact(element: ElementToDrag) {
+                if(element.fact != null) {
+                    nestedFacts.run {
+                        removeIf { it.uid == element.fact.uid }
+                        add(element.index, element.fact)
+                    }
+
+                    if(element.fact.isEmpty) {
+                        selectedFact.value = element.fact.uid
+                    }
+                }
+            }
+            override fun removeUiFact(uid: String) {
+                nestedFacts.removeIf { it.uid == uid }
+            }
+            override fun requestFactsPaste() { }
+            override fun addParagraph(element: ElementToDrag) {
+                if(element.paragraph != null) {
+                    nestedParagraphs.run {
+                        removeIf { it.uid == element.paragraph.uid }
+                        add(element.index, element.paragraph)
+                    }
+                }
+            }
+            override fun removeUiParagraph(uid: String) {
+                nestedParagraphs.removeIf { it.uid == uid }
+            }
+            override fun addNewBulletPoint(index: Int, bulletPoint: String?) {
+                unitBulletPoints.add(index, bulletPoint ?: "")
+            }
+            override fun removeBulletPoint(index: Int) {
+                unitBulletPoints.removeAt(index)
                 unit.bulletPoints = unitBulletPoints.toMutableList()
                 viewModel.updateUnit(unit)
             }
-            override fun updateParagraph(paragraph: ParagraphIO) {
-                viewModel.updateParagraph(unit, newParagraph = paragraph)
+            override fun updateBulletPoint(index: Int, output: String) {
+                unitBulletPoints[index] = output
+                unit.bulletPoints = unitBulletPoints.toMutableList()
+                viewModel.updateUnit(unit)
             }
-            override fun addParagraph() {
-                addContentVisible.value = false
-                nestedParagraphs.add(0, ParagraphIO())
-            }
-            override suspend fun removeParagraph(uid: String) {
-                if(nestedParagraphs.removeIf { it.uid == uid }) {
-                    viewModel.elementUidToRemove.emit(null)
-                    addContentVisible.value = false
+            override fun invalidate() {
+                dragAndDropTarget.value = ""
+                scope.launch(Dispatchers.Default) {
+                    if(unit.facts.size != nestedFacts.size) {
+                        unit.facts.forEachIndexed { index, factIO ->
+                            if(nestedFacts.none { it.uid == factIO.uid }) {
+                                nestedFacts.add(index, factIO)
+                            }
+                        }
+                    }
+                    if(unit.paragraphs.size != nestedParagraphs.size) {
+                        unit.paragraphs.forEachIndexed { index, paragraphIO ->
+                            nestedParagraphs.add(index, paragraphIO)
+                        }
+                    }
                 }
             }
-            override fun addBulletPoint() {
-                addContentVisible.value = false
-                unitBulletPoints.add(0, "")
-            }
         }
+    }
+
+    val paragraphBlocks = nestedParagraphs.map { paragraph ->
+        rememberParagraphBlockState(
+            parentLayer = -1,
+            categories = categories,
+            selectedFact = selectedFact,
+            clipBoard = viewModel.clipBoard,
+            paragraphArg = paragraph,
+            viewModel = viewModel,
+            updateParagraph = { updatedParagraph ->
+                viewModel.updateParagraph(unit, newParagraph = updatedParagraph)
+            },
+            updateFact = { updatedFact ->
+                viewModel.updateFact(unit = unit, fact = updatedFact)
+            }
+        )
     }
 
     LaunchedEffect(Unit) {
@@ -180,71 +249,14 @@ fun UnitScreen(
                 if(elementUid != null) {
                     viewModel.requestObjectRemoval(unit, elementUid)
                     addContentVisible.value = false
-                    bridge.removeParagraph(elementUid)
                 }
             }
-        }
-    }
-
-    LaunchedEffect(unitBulletPoints.size) {
-        bridge.updateBulletPoints()
-    }
-    LaunchedEffect(nestedParagraphs.size) {
-        with(Dispatchers.Default) {
-            unit.paragraphs = nestedParagraphs
-            unit.paragraphUidList = nestedParagraphs.map { it.uid }.toMutableList()
-            viewModel.updateUnit(unit)
         }
     }
 
     BackHandler(addContentVisible.value) {
         addContentVisible.value = false
     }
-
-
-    /*TODO add back functionality of mass selection and action
-    *
-        val coroutineScope = rememberCoroutineScope()
-
-        LaunchedEffect(bridge.selectedFactUids.size) {
-            if(bridge.selectedFactUids.size > 0) {
-                nestedFacts.forEach {
-                    it.second.mode.value = InteractiveCardMode.CHECKING
-                }
-            }else {
-                bridge.stopChecking()
-            }
-        }
-
-        BackHandler(bridge.selectedFactUids.size > 0) {
-            bridge.stopChecking()
-        }
-
-        OptionsLayout(
-            modifier = Modifier.padding(top = 8.dp, start = 8.dp, end = 8.dp),
-            onCopyRequest = {
-                coroutineScope.launch(Dispatchers.Default) {
-                    clipBoard?.facts?.copyItems(
-                        paragraph.facts.filter { bridge.selectedFactUids.contains(it.uid) }
-                    )
-                    bridge.stopChecking()
-                }
-            },
-            onPasteRequest = { bridge.requestFactsPaste() },
-            onDeleteRequest = { showDeleteDialog = true },
-            onSelectAll = {
-                nestedFacts.forEach {
-                    it.second.isChecked.value = true
-                }
-            },
-            onDeselectAll = { bridge.stopChecking() },
-            isEditMode = bridge.selectedFactUids.size > 0,
-            hasPasteOption = clipBoard?.facts?.isEmpty?.value == false,
-            animateTopDown = false,
-            onClipBoardRemoval = { clipBoard?.facts?.clear() }
-        )
-    *
-    */
 
     if(showDeleteDialog.value != null) {
         BasicAlertDialog(
@@ -255,28 +267,19 @@ fun UnitScreen(
                 text = stringResource(id = R.string.button_confirm)
             ) {
                 showDeleteDialog.value?.let { uid ->
-                    Log.d("kostka_test", "elementUidToRemove: $uid")
-                    scope.launch {
-                        viewModel.elementUidToRemove.emit(uid)
-                    }
+                    viewModel.elementUidToRemove.value = uid
                 }
-                viewModel.dragAndDroppedFact = null
                 showDeleteDialog.value = null
             },
             dismissButtonState = ButtonState(
                 text = stringResource(id = R.string.button_dismiss)
             ) {
                 showDeleteDialog.value = null
+                bridge.invalidate()
             }
         )
     }
 
-    val dragAndDropStarted = remember {
-        mutableStateOf(false)
-    }
-    val dragAndDropTarget = rememberSaveable  {
-        mutableStateOf("")
-    }
     val xOffset: Float by animateFloatAsState(
         with(localDensity) {
             if(dragAndDropStarted.value) {
@@ -288,14 +291,25 @@ fun UnitScreen(
 
     Scaffold(
         modifier = Modifier
+            .onKeyEvent {
+                when (it.key) {
+                    Key.Escape -> {
+                        focusManager.clearFocus(true)
+                        selectedFact.value = null
+                        true
+                    }
+
+                    else -> false
+                }
+            }
             .dragAndDropTarget(
                 shouldStartDragAndDrop = { startEvent ->
                     startEvent
                         .mimeTypes()
-                        .contains(ParagraphBlockState.ElementType.PARAGRAPH.name)
+                        .contains(ElementType.PARAGRAPH.name)
                             || startEvent
                         .mimeTypes()
-                        .contains(ParagraphBlockState.ElementType.BULLET_POINT.name)
+                        .contains(ElementType.FACT.name)
                 },
                 target = object : DragAndDropTarget {
                     override fun onStarted(event: DragAndDropEvent) {
@@ -393,16 +407,8 @@ fun UnitScreen(
                         colorInactive = Colors.GREEN_CORRECT_50,
                         imageVector = Icons.Outlined.ContentCopy,
                         contentDescription = stringResource(R.string.button_copy),
-                        onDrop = { type, uid ->
-                            when(type) {
-                                ParagraphBlockState.ElementType.FACT -> {
-                                    viewModel.copyFactByUid(paragraphs = unit.paragraphs, uid = uid)
-                                }
-                                ParagraphBlockState.ElementType.PARAGRAPH -> {
-                                    viewModel.copyParagraphByUid(paragraphs = unit.paragraphs, uid = uid)
-                                }
-                                else -> {}
-                            }
+                        onDrop = {
+                            //TODO copying
                         }
                     )
                     DragAndDropTargetBox(
@@ -410,19 +416,8 @@ fun UnitScreen(
                         colorInactive = Colors.YELLOW_50,
                         imageVector = Icons.Outlined.Archive,
                         contentDescription = stringResource(R.string.button_archive),
-                        onDrop = { type, uid ->
-                            when(type) {
-                                ParagraphBlockState.ElementType.FACT -> {
-                                    viewModel.copyFactByUid(paragraphs = unit.paragraphs, uid = uid)
-                                }
-                                ParagraphBlockState.ElementType.PARAGRAPH -> {
-                                    viewModel.copyParagraphByUid(paragraphs = unit.paragraphs, uid = uid)
-                                }
-                                else -> {}
-                            }
-                            scope.launch {
-                                viewModel.elementUidToRemove.emit(uid)
-                            }
+                        onDrop = {
+                            //TODO archive
                         }
                     )
                     DragAndDropTargetBox(
@@ -430,8 +425,10 @@ fun UnitScreen(
                         colorInactive = Colors.RED_ERROR_50,
                         imageVector = Icons.Outlined.Delete,
                         contentDescription = stringResource(R.string.accessibility_delete),
-                        onDrop = { _, uid ->
-                            if(uid.isNotEmpty()) showDeleteDialog.value = uid
+                        onDrop = {
+                            viewModel.localStateElement?.uid?.let { uid ->
+                                showDeleteDialog.value = uid
+                            }
                         }
                     )
                 }
@@ -458,21 +455,17 @@ fun UnitScreen(
                             ) {
                                 DragAndDropSourceButton(
                                     modifier = Modifier.weight(1f, fill = false),
-                                    elementType = ParagraphBlockState.ElementType.BULLET_POINT,
-                                    imageVector = Icons.AutoMirrored.Outlined.FormatListBulleted,
-                                    contentDescription = stringResource(R.string.accessibility_add_bullet_point)
-                                )
-                                DragAndDropSourceButton(
-                                    modifier = Modifier.weight(1f, fill = false),
-                                    elementType = ParagraphBlockState.ElementType.PARAGRAPH,
+                                    elementType = ElementType.PARAGRAPH,
                                     imageVector = Icons.Outlined.Category,
-                                    contentDescription = stringResource(R.string.accessibility_add_paragraph)
+                                    contentDescription = stringResource(R.string.accessibility_add_paragraph),
+                                    viewModel = viewModel
                                 )
                                 DragAndDropSourceButton(
                                     modifier = Modifier.weight(1f, fill = false),
-                                    elementType = ParagraphBlockState.ElementType.FACT,
+                                    elementType = ElementType.FACT,
                                     imageVector = Icons.AutoMirrored.Outlined.ShortText,
-                                    contentDescription = stringResource(R.string.accessibility_add_fact)
+                                    contentDescription = stringResource(R.string.accessibility_add_fact),
+                                    viewModel = viewModel
                                 )
                             }
                         }else {
@@ -530,122 +523,84 @@ fun UnitScreen(
                             mutableIntStateOf(1)
                         }
 
-                        EditFieldInput(
-                            modifier = Modifier
-                                .padding(start = 16.dp)
-                                .widthIn(min = TextFieldDefaults.MinWidth)
-                                .height(with(localDensity) {
-                                    LocalTheme.styles.heading.fontSize.value.sp
-                                        .toDp()
-                                        .times(lineCount.intValue)
-                                        .plus(16.dp)
-                                }),
-                            value = unit.name,
-                            onTextLayout = { result ->
-                                lineCount.intValue = result.lineCount
-                            },
-                            textStyle = LocalTheme.styles.heading,
-                            isUnfocusedTransparent = true,
-                            hint = stringResource(id = R.string.subject_heading_prefix),
-                            maxLines = 4,
-                            minLines = 1,
-                            paddingValues = PaddingValues(horizontal = 8.dp),
-                            maxLength = MAX_LENGTH_SHORT_TEXT,
-                            onValueChange = { output ->
-                                unit.name = output
-                                viewModel.updateUnit(unit)
-                            }
-                        )
-
-                        val started = remember { mutableStateOf(false) }
-
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .animateContentSize()
-                                .height(if (started.value) 40.dp else 0.dp)
-                                .dragAndDropTarget(
-                                    shouldStartDragAndDrop = { startEvent ->
-                                        startEvent
-                                            .mimeTypes()
-                                            .contains(ParagraphBlockState.ElementType.PARAGRAPH.name)
-                                                || startEvent
-                                            .mimeTypes()
-                                            .contains(ParagraphBlockState.ElementType.BULLET_POINT.name)
-                                    },
-                                    target = object : DragAndDropTarget {
-                                        override fun onDrop(event: DragAndDropEvent): Boolean {
-                                            val clipData = event.toAndroidDragEvent().clipData
-                                            val firstMimeType = event
-                                                .mimeTypes()
-                                                .firstOrNull()
-
-                                            scope.launch(Dispatchers.Default) {
-                                                if (clipData != null) {
-                                                    for (i in 0 until clipData.itemCount) {
-                                                        ParagraphBlockState.ElementType
-                                                            .values()
-                                                            .find {
-                                                                it.name == firstMimeType
-                                                            }
-                                                            ?.let {
-                                                                when (it) {
-                                                                    ParagraphBlockState.ElementType.BULLET_POINT -> {
-                                                                        bridge.addBulletPoint()
-                                                                        addContentVisible.value =
-                                                                            false
-                                                                    }
-
-                                                                    ParagraphBlockState.ElementType.PARAGRAPH -> {
-                                                                        bridge.addParagraph()
-                                                                        //clipData.getItemAt(i).text
-                                                                        addContentVisible.value =
-                                                                            false
-                                                                    }
-
-                                                                    else -> {}
-                                                                }
-                                                            }
-                                                    }
-                                                }
+                        DropTargetContainer(
+                            collapsedParagraphs = collapsedParagraphs,
+                            identifier = unit.uid,
+                            onDropped = {
+                                val localStateElement = viewModel.localStateElement?.data
+                                Log.d("kostka_test", "onDropped, localState: $localStateElement")
+                                when(localStateElement) {
+                                    is FactIO -> {
+                                        val index = nestedFacts
+                                            .indexOfFirst { inner ->
+                                                inner.uid == localStateElement.uid
                                             }
-                                            dragAndDropTarget.value = ""
-                                            return true
-                                        }
-
-                                        override fun onEntered(event: DragAndDropEvent) {
-                                            super.onEntered(event)
-                                            dragAndDropTarget.value = unit.uid
-                                        }
-
-                                        override fun onExited(event: DragAndDropEvent) {
-                                            super.onExited(event)
-                                            dragAndDropTarget.value = ""
-                                        }
-
-                                        override fun onStarted(event: DragAndDropEvent) {
-                                            super.onStarted(event)
-                                            started.value = true
-                                        }
-
-                                        override fun onEnded(event: DragAndDropEvent) {
-                                            super.onEnded(event)
-                                            started.value = false
+                                            .coerceAtLeast(0)
+                                        scope.launch {
+                                            val element = viewModel.onDragEnded(
+                                                ElementToDrag(
+                                                    data = localStateElement,
+                                                    parentUid = unit.uid,
+                                                    index = index
+                                                )
+                                            )
+                                            bridge.addFact(element)
                                         }
                                     }
-                                )
-                                .then(
-                                    if (dragAndDropTarget.value == unit.uid) {
-                                        Modifier.background(
-                                            color = LocalTheme.colors.brandMain,
-                                        )
-                                    } else if (started.value) {
-                                        Modifier.background(
-                                            color = LocalTheme.colors.tetrial,
-                                        )
-                                    } else Modifier
-                                )
-                        )
+                                    is ParagraphIO -> {
+                                        val index = nestedParagraphs
+                                            .indexOfFirst { inner ->
+                                                inner.uid == localStateElement.uid
+                                            }
+                                            .coerceAtLeast(0)
+                                        scope.launch {
+                                            val element = viewModel.onDragEnded(
+                                                ElementToDrag(
+                                                    data = localStateElement,
+                                                    parentUid = unit.uid,
+                                                    index = index
+                                                )
+                                            )
+                                            bridge.addParagraph(element)
+                                        }
+                                    }
+                                    else -> {}
+                                }
+                            },
+                            type = ElementType.PARAGRAPH,
+                            dragAndDropTarget = dragAndDropTarget,
+                            isEnabled = true,
+                            onCanceled = {
+                                bridge.invalidate()
+                            }
+                        ) { modifier ->
+                            EditFieldInput(
+                                modifier = modifier
+                                    .padding(start = 16.dp)
+                                    .widthIn(min = TextFieldDefaults.MinWidth)
+                                    .height(with(localDensity) {
+                                        LocalTheme.styles.heading.fontSize.value.sp
+                                            .toDp()
+                                            .times(lineCount.intValue)
+                                            .plus(16.dp)
+                                    }),
+                                value = unit.name,
+                                onTextLayout = { result ->
+                                    lineCount.intValue = result.lineCount
+                                },
+                                textStyle = LocalTheme.styles.heading,
+                                isUnfocusedTransparent = true,
+                                hint = stringResource(id = R.string.subject_heading_prefix),
+                                maxLines = 4,
+                                minLines = 1,
+                                paddingValues = PaddingValues(horizontal = 8.dp),
+                                maxLength = MAX_LENGTH_SHORT_TEXT,
+                                onValueChange = { output ->
+                                    unit.name = output
+                                    viewModel.updateUnit(unit)
+                                }
+                            )
+                        }
                     }
                 }
                 itemsIndexed(unitBulletPoints) { index, point ->
@@ -669,7 +624,7 @@ fun UnitScreen(
                                     if(index > 0) {
                                         focusManager.moveFocus(FocusDirection.Up)
                                     }
-                                    unitBulletPoints.removeAt(index)
+                                    bridge.removeBulletPoint(index)
                                 }
                             },
                             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
@@ -683,28 +638,84 @@ fun UnitScreen(
                                 }
                             ),
                             onValueChange = { output ->
-                                unitBulletPoints[index] = output
-                                bridge.updateBulletPoints()
+                                bridge.updateBulletPoint(index, output)
                             }
                         )
                     }
                 }
-                nestedParagraphs.forEachIndexed { index, paragraph ->
+                itemsIndexed(
+                    items = nestedFacts,
+                    key = { _, fact -> fact.uid }
+                ) { index, fact ->
+                    FactCard(
+                        modifier = Modifier
+                            .dragSource(
+                                onClick = {
+                                    if (selectedFact.value != fact.uid) {
+                                        selectedFact.value = fact.uid
+                                    }
+                                },
+                                elementType = ElementType.FACT,
+                                uid = fact.uid,
+                                onStarted = {
+                                    viewModel.localStateElement = ElementToDrag(
+                                        data = fact,
+                                        parentUid = unit.uid,
+                                        index = index
+                                    )
+                                    Log.d(
+                                        "kostka_test",
+                                        "before, nestedFacts: ${nestedFacts.map { it.uid }}"
+                                    )
+                                    bridge.removeUiFact(fact.uid)
+                                    Log.d(
+                                        "kostka_test",
+                                        "after, nestedFacts: ${nestedFacts.map { it.uid }}"
+                                    )
+                                }
+                            )
+                            .fillMaxWidth()
+                            .padding(bottom = 8.dp),
+                        data = fact,
+                        requestDataSave = { newFact ->
+                            viewModel.updateFact(unit = unit, fact = newFact)
+                        },
+                        onClick = {
+                            selectedFact.value = if(selectedFact.value == fact.uid) null else fact.uid
+                        },
+                        mode = when {
+                            selectedFact.value == fact.uid -> InteractiveCardMode.EDIT
+                            else -> InteractiveCardMode.DATA_DISPLAY
+                        }
+                    )
+                }
+                paragraphBlocks.forEachIndexed { index, state ->
                     paragraphBlock(
+                        modifier = Modifier.dragSource(
+                            onClick = {
+                                Log.d("kostka_test", "onClick, collapsedParagraphs: $collapsedParagraphs")
+                                if (collapsedParagraphs.contains(state.paragraph.uid)) {
+                                    collapsedParagraphs.remove(state.paragraph.uid)
+                                } else {
+                                    collapsedParagraphs.add(state.paragraph.uid)
+                                }
+                            },
+                            elementType = ElementType.PARAGRAPH,
+                            uid = state.paragraph.uid,
+                            onStarted = {
+                                viewModel.localStateElement = UnitsViewModel.ElementToDrag(
+                                    data = state.paragraph,
+                                    parentUid = unit.uid,
+                                    index = index
+                                )
+                                bridge.removeUiParagraph(state.paragraph.uid)
+                            }
+                        ),
+                        state = state,
                         unitsViewModel = viewModel,
                         collapsedParagraphs = collapsedParagraphs,
                         generalScope = scope,
                         dragAndDropTarget = dragAndDropTarget,
-                        state = ParagraphBlockState(
-                            categories = categories,
-                            paragraph = paragraph,
-                            parentLayer = -1,
-                            clipBoard = viewModel.clipBoard,
-                            updateParagraph = { updatedParagraph ->
-                                bridge.updateParagraph(updatedParagraph)
-                            },
-                            selectedFact = selectedFact
-                        ),
                         addNewCategory = { name ->
                             val newCategory = CategoryIO(name = name)
                             viewModel.requestAddNewCategory(newCategory)
@@ -713,11 +724,12 @@ fun UnitScreen(
                         addContentVisible = addContentVisible,
                         screenWidthDp = screenWidth,
                         onNewCategoryChosen = { chosenCategory ->
+                            /* TODO remove categories and just save names and use them as "categories" with duplicite being allowed
                             nestedParagraphs.getOrNull(index)?.apply {
                                 localCategory = chosenCategory
                                 categoryUid = chosenCategory.uid
                                 bridge.updateParagraph(this)
-                            }
+                            }*/
                         },
                         isLandscape = isLandscape
                     )
@@ -738,7 +750,7 @@ private fun RowScope.DragAndDropTargetBox(
     colorInactive: Color,
     colorActive: Color,
     contentDescription: String,
-    onDrop: (type: ParagraphBlockState.ElementType, uid: String) -> Unit
+    onDrop: () -> Unit
 ) {
     val scope = rememberCoroutineScope()
     val textColor = remember { Animatable(colorActive) }
@@ -753,10 +765,10 @@ private fun RowScope.DragAndDropTargetBox(
                 shouldStartDragAndDrop = { startEvent ->
                     startEvent
                         .mimeTypes()
-                        .contains(ParagraphBlockState.ElementType.PARAGRAPH.name)
-                            || startEvent
-                        .mimeTypes()
-                        .contains(ParagraphBlockState.ElementType.BULLET_POINT.name)
+                        .any {
+                            it == ElementType.PARAGRAPH.name
+                                    || it == ElementType.FACT.name
+                        }
                 },
                 target = object : DragAndDropTarget {
                     override fun onEntered(event: DragAndDropEvent) {
@@ -777,24 +789,10 @@ private fun RowScope.DragAndDropTargetBox(
 
                     override fun onDrop(event: DragAndDropEvent): Boolean {
                         val clipData = event.toAndroidDragEvent().clipData
-                        val firstMimeType = event
-                            .mimeTypes()
-                            .firstOrNull()
-                        scope.launch(Dispatchers.Default) {
-                            if (clipData != null) {
-                                for (i in 0 until clipData.itemCount) {
-                                    ParagraphBlockState.ElementType
-                                        .values()
-                                        .find {
-                                            it.name == firstMimeType
-                                        }
-                                        ?.let {
-                                            onDrop(it, clipData.getItemAt(i).text?.toString() ?: "")
-                                        }
-                                }
-                            }
+                        if (clipData != null) {
+                            onDrop()
                         }
-                        return true
+                        return clipData != null
                     }
 
                     override fun onEnded(event: DragAndDropEvent) {
@@ -821,21 +819,29 @@ private fun RowScope.DragAndDropTargetBox(
 @Composable
 private fun DragAndDropSourceButton(
     modifier: Modifier = Modifier,
+    viewModel: UnitsViewModel,
     imageVector: ImageVector,
     contentDescription: String,
-    elementType: ParagraphBlockState.ElementType
+    elementType: ElementType
 ) {
     Box(
         modifier = modifier
             .dragAndDropSource {
                 detectTapGestures(
                     onLongPress = {
+                        viewModel.localStateElement = ElementToDrag(
+                            data = if(elementType == ElementType.PARAGRAPH) {
+                                ParagraphIO()
+                            }else FactIO(),
+                            parentUid = "",
+                            index = 0
+                        )
                         this@dragAndDropSource.startTransfer(
                             DragAndDropTransferData(
                                 ClipData(
                                     "",
                                     // restrict to this type + paragraph, which is always supported
-                                    arrayOf(elementType.name, ParagraphBlockState.ElementType.PARAGRAPH.name),
+                                    arrayOf(elementType.name, ElementType.PARAGRAPH.name),
                                     ClipData.Item("")
                                 )
                             )

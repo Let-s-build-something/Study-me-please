@@ -1,4 +1,4 @@
-package study.me.please.ui.session.play
+package study.me.please.data.state.session
 
 import androidx.compose.runtime.MutableState
 import com.squadris.squadris.utils.DateUtils

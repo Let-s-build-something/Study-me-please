@@ -20,7 +20,7 @@ import study.me.please.data.io.session.SessionHistoryItem
 import study.me.please.data.io.subjects.CategoryIO
 import study.me.please.data.io.subjects.ParagraphIO
 import study.me.please.data.io.subjects.UnitIO
-import study.me.please.ui.session.play.QuestionModule
+import study.me.please.data.state.session.QuestionModule
 import java.util.Date
 import javax.inject.Inject
 
@@ -435,8 +435,9 @@ class AppDatabaseConverter @Inject constructor(private val gson: Gson) {
     /** Converts list of strings to string */
     @TypeConverter
     fun fromStringList(value: MutableList<String>): String {
+        val copyOfValue = ArrayList(value)
         return gson.toJson(
-            value,
+            copyOfValue,
             TypeToken.getParameterized(MutableList::class.java, String::class.java).type
         )
     }

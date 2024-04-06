@@ -22,10 +22,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.squadris.squadris.compose.components.input.EditFieldInput
@@ -47,6 +49,7 @@ fun ListItemEditField(
     onValueChange: (String) -> Unit = {},
 ) {
     val localDensity = LocalDensity.current
+    val focusManager = LocalFocusManager.current
     val output = remember(value) { mutableStateOf(value) }
     var fieldLineCount by remember { mutableIntStateOf(1) }
 
@@ -71,12 +74,20 @@ fun ListItemEditField(
             .widthIn(min = TextFieldDefaults.MinWidth)
             .onKeyEvent { keyEvent ->
                 Log.d("kostka_test", "key: ${keyEvent.key}")
-                when (keyEvent.key) {
+                when(keyEvent.key) {
+                    Key.Tab -> {
+                        focusManager.moveFocus(FocusDirection.Next)
+                    }
+                    Key.DirectionUp -> {
+                        focusManager.moveFocus(FocusDirection.Up)
+                    }
+                    Key.DirectionDown -> {
+                        focusManager.moveFocus(FocusDirection.Down)
+                    }
                     Key.Backspace -> {
                         onBackspaceKey(value)
                         true
                     }
-
                     else -> false
                 }
             },

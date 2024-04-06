@@ -8,7 +8,7 @@ import com.google.gson.annotations.SerializedName
 import com.squadris.squadris.utils.DateUtils
 import study.me.please.data.io.QuestionMode
 import study.me.please.data.room.AppRoomDatabase
-import study.me.please.ui.session.play.QuestionModule
+import study.me.please.data.state.session.QuestionModule
 import java.io.Serializable
 import java.util.UUID
 

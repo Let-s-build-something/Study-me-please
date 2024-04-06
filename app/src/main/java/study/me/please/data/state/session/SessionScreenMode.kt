@@ -1,4 +1,4 @@
-package study.me.please.ui.session.play
+package study.me.please.data.state.session
 
 /**
  * Modes of Session screen UI

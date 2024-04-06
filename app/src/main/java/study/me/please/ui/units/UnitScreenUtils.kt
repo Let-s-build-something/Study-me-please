@@ -1,5 +1,6 @@
 package study.me.please.ui.units
 
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import study.me.please.data.io.FactIO
 import study.me.please.data.io.subjects.CategoryIO
@@ -23,22 +24,32 @@ val paragraphBlockMockDataState = ParagraphBlockState(
             )
         )
     ),
+    selectedFact = mutableStateOf(null),
     clipBoard = null,
-    isReadOnly = false,
     paragraph = ParagraphIO(
-        categoryUid = "1",
+        categoryUid = "1"
+    ).apply {
+        localCategory = CategoryIO(
+            name = "maps",
+            uid = "2"
+        )
         facts = mutableListOf(
             FactIO(
                 shortKeyInformation = "Short key information",
                 longInformation = "This longInformation isn't correct, due to gramatical error"
             )
-        ),
+        )
         paragraphs = mutableListOf(
             ParagraphIO(
                 categoryUid = "2",
                 bulletPoints = mutableListOf(
                     "the spanish map"
-                ),
+                )
+            ).apply {
+                localCategory = CategoryIO(
+                    name = "maps",
+                    uid = "2"
+                )
                 facts = mutableListOf(
                     FactIO(
                         shortKeyInformation = "Short key information",
@@ -48,10 +59,15 @@ val paragraphBlockMockDataState = ParagraphBlockState(
                         shortKeyInformation = "Short key information",
                         longInformation = "This longInformation isn't correct, due to gramatical error"
                     )
-                ),
+                )
                 paragraphs = mutableListOf(
                     ParagraphIO(
-                        categoryUid = "1",
+                        categoryUid = "1"
+                    ).apply {
+                        localCategory = CategoryIO(
+                            name = "coconuts",
+                            uid = "2"
+                        )
                         facts = mutableListOf(
                             FactIO(
                                 shortKeyInformation = "Short key information",
@@ -61,10 +77,15 @@ val paragraphBlockMockDataState = ParagraphBlockState(
                                 shortKeyInformation = "Short key information",
                                 longInformation = "This longInformation isn't correct, due to gramatical error"
                             )
-                        ),
+                        )
                         paragraphs = mutableListOf(
                             ParagraphIO(
-                                categoryUid = "1",
+                                categoryUid = "1"
+                            ).apply {
+                                localCategory = CategoryIO(
+                                    name = "coconuts",
+                                    uid = "2"
+                                )
                                 facts = mutableListOf(
                                     FactIO(
                                         shortKeyInformation = "Short key information",
@@ -74,10 +95,15 @@ val paragraphBlockMockDataState = ParagraphBlockState(
                                         shortKeyInformation = "Short key information",
                                         longInformation = "This longInformation isn't correct, due to gramatical error"
                                     )
-                                ),
+                                )
                                 paragraphs = mutableListOf(
                                     ParagraphIO(
                                         categoryUid = "1",
+                                    ).apply {
+                                        localCategory = CategoryIO(
+                                            name = "coconuts",
+                                            uid = "2"
+                                        )
                                         facts = mutableListOf(
                                             FactIO(
                                                 shortKeyInformation = "Short key information",
@@ -88,21 +114,16 @@ val paragraphBlockMockDataState = ParagraphBlockState(
                                                 longInformation = "This longInformation isn't correct, due to gramatical error"
                                             )
                                         )
-                                    ).apply {
-                                        localCategory = CategoryIO(
-                                            name = "coconuts",
-                                            uid = "2"
-                                        )
                                     }
                                 )
+                            },
+                            ParagraphIO(
+                                categoryUid = "1"
                             ).apply {
                                 localCategory = CategoryIO(
                                     name = "coconuts",
                                     uid = "2"
                                 )
-                            },
-                            ParagraphIO(
-                                categoryUid = "1",
                                 facts = mutableListOf(
                                     FactIO(
                                         shortKeyInformation = "Short key information",
@@ -113,28 +134,18 @@ val paragraphBlockMockDataState = ParagraphBlockState(
                                         longInformation = "This longInformation isn't correct, due to gramatical error"
                                     )
                                 )
-                            ).apply {
-                                localCategory = CategoryIO(
-                                    name = "coconuts",
-                                    uid = "2"
-                                )
                             }
-                        )
-                    ).apply {
-                        localCategory = CategoryIO(
-                            name = "coconuts",
-                            uid = "2"
                         )
                     }
                 )
-            ).apply {
-                localCategory = CategoryIO(
-                    name = "maps",
-                    uid = "2"
-                )
             },
             ParagraphIO(
-                categoryUid = "0",
+                categoryUid = "0"
+            ).apply {
+                localCategory = CategoryIO(
+                    name = "sandiwches",
+                    uid = "2"
+                )
                 facts = mutableListOf(
                     FactIO(
                         shortKeyInformation = "Short key information",
@@ -149,19 +160,25 @@ val paragraphBlockMockDataState = ParagraphBlockState(
                         longInformation = "This longInformation isn't correct, due to gramatical error"
                     )
                 )
-            ).apply {
-                localCategory = CategoryIO(
-                    name = "sandiwches",
-                    uid = "2"
-                )
             }
         )
-    ).apply {
-        localCategory = CategoryIO(
-            name = "maps",
-            uid = "2"
-        )
     },
+    isReadOnly = false,
     updateParagraph = {},
-    selectedFact = mutableStateOf(null)
+    nestedBulletPoints = mutableStateListOf(),
+    nestedParagraphs = mutableStateListOf(),
+    nestedBlockStates = listOf(),
+    nestedFacts = mutableStateListOf(),
+    updateFact = {},
+    bridge = object: ParagraphBlockBridge {
+        override fun addFact(element: UnitsViewModel.ElementToDrag) {}
+        override fun removeUiFact(uid: String) {}
+        override fun requestFactsPaste() { }
+        override fun addParagraph(element: UnitsViewModel.ElementToDrag) {}
+        override fun removeUiParagraph(uid: String) {}
+        override fun addNewBulletPoint(index: Int, bulletPoint: String?) {}
+        override fun removeBulletPoint(index: Int) {}
+        override fun updateBulletPoint(index: Int, output: String) {}
+        override fun invalidate() {}
+    }
 )

@@ -57,7 +57,7 @@ import study.me.please.ui.components.collapsing_layout.CollapsingBehavior
 import study.me.please.ui.components.collapsing_layout.CollapsingLayout
 import study.me.please.ui.components.pull_refresh.PullRefreshScreen
 
-const val REQUEST_DATA_SAVE_DELAY = 500L
+const val REQUEST_DATA_SAVE_DELAY = 200L
 
 const val PAGE_INDEX_QUESTIONS = 0
 const val PAGE_INDEX_FACTS = 1

@@ -6,7 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.room.Ignore
 import study.me.please.data.io.QuestionAnswerIO
 import study.me.please.data.io.QuestionIO
-import study.me.please.ui.session.play.SessionScreenMode
+import study.me.please.data.state.session.SessionScreenMode
 import java.util.UUID
 
 /** Item of a session with all relevant information to one questioning screen */

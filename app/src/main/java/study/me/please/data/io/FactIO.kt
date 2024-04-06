@@ -75,20 +75,6 @@ data class FactIO(
                 "}"
     }
 
-    fun deepCopy(): FactIO {
-        return FactIO(
-            shortKeyInformation = shortKeyInformation,
-            shortKeyImage = shortKeyImage,
-            longInformation = longInformation,
-            textList = textList,
-            longInformationImage = longInformationImage,
-            promptImage = promptImage,
-            type = type,
-            dateCreated = dateCreated,
-            categoryUids = categoryUids
-        )
-    }
-
     /** Whether there is not visible data */
     @get:Ignore
     val isEmpty: Boolean

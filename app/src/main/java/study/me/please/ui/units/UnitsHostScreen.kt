@@ -121,7 +121,7 @@ fun SubjectsHostScreen(
                     confirmButtonState = ButtonState(
                         text = stringResource(id = R.string.button_confirm)
                     ) {
-                        viewModel.deleteSubject(subject.uid)
+                        viewModel.deleteUnit(subject.uid)
                         showDeleteDialog.value = false
                     },
                     dismissButtonState = ButtonState(
@@ -195,6 +195,7 @@ fun SubjectsHostScreen(
                 LaunchedEffect(pagerState) {
                     snapshotFlow { pagerState.currentPage }.collect { index ->
                         currentPagerIndex.intValue = index
+                        viewModel.currentUnit = subjects.value?.getOrNull(index)
                     }
                 }
                 LaunchedEffect(subjects.value?.size) {
@@ -217,7 +218,7 @@ fun SubjectsHostScreen(
                     beyondBoundsPageCount = 2
                 ) { index ->
                     subjects.value?.getOrNull(index)?.let { subject ->
-                        UnitScreen(
+                        UnitContent(
                             unit = subject,
                             viewModel = viewModel,
                             filtersContent = {
@@ -268,7 +269,7 @@ fun SubjectsHostScreen(
                                                     ComponentHeaderButton(
                                                         modifier = modifier,
                                                         onClick = {
-                                                            viewModel.addNewSubject(
+                                                            viewModel.addNewUnit(
                                                                 collectionUid = collectionUid,
                                                                 prefix = context.getString(R.string.subject_heading_prefix)
                                                             )

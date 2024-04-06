@@ -11,6 +11,7 @@ import study.me.please.data.room.PreferencesDao
 import study.me.please.data.room.QuestionDao
 import study.me.please.data.room.QuestionModuleDao
 import study.me.please.data.room.SessionDao
+import study.me.please.data.state.session.QuestionModule
 import study.me.please.ui.components.preference_chooser.PreferencePackRepository
 import javax.inject.Inject
 

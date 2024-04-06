@@ -7,6 +7,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -21,10 +27,12 @@ import androidx.compose.ui.unit.sp
 import com.squadris.squadris.compose.theme.Colors
 import com.squadris.squadris.compose.theme.LocalTheme
 import com.squadris.squadris.ext.roundOffDecimal
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import study.me.please.R
 import study.me.please.data.io.QuestionIO
 import study.me.please.data.io.session.SessionHistoryItem
-import study.me.please.ui.session.play.QuestionModule
+import study.me.please.data.state.session.QuestionModule
 import java.util.concurrent.TimeUnit
 import kotlin.math.roundToInt
 
@@ -38,33 +46,62 @@ fun StatisticsTable(
     questionModule: QuestionModule,
     backgroundColor: Color = LocalTheme.colors.onBackgroundComponent
 ) {
+    val coroutineScope = rememberCoroutineScope()
+
     val items = questionModule.history//.filter { it.timeOfStart != null && it.isRepetition.not() }
     val responseTimeAverages = mutableListOf<Long>()
-    val successRates = mutableListOf<Double>()
-    var iteratedValueSuccessRate = 0.0
-    var iteratedValueResponseTime = 0L
+    val successRates = mutableListOf<Float>()
+    val responseTime = remember {
+        mutableLongStateOf(0L)
+    }
+    val successRate = remember {
+        mutableFloatStateOf(0f)
+    }
+    val percentageDone = remember {
+        mutableFloatStateOf(0f)
+    }
 
-    items.forEachIndexed { index, item ->
-        if(item.timeOfStart != null) {
-            if(item.answers.none { it.isCorrect.not() }) {
-                iteratedValueSuccessRate++
+    LaunchedEffect(Unit) {
+        withContext(Dispatchers.Default) {
+            var iteratedValueSuccessRate = 0.0f
+            var iteratedValueResponseTime = 0L
+
+            items.forEachIndexed { index, item ->
+                if(item.timeOfStart != null) {
+                    if(item.answers.none { it.isCorrect.not() }) {
+                        iteratedValueSuccessRate++
+                    }
+
+                    // response time
+                    iteratedValueResponseTime += item.timeToAnswer.minus(item.timeOfStart)
+
+                    responseTimeAverages.add(
+                        iteratedValueResponseTime.div((index + 1))
+                    )
+                    successRates.add(
+                        (iteratedValueSuccessRate.div((index.toFloat() + 1.0f))) * 100.0f
+                    )
+                }
             }
 
-            // response time
-            iteratedValueResponseTime += item.timeToAnswer.minus(item.timeOfStart)
+            val allQuestions = questionModule.questionsStack.filter { it.isRepetition.not() }
+            val lastAnswered = allQuestions.indexOfFirst { it.uid == items.lastOrNull { item -> item.isRepetition.not() }?.uid }
 
-            responseTimeAverages.add(
-                iteratedValueResponseTime.div((index + 1))
-            )
-            successRates.add(
-                (iteratedValueSuccessRate.div((index.toDouble() + 1.0))) * 100.0
-            )
+            responseTime.longValue = iteratedValueResponseTime
+            successRate.floatValue = iteratedValueSuccessRate
+            percentageDone.floatValue = lastAnswered.plus(1).toFloat()
+                .div(
+                    allQuestions.size.coerceAtLeast(1)
+                )
         }
     }
-    val averageResponseTime = if(items.isNotEmpty()) {
-        iteratedValueResponseTime.div(items.size)
-    }else 0
-    val percentageDone = items.size.toFloat().div(questionModule.questions.size)
+    val averageResponseTime = remember {
+        derivedStateOf {
+            if(items.isNotEmpty()) {
+                responseTime.longValue.div(items.size)
+            }else 0
+        }
+    }
 
     Column(
         modifier = modifier
@@ -74,13 +111,13 @@ fun StatisticsTable(
             )
             .padding(12.dp)
     ) {
-        val successResources = getSuccessText(successRates.lastOrNull() ?: 100.0)
+        val successResources = getSuccessText(successRates.lastOrNull() ?: 100.0f)
         Text(
             modifier = Modifier.fillMaxWidth(),
             text = stringResource(
                 id = R.string.statistics_success_rate,
                 successResources.first,
-                (successRates.lastOrNull() ?: 100.0).roundOffDecimal().toString()
+                (successRates.lastOrNull() ?: 100.0f).roundOffDecimal().toString()
             ),
             style = TextStyle(
                 fontSize = 18.sp,
@@ -95,7 +132,7 @@ fun StatisticsTable(
                 .align(Alignment.CenterHorizontally)
                 .fillMaxWidth(0.8f),
             strokeCap = StrokeCap.Round,
-            progress = { percentageDone },
+            progress = { percentageDone.floatValue },
             trackColor = LocalTheme.colors.tetrial,
             color = LocalTheme.colors.brandMain
         )
@@ -105,7 +142,7 @@ fun StatisticsTable(
                 .padding(bottom = 4.dp),
             text = stringResource(
                 R.string.statistics_progress_percentage,
-                percentageDone.times(100).roundToInt().toString()
+                percentageDone.floatValue.times(100f).roundToInt().toString()
             ),
             style = TextStyle(
                 color = LocalTheme.colors.primary,
@@ -117,7 +154,7 @@ fun StatisticsTable(
             modifier = Modifier.fillMaxWidth(),
             text = stringResource(
                 id = R.string.statistics_time_spent_total,
-                millisToTimeLapsed(millis = iteratedValueResponseTime),
+                millisToTimeLapsed(millis = responseTime.longValue),
                 items.size,
                 questionModule.questions.size
             ),
@@ -133,7 +170,7 @@ fun StatisticsTable(
                 .padding(top = 6.dp),
             text = stringResource(
                 id = R.string.statistics_time_spent_average,
-                millisToTimeLapsed(millis = averageResponseTime)
+                millisToTimeLapsed(millis = averageResponseTime.value)
             ),
             style = TextStyle(
                 fontSize = 14.sp,
@@ -155,7 +192,7 @@ private const val GRADE_C1_PERCENTAGE = 55.0
 private const val GRADE_C2_PERCENTAGE = 50.0
 
 @Composable
-private fun getSuccessText(percentageSuccess: Double): Pair<String, Color> {
+private fun getSuccessText(percentageSuccess: Float): Pair<String, Color> {
     return when(percentageSuccess) {
         in GRADE_A1_PERCENTAGE .. 100.0 -> {
             stringResource(id = R.string.grade_a1) to Colors.GREEN_CORRECT

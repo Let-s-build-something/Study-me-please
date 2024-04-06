@@ -64,6 +64,9 @@ import study.me.please.data.io.QuestionAnswerIO
 import study.me.please.data.io.QuestionIO
 import study.me.please.data.io.preferences.SessionPreferencePack
 import study.me.please.data.io.session.SessionItem
+import study.me.please.data.state.session.QuestionModule
+import study.me.please.data.state.session.SessionScreenMode
+import study.me.please.data.state.session.SessionScreenState
 import study.me.please.ui.components.BulletPoint
 import study.me.please.ui.components.ComponentHeaderButton
 import study.me.please.ui.components.EditableImageAsset

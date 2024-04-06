@@ -235,7 +235,7 @@
     <string name="question_generating_fact_short">What is/are <b>\"%1$s\" (%2$s)?</b></string>
     <string name="question_generating_fact_long">What best describes: <b>\"%1$s\" (%2$s)</b>?</string>
     <string name="question_generating_children_items">
-        Pick related information to the <b><![CDATA[<a href="/paragraph/%2$s">%1$s</a>]]></b> (<b><![CDATA[<a href="/units/%4$s">%3$s</a>]]></b>).
+        Pick related information to the <b><![CDATA[<a href="/paragraph/%2$s">%1$s</a>]]></b> (<b><![CDATA[<a href="/paragraph/%4$s">%3$s</a>]]></b>).
     </string>
 
 

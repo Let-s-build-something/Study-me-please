@@ -82,6 +82,7 @@ class QuestionGenerator @Inject constructor() {
                 // iterates further into all depths
                 suspend fun iterateFurther(
                     paragraph: ParagraphIO,
+                    parentParagraph: ParagraphIO?,
                     parentCategoryUid: List<String>,
                     parentUid: List<String>,
                 ) {
@@ -91,6 +92,7 @@ class QuestionGenerator @Inject constructor() {
                             paragraphs.add(
                                 ParagraphToGenerate(
                                     data = paragraph,
+                                    parentParagraph = parentParagraph,
                                     parentUnitUid = subject.uid,
                                     sortedCategoryUid = parentCategoryUid,
                                     parentUid
@@ -107,7 +109,7 @@ class QuestionGenerator @Inject constructor() {
                                     parentUnitUid = subject.uid,
                                     sortedCategoryUid = parentCategoryUid,
                                     sortedParentUid = parentUid,
-                                    parentParagraphIO = paragraph
+                                    parentParagraph = paragraph
                                 )
                             )
                         }
@@ -116,6 +118,7 @@ class QuestionGenerator @Inject constructor() {
                             excludedList.contains(it.uid).not()
                         }.forEach { iteratedParagraph ->
                             iterateFurther(
+                                parentParagraph = paragraph,
                                 paragraph = iteratedParagraph,
                                 parentCategoryUid = parentCategoryUid.toMutableList().apply {
                                     iteratedParagraph.categoryUid?.let { categoryUid ->
@@ -135,6 +138,7 @@ class QuestionGenerator @Inject constructor() {
                 }.forEach { paragraph ->
                     iterateFurther(
                         paragraph = paragraph,
+                        parentParagraph = null,
                         parentCategoryUid = listOf(paragraph.categoryUid ?: ""),
                         parentUid = listOf(paragraph.uid)
                     )
@@ -320,7 +324,7 @@ class QuestionGenerator @Inject constructor() {
                     prompt = activity.getString(
                         R.string.question_generating_fact_list,
                         promptFact.data.shortKeyInformation,
-                        promptFact.parentParagraphIO.localCategory?.name ?: "-"
+                        promptFact.parentParagraph.localCategory?.name ?: "-"
                     )
                 )
             }else {
@@ -329,7 +333,7 @@ class QuestionGenerator @Inject constructor() {
                         val makeImportedSourceRoute = mappingFact.makeImportedSourceRoute()
 
                         QuestionAnswerIO(
-                            text = "${mappingFact.data.shortKeyInformation} (${mappingFact.parentParagraphIO.localCategory?.name})",
+                            text = "${mappingFact.data.shortKeyInformation} (${mappingFact.parentParagraph.localCategory?.name})",
                             explanationMessage = mappingFact.data.longInformation,
                             imageExplanation = mappingFact.data.promptImage,
                             explanationList = mappingFact.data.textList,
@@ -340,7 +344,7 @@ class QuestionGenerator @Inject constructor() {
                         // we add the correct answer
                         add(
                             QuestionAnswerIO(
-                                text = "${promptFact.data.shortKeyInformation} (${promptFact.parentParagraphIO.localCategory?.name})",
+                                text = "${promptFact.data.shortKeyInformation} (${promptFact.parentParagraph.localCategory?.name})",
                                 isCorrect = true
                             )
                         )
@@ -354,7 +358,7 @@ class QuestionGenerator @Inject constructor() {
             QuestionIO(
                 answers = facts.map { mappingFact ->
                     val makeImportedSourceRoute = mappingFact.makeImportedSourceRoute()
-                    val shortKeyInformation = "${mappingFact.data.shortKeyInformation} (${mappingFact.parentParagraphIO.localCategory?.name})"
+                    val shortKeyInformation = "${mappingFact.data.shortKeyInformation} (${mappingFact.parentParagraph.localCategory?.name})"
 
                     QuestionAnswerIO(
                         textList = if(generatingGoal == FactGeneratingGoal.SHORT_INFORMATION
@@ -380,7 +384,7 @@ class QuestionGenerator @Inject constructor() {
                         importedSource = makeImportedSourceRoute
                     )
                 }.toMutableList().apply {
-                    val shortKeyInformation = "${promptFact.data.shortKeyInformation} (${promptFact.parentParagraphIO.localCategory?.name})"
+                    val shortKeyInformation = "${promptFact.data.shortKeyInformation} (${promptFact.parentParagraph.localCategory?.name})"
 
                     // we add the correct answer
                     add(
@@ -407,7 +411,7 @@ class QuestionGenerator @Inject constructor() {
                         activity.getString(
                             R.string.question_generating_fact_short,
                             promptFact.data.shortKeyInformation,
-                            promptFact.parentParagraphIO.localCategory?.name ?: "-"
+                            promptFact.parentParagraph.localCategory?.name ?: "-"
                         )
                     }
                     FactGeneratingGoal.LONG_INFORMATION -> {
@@ -416,7 +420,7 @@ class QuestionGenerator @Inject constructor() {
                         }else activity.getString(
                             R.string.question_generating_fact_long,
                             promptFact.data.longInformation,
-                            promptFact.parentParagraphIO.localCategory?.name ?: "-"
+                            promptFact.parentParagraph.localCategory?.name ?: "-"
                         )
                     }
                 },
@@ -443,10 +447,10 @@ class QuestionGenerator @Inject constructor() {
         return withContext(Dispatchers.Default) {
             when {
                 // only paragraphs that act as a form of a "fact" - have some paragraphs
-                generatingGoal == ParagraphGeneratingGoal.LIST_OF_CHILDREN_PARAGRAPHS
+                /*generatingGoal == ParagraphGeneratingGoal.LIST_OF_CHILDREN_PARAGRAPHS TODO children paragraph may not be unique
                         && paragraph.data.paragraphs.count { it.isSeriousDataPoint() } < 2 -> {
                     return@withContext null
-                }
+                }*/
                 // we need correct answers
                 generatingGoal == ParagraphGeneratingGoal.LIST_OF_CHILDREN_FACTS
                         && (paragraph.data.facts.size < 2 || paragraph.data.isSeriousDataPoint().not()) -> {
@@ -478,6 +482,7 @@ class QuestionGenerator @Inject constructor() {
 
                     if(chosenParagraphs.isEmpty()) return@withContext null
 
+                    val parentParagraph = paragraph.parentParagraph?.localCategory?.name
                     listOf(
                         QuestionIO(
                             answers = chosenParagraphs
@@ -501,7 +506,7 @@ class QuestionGenerator @Inject constructor() {
                             prompt = activity.getString(
                                 R.string.question_generating_bulletin_name,
                                 paragraph.data.localCategory?.name ?: ""
-                            )
+                            ) + if(parentParagraph != null) " ($parentParagraph)" else ""
                         )
                     )
                 }
@@ -520,27 +525,31 @@ class QuestionGenerator @Inject constructor() {
                             answers = chosenParagraphs
                                 .take(MINIMUM_RELATED_DATA_TO_GENERATE)
                                 .map { relatedParagraph ->
+                                    val parentParagraph = relatedParagraph.first.parentParagraph?.localCategory?.name
+
                                     QuestionAnswerIO(
                                         isCorrect = false,
-                                        text = relatedParagraph.first.data.localCategory?.name ?: "",
+                                        text = (relatedParagraph.first.data.localCategory?.name ?: "") + if(parentParagraph != null) " ($parentParagraph)" else "",
                                         explanationList = relatedParagraph.first.data.bulletPoints,
                                         importedSource = relatedParagraph.first.makeImportedSourceRoute()
                                     )
                                 }.toMutableList().apply {
+                                    val parentParagraph = paragraph.parentParagraph?.localCategory?.name
                                     add(
                                         QuestionAnswerIO(
                                             isCorrect = true,
-                                            text = paragraph.data.localCategory?.name ?: "",
+                                            text = (paragraph.data.localCategory?.name ?: "") + if(parentParagraph != null) " ($parentParagraph)" else "",
                                             explanationList = paragraph.data.bulletPoints
                                         )
                                     )
                                 },
-                            prompt = activity.getString(R.string.question_generating_bulletin_points),
+                            prompt = activity.getString(R.string.question_generating_bulletin_points)
+                                    + if(paragraph.parentParagraph != null) " (${paragraph.parentParagraph.localCategory?.name})" else "",
                             promptList = paragraph.data.bulletPoints
                         )
                     )
                 }
-                ParagraphGeneratingGoal.LIST_OF_CHILDREN_PARAGRAPHS -> {
+                /*ParagraphGeneratingGoal.LIST_OF_CHILDREN_PARAGRAPHS -> {
                     val correctParagraphs = paragraph.data.paragraphs
                         .filter { it.isSeriousDataPoint() }
 
@@ -550,7 +559,7 @@ class QuestionGenerator @Inject constructor() {
                                     && related.first.data.isSeriousDataPoint()
                         }
                         .take(correctParagraphs.size)
-                        .flatMap { data -> data.first.data.paragraphs.map { it to data.first } }
+                        .flatMap { data -> data.first.data.paragraphs.map { it to data } }
                     // if there are no related paragraphs
                     if(relatedChildrenParagraphs.isEmpty()) return@withContext listOf()
 
@@ -562,11 +571,13 @@ class QuestionGenerator @Inject constructor() {
                                 .shuffled()
                                 .take(MINIMUM_RELATED_DATA_TO_GENERATE)
                                 .map { childrenParagraph ->
+                                    val parentParagraph = childrenParagraph.second.first.parentParagraph?.localCategory?.name
+
                                     QuestionAnswerIO(
-                                        text = childrenParagraph.first.localCategory?.name ?: "",
+                                        text = (childrenParagraph.first.localCategory?.name ?: "") + if(parentParagraph != null) " ($parentParagraph)" else "",
                                         explanationList = childrenParagraph.first.bulletPoints,
                                         isCorrect = false,
-                                        importedSource = childrenParagraph.second.makeImportedSourceRoute()
+                                        importedSource = childrenParagraph.second.first.makeImportedSourceRoute()
                                     )
                                 }.toMutableList().apply {
                                     correctParagraphs.forEach { correctParagraph ->
@@ -590,7 +601,7 @@ class QuestionGenerator @Inject constructor() {
                             )
                         )
                     )
-                }
+                }*/
                 ParagraphGeneratingGoal.LIST_OF_CHILDREN_FACTS -> {
                     if(paragraph.data.localCategory == null) return@withContext null
                     val correctFacts = paragraph.data.facts
@@ -637,8 +648,8 @@ class QuestionGenerator @Inject constructor() {
                                 R.string.question_generating_children_items,
                                 paragraph.data.localCategory?.name ?: "",
                                 paragraph.data.uid,
-                                subject?.name ?: "",
-                                subject?.uid ?: ""
+                                paragraph.parentParagraph?.localCategory?.name ?: "",
+                                paragraph.parentParagraph?.localCategory?.uid ?: "-"
                             )
                         )
                     )
@@ -779,7 +790,7 @@ class QuestionGenerator @Inject constructor() {
         BULLET_POINTS_VALUES,
 
         /** list of paragraphs under specific paragraph */
-        LIST_OF_CHILDREN_PARAGRAPHS,
+        //LIST_OF_CHILDREN_PARAGRAPHS, TODO paragraphs may not be unique
 
         /** list of facts under specific paragraph */
         LIST_OF_CHILDREN_FACTS,
@@ -804,7 +815,7 @@ class QuestionGenerator @Inject constructor() {
 
     private data class FactToGenerate(
         val data: FactIO,
-        val parentParagraphIO: ParagraphIO,
+        val parentParagraph: ParagraphIO,
         val parentUnitUid: String,
         val sortedCategoryUid: List<String>,
         val sortedParentUid: List<String>,
@@ -838,6 +849,7 @@ class QuestionGenerator @Inject constructor() {
      */
     private data class ParagraphToGenerate(
         val data: ParagraphIO,
+        val parentParagraph: ParagraphIO?,
         val parentUnitUid: String,
         val sortedCategoryUid: List<String>,
         val sortedParentUid: List<String>

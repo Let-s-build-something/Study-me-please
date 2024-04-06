@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import study.me.please.base.BaseViewModel
 import study.me.please.base.GeneralClipBoard
 import study.me.please.data.io.BaseResponse
@@ -21,6 +22,7 @@ import study.me.please.data.io.subjects.CategoryIO
 import study.me.please.data.io.subjects.ParagraphIO
 import study.me.please.data.io.subjects.UnitIO
 import study.me.please.ui.components.FactCardCategoryUseCase
+import java.util.UUID
 import javax.inject.Inject
 
 /** Communication bridge between UI and DB */
@@ -37,7 +39,7 @@ class UnitsViewModel @Inject constructor(
     }
 
     /** List of all subjects related to a collection */
-    private val _subjectsList = MutableStateFlow<List<UnitIO>?>(null)
+    private val _unitsList = MutableStateFlow<List<UnitIO>?>(null)
 
     /** List of all categories */
     private val _categories = MutableStateFlow<List<CategoryIO>?>(null)
@@ -48,11 +50,14 @@ class UnitsViewModel @Inject constructor(
     /** Filter for current subjects */
     val filter = MutableStateFlow(UnitsFilter())
 
+    /** currently selected unit */
+    var currentUnit: UnitIO? = null
+
     /** response from generating questions */
     val questionsGeneratingResponse = _questionsGeneratingResponse.asSharedFlow()
 
     /** List of all subjects related to a collection */
-    val subjects = _subjectsList.combine(filter) { subjects, filter ->
+    val subjects = _unitsList.combine(filter) { subjects, filter ->
         // TODO filtering the content
         // TODO searching in the content will be similar to web searching - iterate through all of content
         //  - purpose of search can be both read only and also to change information.
@@ -67,8 +72,193 @@ class UnitsViewModel @Inject constructor(
     /** uid of an element that is requested to be removed from its paragraph */
     val elementUidToRemove = MutableStateFlow<String?>(null)
 
-    var dragAndDroppedFact: FactIO? = null
-    var dragAndDroppedParagraph: ParagraphIO? = null
+    /** Element that is being currently dragged */
+    data class ElementToDrag(
+        /** data that is being dragged - the same as localState inside the drag event */
+        val data: Any?,
+
+        /** uid of the parent of the [data] element */
+        val parentUid: String,
+
+        /** index of the element in the parent */
+        val index: Int
+    ) {
+        /** returns [data] as [FactIO] */
+        val fact: FactIO? = data as? FactIO
+
+        /** returns [data] as [ParagraphIO] */
+        val paragraph: ParagraphIO? = data as? ParagraphIO
+
+        /** uid of the element */
+        val uid: String
+            get() = fact?.uid ?: paragraph?.uid ?: ""
+
+        val asNew: ElementToDrag
+            get() = ElementToDrag(
+                data = fact?.copy(uid = UUID.randomUUID().toString()) ?: paragraph?.deepCopy(),
+                parentUid = parentUid,
+                index = index
+            )
+    }
+
+    /** currently dragged element */
+    var localStateElement: ElementToDrag? = null
+
+    /** patch with modified paragraph */
+    val paragraphPatch = MutableStateFlow<ParagraphIO?>(null)
+
+    /** called when drag event is ended */
+    suspend fun onDragEnded(elementToDrag: ElementToDrag): ElementToDrag {
+        Log.d("kostka_test", "onDragEnded, element: ${elementToDrag.uid}")
+        val newElement = elementToDrag.asNew
+        Log.d("kostka_test", "onDragEnded, newElement: ${newElement.uid}")
+        currentUnit?.let { unit ->
+            requestObjectRemoval(
+                unit = unit,
+                elementUid = elementToDrag.uid
+            )
+            requestObjectAdd(
+                unit = unit,
+                element = newElement
+            )
+        }
+        localStateElement = null
+        return newElement
+    }
+
+    /** iterates through whole subject in order to remove any element by its uid */
+    suspend fun requestObjectRemoval(
+        unit: UnitIO,
+        elementUid: String
+    ) {
+        withContext(Dispatchers.Default) {
+            Log.d("kostka_test", "requestObjectRemoval, uid: $elementUid")
+            // unit layer removal
+            if(unit.removeParagraph(elementUid)) {
+                repository.deleteParagraph(elementUid)
+                updateUnit(unit)
+                Log.d("kostka_test", "requestObjectRemoval, object $elementUid removed")
+                elementUidToRemove.value = null
+                return@withContext
+            }
+            if(unit.removeFact(elementUid)) {
+                repository.deleteFact(elementUid)
+                updateUnit(unit)
+                Log.d("kostka_test", "requestObjectRemoval, object $elementUid removed")
+                elementUidToRemove.value = null
+                return@withContext
+            }
+
+            unit.paragraphs.forEach { paragraph ->
+                // first paragraphs layer
+                if(paragraph.removeParagraph(elementUid)) {
+                    repository.deleteParagraph(elementUid)
+                    repository.updateParagraph(paragraph)
+                    paragraphPatch.value = paragraph
+                    Log.d("kostka_test", "requestObjectRemoval, object $elementUid removed")
+                    elementUidToRemove.value = null
+                    return@withContext
+                }
+                if(paragraph.removeFact(elementUid)) {
+                    repository.deleteFact(elementUid)
+                    repository.updateParagraph(paragraph)
+                    Log.d("kostka_test", "requestObjectRemoval, object $elementUid removed")
+                    elementUidToRemove.value = null
+                    return@withContext
+                }
+
+                iterateFurtherAction(
+                    paragraph,
+                    action = { nestedParagraph ->
+                        // nested paragraphs layer
+                        if(nestedParagraph.removeParagraph(elementUid)) {
+                            repository.deleteParagraph(elementUid)
+                            repository.updateParagraph(nestedParagraph)
+                            paragraphPatch.value = nestedParagraph
+                            Log.d("kostka_test", "requestObjectRemoval, object $elementUid removed")
+                            elementUidToRemove.value = null
+                            return@iterateFurtherAction
+                        }
+                        if(nestedParagraph.removeFact(elementUid)) {
+                            repository.deleteFact(elementUid)
+                            repository.updateParagraph(nestedParagraph)
+                            Log.d("kostka_test", "requestObjectRemoval, object $elementUid removed")
+                            elementUidToRemove.value = null
+                            return@iterateFurtherAction
+                        }
+                    }
+                )
+            }
+        }
+    }
+
+    /** iterates through whole subject in order to add any element by parent uid */
+    private suspend fun requestObjectAdd(
+        unit: UnitIO,
+        element: ElementToDrag
+    ) {
+        withContext(Dispatchers.Default) {
+            Log.d("kostka_test", "requestObjectAdd, uid: ${element.uid}")
+            // unit layer add
+            if(element.paragraph != null && element.parentUid == unit.uid) {
+                unit.addParagraph(index = element.index, paragraph = element.paragraph)
+                repository.updateParagraph(element.paragraph)
+                repository.updateUnit(unit)
+                Log.d("kostka_test", "requestObjectAdd, object ${element.uid} added (paragraphUidList: ${unit.paragraphUidList}")
+                return@withContext
+            }
+            if(element.fact != null && element.parentUid == unit.uid) {
+                unit.addFact(index = element.index, fact = element.fact)
+                repository.updateFact(element.fact)
+                repository.updateUnit(unit)
+                Log.d("kostka_test", "requestObjectAdd, object ${element.uid} added (factUidList: ${unit.factUidList}")
+                return@withContext
+            }
+
+            unit.paragraphs.forEach { paragraph ->
+                // first paragraphs layer
+                if(element.paragraph != null && paragraph.uid == element.parentUid) {
+                    paragraph.addParagraph(index = element.index, paragraph = element.paragraph)
+                    repository.updateParagraph(element.paragraph)
+                    repository.updateParagraph(paragraph)
+                    paragraphPatch.value = paragraph
+                    Log.d("kostka_test", "requestObjectAdd, object ${element.uid} added (paragraphUidList: ${paragraph.paragraphUidList}")
+                    return@withContext
+                }
+                if(element.fact != null && paragraph.uid == element.parentUid) {
+                    paragraph.addFact(index = element.index, fact = element.fact)
+                    repository.updateFact(element.fact)
+                    repository.updateParagraph(paragraph)
+                    paragraphPatch.value = paragraph
+                    Log.d("kostka_test", "requestObjectAdd, object ${element.uid} added (factUidList: ${paragraph.factUidList}")
+                    return@withContext
+                }
+
+                iterateFurtherAction(
+                    paragraph,
+                    action = { nestedParagraph ->
+                        // nested paragraphs layer
+                        if(element.paragraph != null && nestedParagraph.uid == element.parentUid) {
+                            nestedParagraph.addParagraph(index = element.index, paragraph = element.paragraph)
+                            repository.updateParagraph(element.paragraph)
+                            repository.updateParagraph(nestedParagraph)
+                            paragraphPatch.value = nestedParagraph
+                            Log.d("kostka_test", "requestObjectAdd, object ${element.uid} added (paragraphUidList: ${nestedParagraph.paragraphUidList}")
+                            return@iterateFurtherAction
+                        }
+                        if(element.fact != null && nestedParagraph.uid == element.parentUid) {
+                            nestedParagraph.addFact(index = element.index, fact = element.fact)
+                            repository.updateFact(element.fact)
+                            repository.updateParagraph(nestedParagraph)
+                            paragraphPatch.value = nestedParagraph
+                            Log.d("kostka_test", "requestObjectAdd, object ${element.uid} added (factUidList: ${nestedParagraph.factUidList}")
+                            return@iterateFurtherAction
+                        }
+                    }
+                )
+            }
+        }
+    }
 
     /** Generates questions and saves them right after that */
     fun generateQuestions(
@@ -80,8 +270,8 @@ class UnitsViewModel @Inject constructor(
             val collection = repository.getCollection(collectionUid)
             val response = questionGenerator.generateQuestions(
                 activity = activity,
-                subjects = _subjectsList.value?.filter { checkedSubjectUids.contains(it.uid) }.orEmpty(),
-                allSubject = _subjectsList.value.orEmpty(),
+                subjects = _unitsList.value?.filter { checkedSubjectUids.contains(it.uid) }.orEmpty(),
+                allSubject = _unitsList.value.orEmpty(),
                 excludedList = repository.getAllQuestions(collectionUid = collectionUid)
                     ?.map { it.uid }
                     .orEmpty()
@@ -99,43 +289,43 @@ class UnitsViewModel @Inject constructor(
         }
     }
 
-    /**
-     * Iterates through the given source paragraph [sourceUid] and checks,
-     * whether [targetUid] is a child of it
-     */
-    fun isNestedOfParagraph(
-        sourceParagraph: ParagraphIO?,
-        targetUid: String
-    ): Boolean {
-        if(sourceParagraph == null) return false
-
-        sourceParagraph.paragraphs.forEach { paragraph ->
-            if(paragraph.uid == targetUid) return true
-            if(isNestedOfParagraph(
-                sourceParagraph = paragraph,
-                targetUid = targetUid
-            )) return true
-        }
-        return false
-    }
-
     /** Makes a request to return subjects */
     fun requestSubjectsList(collectionUid: String) {
         viewModelScope.launch(Dispatchers.Default) {
             _categories.value = repository.getAllCategories()
             val res = repository.getSubjectsByCollection(collectionUid)
-            _subjectsList.value = if(res.isNullOrEmpty()) {
+            _unitsList.value = if(res.isNullOrEmpty()) {
                 listOf(UnitIO(collectionUid = collectionUid))
-            }else res.onEach {
-                // TODO REMOVE and seal this functionality before release version
-                /*if(it.paragraphUidList.isNotEmpty()) {
-                    it.paragraphs = it.paragraphs.toMutableList().apply {
-                        addAll(
-                            repository.getParagraphsBy(it.paragraphUidList).orEmpty()
-                        )
-                    }
-                }*/
+            }else res.onEach { unit ->
+                if(unit.paragraphUidList.isNotEmpty()) {
+                    unit.paragraphs.clear()
+                    unit.paragraphs.addAll(
+                        repository.getParagraphsBy(unit.paragraphUidList)
+                            .orEmpty()
+                            .onEach { paragraph ->
+                                paragraph.fillInParagraph()
+                            }
+                    )
+                }
+                if(unit.factUidList.isNotEmpty()) {
+                    unit.facts.clear()
+                    unit.facts.addAll(
+                        repository.getFactsBy(unit.factUidList).orEmpty()
+                    )
+                }
             }
+        }
+    }
+
+    /** Fills in all neccessary data to this paragraph */
+    private suspend fun ParagraphIO.fillInParagraph() {
+        if(paragraphUidList.isNotEmpty()) {
+            paragraphs = repository.getParagraphsBy(paragraphUidList).orEmpty().onEach {
+                it.fillInParagraph()
+            }.toMutableList()
+        }
+        if(factUidList.isNotEmpty()) {
+            facts = repository.getFactsBy(factUidList).orEmpty().toMutableList()
         }
     }
 
@@ -174,63 +364,37 @@ class UnitsViewModel @Inject constructor(
     }
 
     /** iterates into all possible depths */
-    private fun iterateFurtherAction(paragraph: ParagraphIO, action: (ParagraphIO) -> Unit) {
-        paragraph.paragraphs.forEach { iterationParagraph ->
-            action(iterationParagraph)
-            iterateFurtherAction(paragraph = iterationParagraph, action = action)
+    private suspend fun iterateFurtherAction(
+        paragraph: ParagraphIO,
+        action: suspend (ParagraphIO) -> Unit
+    ) {
+        withContext(Dispatchers.Default) {
+            val paragraphsCopy = paragraph.paragraphs.toList()
+            paragraphsCopy.forEach { iterationParagraph ->
+                action(iterationParagraph)
+                iterateFurtherAction(paragraph = iterationParagraph, action = action)
+            }
+            paragraph.paragraphs = paragraphsCopy.toMutableList()
         }
     }
 
-    /** iterates through whole subject in order to remove any element by its uid */
-    fun requestObjectRemoval(unit: UnitIO, elementUid: String) {
-        viewModelScope.launch(Dispatchers.Default) {
-            if(unit.paragraphUidList.remove(elementUid)) {
-                updateUnit(unit)
-                Log.d("kostka_test", "requestObjectRemoval, object $elementUid removed")
-                return@launch
-            }
-            unit.paragraphs.forEach { paragraph ->
-                if(paragraph.paragraphs.removeIf { it.uid == elementUid }
-                    || paragraph.facts.removeIf { it.uid == elementUid }
-                ) {
-                    updateUnit(unit)
-                    Log.d("kostka_test", "requestObjectRemoval, object $elementUid removed")
-                    return@launch
-                }
-
-                iterateFurtherAction(
-                    paragraph,
-                    action = { nestedParagraph ->
-                        if(nestedParagraph.paragraphs.removeIf { it.uid == elementUid }
-                            || nestedParagraph.facts.removeIf { it.uid == elementUid }
-                        ) {
-                            updateUnit(unit)
-                            Log.d("kostka_test", "requestObjectRemoval, object $elementUid removed")
-                            return@iterateFurtherAction
-                        }
-                    }
-                )
-            }
-        }
-    }
-
-    /** Makes a request for a subject deletion from the DB */
-    fun deleteSubject(subjectUid: String) {
+    /** Makes a request for a unit deletion from the DB */
+    fun deleteUnit(unitUid: String) {
         viewModelScope.launch {
-            _subjectsList.update { previousSubjects ->
+            _unitsList.update { previousSubjects ->
                 previousSubjects?.toMutableList()?.apply {
-                    removeIf { it.uid == subjectUid }
+                    removeIf { it.uid == unitUid }
                 }
             }
-            repository.deleteSubject(subjectUid)
+            repository.deleteSubject(unitUid)
         }
     }
 
-    /** Adds new subject and creates, but doesn't create a DB record for it */
-    fun addNewSubject(collectionUid: String, prefix: String) {
+    /** Adds new unit but doesn't create a DB record for it */
+    fun addNewUnit(collectionUid: String, prefix: String) {
         viewModelScope.launch {
-            _subjectsList.update { previousSubjects ->
-                previousSubjects?.toMutableList()?.apply {
+            _unitsList.update { previousUnits ->
+                previousUnits?.toMutableList()?.apply {
                     add(UnitIO(collectionUid = collectionUid, name = "$prefix ${this.size.plus(1)}"))
                 }
             }
@@ -240,40 +404,55 @@ class UnitsViewModel @Inject constructor(
     /** Updates specific subject */
     fun updateUnit(subject: UnitIO) {
         viewModelScope.launch {
-            _subjectsList.value?.apply {
+            _unitsList.value?.apply {
                 find { it.uid == subject.uid }?.updateTO(subject)
             }
-            repository.updateSubject(subject)
+            repository.updateUnit(subject)
         }
     }
 
-    /** iterates into all possible depths */
-    private fun iterateFurther(paragraph: ParagraphIO, newParagraph: ParagraphIO) {
-        paragraph.paragraphs.forEach { iterationParagraph ->
-            if(iterationParagraph.uid == newParagraph.uid) {
-                iterationParagraph.updateTO(newParagraph)
+    /** Updates specific fact */
+    fun updateFact(unit: UnitIO, fact: FactIO) {
+        viewModelScope.launch(Dispatchers.Default) {
+            _unitsList.value?.apply {
+                unit.facts.find { fact.uid == it.uid }?.apply {
+                    updateTO(fact)
+                    return@launch
+                }
+                unit.paragraphs.forEach { paragraph ->
+                    iterateFurtherAction(paragraph, action = { iterationParagraph ->
+                        iterationParagraph.facts.find { fact.uid == it.uid }?.apply {
+                            updateTO(fact)
+                            return@iterateFurtherAction
+                        }
+                    })
+                }
             }
-            iterateFurther(paragraph = iterationParagraph, newParagraph = newParagraph)
+            repository.updateFact(fact)
         }
     }
 
     /** Updates specific subject */
-    fun updateParagraph(subject: UnitIO, newParagraph: ParagraphIO) {
+    fun updateParagraph(unit: UnitIO, newParagraph: ParagraphIO) {
         viewModelScope.launch {
-            subject.paragraphs.forEach { paragraph ->
+            unit.paragraphs.forEach { paragraph ->
+                if(paragraph.uid == newParagraph.uid) {
+                    paragraph.updateTO(newParagraph)
+                    return@forEach
+                }
+
                 iterateFurtherAction(paragraph, action = { iterationParagraph ->
                     if(iterationParagraph.uid == newParagraph.uid) {
                         iterationParagraph.updateTO(newParagraph)
                         return@iterateFurtherAction
                     }
                 })
-                iterateFurther(paragraph, newParagraph)
             }
 
-            _subjectsList.value?.apply {
-                find { it.uid == subject.uid }?.updateTO(subject)
+            _unitsList.value?.apply {
+                find { it.uid == unit.uid }?.updateTO(unit)
             }
-            repository.updateSubject(subject)
+
             repository.updateParagraph(newParagraph)
         }
     }

@@ -18,7 +18,9 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import study.me.please.base.LocalIsTablet
+import study.me.please.ui.units.ParagraphBlockBridge
 import study.me.please.ui.units.ParagraphBlockState
+import study.me.please.ui.units.UnitsViewModel
 import study.me.please.ui.units.paragraphBlock
 
 /** screen for subject detail with user's main notes for certain collection */
@@ -74,11 +76,27 @@ fun ParagraphLayout(
             paragraphBlock(
                 state = ParagraphBlockState(
                     parentLayer = -1,
+                    selectedFact = mutableStateOf(null),
+                    clipBoard = null,
                     paragraph = safeParagraph,
                     isReadOnly = true,
-                    clipBoard = null,
                     updateParagraph = {},
-                    selectedFact = mutableStateOf(null)
+                    nestedBulletPoints = mutableStateListOf(*safeParagraph.bulletPoints.toTypedArray()),
+                    nestedParagraphs = mutableStateListOf(*safeParagraph.paragraphs.toTypedArray()),
+                    nestedBlockStates = listOf(),
+                    nestedFacts = mutableStateListOf(*safeParagraph.facts.toTypedArray()),
+                    updateFact = {},
+                    bridge = object: ParagraphBlockBridge {
+                        override fun addFact(element: UnitsViewModel.ElementToDrag) {}
+                        override fun removeUiFact(uid: String) {}
+                        override fun requestFactsPaste() { }
+                        override fun addParagraph(element: UnitsViewModel.ElementToDrag) {}
+                        override fun removeUiParagraph(uid: String) {}
+                        override fun addNewBulletPoint(index: Int, bulletPoint: String?) {}
+                        override fun removeBulletPoint(index: Int) {}
+                        override fun updateBulletPoint(index: Int, output: String) {}
+                        override fun invalidate() {}
+                    }
                 ),
                 collapsedParagraphs = collapsedParagraphs.apply {
                     if(collapsedParagraphs.contains(safeParagraph.uid)) {

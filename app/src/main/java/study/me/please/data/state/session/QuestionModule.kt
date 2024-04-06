@@ -1,4 +1,4 @@
-package study.me.please.ui.session.play
+package study.me.please.data.state.session
 
 import androidx.room.Entity
 import androidx.room.Ignore

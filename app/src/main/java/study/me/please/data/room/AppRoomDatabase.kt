@@ -15,7 +15,7 @@ import study.me.please.data.io.session.SessionIO
 import study.me.please.data.io.subjects.CategoryIO
 import study.me.please.data.io.subjects.ParagraphIO
 import study.me.please.data.io.subjects.UnitIO
-import study.me.please.ui.session.play.QuestionModule
+import study.me.please.data.state.session.QuestionModule
 
 @Database(
     entities = [
@@ -31,7 +31,7 @@ import study.me.please.ui.session.play.QuestionModule
         CategoryIO::class,
         ParagraphIO::class
     ],
-    version = 4,
+    version = 6,
     exportSchema = true
 )
 @TypeConverters(AppDatabaseConverter::class)
@@ -53,6 +53,47 @@ abstract class AppRoomDatabase: RoomDatabase() {
         val MIGRATION_3_4 = object : Migration(3, 4) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE $ROOM_UNIT_TABLE ADD COLUMN paragraphUidList TEXT NOT NULL DEFAULT ''")
+            }
+        }
+
+        val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE ROOM_SUBJECT_TABLE ADD COLUMN paragraphs TEXT NOT NULL DEFAULT ''")
+                db.execSQL("ALTER TABLE ROOM_SUBJECT_TABLE ADD COLUMN facts TEXT NOT NULL DEFAULT ''")
+            }
+        }
+
+        val MIGRATION_5_6 = object : Migration(5, 6) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // Add paragraphUidList column to the ROOM_PARAGRAPH_TABLE
+                db.execSQL("ALTER TABLE ROOM_PARAGRAPH_TABLE ADD COLUMN paragraphUidList TEXT NOT NULL DEFAULT ''")
+
+                // Add factUidList column to the ROOM_PARAGRAPH_TABLE
+                db.execSQL("ALTER TABLE ROOM_PARAGRAPH_TABLE ADD COLUMN factUidList TEXT NOT NULL DEFAULT ''")
+
+                // Create new table with desired structure
+                db.execSQL("""
+            CREATE TABLE new_ROOM_PARAGRAPH_TABLE (
+                uid TEXT PRIMARY KEY NOT NULL,
+                bulletPoints TEXT NOT NULL DEFAULT '',
+                paragraphUidList TEXT NOT NULL DEFAULT '',
+                categoryUid TEXT,
+                factUidList TEXT NOT NULL DEFAULT '',
+                localCategory TEXT
+            )
+        """.trimIndent())
+
+                // Copy data from old table to new table
+                db.execSQL("""
+            INSERT INTO new_ROOM_PARAGRAPH_TABLE (uid, bulletPoints, paragraphUidList, categoryUid, factUidList, localCategory)
+            SELECT uid, bulletPoints, paragraphUidList, categoryUid, factUidList, localCategory FROM ROOM_PARAGRAPH_TABLE
+        """.trimIndent())
+
+                // Drop old table
+                db.execSQL("DROP TABLE ROOM_PARAGRAPH_TABLE")
+
+                // Rename new table to old table's name
+                db.execSQL("ALTER TABLE new_ROOM_PARAGRAPH_TABLE RENAME TO ROOM_PARAGRAPH_TABLE")
             }
         }
 

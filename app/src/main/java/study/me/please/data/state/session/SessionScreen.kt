@@ -1,4 +1,4 @@
-package study.me.please.ui.session.play
+package study.me.please.data.state.session
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -52,6 +52,9 @@ import study.me.please.ui.components.SimpleModalBottomSheet
 import study.me.please.ui.components.preference_chooser.PreferenceChooser
 import study.me.please.ui.components.preference_chooser.PreferenceChooserController
 import study.me.please.ui.components.session.StatisticsTable
+import study.me.please.ui.session.play.PromptLayout
+import study.me.please.ui.session.play.SessionViewModel
+import study.me.please.ui.session.play.rememberSessionScreenState
 
 /** how many items behind the front can be skipped forward */
 private const val INDEXES_FOR_SKIP_TO_FRONT = 5
@@ -246,7 +249,9 @@ fun SessionScreen(
                         }
                         AnimatedVisibility(
                             modifier = Modifier.padding(vertical = 4.dp),
-                            visible = liveIndex.value < sessionState.module.history.size.minus(INDEXES_FOR_SKIP_TO_FRONT)
+                            visible = liveIndex.value < sessionState.module.history.size.minus(
+                                INDEXES_FOR_SKIP_TO_FRONT
+                            )
                         ) {
                             ComponentHeaderButton(
                                 startIconVector = Icons.Outlined.SkipNext,

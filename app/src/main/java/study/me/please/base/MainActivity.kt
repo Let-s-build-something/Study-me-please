@@ -32,7 +32,7 @@ import study.me.please.ui.collection.detail.questions.detail.QuestionDetailScree
 import study.me.please.ui.home.HomeScreen
 import study.me.please.ui.session.detail.SessionDetailScreen
 import study.me.please.ui.session.lobby.SessionLobbyScreen
-import study.me.please.ui.session.play.SessionScreen
+import study.me.please.data.state.session.SessionScreen
 import study.me.please.ui.settings.SettingsScreen
 import study.me.please.ui.settings.SettingsViewModel
 import study.me.please.ui.units.SubjectsHostScreen
