@@ -134,7 +134,7 @@ fun DropTargetContainer(
     Column(modifier = modifier.fillMaxWidth()) {
         if(type == ElementType.PARAGRAPH) {
             content(dragDropModifier)
-            Text(
+            /*Text(
                 modifier = Modifier
                     .background(color = Colors.ORANGE)
                     .fillMaxWidth()
@@ -145,7 +145,7 @@ fun DropTargetContainer(
                     fontSize = 20.sp,
                     color = Color.White
                 )
-            )
+            )*/
         }
         AnimatedVisibility(visible = dragAndDropTarget.value == identifier) {
             Box(
