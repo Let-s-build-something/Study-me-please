@@ -35,14 +35,15 @@
 # Application classes that will be serialized/deserialized over Gson
 -keep class com.google.gson.examples.android.model.** { *; }
 
+-keep class study.me.please.data.* { *; }
 -keep class study.me.please.data.io.*
+-keep class study.me.please.base.navigation.** { *; }
 -keep class * implements com.google.gson.TypeAdapterFactory
 -keep class * implements com.google.gson.JsonSerializer
 -keep class * implements com.google.gson.JsonDeserializer
 
 -keepclassmembers enum * { *; }
 -keep class com.google.code.gson.* { *; }
--keep class study.me.please.data.* { *; }
 -keepattributes *Annotation*, Signature, Exception
 -keepclassmembers,allowobfuscation class * {
   @com.google.gson.annotations.SerializedName <fields>;

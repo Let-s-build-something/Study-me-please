@@ -5,6 +5,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -54,11 +55,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import study.me.please.R
 import study.me.please.base.LocalNavController
-import study.me.please.base.navigation.NavigationComponent
-import study.me.please.base.navigation.NavigationComponent.COLLECTION_UID
-import study.me.please.base.navigation.NavigationComponent.TOOLBAR_TITLE
-import study.me.please.base.navigation.NavigationScreen
-import study.me.please.ui.components.AddToSessionCollectionSheet
+import study.me.please.base.navigation.NavigationRoot
 import study.me.please.ui.components.BasicAlertDialog
 import study.me.please.ui.components.ButtonState
 import study.me.please.ui.components.CollectionCard
@@ -68,7 +65,9 @@ import study.me.please.ui.components.InteractiveCardMode
 import study.me.please.ui.components.ListOptionsBottomSheet
 import study.me.please.ui.components.pull_refresh.PullRefreshScreen
 import study.me.please.ui.components.rememberInteractiveCardState
+import study.me.please.ui.components.session.launcher.SessionLauncher
 import study.me.please.ui.session.lobby.EditableListShimmerLayout
+import java.util.UUID
 
 /** Screen with user's collections */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
@@ -78,14 +77,13 @@ fun CollectionLobbyScreen(
 ) {
     val coroutineScope = rememberCoroutineScope()
     val collectionsFlow = viewModel.dataManager.collections.collectAsState()
-    val sessions = viewModel.dataManager.sessions.collectAsState()
 
     val bottomSheetState = rememberBottomSheetScaffoldState(
         bottomSheetState = rememberStandardBottomSheetState(skipHiddenState = false)
     )
 
     val showDeleteDialog = remember { mutableStateOf(false) }
-    val showAddToSheet = remember { mutableStateOf(false) }
+    val showSessionLauncher = remember { mutableStateOf<Boolean?>(null) }
     val collections = remember(collectionsFlow.value) {
         mutableStateListOf(
             *collectionsFlow.value?.toTypedArray().orEmpty()
@@ -147,31 +145,22 @@ fun CollectionLobbyScreen(
                     }
                     viewModel.requestCollectionDeletion(uidList = selectedCollectionUids.toSet())
                     stopChecking()
-                    showDeleteDialog.value = false
                 }
             },
             dismissButtonState = ButtonState(
                 text = stringResource(id = R.string.button_dismiss)
-            ) { showDeleteDialog.value = false }
+            ),
+            onDismissRequest = { showDeleteDialog.value = false }
         )
     }
-    if(showAddToSheet.value) {
-        AddToSessionCollectionSheet(
-            tabs = mutableListOf(
-                stringResource(id = R.string.screen_sessions_title)
-            ),
-            sessions = sessions.value,
-            isShimmering = sessions.value == null,
-            selectedCollections = selectedCollectionUids,
-            onConfirmation = { sessionList, _ ->
-                if(sessionList.isNullOrEmpty().not()) {
-                    viewModel.requestSessionsSave(sessionList.orEmpty())
-                }
-                stopChecking()
-                showAddToSheet.value = false
-            },
+
+    // whether it should contain all or not
+    showSessionLauncher.value?.let { justAdding ->
+        SessionLauncher(
+            collectionUidList = selectedCollectionUids,
+            containsAll = justAdding,
             onDismissRequest = {
-                showAddToSheet.value = false
+                showSessionLauncher.value = null
             }
         )
     }
@@ -221,8 +210,7 @@ fun CollectionLobbyScreen(
                         leadingImageVector = Icons.Outlined.Add,
                         text = stringResource(id = R.string.button_add_to)
                     ) {
-                        viewModel.requestSessions()
-                        showAddToSheet.value = true
+                        showSessionLauncher.value = true
                     }
                     val toolbarText = stringResource(id = R.string.session_detail_default_toolbar)
                     ImageAction(
@@ -230,9 +218,11 @@ fun CollectionLobbyScreen(
                         text = stringResource(id = R.string.button_start_session)
                     ) {
                         navController?.navigate(
-                            NavigationScreen.SessionDetail.createRoute(
-                                NavigationComponent.COLLECTION_UID_LIST to selectedCollectionUids,
-                                TOOLBAR_TITLE to toolbarText
+                            NavigationRoot.SessionDetail.createRoute(
+                                NavigationRoot.SessionDetail.SessionDetailArgument(
+                                    toolbarTitle = toolbarText,
+                                    collectionUidList = selectedCollectionUids
+                                )
                             )
                         )
                         stopChecking()
@@ -249,21 +239,24 @@ fun CollectionLobbyScreen(
                         },
                     verticalArrangement = Arrangement.spacedBy(LocalTheme.shapes.betweenItemsSpace)
                 ) {
-                    if(collections.isNotEmpty()) {
-                        stickyHeader {
-                            ComponentHeaderButton(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(top = LocalTheme.shapes.betweenItemsSpace),
-                                text = stringResource(id = R.string.add_new_collection)
-                            ) {
-                                navController?.navigate(
-                                    NavigationScreen.CollectionDetail.createRoute(
-                                        TOOLBAR_TITLE to context.getString(R.string.screen_collection_detail_new)
+                    stickyHeader {
+                        ComponentHeaderButton(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = LocalTheme.shapes.betweenItemsSpace),
+                            text = stringResource(id = R.string.add_new_collection)
+                        ) {
+                            navController?.navigate(
+                                NavigationRoot.CollectionDetail.createRoute(
+                                    NavigationRoot.CollectionDetail.CollectionDetailArgument(
+                                        toolbarTitle = context.getString(R.string.screen_collection_detail_new),
+                                        collectionUid = UUID.randomUUID().toString()
                                     )
                                 )
-                            }
+                            )
                         }
+                    }
+                    if(collections.isNotEmpty()) {
                         itemsIndexed(
                             items = collections,
                             key = { _, item ->
@@ -287,21 +280,18 @@ fun CollectionLobbyScreen(
                                     data = collection,
                                     onNavigateToDetail = {
                                         navController?.navigate(
-                                            NavigationScreen.CollectionDetail.createRoute(
-                                                COLLECTION_UID to collection.uid,
-                                                TOOLBAR_TITLE to collection.name.ifEmpty {
-                                                    context.getString(R.string.screen_collection_detail_new)
-                                                }
+                                            NavigationRoot.CollectionDetail.createRoute(
+                                                NavigationRoot.CollectionDetail.CollectionDetailArgument(
+                                                    collectionUid = collection.uid,
+                                                    toolbarTitle = collection.name.ifEmpty {
+                                                        context.getString(R.string.screen_collection_detail_new)
+                                                    }
+                                                )
                                             )
                                         )
                                     },
                                     onNavigateToSession = {
-                                        navController?.navigate(
-                                            NavigationScreen.SessionDetail.createRoute(
-                                                NavigationComponent.COLLECTION_UID_LIST to listOf(collection.uid),
-                                                TOOLBAR_TITLE to context.getString(R.string.session_detail_default_toolbar)
-                                            )
-                                        )
+                                        showSessionLauncher.value = false
                                     },
                                     state = state
                                 )
@@ -309,11 +299,13 @@ fun CollectionLobbyScreen(
                         }
                     }else if(collections.isEmpty() && collectionsFlow.value != null) {
                         item {
-                            EmptyScreen()
+                            EmptyLayout(
+                                emptyText = stringResource(id = R.string.collection_empty_error)
+                            )
                         }
                     }else {
                         item {
-                            // loading state
+                            // TODO loading state
                         }
                     }
                 }
@@ -322,41 +314,50 @@ fun CollectionLobbyScreen(
     }
 }
 
+/** Empty state layout */
 @Composable
-private fun EmptyScreen() {
+fun EmptyLayout(
+    modifier: Modifier = Modifier,
+    emptyText: String
+) {
     val localConfiguration = LocalConfiguration.current
     val composition by rememberLottieComposition(
         LottieCompositionSpec.RawRes(R.raw.animation_empty)
     )
-    // empty state
-    Text(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(
-                start = 8.dp,
-                end = 8.dp,
-                top = 12.dp,
-                bottom = 4.dp
-            ),
-        text = stringResource(id = R.string.collection_empty_error),
-        fontSize = 18.sp,
-        color = LocalTheme.colors.secondary,
-        fontWeight = FontWeight.Bold,
-        textAlign = TextAlign.Center
-    )
-    LottieAnimation(
-        modifier = Modifier
-            .padding(
-                top = 4.dp,
-                start = 4.dp,
-                end = 4.dp,
-                bottom = 8.dp
-            )
-            .height(localConfiguration.screenHeightDp.dp.div(2)),
-        composition = composition,
-        restartOnPlay = true,
-        isPlaying = true,
-        contentScale = ContentScale.Inside,
-        iterations = Int.MAX_VALUE
-    )
+
+    Column(
+        modifier = modifier
+    ) {
+        LottieAnimation(
+            modifier = Modifier
+                .padding(
+                    top = 4.dp,
+                    start = 4.dp,
+                    end = 4.dp,
+                    bottom = 8.dp
+                )
+                .height(localConfiguration.screenHeightDp.dp.div(2)),
+            composition = composition,
+            restartOnPlay = true,
+            isPlaying = true,
+            contentScale = ContentScale.Inside,
+            iterations = Int.MAX_VALUE
+        )
+
+        Text(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(
+                    start = 8.dp,
+                    end = 8.dp,
+                    top = 4.dp,
+                    bottom = 12.dp
+                ),
+            text = emptyText,
+            fontSize = 18.sp,
+            color = LocalTheme.colors.secondary,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center
+        )
+    }
 }

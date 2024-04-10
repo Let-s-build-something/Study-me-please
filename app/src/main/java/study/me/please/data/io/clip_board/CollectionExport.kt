@@ -7,7 +7,7 @@ import java.io.Serializable
 
 /** data class designed only for purpose of manual export */
 data class CollectionExport(
-    val collection: CollectionIO,
+    val collection: CollectionIO?,
     val questions: List<QuestionIO>,
     val facts: List<FactIO>
 ): Serializable

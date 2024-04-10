@@ -9,7 +9,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.navigation.compose.currentBackStackEntryAsState
 import study.me.please.base.navigation.DefaultAppBarActions
 import study.me.please.base.navigation.NavIconType
-import study.me.please.base.navigation.NavigationScreen
+import study.me.please.base.navigation.NavigationRoot
 
 /**
  * Most simple screen for implementing bussiness level logic
@@ -22,6 +22,7 @@ fun BrandBaseScreen(
     subtitle: String? = null,
     onBackPressed: () -> Boolean = { true },
     actionIcons: (@Composable RowScope.() -> Unit)? = null,
+    onNavigationIconClick: (() -> Unit)? = null,
     appBarVisible: Boolean = true,
     containerColor: Color = Color.Transparent,
     contentColor: Color = Color.Transparent,
@@ -31,6 +32,16 @@ fun BrandBaseScreen(
 ) {
     val navController = LocalNavController.current
     val currentEntry = navController?.currentBackStackEntryAsState()
+
+    val navIconClick: (() -> Unit)? = when {
+        navIconType == NavIconType.HOME -> {
+            {
+                navController?.popBackStack(NavigationRoot.Home.route, inclusive = false)
+            }
+        }
+        onNavigationIconClick != null -> onNavigationIconClick
+        else -> null
+    }
 
     BaseScreen(
         modifier = modifier,
@@ -48,11 +59,7 @@ fun BrandBaseScreen(
         appBarVisible = appBarVisible,
         containerColor = containerColor,
         contentColor = contentColor,
-        onNavigationIconClick = if(navIconType == NavIconType.HOME) {
-            {
-                navController?.popBackStack(NavigationScreen.Home.route, inclusive = false)
-            }
-        } else null,
+        onNavigationIconClick = navIconClick,
         floatingActionButtonPosition = floatingActionButtonPosition,
         floatingActionButton = floatingActionButton,
         navigationIcon = navIconType.imageVector,

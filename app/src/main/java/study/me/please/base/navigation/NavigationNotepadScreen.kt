@@ -1,46 +1,39 @@
 package study.me.please.base.navigation
 
+import kotlin.reflect.KClass
+
 /** Navigation destinations within notepad */
-sealed class NavigationNotepadScreen(
+sealed class NavigationNotepadScreen<T>(
     override val identification: String,
-    override val arguments: List<String> = listOf()
-): NavigationDestination(identification, arguments) {
+    override val argumentKClass: KClass<T>? = null
+): NavigationNode<T>(identification, argumentKClass) where T: Any {
 
     /** screen for subject detail with user's main notes for certain collection */
-    object Paragraph: NavigationNotepadScreen(
+    object Paragraph: NavigationNotepadScreen<Paragraph.ParagraphArgument>(
         identification = "paragraph",
-        arguments = listOf(
-            NavigationComponent.PARAGRAPH_UID,
-            NavigationComponent.FACT_UID
-        )
+        argumentKClass = ParagraphArgument::class
     ) {
-        /** Creates a route for navigation */
-        fun makeRoute(
-            paragraphUid: String?,
-            factUid: String? = null
-        ): String {
-            return super.createRoute(
-                NavigationComponent.PARAGRAPH_UID to paragraphUid,
-                NavigationComponent.FACT_UID to factUid
-            )
-        }
+        /** Argument for paragraph screen */
+        data class ParagraphArgument(
+
+            /** unique identifier for the paragraph to be displayed */
+            val paragraphUid: String,
+
+            /** unique identifier for specific fact */
+            val factUid: String = ""
+        )
     }
 
     /** screen for subject detail with user's main notes for certain collection */
-    object Unit: NavigationNotepadScreen(
+    object Unit: NavigationNotepadScreen<Unit.UnitArgument>(
         identification = "unit",
-        arguments = listOf(
-            NavigationComponent.UNIT_UID
-        )
+        argumentKClass = UnitArgument::class
     ) {
-        /** Creates a route for navigation */
-        fun makeRoute(
-            isEmbedded: Boolean,
-            unitUid: String
-        ): String {
-            return super.createRoute(
-                NavigationComponent.UNIT_UID to unitUid,
-            )
-        }
+
+        /** Argument for unit screen */
+        data class UnitArgument(
+            /** unique identifier for the unit */
+            val unitUid: String
+        )
     }
 }

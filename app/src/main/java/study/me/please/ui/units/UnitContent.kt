@@ -17,7 +17,6 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
@@ -73,7 +72,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
@@ -119,7 +117,6 @@ private const val MAX_LENGTH_SHORT_TEXT = 42
 @Composable
 fun UnitContent(
     unit: UnitIO,
-    filtersContent: @Composable () -> Unit,
     viewModel: UnitsViewModel = hiltViewModel()
 ) {
     val categories = viewModel.categories.collectAsState()
@@ -269,14 +266,13 @@ fun UnitContent(
                 showDeleteDialog.value?.let { uid ->
                     viewModel.elementUidToRemove.value = uid
                 }
-                showDeleteDialog.value = null
             },
             dismissButtonState = ButtonState(
                 text = stringResource(id = R.string.button_dismiss)
             ) {
-                showDeleteDialog.value = null
                 bridge.invalidate()
-            }
+            },
+            onDismissRequest = { showDeleteDialog.value = null }
         )
     }
 
@@ -288,6 +284,48 @@ fun UnitContent(
         },
         label = ""
     )
+
+    fun onItemDropped() {
+        val localStateElement = viewModel.localStateElement?.data
+        Log.d("kostka_test", "onDropped, localState: $localStateElement")
+        when(localStateElement) {
+            is FactIO -> {
+                val index = nestedFacts
+                    .indexOfFirst { inner ->
+                        inner.uid == localStateElement.uid
+                    }
+                    .coerceAtLeast(0)
+                scope.launch {
+                    val element = viewModel.onDragEnded(
+                        ElementToDrag(
+                            data = localStateElement,
+                            parentUid = unit.uid,
+                            index = index
+                        )
+                    )
+                    bridge.addFact(element)
+                }
+            }
+            is ParagraphIO -> {
+                val index = nestedParagraphs
+                    .indexOfFirst { inner ->
+                        inner.uid == localStateElement.uid
+                    }
+                    .coerceAtLeast(0)
+                scope.launch {
+                    val element = viewModel.onDragEnded(
+                        ElementToDrag(
+                            data = localStateElement,
+                            parentUid = unit.uid,
+                            index = index
+                        )
+                    )
+                    bridge.addParagraph(element)
+                }
+            }
+            else -> {}
+        }
+    }
 
     Scaffold(
         modifier = Modifier
@@ -495,112 +533,59 @@ fun UnitContent(
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
             LazyVerticalGrid(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .pointerInput(Unit) {
-                        detectTapGestures(onTap = {
-                            focusManager.clearFocus()
-                            addContentVisible.value = false
-                        })
-                    },
+                modifier = Modifier.fillMaxSize(),
                 state = lazyGridState,
                 columns = GridCells.Fixed(if(isLandscape) 2 else 1),
                 horizontalArrangement = if(isLandscape) Arrangement.spacedBy(4.dp) else Arrangement.Start
             ) {
-                item(span = { GridItemSpan(if(isLandscape) 2 else 1) }) {
-                    filtersContent()
-                }
                 item(
                     span = { GridItemSpan(if(isLandscape) 2 else 1) },
                     contentType = UUID.randomUUID().toString()
                 ) {
-                    Column(
+                    val lineCount = remember {
+                        mutableIntStateOf(1)
+                    }
+
+                    DropTargetContainer(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 8.dp)
+                            .padding(top = 24.dp, bottom = 8.dp),
+                        collapsedParagraphs = collapsedParagraphs,
+                        identifier = unit.uid,
+                        onDropped = ::onItemDropped,
+                        type = ElementType.PARAGRAPH,
+                        dragAndDropTarget = dragAndDropTarget,
+                        isEnabled = true,
+                        onCanceled = {
+                            bridge.invalidate()
+                        }
                     ) {
-                        val lineCount = remember {
-                            mutableIntStateOf(1)
-                        }
-
-                        DropTargetContainer(
-                            collapsedParagraphs = collapsedParagraphs,
-                            identifier = unit.uid,
-                            onDropped = {
-                                val localStateElement = viewModel.localStateElement?.data
-                                Log.d("kostka_test", "onDropped, localState: $localStateElement")
-                                when(localStateElement) {
-                                    is FactIO -> {
-                                        val index = nestedFacts
-                                            .indexOfFirst { inner ->
-                                                inner.uid == localStateElement.uid
-                                            }
-                                            .coerceAtLeast(0)
-                                        scope.launch {
-                                            val element = viewModel.onDragEnded(
-                                                ElementToDrag(
-                                                    data = localStateElement,
-                                                    parentUid = unit.uid,
-                                                    index = index
-                                                )
-                                            )
-                                            bridge.addFact(element)
-                                        }
-                                    }
-                                    is ParagraphIO -> {
-                                        val index = nestedParagraphs
-                                            .indexOfFirst { inner ->
-                                                inner.uid == localStateElement.uid
-                                            }
-                                            .coerceAtLeast(0)
-                                        scope.launch {
-                                            val element = viewModel.onDragEnded(
-                                                ElementToDrag(
-                                                    data = localStateElement,
-                                                    parentUid = unit.uid,
-                                                    index = index
-                                                )
-                                            )
-                                            bridge.addParagraph(element)
-                                        }
-                                    }
-                                    else -> {}
-                                }
+                        EditFieldInput(
+                            modifier = Modifier
+                                .padding(start = 16.dp)
+                                .widthIn(min = TextFieldDefaults.MinWidth)
+                                .height(with(localDensity) {
+                                    LocalTheme.styles.heading.fontSize.value.sp
+                                        .toDp()
+                                        .times(lineCount.intValue)
+                                        .plus(16.dp)
+                                }),
+                            value = unit.name,
+                            onTextLayout = { result ->
+                                lineCount.intValue = result.lineCount
                             },
-                            type = ElementType.PARAGRAPH,
-                            dragAndDropTarget = dragAndDropTarget,
-                            isEnabled = true,
-                            onCanceled = {
-                                bridge.invalidate()
+                            textStyle = LocalTheme.styles.heading,
+                            isUnfocusedTransparent = true,
+                            hint = stringResource(id = R.string.unit_heading_prefix),
+                            maxLines = 4,
+                            minLines = 1,
+                            paddingValues = PaddingValues(horizontal = 8.dp),
+                            maxLength = MAX_LENGTH_SHORT_TEXT,
+                            onValueChange = { output ->
+                                unit.name = output
+                                viewModel.updateUnit(unit)
                             }
-                        ) { modifier ->
-                            EditFieldInput(
-                                modifier = modifier
-                                    .padding(start = 16.dp)
-                                    .widthIn(min = TextFieldDefaults.MinWidth)
-                                    .height(with(localDensity) {
-                                        LocalTheme.styles.heading.fontSize.value.sp
-                                            .toDp()
-                                            .times(lineCount.intValue)
-                                            .plus(16.dp)
-                                    }),
-                                value = unit.name,
-                                onTextLayout = { result ->
-                                    lineCount.intValue = result.lineCount
-                                },
-                                textStyle = LocalTheme.styles.heading,
-                                isUnfocusedTransparent = true,
-                                hint = stringResource(id = R.string.subject_heading_prefix),
-                                maxLines = 4,
-                                minLines = 1,
-                                paddingValues = PaddingValues(horizontal = 8.dp),
-                                maxLength = MAX_LENGTH_SHORT_TEXT,
-                                onValueChange = { output ->
-                                    unit.name = output
-                                    viewModel.updateUnit(unit)
-                                }
-                            )
-                        }
+                        )
                     }
                 }
                 itemsIndexed(unitBulletPoints) { index, point ->
@@ -647,92 +632,105 @@ fun UnitContent(
                     items = nestedFacts,
                     key = { _, fact -> fact.uid }
                 ) { index, fact ->
-                    FactCard(
-                        modifier = Modifier
-                            .dragSource(
+                    DropTargetContainer(
+                        type = ElementType.FACT,
+                        identifier = fact.uid,
+                        onDropped = ::onItemDropped,
+                        dragAndDropTarget = dragAndDropTarget,
+                        collapsedParagraphs = collapsedParagraphs,
+                        onCanceled = {
+                            bridge.invalidate()
+                        }
+                    ) {
+                        FactCard(
+                            modifier = Modifier
+                                .dragSource(
+                                    onClick = {
+                                        if (selectedFact.value != fact.uid) {
+                                            selectedFact.value = fact.uid
+                                        }
+                                    },
+                                    elementType = ElementType.FACT,
+                                    uid = fact.uid,
+                                    onStarted = {
+                                        viewModel.localStateElement = ElementToDrag(
+                                            data = fact,
+                                            parentUid = unit.uid,
+                                            index = index
+                                        )
+                                        Log.d(
+                                            "kostka_test",
+                                            "before, nestedFacts: ${nestedFacts.map { it.uid }}"
+                                        )
+                                        bridge.removeUiFact(fact.uid)
+                                        Log.d(
+                                            "kostka_test",
+                                            "after, nestedFacts: ${nestedFacts.map { it.uid }}"
+                                        )
+                                    }
+                                )
+                                .fillMaxWidth()
+                                .padding(bottom = 8.dp),
+                            data = fact,
+                            requestDataSave = { newFact ->
+                                viewModel.updateFact(unit = unit, fact = newFact)
+                            },
+                            onClick = {
+                                selectedFact.value = if(selectedFact.value == fact.uid) null else fact.uid
+                            },
+                            mode = when {
+                                selectedFact.value == fact.uid -> InteractiveCardMode.EDIT
+                                else -> InteractiveCardMode.DATA_DISPLAY
+                            }
+                        )
+                    }
+                }
+                nestedParagraphs.forEachIndexed { index, paragraph ->
+                    paragraphBlocks.getOrNull(index)?.let { state ->
+                        paragraphBlock(
+                            modifier = Modifier.dragSource(
                                 onClick = {
-                                    if (selectedFact.value != fact.uid) {
-                                        selectedFact.value = fact.uid
+                                    Log.d("kostka_test", "onClick, collapsedParagraphs: $collapsedParagraphs")
+                                    if (collapsedParagraphs.contains(paragraph.uid)) {
+                                        collapsedParagraphs.remove(paragraph.uid)
+                                    } else {
+                                        collapsedParagraphs.add(paragraph.uid)
                                     }
                                 },
-                                elementType = ElementType.FACT,
-                                uid = fact.uid,
+                                elementType = ElementType.PARAGRAPH,
+                                uid = paragraph.uid,
                                 onStarted = {
                                     viewModel.localStateElement = ElementToDrag(
-                                        data = fact,
+                                        data = paragraph,
                                         parentUid = unit.uid,
                                         index = index
                                     )
-                                    Log.d(
-                                        "kostka_test",
-                                        "before, nestedFacts: ${nestedFacts.map { it.uid }}"
-                                    )
-                                    bridge.removeUiFact(fact.uid)
-                                    Log.d(
-                                        "kostka_test",
-                                        "after, nestedFacts: ${nestedFacts.map { it.uid }}"
-                                    )
+                                    bridge.removeUiParagraph(paragraph.uid)
                                 }
-                            )
-                            .fillMaxWidth()
-                            .padding(bottom = 8.dp),
-                        data = fact,
-                        requestDataSave = { newFact ->
-                            viewModel.updateFact(unit = unit, fact = newFact)
-                        },
-                        onClick = {
-                            selectedFact.value = if(selectedFact.value == fact.uid) null else fact.uid
-                        },
-                        mode = when {
-                            selectedFact.value == fact.uid -> InteractiveCardMode.EDIT
-                            else -> InteractiveCardMode.DATA_DISPLAY
-                        }
-                    )
-                }
-                paragraphBlocks.forEachIndexed { index, state ->
-                    paragraphBlock(
-                        modifier = Modifier.dragSource(
-                            onClick = {
-                                Log.d("kostka_test", "onClick, collapsedParagraphs: $collapsedParagraphs")
-                                if (collapsedParagraphs.contains(state.paragraph.uid)) {
-                                    collapsedParagraphs.remove(state.paragraph.uid)
-                                } else {
-                                    collapsedParagraphs.add(state.paragraph.uid)
-                                }
+                            ),
+                            state = state,
+                            unitsViewModel = viewModel,
+                            collapsedParagraphs = collapsedParagraphs,
+                            generalScope = scope,
+                            dragAndDropTarget = dragAndDropTarget,
+                            addNewCategory = { name ->
+                                val newCategory = CategoryIO(name = name)
+                                viewModel.requestAddNewCategory(newCategory)
+                                newCategory
                             },
-                            elementType = ElementType.PARAGRAPH,
-                            uid = state.paragraph.uid,
-                            onStarted = {
-                                viewModel.localStateElement = UnitsViewModel.ElementToDrag(
-                                    data = state.paragraph,
-                                    parentUid = unit.uid,
-                                    index = index
-                                )
-                                bridge.removeUiParagraph(state.paragraph.uid)
-                            }
-                        ),
-                        state = state,
-                        unitsViewModel = viewModel,
-                        collapsedParagraphs = collapsedParagraphs,
-                        generalScope = scope,
-                        dragAndDropTarget = dragAndDropTarget,
-                        addNewCategory = { name ->
-                            val newCategory = CategoryIO(name = name)
-                            viewModel.requestAddNewCategory(newCategory)
-                            newCategory
-                        },
-                        addContentVisible = addContentVisible,
-                        screenWidthDp = screenWidth,
-                        onNewCategoryChosen = { chosenCategory ->
-                            /* TODO remove categories and just save names and use them as "categories" with duplicite being allowed
-                            nestedParagraphs.getOrNull(index)?.apply {
-                                localCategory = chosenCategory
-                                categoryUid = chosenCategory.uid
-                                bridge.updateParagraph(this)
-                            }*/
-                        },
-                        isLandscape = isLandscape
-                    )
+                            addContentVisible = addContentVisible,
+                            screenWidthDp = screenWidth,
+                            onNewCategoryChosen = { chosenCategory ->
+                                /* TODO remove categories and just save names and use them as "categories" with duplicite being allowed
+                                nestedParagraphs.getOrNull(index)?.apply {
+                                    localCategory = chosenCategory
+                                    categoryUid = chosenCategory.uid
+                                    bridge.updateParagraph(this)
+                                }*/
+                            },
+                            isLandscape = isLandscape
+                        )
+                    }
                 }
                 item {
                     Spacer(modifier = Modifier.height(240.dp))

@@ -29,7 +29,6 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -42,9 +41,10 @@ import com.squadris.squadris.compose.theme.LocalTheme
 @Composable
 fun ExpandableContent(
     modifier: Modifier = Modifier,
-    text: String,
+    text: String = "",
     containerColor: Color = LocalTheme.colors.onBackgroundComponent,
     contentColor: Color = LocalTheme.colors.secondary,
+    textStyle: TextStyle = LocalTheme.styles.menuItem,
     isExpanded: Boolean = false,
     collapsedPadding: Dp = 0.dp,
     shape: Shape = RectangleShape,
@@ -66,6 +66,7 @@ fun ExpandableContent(
             modifier = Modifier.padding(collapsedPadding),
             containerColor = containerColor,
             contentColor = contentColor,
+            textStyle = textStyle,
             arrowModifier = Modifier.graphicsLayer {
                 rotationZ = arrowDegreeRotation.value
             },
@@ -88,6 +89,7 @@ fun LineButton(
     text: String,
     arrowModifier: Modifier = Modifier,
     arrowRotation: Float = 180f,
+    textStyle: TextStyle = LocalTheme.styles.linkText,
     shape: Shape = RectangleShape,
     collapsedContent: (@Composable () -> Unit)? = null,
     containerColor: Color = LocalTheme.colors.onBackgroundComponent,
@@ -116,11 +118,7 @@ fun LineButton(
             }else {
                 Text(
                     text = text,
-                    style = TextStyle(
-                        color = contentColor,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Medium
-                    )
+                    style = textStyle.copy(color = contentColor)
                 )
             }
         }

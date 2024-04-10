@@ -104,12 +104,12 @@ fun LazyGridScope.paragraphBlock(
             Log.d("kostka_test", "onDropped, localState: $${unitsViewModel?.localStateElement?.uid}")
             when (localStateElement) {
                 is FactIO -> {
-                    val index = nestedFacts
+                    val index = facts
                         .indexOfFirst { fact ->
                             fact.uid == localStateElement.uid
                         }
                         .coerceAtLeast(0)
-                    generalScope!!.launch {
+                    generalScope?.launch {
                         val element = unitsViewModel.onDragEnded(
                             ElementToDrag(
                                 data = localStateElement,
@@ -121,12 +121,12 @@ fun LazyGridScope.paragraphBlock(
                     }
                 }
                 is ParagraphIO -> {
-                    val index = nestedParagraphs
+                    val index = paragraphs
                         .indexOfFirst { paragraph ->
                             paragraph.uid == localStateElement.uid
                         }
                         .coerceAtLeast(0)
-                    generalScope!!.launch {
+                    generalScope?.launch {
                         val element = unitsViewModel.onDragEnded(
                             ElementToDrag(
                                 data = localStateElement,
@@ -142,7 +142,7 @@ fun LazyGridScope.paragraphBlock(
         }
 
         item(
-            //key = paragraph.uid,
+            key = paragraph.uid,
             contentType = { UUID.randomUUID().toString() },
             span = { GridItemSpan(if(isLandscape) 2 else 1) }
         ) {
@@ -154,33 +154,27 @@ fun LazyGridScope.paragraphBlock(
                 padding = paddingStart,
                 isEnabled = isReadOnly.not(),
                 identifier = paragraph.uid,
-                enterModifier = Modifier.drawSegmentedBorder(
-                    borderOrder = if (nestedParagraphs.isNotEmpty()) BorderOrder.Center else BorderOrder.None,
-                    screenWidthDp = screenWidthDp,
-                    notLastLayers = notLastLayers,
-                    parentLayer = parentLayer
-                ),
                 onDropped = ::onItemDropped,
                 dragAndDropTarget = dragAndDropTarget,
                 collapsedParagraphs = collapsedParagraphs,
                 onCanceled = {
                     bridge.invalidate()
                 }
-            ) { dropTargetModifier ->
+            ) {
                 ExpandableContent(
                     modifier = Modifier
                         .padding(start = paddingStart)
                         .fillMaxWidth()
                         .then(modifier)
                         .then(
-                            if (parentLayer >= 0) dropTargetModifier
+                            if (parentLayer >= 0) Modifier
                                 .drawSegmentedBorder(
                                     borderOrder = BorderOrder.Start,
                                     screenWidthDp = screenWidthDp,
                                     notLastLayers = notLastLayers,
                                     parentLayer = parentLayer
                                 )
-                            else dropTargetModifier
+                            else Modifier
                         )
                         .padding(top = 2.dp),
                     text = paragraph.localCategory?.name ?: "",
@@ -231,7 +225,7 @@ fun LazyGridScope.paragraphBlock(
                 modifier = Modifier
                     .padding(start = paddingStart)
                     .drawSegmentedBorder(
-                        borderOrder = if (nestedParagraphs.isNotEmpty()) BorderOrder.Center else BorderOrder.None,
+                        borderOrder = if (paragraphs.isNotEmpty()) BorderOrder.Center else BorderOrder.None,
                         screenWidthDp = screenWidthDp,
                         notLastLayers = notLastLayers,
                         parentLayer = parentLayer
@@ -246,9 +240,9 @@ fun LazyGridScope.paragraphBlock(
                 ) {
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    val isIrremovable = nestedBulletPoints.size <= 1
+                    val isIrremovable = bulletPoints.size <= 1
 
-                    nestedBulletPoints.forEachIndexed { index, point ->
+                    bulletPoints.forEachIndexed { index, point ->
                         ListItemEditField(
                             modifier = Modifier.padding(bottom = 2.dp),
                             prefix = FactType.BULLET_POINT_PREFIX,
@@ -288,8 +282,8 @@ fun LazyGridScope.paragraphBlock(
         }
 
         itemsIndexed(
-            items = if(collapsedParagraphs.contains(state.paragraph.uid)) listOf() else nestedFacts,
-            //key = { _, fact -> fact.uid }
+            items = if(collapsedParagraphs.contains(state.paragraph.uid)) listOf() else facts,
+            key = { _, fact -> fact.uid }
         ) { index, fact ->
             DropTargetContainer(
                 modifier = Modifier
@@ -307,7 +301,7 @@ fun LazyGridScope.paragraphBlock(
                     .then(
                         if(isLandscape.not() || index % 2 == 0) {
                             Modifier.drawSegmentedBorder(
-                                borderOrder = if (nestedParagraphs.isNotEmpty()) {
+                                borderOrder = if (paragraphs.isNotEmpty()) {
                                     BorderOrder.Center
                                 } else BorderOrder.None,
                                 screenWidthDp = screenWidthDp,
@@ -319,19 +313,13 @@ fun LazyGridScope.paragraphBlock(
                 isEnabled = isReadOnly.not(),
                 type = ElementType.FACT,
                 identifier = fact.uid,
-                enterModifier = Modifier.drawSegmentedBorder(
-                    borderOrder = if (nestedParagraphs.isNotEmpty()) BorderOrder.Center else BorderOrder.None,
-                    screenWidthDp = screenWidthDp,
-                    notLastLayers = notLastLayers,
-                    parentLayer = parentLayer
-                ),
                 onDropped = ::onItemDropped,
                 dragAndDropTarget = dragAndDropTarget,
                 collapsedParagraphs = collapsedParagraphs,
                 onCanceled = {
                     bridge.invalidate()
                 }
-            ) { dropTargetModifier ->
+            ) {
                 FactCard(
                     modifier = Modifier
                         .then(
@@ -345,7 +333,7 @@ fun LazyGridScope.paragraphBlock(
                                     elementType = ElementType.FACT,
                                     uid = fact.uid,
                                     onStarted = {
-                                        unitsViewModel?.localStateElement = UnitsViewModel.ElementToDrag(
+                                        unitsViewModel?.localStateElement = ElementToDrag(
                                             data = fact,
                                             parentUid = state.paragraph.uid,
                                             index = index
@@ -356,8 +344,7 @@ fun LazyGridScope.paragraphBlock(
                             }else Modifier
                         )
                         .fillMaxWidth()
-                        .padding(bottom = 8.dp)
-                        .then(dropTargetModifier),
+                        .padding(bottom = 8.dp),
                     data = fact,
                     isReadOnly = isReadOnly,
                     requestDataSave = { newFact ->
@@ -376,7 +363,7 @@ fun LazyGridScope.paragraphBlock(
         }
 
         if(collapsedParagraphs.contains(state.paragraph.uid).not()) {
-            nestedBlockStates.forEachIndexed { index, state ->
+            blockStates.forEachIndexed { index, state ->
                 //Log.d("kostka_test", "nestedBlockStates: ${nestedBlockStates.map { it.paragraph.uid }}")
                 paragraphBlock(
                     modifier = if(isReadOnly.not()) {
@@ -397,7 +384,7 @@ fun LazyGridScope.paragraphBlock(
                                     index = index
                                 )
                                 Log.d("kostka_test", "onStarted, uid: ${state.paragraph.uid}," +
-                                        " nestedBlockStates: ${nestedBlockStates.map { it.paragraph.uid }}")
+                                        " nestedBlockStates: ${blockStates.map { it.paragraph.uid }}")
                                 bridge.removeUiParagraph(state.paragraph.uid)
                             }
                         )
@@ -407,7 +394,7 @@ fun LazyGridScope.paragraphBlock(
                     collapsedParagraphs = collapsedParagraphs,
                     addNewCategory = addNewCategory,
                     onNewCategoryChosen = { chosenCategory ->
-                        nestedParagraphs.getOrNull(index)?.apply {
+                        paragraphs.getOrNull(index)?.apply {
                             localCategory = chosenCategory
                             categoryUid = chosenCategory.uid
                             updateParagraph(this)
@@ -415,7 +402,7 @@ fun LazyGridScope.paragraphBlock(
                     },
                     addContentVisible = addContentVisible,
                     notLastLayers = notLastLayers.toMutableList().apply {
-                        if(index != nestedParagraphs.lastIndex) add(parentLayer.plus(1))
+                        if(index != paragraphs.lastIndex) add(parentLayer.plus(1))
                     },
                     screenWidthDp = screenWidthDp,
                     isLandscape = isLandscape,

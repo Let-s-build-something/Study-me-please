@@ -19,9 +19,9 @@ interface SubjectDao {
     @Query("SELECT * FROM ${AppRoomDatabase.ROOM_PARAGRAPH_TABLE} WHERE uid IN (:uidList)")
     suspend fun getParagraphsByUidList(uidList: List<String>): List<ParagraphIO>?
 
-    /** Removes units from the database by its identification [unitUid] */
-    @Query("DELETE FROM ${AppRoomDatabase.ROOM_UNIT_TABLE} WHERE uid == :unitUid")
-    suspend fun deleteUnit(unitUid: String)
+    /** Removes units from the database by its identification within [unitUidList] */
+    @Query("DELETE FROM ${AppRoomDatabase.ROOM_UNIT_TABLE} WHERE uid IN (:unitUidList)")
+    suspend fun deleteUnits(unitUidList: List<String>)
 
     /** Removes paragraphs from the database by its identification [paragraphUid] */
     @Query("DELETE FROM ${AppRoomDatabase.ROOM_PARAGRAPH_TABLE} WHERE uid == :paragraphUid")

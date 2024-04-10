@@ -169,11 +169,11 @@ fun rememberParagraphBlockState(
         isReadOnly = isReadOnly,
         updateFact = updateFact,
         updateParagraph = updateParagraph,
-        nestedBulletPoints = nestedBulletPoints,
-        nestedParagraphs = nestedParagraphs,
-        nestedFacts = nestedFacts,
+        bulletPoints = nestedBulletPoints,
+        paragraphs = nestedParagraphs,
+        facts = nestedFacts,
         bridge = bridge,
-        nestedBlockStates = nestedBlockStates
+        blockStates = nestedBlockStates
     )
 }
 
@@ -187,11 +187,15 @@ data class ParagraphBlockState(
     val isReadOnly: Boolean,
     val updateParagraph: (ParagraphIO) -> Unit,
     val updateFact: (FactIO) -> Unit,
-    val nestedBulletPoints: List<String>,
-    val nestedFacts: SnapshotStateList<FactIO>,
-    val nestedParagraphs: SnapshotStateList<ParagraphIO>,
-    val nestedBlockStates: List<ParagraphBlockState>,
-    val bridge: ParagraphBlockBridge
+    val bridge: ParagraphBlockBridge,
+
+    //TODO !!!!!!!!
+    //TODO remove things that should be live - val makes it so it doesn't get invalidated - put them into a constructor
+    // then remove the localCategories and change generating
+    val bulletPoints: List<String>,
+    val facts: SnapshotStateList<FactIO>,
+    val paragraphs: SnapshotStateList<ParagraphIO>,
+    val blockStates: List<ParagraphBlockState>,
 )
 
 /** type of the element in the paragraph */

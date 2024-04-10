@@ -34,16 +34,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.constraintlayout.compose.ConstraintLayout
-import androidx.constraintlayout.compose.Dimension
 import com.squadris.squadris.compose.theme.LocalTheme
 import com.squadris.squadris.ext.brandShimmerEffect
-import study.me.please.R
 import study.me.please.data.io.QuestionMode
 import study.me.please.data.io.session.SessionIO
 import study.me.please.ui.components.InteractiveCardMode
@@ -58,6 +54,7 @@ import study.me.please.ui.components.OptionsModeLayout
 fun SessionCard(
     modifier: Modifier = Modifier,
     session: SessionIO?,
+    verticalAlignment: Alignment.Vertical = Alignment.Top,
     state: InteractiveCardState,
     onEditOptionPressed: () -> Unit = {},
     onPlayOptionPressed: () -> Unit = {}
@@ -74,7 +71,6 @@ fun SessionCard(
 
             Card(
                 modifier = modifier
-                    .fillMaxWidth()
                     .wrapContentHeight()
                     .clip(LocalTheme.shapes.componentShape)
                     .combinedClickable(
@@ -120,6 +116,7 @@ fun SessionCard(
                                 cardHeight = with(localDensity) { coordinates.size.height.toDp() }
                             },
                             session = session,
+                            verticalAlignment = verticalAlignment,
                             state = state
                         )
                     }
@@ -133,19 +130,16 @@ fun SessionCard(
 private fun ContentLayout(
     modifier: Modifier = Modifier,
     session: SessionIO,
+    verticalAlignment: Alignment.Vertical = Alignment.Top,
     state: InteractiveCardState
 ) {
     Column(
         modifier = modifier
-            .fillMaxWidth()
             .wrapContentHeight()
             .animateContentSize()
             .padding(vertical = 8.dp, horizontal = 12.dp)
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.Top
-        ) {
+        Row(verticalAlignment = verticalAlignment) {
             AnimatedVisibility(
                 visible = state.mode.value == InteractiveCardMode.CHECKING
             ) {
@@ -173,7 +167,7 @@ private fun ContentLayout(
             )
             Text(
                 modifier = Modifier
-                    .padding(horizontal = 6.dp)
+                    .padding(start = 8.dp, end = 4.dp)
                     .fillMaxWidth(),
                 text = session.name,
                 color = LocalTheme.colors.primary,

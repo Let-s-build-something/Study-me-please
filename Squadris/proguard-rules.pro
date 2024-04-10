@@ -21,5 +21,6 @@
 #-renamesourcefileattribute SourceFile
 
 -keep class com.google.gson.reflect.TypeToken
+-keep class study.me.please.base.navigation.** { *; }
 -keep class * extends com.google.gson.reflect.TypeToken
 -keep public class * implements java.lang.reflect.Type

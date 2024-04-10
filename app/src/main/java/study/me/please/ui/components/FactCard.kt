@@ -70,6 +70,7 @@ import study.me.please.ui.components.tab_switch.TabSwitchState
 @Composable
 fun FactCard(
     modifier: Modifier = Modifier,
+    thenModifier: Modifier = Modifier,
     mode: InteractiveCardMode = InteractiveCardMode.DATA_DISPLAY,
     data: FactIO?,
     onClick: () -> Unit,
@@ -82,6 +83,7 @@ fun FactCard(
         }else if(data != null) {
             ContentLayout(
                 modifier = modifier,
+                thenModifier = thenModifier,
                 data = data,
                 isReadOnly = isReadOnly,
                 mode = mode,
@@ -98,6 +100,7 @@ fun FactCard(
 @Composable
 fun FactCard(
     modifier: Modifier = Modifier,
+    thenModifier: Modifier = Modifier,
     state: InteractiveCardState = rememberInteractiveCardState(),
     data: FactIO?,
     isReadOnly: Boolean = false,
@@ -109,6 +112,7 @@ fun FactCard(
         }else if(data != null) {
             ContentLayout(
                 modifier = modifier,
+                thenModifier = thenModifier,
                 data = data,
                 isReadOnly = isReadOnly,
                 mode = state.mode.value,
@@ -132,6 +136,7 @@ fun FactCard(
 @Composable
 private fun ContentLayout(
     modifier: Modifier,
+    thenModifier: Modifier = Modifier,
     data: FactIO,
     mode: InteractiveCardMode,
     isReadOnly: Boolean = false,
@@ -143,6 +148,7 @@ private fun ContentLayout(
             .fillMaxWidth()
             .wrapContentHeight()
             .clip(LocalTheme.shapes.componentShape),
+        thenModifier = thenModifier,
         mode = mode,
         onClick = onClick,
         data = data,
@@ -156,6 +162,7 @@ private fun ContentLayout(
 @Composable
 private fun DataCard(
     modifier: Modifier = Modifier,
+    thenModifier: Modifier = Modifier,
     mode: InteractiveCardMode,
     isReadOnly: Boolean = false,
     requestDataSave: () -> Unit,
@@ -214,7 +221,8 @@ private fun DataCard(
                         shape = LocalTheme.shapes.componentShape
                     )
                 } else Modifier
-            ),
+            )
+            .then(thenModifier),
         horizontalAlignment = Alignment.Start,
         verticalArrangement = Arrangement.Top
     ) {

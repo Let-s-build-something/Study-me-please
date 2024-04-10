@@ -63,15 +63,6 @@ class CollectionViewModel @Inject constructor(
         }
     }
 
-    /** Requests all collections */
-    fun requestSessions() {
-        viewModelScope.launch {
-            repository.getSessions()?.let { sessions ->
-                dataManager.sessions.value = sessions
-            }
-        }
-    }
-
     /** Requests for a removal of collections */
     fun requestCollectionDeletion(uidList: Set<String>) {
         viewModelScope.launch {

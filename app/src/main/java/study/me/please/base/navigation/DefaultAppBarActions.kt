@@ -19,20 +19,20 @@ import study.me.please.R
 @Composable
 fun DefaultAppBarActions(
     isUserSignedIn: Boolean = false,
-    currentRoute: String? = NavigationScreen.Home.route,
+    currentRoute: String? = NavigationRoot.Home.route,
     actionNavigation: (screen: String) -> Unit = {}
 ) {
     // first action
     when(currentRoute) {
         // lobby destinations
-        NavigationScreen.Home.route,
-        NavigationScreen.Settings.route -> {
-            if(currentRoute != NavigationScreen.Settings.route) {
+        NavigationRoot.Home.route,
+        NavigationRoot.Settings.route -> {
+            if(currentRoute != NavigationRoot.Settings.route) {
                 ActionBarIcon(
                     text = stringResource(id = R.string.screen_settings_title),
                     imageVector = Icons.Outlined.Settings,
                     onClick = {
-                        actionNavigation(NavigationScreen.Settings.route)
+                        actionNavigation(NavigationRoot.Settings.route)
                     }
                 )
             }
@@ -57,21 +57,21 @@ fun DefaultAppBarActions(
     }
     // second action
     when(currentRoute) {
-        NavigationScreen.SessionLobby.route -> {
+        NavigationRoot.SessionLobby.route -> {
             ActionBarIcon(
                 text = stringResource(id = R.string.screen_collection_title),
                 imageVector = Icons.Outlined.Inventory2,
                 onClick = {
-                    actionNavigation.invoke(NavigationScreen.CollectionLobby.route)
+                    actionNavigation.invoke(NavigationRoot.CollectionLobby.route)
                 }
             )
         }
-        NavigationScreen.CollectionLobby.route -> {
+        NavigationRoot.CollectionLobby.route -> {
             ActionBarIcon(
                 text = stringResource(id = R.string.screen_sessions_title),
                 imageVector = Icons.Outlined.PlayArrow,
                 onClick = {
-                    actionNavigation.invoke(NavigationScreen.SessionLobby.route)
+                    actionNavigation.invoke(NavigationRoot.SessionLobby.route)
                 }
             )
         }

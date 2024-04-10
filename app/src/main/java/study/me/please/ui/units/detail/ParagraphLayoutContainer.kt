@@ -1,6 +1,5 @@
 package study.me.please.ui.units.detail
 
-import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
@@ -20,11 +19,10 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.Velocity
 import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.squadris.squadris.compose.components.MinimalisticIcon
 import com.squadris.squadris.compose.theme.LocalTheme
-import study.me.please.base.navigation.NavigationComponent
+import study.me.please.base.navigation.NavigationNode.Companion.composableNode
 import study.me.please.base.navigation.NavigationNotepadScreen
 import study.me.please.data.io.ImportSourceType
 import study.me.please.data.io.ImportedSource
@@ -52,13 +50,16 @@ fun ParagraphLayoutContainer(
     CollapsingLayout(
         modifier = modifier
             .background(LocalTheme.colors.backgroundLight)
-            .nestedScroll(object: NestedScrollConnection {
-                override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset = Offset.Zero
+            .nestedScroll(object : NestedScrollConnection {
+                override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset =
+                    Offset.Zero
+
                 override suspend fun onPreFling(available: Velocity): Velocity = Velocity.Zero
                 override suspend fun onPostFling(
                     consumed: Velocity,
                     available: Velocity
                 ): Velocity = Velocity.Zero
+
                 override fun onPostScroll(
                     consumed: Offset,
                     available: Offset,
@@ -81,8 +82,10 @@ fun ParagraphLayoutContainer(
                             startIconVector = Icons.AutoMirrored.Outlined.KeyboardReturn,
                             onClick = {
                                 navController.navigate(
-                                    NavigationNotepadScreen.Paragraph.makeRoute(
-                                        paragraphUid = currentImportedSource.value?.parent?.sourceUid
+                                    NavigationNotepadScreen.Paragraph.createRoute(
+                                        NavigationNotepadScreen.Paragraph.ParagraphArgument(
+                                            paragraphUid = currentImportedSource.value?.parent?.sourceUid ?: ""
+                                        )
                                     )
                                 )
                                 currentImportedSource.value = currentImportedSource.value?.parent
@@ -101,21 +104,13 @@ fun ParagraphLayoutContainer(
                     navController = navController,
                     startDestination = NavigationNotepadScreen.Paragraph.route
                 ) {
-                    composable(
-                        NavigationNotepadScreen.Paragraph.route,
-                        deepLinks = NavigationNotepadScreen.Paragraph.deepLinks,
-                        arguments = NavigationNotepadScreen.Paragraph.navArguments
-                    ) { navBackstackEntry ->
-                        (navBackstackEntry.arguments?.getString(
-                            NavigationComponent.PARAGRAPH_UID
-                        ) ?: currentImportedSource.value?.sourceUid)?.let { paragraphUid ->
-                            ParagraphLayout(
-                                paragraphUid = paragraphUid,
-                                factUid = if(currentImportedSource.value?.type == ImportSourceType.FACT) {
-                                    currentImportedSource.value?.sourceUid
-                                }else null
-                            )
-                        }
+                    composableNode(NavigationNotepadScreen.Paragraph) { _, argument ->
+                        ParagraphLayout(
+                            paragraphUid = argument?.paragraphUid ?: currentImportedSource.value?.sourceUid,
+                            factUid = if(currentImportedSource.value?.type == ImportSourceType.FACT) {
+                                currentImportedSource.value?.sourceUid
+                            }else null
+                        )
                     }
                 }
 

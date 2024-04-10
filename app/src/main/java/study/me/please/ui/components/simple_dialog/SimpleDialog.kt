@@ -2,6 +2,7 @@ package study.me.please.ui.components.simple_dialog
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -9,12 +10,14 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -32,7 +35,8 @@ import study.me.please.ui.components.OutlinedButton
 fun SimpleDialog(
     modifier: Modifier = Modifier,
     state: SimpleDialogState = rememberSimpleDialogState(),
-    properties: DialogProperties = DialogProperties(),
+    content: @Composable ColumnScope.() -> Unit = {},
+    properties: DialogProperties = dismissibleDialogProperties,
     onDismissRequest: () -> Unit
 ) {
     Dialog(
@@ -46,8 +50,8 @@ fun SimpleDialog(
             shape = RoundedCornerShape(8.dp),
             elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
             colors = CardDefaults.cardColors(
-                containerColor = Color.White,
-                contentColor = Color.White
+                containerColor = LocalTheme.colors.onBackgroundComponent,
+                contentColor = LocalTheme.colors.primary
             )
         ) {
             Column(
@@ -62,18 +66,30 @@ fun SimpleDialog(
                     .wrapContentHeight()
             ) {
                 if(state.title != null) {
-                    Text(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .wrapContentHeight()
-                            .padding(end = 16.dp),
-                        text = state.title,
-                        style = TextStyle(
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = LocalTheme.colors.primary
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        if(state.icon != null) {
+                            Icon(
+                                imageVector = state.icon,
+                                contentDescription = "",
+                                tint = LocalTheme.colors.secondary
+                            )
+                        }
+                        Text(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .wrapContentHeight()
+                                .padding(end = 16.dp),
+                            text = state.title,
+                            style = TextStyle(
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = LocalTheme.colors.primary
+                            )
                         )
-                    )
+                    }
                 }
                 if(state.content != null) {
                     Text(
@@ -84,10 +100,11 @@ fun SimpleDialog(
                         text = state.content,
                         style = TextStyle(
                             fontSize = 16.sp,
-                            color = LocalTheme.colors.secondary
+                            color = LocalTheme.colors.primary
                         )
                     )
                 }
+                content()
                 if(state.negativeButtonState != null || state.positiveButtonState != null) {
                     Row(
                         modifier = Modifier
@@ -130,6 +147,9 @@ data class SimpleDialogState(
     /** Text content */
     val content: String? = null,
 
+    /** Icon in the left top corner of the dialog */
+    val icon: ImageVector? = null,
+
     /** Positive, bold, colorful button */
     val positiveButtonState: ButtonState? = null,
 
@@ -149,6 +169,7 @@ data class SimpleDialogState(
 fun rememberSimpleDialogState(
     title: String? = null,
     content: String? = null,
+    icon: ImageVector? = null,
     positiveButtonState: ButtonState? = null,
     negativeButtonState: ButtonState? = null
 ): SimpleDialogState {
@@ -157,6 +178,7 @@ fun rememberSimpleDialogState(
         SimpleDialogState(
             title = title,
             content = content,
+            icon = icon,
             positiveButtonState = positiveButtonState,
             negativeButtonState = negativeButtonState
         )

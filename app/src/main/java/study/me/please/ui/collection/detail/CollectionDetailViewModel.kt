@@ -21,15 +21,12 @@ import study.me.please.data.io.ImportSourceType
 import study.me.please.data.io.ImportedSource
 import study.me.please.data.io.QuestionAnswerIO
 import study.me.please.data.io.QuestionIO
-import study.me.please.data.io.clip_board.CollectionExport
-import study.me.please.data.io.session.SessionIO
 import study.me.please.data.io.subjects.CategoryIO
 import study.me.please.ui.collection.RefreshableViewModel
 import study.me.please.ui.collection.detail.facts.FactsFilter
 import study.me.please.ui.collection.detail.questions.QuestionsFilter
 import study.me.please.ui.collection.detail.questions.SortByType
 import study.me.please.ui.components.FactCardCategoryUseCase
-import study.me.please.ui.components.collapsing_layout.CollapsingLayoutState
 import java.util.UUID
 import javax.inject.Inject
 
@@ -57,17 +54,11 @@ class CollectionDetailViewModel @Inject constructor(
             return field
         }
 
-    /** state for scrollable collapsing layout above everything else */
-    val collapsingLayoutState = CollapsingLayoutState()
-
     /** response from question generation */
     var questionGenerationResponse = MutableSharedFlow<QuestionGenerationResponse>()
 
     /** Detail of received collection from database */
     var collectionDetail = dataManager.collectionDetail.asStateFlow()
-
-    /** list of all sessions saved locally */
-    var sessions = dataManager.sessions.asStateFlow()
 
     /** filter for questions */
     val questionsFilter: MutableStateFlow<QuestionsFilter> = MutableStateFlow(QuestionsFilter())
@@ -119,7 +110,6 @@ class CollectionDetailViewModel @Inject constructor(
             repository.getCollectionByUid(collectionUid)?.let { collectionDetail ->
                 dataManager.collectionDetail.value = collectionDetail
                 requestCachedQuestions(questionUidList = collectionDetail.questionUidList.toList())
-                requestCachedFacts(factUidList = collectionDetail.factUidList.toList())
             }
             if(isPullRefresh) setRefreshing(false)
         }
@@ -159,23 +149,9 @@ class CollectionDetailViewModel @Inject constructor(
                 questionUidList
             ).orEmpty().also { newList ->
                 if(newList.isNotEmpty()
-                    && newList.size != dataManager.collectionDetail.value.questionUidList.size
+                    && newList.size != dataManager.collectionDetail.value?.questionUidList?.size
                 ) {
-                    dataManager.collectionDetail.value.questionUidList = newList.map { it.uid }.toMutableSet()
-                }
-            }
-        }
-    }
-
-    private fun requestCachedFacts(factUidList: List<String>) {
-        viewModelScope.launch {
-            dataManager.collectionFacts.value = repository.getFactsByUid(
-                factUidList
-            ).orEmpty().also { newList ->
-                if(newList.isNotEmpty()
-                    && newList.size != dataManager.collectionDetail.value.factUidList.size
-                ) {
-                    dataManager.collectionDetail.value.factUidList = newList.map { it.uid }.toMutableSet()
+                    dataManager.collectionDetail.value?.questionUidList = newList.map { it.uid }.toMutableSet()
                 }
             }
         }
@@ -249,11 +225,11 @@ class CollectionDetailViewModel @Inject constructor(
 
             // save data
             dataManager.collectionDetail.update { collection ->
-                collection.apply {
+                collection?.apply {
                     questionUidList.addAll(newQuestions.map { it.uid })
                 }
             }
-            requestCollectionSave(dataManager.collectionDetail.value)
+            dataManager.collectionDetail.value?.let { requestCollectionSave(it) }
             requestQuestionsSave(newQuestions)
             dataManager.collectionQuestions.update {
                 newQuestions.plus(it)
@@ -486,9 +462,9 @@ class CollectionDetailViewModel @Inject constructor(
             }
         }
         viewModelScope.launch {
-            requestCollectionSave(dataManager.collectionDetail.value.apply {
+            dataManager.collectionDetail.value?.apply {
                 questionUidList.add(newQuestion.uid)
-            })
+            }?.let { requestCollectionSave(it) }
         }
         return newQuestion
     }
@@ -500,9 +476,9 @@ class CollectionDetailViewModel @Inject constructor(
             clipBoard.forEach {
                 requestFactSave(it)
             }
-            requestCollectionSave(dataManager.collectionDetail.value.apply {
+            dataManager.collectionDetail.value?.apply {
                 factUidList.addAll(clipBoard.map { it.uid })
-            })
+            }?.let { requestCollectionSave(it) }
             dataManager.collectionFacts.update {
                 it.toMutableList().apply { addAll(0, clipBoard) }
             }
@@ -516,9 +492,9 @@ class CollectionDetailViewModel @Inject constructor(
             clipBoard.forEach {
                 requestQuestionSave(it)
             }
-            requestCollectionSave(dataManager.collectionDetail.value.apply {
+            dataManager.collectionDetail.value?.apply {
                 questionUidList.addAll(clipBoard.map { it.uid })
-            })
+            }?.let { requestCollectionSave(it) }
             dataManager.collectionQuestions.update {
                 it.toMutableList().apply { addAll(0, clipBoard) }
             }
@@ -539,40 +515,10 @@ class CollectionDetailViewModel @Inject constructor(
         }
     }
 
-    /** Requests all collections */
-    fun requestSessions() {
-        viewModelScope.launch {
-            repository.getSessions()?.let { sessions ->
-                dataManager.sessions.value = sessions
-            }
-        }
-    }
-
-    /** Requests a save for sessions */
-    fun requestSessionsSave(sessions: List<SessionIO>) {
-        viewModelScope.launch {
-            repository.saveSessions(sessions)
-        }
-    }
-
-    /** Returns a json string in [onSuccess] for quick clipboard export */
-    fun getExportString(onSuccess: (json: String) -> Unit) {
-        viewModelScope.launch {
-            repository.exportCollection(
-                CollectionExport(
-                    collection = collectionDetail.value,
-                    questions = dataManager.collectionQuestions.value,
-                    facts = dataManager.collectionFacts.value,
-                ),
-                onSuccess = onSuccess
-            )
-        }
-    }
-
     /** Update current TO with new one */
     fun updateCollection(collection: CollectionIO) {
         dataManager.collectionDetail.update { previousCollection ->
-            previousCollection.copy(
+            previousCollection?.copy(
                 description = collection.description,
                 name = collection.name
             )

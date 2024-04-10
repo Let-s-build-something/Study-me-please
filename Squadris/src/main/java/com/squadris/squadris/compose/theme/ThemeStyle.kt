@@ -57,4 +57,8 @@ interface ThemeStyle {
     /** Style for link text */
     @get:Composable
     val linkText: TextStyle
+
+    /** Style for item in a menu */
+    @get:Composable
+    val menuItem: TextStyle
 }

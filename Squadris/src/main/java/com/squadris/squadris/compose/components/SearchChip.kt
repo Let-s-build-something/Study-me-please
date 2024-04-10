@@ -1,6 +1,7 @@
 package com.squadris.squadris.compose.components
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -13,7 +14,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Search
@@ -31,6 +31,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusEvent
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
@@ -56,6 +57,7 @@ fun SearchChip(
 ) {
     val isImeVisible = WindowInsets.isImeVisible
     val localDensity = LocalDensity.current
+    val configuration = LocalConfiguration.current
     val focusRequester = FocusRequester()
 
     val isFocused = remember { mutableStateOf(false) }
@@ -71,6 +73,8 @@ fun SearchChip(
             isChecked.value = false
         }
     }
+    val componentWidth = remember { mutableStateOf(0.dp) }
+
     Row(
         modifier = modifier
             .padding(vertical = 8.dp, horizontal = if (isChecked.value) 8.dp else 4.dp)
@@ -80,6 +84,11 @@ fun SearchChip(
                 color = LocalTheme.colors.brandMain,
                 shape = LocalTheme.shapes.chipShape
             )
+            .onGloballyPositioned { coordinates ->
+                componentWidth.value = with(localDensity) {
+                    coordinates.size.width.toDp()
+                }
+            }
             .focusRequester(focusRequester)
             .onFocusEvent { state ->
                 if (fieldOutput.value.isEmpty() && isChecked.value && state.hasFocus.not() && isFocused.value) {
@@ -105,12 +114,16 @@ fun SearchChip(
             tint = LocalTheme.colors.tetrial,
             contentDescription = null
         )
-        val configuration = LocalConfiguration.current
         AnimatedVisibility(visible = isChecked.value) {
             EditFieldInput(
                 modifier = Modifier
                     .padding(start = 4.dp)
-                    .width(configuration.screenWidthDp.times(PERCENTAGE_OF_SCREEN_WIDTH).dp),
+                    .widthIn(
+                        min = if(isChecked.value) {
+                            componentWidth.value
+                        }else configuration.screenWidthDp.times(PERCENTAGE_OF_SCREEN_WIDTH).dp
+                    )
+                    .animateContentSize(),
                 value = text,
                 paddingValues = PaddingValues(start = 8.dp),
                 minLines = 1,

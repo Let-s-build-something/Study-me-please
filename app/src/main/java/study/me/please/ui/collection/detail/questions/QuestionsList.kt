@@ -18,7 +18,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -54,12 +53,11 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import study.me.please.R
 import study.me.please.base.LocalNavController
-import study.me.please.base.navigation.NavigationComponent
-import study.me.please.base.navigation.NavigationScreen
+import study.me.please.base.navigation.NavigationRoot
 import study.me.please.data.io.QuestionIO
+import study.me.please.ui.collection.EmptyLayout
 import study.me.please.ui.collection.detail.CollectionDetailViewModel
 import study.me.please.ui.collection.detail.questions.detail.INPUT_DELAYED_RESPONSE_MILLIS
-import study.me.please.ui.components.AddToSessionCollectionSheet
 import study.me.please.ui.components.BasicAlertDialog
 import study.me.please.ui.components.BrandHeaderButton
 import study.me.please.ui.components.ButtonState
@@ -69,6 +67,7 @@ import study.me.please.ui.components.OptionsLayout
 import study.me.please.ui.components.QuestionCard
 import study.me.please.ui.components.ScrollBarProgressIndicator
 import study.me.please.ui.components.rememberInteractiveCardState
+import study.me.please.ui.components.session.launcher.SessionLauncher
 
 private const val CHIP_HAS_IMAGE_ID = "HAS_IMAGE_CHIP"
 private const val CHIP_IS_INVALID_ID = "IS_INVALID_CHIP"
@@ -76,8 +75,10 @@ private const val CHIP_IS_INVALID_ID = "IS_INVALID_CHIP"
 /** Interactive list of questions */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
-fun QuestionsList(viewModel: CollectionDetailViewModel) {
-    val sessions = viewModel.sessions.collectAsState()
+fun QuestionsList(
+    modifier: Modifier = Modifier,
+    viewModel: CollectionDetailViewModel
+) {
     val questions = viewModel.collectionQuestions.collectAsState(initial = listOf())
     val chipsFilter = viewModel.questionsFilter.collectAsState()
 
@@ -88,7 +89,7 @@ fun QuestionsList(viewModel: CollectionDetailViewModel) {
     val context = LocalContext.current
 
     val interactiveStates = questions.value.map { rememberInteractiveCardState() }
-    val showAddToSheet = remember(questions.value) { mutableStateOf(false) }
+    val showSessionLauncher = remember(questions.value) { mutableStateOf(false) }
     val showDeleteDialog = remember(questions.value) { mutableStateOf(false) }
     val chipGroupState = rememberCustomChipGroupState(
         onCheckedChipsChanged = { chipUids ->
@@ -182,10 +183,14 @@ fun QuestionsList(viewModel: CollectionDetailViewModel) {
         }
         override fun addQuestion() {
             val newQuestion = viewModel.addNewQuestion()
-            navController?.navigate(NavigationScreen.QuestionDetail.createRoute(
-                NavigationComponent.QUESTION_UID to newQuestion.uid,
-                NavigationComponent.TOOLBAR_TITLE to newQuestion.prompt
-            ))
+            navController?.navigate(
+                NavigationRoot.QuestionDetail.createRoute(
+                    NavigationRoot.QuestionDetail.QuestionDetailArgument(
+                        toolbarTitle = newQuestion.prompt,
+                        questionUid = newQuestion.uid
+                    )
+                )
+            )
             stopChecking()
         }
         override fun stopChecking() {
@@ -202,10 +207,14 @@ fun QuestionsList(viewModel: CollectionDetailViewModel) {
             stopChecking()
         }
         override fun openQuestion(question: QuestionIO) {
-            navController?.navigate(NavigationScreen.QuestionDetail.createRoute(
-                NavigationComponent.QUESTION_UID to question.uid,
-                NavigationComponent.TOOLBAR_TITLE to question.prompt
-            ))
+            navController?.navigate(
+                NavigationRoot.QuestionDetail.createRoute(
+                    NavigationRoot.QuestionDetail.QuestionDetailArgument(
+                        toolbarTitle = question.prompt,
+                        questionUid = question.uid
+                    )
+                )
+            )
             localFocusManager.clearFocus()
         }
         override fun copyItems() {
@@ -234,27 +243,6 @@ fun QuestionsList(viewModel: CollectionDetailViewModel) {
         }
     }
 
-    if(showAddToSheet.value) {
-        AddToSessionCollectionSheet(
-            tabs = mutableListOf(
-                stringResource(id = R.string.screen_sessions_title)
-            ),
-            sessions = sessions.value,
-            isShimmering = sessions.value == null,
-            selectedCollections = controller.selectedQuestionUids,
-            onConfirmation = { sessionList, _ ->
-                if(sessionList.isNullOrEmpty().not()) {
-                    viewModel.requestSessionsSave(sessionList.orEmpty())
-                }
-                controller.stopChecking()
-                showAddToSheet.value = false
-            },
-            onDismissRequest = {
-                showAddToSheet.value = false
-            }
-        )
-    }
-
     if(showDeleteDialog.value) {
         BasicAlertDialog(
             title = stringResource(id = R.string.question_delete_dialog_title),
@@ -268,16 +256,25 @@ fun QuestionsList(viewModel: CollectionDetailViewModel) {
             ) {
                 coroutineScope.launch(Dispatchers.Default) {
                     controller.deleteQuestions()
-                    showDeleteDialog.value = false
                 }
             },
             dismissButtonState = ButtonState(
                 text = stringResource(id = R.string.button_dismiss)
-            ) { showDeleteDialog.value = false }
+            ),
+            onDismissRequest = { showDeleteDialog.value = false }
         )
     }
 
-    ConstraintLayout(modifier = Modifier.fillMaxSize()) {
+    if(showSessionLauncher.value) {
+        SessionLauncher(
+            questionUidList = controller.selectedQuestionUids,
+            onDismissRequest = {
+                showSessionLauncher.value = false
+            }
+        )
+    }
+
+    ConstraintLayout(modifier = modifier.fillMaxSize()) {
         val (progressScrollbar, content) = createRefs()
 
         val questionsScrollState = rememberLazyListState()
@@ -353,31 +350,23 @@ fun QuestionsList(viewModel: CollectionDetailViewModel) {
                     ) {
                         AnimatedVisibility(visible = controller.selectedQuestionUids.size > 0) {
                             ImageAction(
-                                leadingImageVector = Icons.Outlined.Add,
-                                text = stringResource(id = R.string.button_add_to)
-                            ) {
-                                viewModel.requestSessions()
-                                showAddToSheet.value = true
-                            }
-                        }
-                        AnimatedVisibility(visible = controller.selectedQuestionUids.size > 0) {
-                            ImageAction(
                                 leadingImageVector = Icons.Outlined.PlayArrow,
                                 text = stringResource(id = R.string.button_start_session)
                             ) {
-                                navController?.navigate(
-                                    NavigationScreen.SessionPlay.createRoute(
-                                        NavigationComponent.TOOLBAR_TITLE to viewModel.collectionDetail.value.name,
-                                        NavigationComponent.QUESTION_UID_LIST to controller.selectedQuestionUids.toList()
-                                    )
-                                )
                                 controller.stopChecking()
+                                showSessionLauncher.value = true
                             }
                         }
                     }
                 }
             }
-
+            item {
+                AnimatedVisibility(visible = questions.value.isEmpty()) {
+                    EmptyLayout(
+                        emptyText = stringResource(id = R.string.collection_questions_empty_error)
+                    )
+                }
+            }
             itemsIndexed(
                 questions.value,
                 key = { _, question -> question.uid }
@@ -397,11 +386,6 @@ fun QuestionsList(viewModel: CollectionDetailViewModel) {
                     }
                 )
                 Spacer(modifier = Modifier.height(LocalTheme.shapes.betweenItemsSpace))
-            }
-            item {
-                Spacer(modifier = Modifier.height(
-                    viewModel.collapsingLayoutState.getCollapsingHeightAbove(1).div(2).dp
-                ))
             }
         }
     }

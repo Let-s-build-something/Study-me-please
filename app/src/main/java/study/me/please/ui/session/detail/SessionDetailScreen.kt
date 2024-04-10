@@ -54,16 +54,15 @@ import com.squadris.squadris.utils.OnLifecycleEvent
 import study.me.please.R
 import study.me.please.base.LocalNavController
 import study.me.please.base.navigation.ActionBarIcon
-import study.me.please.base.navigation.NavigationComponent
-import study.me.please.base.navigation.NavigationScreen
+import study.me.please.base.navigation.NavigationRoot
 import study.me.please.data.io.CollectionIO
 import study.me.please.data.io.preferences.SessionPreferencePack
 import study.me.please.data.io.session.SessionIO
-import study.me.please.ui.components.OptionsLayout
 import study.me.please.ui.components.BasicAlertDialog
 import study.me.please.ui.components.ButtonState
 import study.me.please.ui.components.CollectionCard
 import study.me.please.ui.components.InteractiveCardMode
+import study.me.please.ui.components.OptionsLayout
 import study.me.please.ui.components.QuestionCard
 import study.me.please.ui.components.TextHeader
 import study.me.please.ui.components.preference_chooser.PreferenceChooser
@@ -101,6 +100,7 @@ fun SessionDetailScreen(
 
     OnLifecycleEvent { event ->
         if(event == Lifecycle.Event.ON_CREATE) {
+            viewModel.defaultName = title ?: ""
             viewModel.sessionUid = sessionUid
             viewModel.collectionUidList = collectionUidList.orEmpty()
             viewModel.questionUidList = questionUidList.orEmpty()
@@ -117,9 +117,11 @@ fun SessionDetailScreen(
                 imageVector = Icons.Outlined.PlayArrow,
                 onClick = {
                     navController?.navigate(
-                        NavigationScreen.SessionPlay.createRoute(
-                            NavigationComponent.TOOLBAR_TITLE to sessionDetail.value?.name,
-                            NavigationComponent.SESSION_UID to sessionDetail.value?.uid
+                        NavigationRoot.SessionPlay.createRoute(
+                            NavigationRoot.SessionPlay.SessionPlayArgument(
+                                sessionUid = sessionDetail.value?.uid ?: "",
+                                toolbarTitle = sessionDetail.value?.name ?: ""
+                            )
                         )
                     )
                 }
@@ -138,14 +140,16 @@ fun SessionDetailScreen(
                 },
                 navigateToCollection = { collection ->
                     navController?.navigate(
-                        NavigationScreen.CollectionDetail.createRoute(
-                            NavigationComponent.COLLECTION_UID to collection.uid,
-                            NavigationComponent.TOOLBAR_TITLE to collection.name
+                        NavigationRoot.CollectionDetail.createRoute(
+                            NavigationRoot.CollectionDetail.CollectionDetailArgument(
+                                collectionUid = collection.uid,
+                                toolbarTitle = collection.name
+                            )
                         )
                     )
                 },
                 onAddCollection = {
-                    navController?.navigate(NavigationScreen.CollectionLobby.createRoute())
+                    navController?.navigate(NavigationRoot.CollectionLobby.route)
                 },
                 onPreferencePackChosen = { preferencePack ->
                     sessionDetail.value?.apply {
@@ -230,11 +234,11 @@ private fun ContentLayout(
                 }else session?.questionUidList?.removeAll { selectedQuestionUids.contains(it) }
                 requestDataSave()
                 stopChecking()
-                showDialog.value = null
             },
             dismissButtonState = ButtonState(
                 text = stringResource(id = R.string.button_dismiss)
-            ) { showDialog.value = null }
+            ),
+            onDismissRequest = { showDialog.value = null }
         )
     }
 

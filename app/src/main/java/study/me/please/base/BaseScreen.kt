@@ -104,7 +104,7 @@ fun BaseScreen(
                         subtitle = subtitle,
                         actions = actionIcons,
                         onNavigationIconClick = {
-                            onNavigationIconClick?: onBackPressedDispatcher?.onBackPressedDispatcher
+                            onNavigationIconClick?.invoke() ?: onBackPressedDispatcher?.onBackPressedDispatcher
                                 ?.onBackPressed()
                         }
                     )

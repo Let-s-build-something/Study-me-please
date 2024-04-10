@@ -3,6 +3,7 @@ package study.me.please.data.io.session
 import androidx.room.ColumnInfo
 import androidx.room.Embedded
 import androidx.room.Entity
+import androidx.room.Ignore
 import androidx.room.PrimaryKey
 import com.google.gson.annotations.SerializedName
 import com.squadris.squadris.utils.DateUtils
@@ -50,4 +51,23 @@ data class SessionIO(
 
     /** number of questions in this session */
     var questionCount: Int = 0
-): Serializable
+): Serializable {
+
+    /** local variable for whether this object is playable */
+    @Ignore
+    var isPlayable: Boolean = false
+
+    override fun toString(): String {
+        return "{" +
+                "name: $name, " +
+                "uid: $uid, " +
+                "isPlayable: $isPlayable, " +
+                "preferencePackUid: $preferencePackUid, " +
+                "estimatedMode: $estimatedMode, " +
+                "lastPlayed: $lastPlayed, " +
+                "collectionUidList: $collectionUidList, " +
+                "questionUidList: $questionUidList, " +
+                "questionCount: $questionCount, " +
+                "}"
+    }
+}

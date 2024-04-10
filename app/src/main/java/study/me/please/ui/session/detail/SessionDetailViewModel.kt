@@ -10,8 +10,8 @@ import kotlinx.coroutines.launch
 import study.me.please.base.BaseViewModel
 import study.me.please.data.io.CollectionIO
 import study.me.please.data.io.QuestionIO
-import study.me.please.data.io.session.SessionIO
 import study.me.please.data.io.preferences.SessionPreferencePack
+import study.me.please.data.io.session.SessionIO
 import study.me.please.ui.collection.RefreshableViewModel
 import study.me.please.ui.components.preference_chooser.PreferencePackDataManager
 import study.me.please.ui.components.preference_chooser.PreferencePackRepository
@@ -46,6 +46,7 @@ class SessionDetailViewModel @Inject constructor(
     val collections: StateFlow<List<CollectionIO>?> = dataManager.collections.asStateFlow()
 
     //TODO refactor needed for the RefreshableViewModel
+    var defaultName = ""
     var sessionUid: String? = null
     var collectionUidList: List<String> = listOf()
     var questionUidList: List<String> = listOf()
@@ -58,7 +59,14 @@ class SessionDetailViewModel @Inject constructor(
                     if(dataManager.session.value == null) {
                         requestQuestions(questionUidList)
                         requestCollections(collectionUidList)
+
+                        val collections = dataManager.collections.value.orEmpty()
+                        val componentName = if(collections.size == 1) {
+                            collections.firstOrNull()?.name ?: ""
+                        }else ""
+
                         dataManager.session.value = SessionIO(
+                            name = "$defaultName $componentName",
                             collectionUidList = collectionUidList.toMutableSet(),
                             questionUidList = questionUidList.toMutableSet()
                         )

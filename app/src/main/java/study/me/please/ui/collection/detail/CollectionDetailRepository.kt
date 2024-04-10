@@ -1,14 +1,13 @@
 package study.me.please.ui.collection.detail
 
-import android.util.Log
 import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import study.me.please.data.io.CollectionIO
 import study.me.please.data.io.FactIO
 import study.me.please.data.io.QuestionIO
-import study.me.please.data.io.session.SessionIO
 import study.me.please.data.io.clip_board.CollectionExport
+import study.me.please.data.io.session.SessionIO
 import study.me.please.data.io.subjects.CategoryIO
 import study.me.please.data.room.CategoryDao
 import study.me.please.data.room.CollectionDao
@@ -76,13 +75,6 @@ class CollectionDetailRepository @Inject constructor(
     suspend fun getAllCategories(): List<CategoryIO>? {
         return withContext(Dispatchers.IO) {
             categoryDao.getAllCategories()
-        }
-    }
-
-    /** Get list of all sessions */
-    suspend fun getSessions(): List<SessionIO>? {
-        return withContext(Dispatchers.IO) {
-            sessionDao.getAllSessions()
         }
     }
 

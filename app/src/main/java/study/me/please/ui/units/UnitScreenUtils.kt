@@ -165,10 +165,10 @@ val paragraphBlockMockDataState = ParagraphBlockState(
     },
     isReadOnly = false,
     updateParagraph = {},
-    nestedBulletPoints = mutableStateListOf(),
-    nestedParagraphs = mutableStateListOf(),
-    nestedBlockStates = listOf(),
-    nestedFacts = mutableStateListOf(),
+    bulletPoints = mutableStateListOf(),
+    paragraphs = mutableStateListOf(),
+    blockStates = listOf(),
+    facts = mutableStateListOf(),
     updateFact = {},
     bridge = object: ParagraphBlockBridge {
         override fun addFact(element: UnitsViewModel.ElementToDrag) {}

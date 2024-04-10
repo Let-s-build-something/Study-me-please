@@ -56,8 +56,7 @@ import study.me.please.R
 import study.me.please.base.LocalNavController
 import study.me.please.base.navigation.ActionBarIcon
 import study.me.please.base.navigation.NavIconType
-import study.me.please.base.navigation.NavigationComponent
-import study.me.please.base.navigation.NavigationScreen
+import study.me.please.base.navigation.NavigationRoot
 import study.me.please.data.io.FactType
 import study.me.please.data.io.LargePathAsset
 import study.me.please.data.io.QuestionAnswerIO
@@ -234,11 +233,11 @@ fun QuestionDetailScreen(
             ) {
                 bridge.deleteAnswers(bridge.selectedAnswerUids)
                 bridge.stopChecking()
-                showDeleteDialog = false
             },
             dismissButtonState = ButtonState(
                 text = stringResource(id = R.string.button_dismiss)
-            ) { showDeleteDialog = false }
+            ),
+            onDismissRequest = { showDeleteDialog = false }
         )
     }
 
@@ -254,10 +253,12 @@ fun QuestionDetailScreen(
                 imageVector = Icons.Outlined.PlayArrow,
                 onClick = {
                     navController?.navigate(
-                        NavigationScreen.SessionPlay.createRoute(
-                            NavigationComponent.TOOLBAR_TITLE to question.value?.prompt,
-                            NavigationComponent.IS_TESTING_MODE to true,
-                            NavigationComponent.QUESTION_UID to question.value?.uid
+                        NavigationRoot.SessionPlay.createRoute(
+                            NavigationRoot.SessionPlay.SessionPlayArgument(
+                                toolbarTitle = question.value?.prompt ?: "",
+                                questionUid = questionUid,
+                                isTestingMode = true
+                            )
                         )
                     )
                 }

@@ -81,10 +81,10 @@ fun ParagraphLayout(
                     paragraph = safeParagraph,
                     isReadOnly = true,
                     updateParagraph = {},
-                    nestedBulletPoints = mutableStateListOf(*safeParagraph.bulletPoints.toTypedArray()),
-                    nestedParagraphs = mutableStateListOf(*safeParagraph.paragraphs.toTypedArray()),
-                    nestedBlockStates = listOf(),
-                    nestedFacts = mutableStateListOf(*safeParagraph.facts.toTypedArray()),
+                    bulletPoints = mutableStateListOf(*safeParagraph.bulletPoints.toTypedArray()),
+                    paragraphs = mutableStateListOf(*safeParagraph.paragraphs.toTypedArray()),
+                    blockStates = listOf(),
+                    facts = mutableStateListOf(*safeParagraph.facts.toTypedArray()),
                     updateFact = {},
                     bridge = object: ParagraphBlockBridge {
                         override fun addFact(element: UnitsViewModel.ElementToDrag) {}
@@ -106,7 +106,7 @@ fun ParagraphLayout(
                 addNewCategory = null,
                 onNewCategoryChosen = {},
                 screenWidthDp = screenWidth,
-                isLandscape = isLandscape
+                isLandscape = isLandscape,
             )
         }
     }

@@ -102,14 +102,12 @@ fun SessionScreen(
             confirmButtonState = ButtonState(
                 text = stringResource(id = R.string.button_confirm)
             ) {
-                showExitDialog = false
                 navController?.popBackStack()
             },
             dismissButtonState = ButtonState(
                 text = stringResource(id = R.string.button_cancel)
-            ) {
-                showExitDialog = false
-            }
+            ),
+            onDismissRequest = { showExitDialog = false }
         )
     }
 

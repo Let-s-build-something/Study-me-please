@@ -1,5 +1,6 @@
 package study.me.please.ui.collection.detail
 
+import dagger.hilt.android.scopes.ActivityRetainedScoped
 import kotlinx.coroutines.flow.MutableStateFlow
 import study.me.please.data.io.CollectionIO
 import study.me.please.data.io.FactIO
@@ -13,10 +14,7 @@ import javax.inject.Inject
 class CollectionDetailDataManager @Inject constructor() {
 
     /** Detail of received collection from database */
-    val collectionDetail: MutableStateFlow<CollectionIO> = MutableStateFlow(CollectionIO())
-
-    /** list of all sessions saved locally */
-    val sessions: MutableStateFlow<List<SessionIO>?> = MutableStateFlow(null)
+    val collectionDetail: MutableStateFlow<CollectionIO?> = MutableStateFlow(null)
 
     /** local temporary save of downloaded questions */
     val collectionQuestions: MutableStateFlow<List<QuestionIO>> = MutableStateFlow(listOf())

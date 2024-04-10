@@ -51,8 +51,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import study.me.please.R
 import study.me.please.base.LocalNavController
-import study.me.please.base.navigation.NavigationComponent
-import study.me.please.base.navigation.NavigationScreen
+import study.me.please.base.navigation.NavigationRoot
 import study.me.please.base.navigation.SessionLobbyBarActions
 import study.me.please.data.io.preferences.SessionPreferencePack
 import study.me.please.ui.components.BasicAlertDialog
@@ -209,12 +208,12 @@ fun SessionLobbyScreen(
                 coroutineScope.launch(Dispatchers.Default) {
                     viewModel.requestSessionsDeletion(uids = selectedSessionUids.toSet())
                     stopChecking()
-                    showDeleteDialog.value = false
                 }
             },
             dismissButtonState = ButtonState(
                 text = stringResource(id = R.string.button_dismiss)
-            ) { showDeleteDialog.value = false }
+            ),
+            onDismissRequest = { showDeleteDialog.value = false }
         )
     }
 
@@ -320,9 +319,11 @@ fun SessionLobbyScreen(
                                     session = session,
                                     onEditOptionPressed = {
                                         navController?.navigate(
-                                            NavigationScreen.SessionDetail.createRoute(
-                                                NavigationComponent.SESSION_UID to session.uid,
-                                                NavigationComponent.TOOLBAR_TITLE to session.name
+                                            NavigationRoot.SessionDetail.createRoute(
+                                                NavigationRoot.SessionDetail.SessionDetailArgument(
+                                                    sessionUid = session.uid,
+                                                    toolbarTitle = session.name
+                                                )
                                             )
                                         )
                                     },

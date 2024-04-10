@@ -1,6 +1,5 @@
 package study.me.please.ui.home
 
-import android.app.Activity
 import android.content.res.Configuration
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.animateContentSize
@@ -19,6 +18,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowForwardIos
 import androidx.compose.material.icons.outlined.DoorBack
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -40,10 +40,10 @@ import androidx.lifecycle.Lifecycle
 import com.squadris.squadris.compose.theme.LocalTheme
 import com.squadris.squadris.utils.OnLifecycleEvent
 import study.me.please.R
+import study.me.please.base.LocalActivity
 import study.me.please.base.LocalNavController
 import study.me.please.base.navigation.NavIconType
-import study.me.please.base.navigation.NavigationComponent
-import study.me.please.base.navigation.NavigationScreen
+import study.me.please.base.navigation.NavigationRoot
 import study.me.please.data.io.CollectionIO
 import study.me.please.data.io.session.SessionIO
 import study.me.please.ui.components.BasicAlertDialog
@@ -55,9 +55,11 @@ import study.me.please.ui.components.OutlinedButton
 import study.me.please.ui.components.pull_refresh.PullRefreshScreen
 import study.me.please.ui.components.rememberInteractiveCardState
 import study.me.please.ui.components.session.SessionCard
+import study.me.please.ui.components.session.launcher.SessionLauncher
 import java.util.UUID
 
 /** Main screen, visible first when user opens the app */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel()
@@ -67,9 +69,11 @@ fun HomeScreen(
 
     val configuration = LocalConfiguration.current
     val context = LocalContext.current
+    val activity = LocalActivity.current
     val navController = LocalNavController.current
 
     var showLeaveDialog by remember { mutableStateOf(false) }
+    val showSessionLauncher = remember { mutableStateOf<String?>(null) }
 
     val interactiveCollectionStates = collections.value?.map {
         rememberInteractiveCardState()
@@ -94,27 +98,36 @@ fun HomeScreen(
             content = stringResource(R.string.leave_app_dialog_content),
             icon = Icons.Outlined.DoorBack,
             confirmButtonState = ButtonState(
-                text = stringResource(id = R.string.button_cancel)
-            ) {
-                showLeaveDialog = false
-            },
-            dismissButtonState = ButtonState(
                 text = stringResource(id = R.string.button_confirm)
             ) {
-                showLeaveDialog = false
-                (context as? Activity)?.finish()
+                activity?.finish()
             },
+            dismissButtonState = ButtonState(
+                text = stringResource(id = R.string.button_cancel)
+            ),
             onDismissRequest = {
                 showLeaveDialog = false
             }
         )
     }
 
+
+
     PullRefreshScreen(
         viewModel = viewModel,
         navIconType = NavIconType.HOME,
         title = stringResource(id = R.string.home_screen_title)
     ) { paddingValues ->
+        showSessionLauncher.value?.let {
+            SessionLauncher(
+                collectionUidList = listOf(it),
+                containsAll = false,
+                onDismissRequest = {
+                    showSessionLauncher.value = null
+                }
+            )
+        }
+
         // hotfix to Google bug - crash on "replace()..."
         ConstraintLayout(
             modifier = Modifier
@@ -142,34 +155,32 @@ fun HomeScreen(
                     collections = collections.value,
                     onNavigationToDetail = { collection ->
                         navController?.navigate(
-                            NavigationScreen.CollectionDetail.createRoute(
-                                NavigationComponent.COLLECTION_UID to collection.uid,
-                                NavigationComponent.TOOLBAR_TITLE to collection.name.ifEmpty {
-                                    context.getString(R.string.screen_collection_detail_new)
-                                }
+                            NavigationRoot.CollectionDetail.createRoute(
+                                NavigationRoot.CollectionDetail.CollectionDetailArgument(
+                                    collectionUid = collection.uid,
+                                    toolbarTitle = collection.name.ifEmpty {
+                                        context.getString(R.string.screen_collection_detail_new)
+                                    }
+                                )
                             )
                         )
                     },
                     onNavigationToLobby = { createNewItem ->
                         if(createNewItem) {
                             navController?.navigate(
-                                NavigationScreen.CollectionDetail.createRoute(
-                                    NavigationComponent.TOOLBAR_TITLE to context.getString(
-                                        R.string.screen_collection_detail_new
+                                NavigationRoot.CollectionDetail.createRoute(
+                                    NavigationRoot.CollectionDetail.CollectionDetailArgument(
+                                        toolbarTitle = context.getString(R.string.screen_collection_detail_new),
+                                        collectionUid = UUID.randomUUID().toString()
                                     )
                                 )
                             )
                         }else {
-                            navController?.navigate(NavigationScreen.CollectionLobby.createRoute())
+                            navController?.navigate(NavigationRoot.CollectionLobby.route)
                         }
                     },
                     onNavigationToSession = { collection ->
-                        navController?.navigate(
-                            NavigationScreen.SessionPlay.createRoute(
-                                NavigationComponent.TOOLBAR_TITLE to collection.name,
-                                NavigationComponent.COLLECTION_UID to collection.uid
-                            )
-                        )
+                        showSessionLauncher.value = collection.uid
                     }
                 )
                 SessionsRow(
@@ -177,21 +188,25 @@ fun HomeScreen(
                     sessions = sessions.value,
                     configuration = configuration,
                     onNavigationToLobby = {
-                        navController?.navigate(NavigationScreen.SessionLobby.createRoute())
+                        navController?.navigate(NavigationRoot.SessionLobby.route)
                     },
                     onNavigationToSession = { session ->
                         navController?.navigate(
-                            NavigationScreen.SessionPlay.createRoute(
-                                NavigationComponent.TOOLBAR_TITLE to session.name,
-                                NavigationComponent.SESSION_UID to session.uid
+                            NavigationRoot.SessionPlay.createRoute(
+                                NavigationRoot.SessionPlay.SessionPlayArgument(
+                                    toolbarTitle = session.name,
+                                    sessionUid = session.uid
+                                )
                             )
                         )
                     },
                     onNavigationToDetail = { session ->
                         navController?.navigate(
-                            NavigationScreen.SessionDetail.createRoute(
-                                NavigationComponent.SESSION_UID to session.uid,
-                                NavigationComponent.TOOLBAR_TITLE to session.name
+                            NavigationRoot.SessionDetail.createRoute(
+                                NavigationRoot.SessionDetail.SessionDetailArgument(
+                                    toolbarTitle = session.name,
+                                    sessionUid = session.uid
+                                )
                             )
                         )
                     }

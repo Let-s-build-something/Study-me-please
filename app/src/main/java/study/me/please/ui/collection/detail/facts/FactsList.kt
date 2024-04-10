@@ -1,6 +1,5 @@
 package study.me.please.ui.collection.detail.facts
 
-import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.LinearOutSlowInEasing
@@ -12,7 +11,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredSize
@@ -53,19 +51,17 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import study.me.please.R
 import study.me.please.base.LocalSnackbarHost
-import study.me.please.data.io.CollectionIO
-import study.me.please.data.io.FactIO
 import study.me.please.data.io.FactType
 import study.me.please.ui.collection.detail.CollectionDetailViewModel
-import study.me.please.ui.collection.detail.questions.detail.INPUT_DELAYED_RESPONSE_MILLIS
-import study.me.please.ui.components.OptionsLayout
 import study.me.please.ui.collection.detail.PAGE_INDEX_QUESTIONS
 import study.me.please.ui.collection.detail.questions.SortByType
+import study.me.please.ui.collection.detail.questions.detail.INPUT_DELAYED_RESPONSE_MILLIS
 import study.me.please.ui.components.BasicAlertDialog
 import study.me.please.ui.components.BrandHeaderButton
 import study.me.please.ui.components.ButtonState
 import study.me.please.ui.components.FactCard
 import study.me.please.ui.components.InteractiveCardMode
+import study.me.please.ui.components.OptionsLayout
 import study.me.please.ui.components.ScrollBarProgressIndicator
 import study.me.please.ui.components.rememberInteractiveCardState
 
@@ -175,15 +171,14 @@ fun FactsList(
                 }
             }
             LaunchedEffect(facts.value.size) {
-                if(collectionDetail.value.factUidList.size != facts.value.size) {
-                    if(collectionDetail.value.factUidList.size < facts.value.size) {
+                if((collectionDetail.value?.factUidList?.size ?: 0) != facts.value.size) {
+                    if((collectionDetail.value?.factUidList?.size ?: 0) < facts.value.size) {
                         interactiveStates.firstOrNull()?.mode?.value = InteractiveCardMode.EDIT
                     }
                     coroutineScope.launch(Dispatchers.Default) {
-                        collectionDetail.value.factUidList.apply {
+                        collectionDetail.value?.factUidList?.apply {
                             addAll(facts.value.map { it.uid })
                         }
-                        viewModel.requestCollectionSave(collectionDetail.value)
                     }
                 }
             }
@@ -207,10 +202,9 @@ fun FactsList(
         }
         override fun onDeleteRequest() {
             coroutineScope.launch(Dispatchers.Default) {
-                collectionDetail.value.factUidList.removeAll {
+                collectionDetail.value?.factUidList?.removeAll {
                     selectedFactUids.contains(it)
                 }
-                viewModel.requestCollectionSave(collectionDetail.value)
                 viewModel.requestFactsDeletion(selectedFactUids.toSet())
                 selectedFactUids.clear()
             }
@@ -285,11 +279,11 @@ fun FactsList(
             ) {
                 viewModel.requestFactsDeletion(uidList = controller.selectedFactUids.toSet())
                 controller.stopChecking()
-                showDeleteDialog.value = false
             },
             dismissButtonState = ButtonState(
                 text = stringResource(id = R.string.button_dismiss)
-            ) { showDeleteDialog.value = false }
+            ),
+            onDismissRequest = { showDeleteDialog.value = false }
         )
     }
 
@@ -410,11 +404,6 @@ fun FactsList(
                         viewModel.requestFactSave(it)
                     }
                 )
-            }
-            item {
-                Spacer(modifier = Modifier.height(
-                    viewModel.collapsingLayoutState.getCollapsingHeightAbove(1).div(2).dp
-                ))
             }
         }
     }

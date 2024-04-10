@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
@@ -31,15 +30,10 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.squadris.squadris.compose.theme.Colors
 import com.squadris.squadris.compose.theme.LocalTheme
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.delay
@@ -62,7 +56,7 @@ fun DropTargetContainer(
     modifier: Modifier = Modifier,
     enterModifier: Modifier = Modifier,
     padding: Dp = 0.dp,
-    isEnabled: Boolean,
+    isEnabled: Boolean = true,
     dragAndDropTarget: MutableState<String>,
     type: ElementType,
     collapsedParagraphs: SnapshotStateList<String>,
@@ -70,7 +64,7 @@ fun DropTargetContainer(
     onCanceled: () -> Unit,
     identifier: String,
     onStarted: (isStarted: Boolean) -> Unit = {},
-    content: @Composable ColumnScope.(Modifier) -> Unit = {}
+    content: @Composable ColumnScope.() -> Unit = {}
 ) {
     val cancelableScope = rememberCoroutineScope()
     if(type == ElementType.PARAGRAPH && collapsedParagraphs.contains(identifier)) {
@@ -91,18 +85,20 @@ fun DropTargetContainer(
     }
 
     val dragDropModifier = if(isEnabled) {
-        Modifier.dragAndDropTarget(
+        modifier.dragAndDropTarget(
             shouldStartDragAndDrop = { startEvent ->
                 startEvent
                     .mimeTypes()
                     .contains(type.name)
-                true
             },
             target = object : DragAndDropTarget {
                 override fun onDrop(event: DragAndDropEvent): Boolean {
-                    onDropped()
-                    dragAndDropTarget.value = ""
-                    return true
+                    val isValid = event.mimeTypes().contains(type.name)
+                    if(isValid) {
+                        onDropped()
+                        dragAndDropTarget.value = ""
+                    }
+                    return isValid
                 }
 
                 override fun onEnded(event: DragAndDropEvent) {
@@ -129,24 +125,22 @@ fun DropTargetContainer(
                 }
             }
         )
-    }else Modifier
+    }else modifier
 
-    Column(modifier = modifier.fillMaxWidth()) {
-        if(type == ElementType.PARAGRAPH) {
-            content(dragDropModifier)
-            /*Text(
-                modifier = Modifier
-                    .background(color = Colors.ORANGE)
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                text = identifier,
-                style = TextStyle(
-                    textAlign = TextAlign.Center,
-                    fontSize = 20.sp,
-                    color = Color.White
-                )
-            )*/
-        }
+    Column(modifier = dragDropModifier.fillMaxWidth()) {
+        content()
+        /*Text(
+            modifier = Modifier
+                .background(color = Colors.ORANGE)
+                .fillMaxWidth()
+                .padding(16.dp),
+            text = identifier,
+            style = TextStyle(
+                textAlign = TextAlign.Center,
+                fontSize = 20.sp,
+                color = Color.White
+            )
+        )*/
         AnimatedVisibility(visible = dragAndDropTarget.value == identifier) {
             Box(
                 modifier = Modifier
@@ -156,10 +150,9 @@ fun DropTargetContainer(
                     .background(
                         color = LocalTheme.colors.brandMain,
                     )
-                    .then(enterModifier)
+                    //.then(enterModifier)
             )
         }
-        if(type != ElementType.PARAGRAPH) content(dragDropModifier)
     }
 }
 

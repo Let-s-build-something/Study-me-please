@@ -60,10 +60,10 @@ class UnitsRepository @Inject constructor(
         }
     }
 
-    /** Deletes subject from the DB */
-    suspend fun deleteSubject(subjectUid: String) {
+    /** Deletes units from the DB */
+    suspend fun deleteUnits(unitUidList: List<String>) {
         return withContext(Dispatchers.IO) {
-            subjectsDao.deleteUnit(subjectUid)
+            subjectsDao.deleteUnits(unitUidList = unitUidList)
         }
     }
 
@@ -106,6 +106,13 @@ class UnitsRepository @Inject constructor(
     suspend fun getCollection(collectionUid: String): CollectionIO? {
         return withContext(Dispatchers.IO) {
             collectionDao.getCollectionByUid(collectionUid)
+        }
+    }
+
+    /** Inserts or updates a new collection [collection] into the database */
+    suspend fun insertCollection(collection: CollectionIO) {
+        return withContext(Dispatchers.IO) {
+            collectionDao.insertCollection(collection)
         }
     }
 

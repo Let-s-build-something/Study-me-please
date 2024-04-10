@@ -2,21 +2,22 @@ package study.me.please.ui.components
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.RowScope
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ButtonElevation
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -34,8 +35,11 @@ private fun HeaderButton(
     text: String = "",
     contentColor: Color,
     containerColor: Color,
-    startIconVector: ImageVector? = Icons.Outlined.Add,
+    endIconVector: ImageVector? = Icons.Outlined.Add,
     extraContent: @Composable RowScope.() -> Unit = {},
+    elevation: ButtonElevation? = null,
+    textStyle: TextStyle? = null,
+    shape: Shape = LocalTheme.shapes.circularActionShape,
     onClick: () -> Unit = {}
 ) {
     Button(
@@ -45,34 +49,36 @@ private fun HeaderButton(
             vertical = 6.dp,
             horizontal = 10.dp
         ),
-        shape = LocalTheme.shapes.circularActionShape,
+        shape = shape,
         colors = ButtonDefaults.buttonColors(
             containerColor = containerColor,
             contentColor = contentColor,
             disabledContainerColor = LocalTheme.colors.disabled,
             disabledContentColor = LocalTheme.colors.secondary
         ),
-        elevation = ButtonDefaults.elevatedButtonElevation(
+        elevation = elevation ?: ButtonDefaults.elevatedButtonElevation(
             defaultElevation = LocalTheme.styles.actionElevation
         )
     ) {
-        if(startIconVector != null) {
-            Icon(
-                startIconVector,
-                contentDescription = stringResource(id = R.string.add_new_content_description),
-                tint = contentColor,
-                modifier = Modifier
-                    .size(24.dp)
-            )
-        }
         if(text.isNotEmpty()) {
             Text(
                 modifier = Modifier
-                    .padding(end = 4.dp),
+                    .padding(end = 6.dp),
                 text = text,
-                fontSize = 16.sp,
-                color = contentColor,
-                fontWeight = FontWeight.Bold
+                style = textStyle ?: TextStyle(
+                    fontSize = 16.sp,
+                    color = contentColor,
+                    fontWeight = FontWeight.Bold
+                )
+            )
+        }
+        if(endIconVector != null) {
+            Icon(
+                endIconVector,
+                contentDescription = stringResource(id = R.string.add_new_content_description),
+                tint = contentColor,
+                modifier = Modifier
+                    .requiredSize(24.dp)
             )
         }
         extraContent()
@@ -88,16 +94,22 @@ private fun HeaderButton(
 fun ComponentHeaderButton(
     modifier: Modifier = Modifier,
     text: String = "",
+    shape: Shape = LocalTheme.shapes.circularActionShape,
+    textStyle: TextStyle? = null,
     startIconVector: ImageVector? = Icons.Outlined.Add,
+    elevation: ButtonElevation? = null,
     extraContent: @Composable RowScope.() -> Unit = {},
     onClick: () -> Unit = {}
 ) {
     HeaderButton(
         modifier = modifier,
         text = text,
+        shape = shape,
         onClick = onClick,
+        elevation = elevation,
+        textStyle = textStyle,
         extraContent = extraContent,
-        startIconVector = startIconVector,
+        endIconVector = startIconVector,
         contentColor = LocalTheme.colors.secondary,
         containerColor = LocalTheme.colors.onBackgroundComponent
     )

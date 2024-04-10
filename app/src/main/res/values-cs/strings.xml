@@ -2,18 +2,22 @@
 <resources>
     <string name="app_name">Study me, please</string>
     <string name="home_screen_title">Domů</string>
-    <string name="screen_sessions_title">Testy</string>
+    <string name="screen_sessions_title">Cvičení</string>
     <string name="screen_collection_title">Kolekce</string>
     <string name="screen_register_title">Jsem nový</string>
     <string name="screen_settings_title">Šatna</string>
     <string name="screen_account_title">Můj byznys</string>
-    <string name="screen_session_lobby_title">Moje testy</string>
+    <string name="screen_session_lobby_title">Moje cvičky</string>
     <string name="screen_collection_detail_new">Nová kolekce</string>
-    <string name="screen_units">Kapitoly</string>
+    <string name="screen_units">Poznámky</string>
+    <string name="screen_questions">Otázky</string>
+    <string name="screen_collection_about">Informace</string>
+
     <string name="navigate_back">Zpět</string>
     <string name="navigate_close">Zavřít</string>
+    <string name="navigate_hamburger_menu">Menu</string>
     <string name="home_screen_sessions_empty_action">Čas trénovat</string>
-    <string name="collection_detail_start_session">Do testu</string>
+    <string name="collection_detail_start_session">Do cviku</string>
     <string name="collection_detail_basic_information">Základní informace</string>
     <string name="collection_detail_page_questions">Otázky</string>
     <string name="collection_detail_page_facts">Fakta</string>
@@ -42,10 +46,14 @@
     <string name="answer_is_correct_not_ticked">Nesprávná odpověď</string>
     <string name="questions_list_chip_has_image">má obrázek</string>
     <string name="questions_list_chip_is_invalid">je špatně</string>
+
     <string name="subjects_button_generate">Generovat otázky</string>
     <string name="subjects_delete_dialog_title">Smazání kapitoly</string>
     <string name="subject_heading_hint">Název kapitoly</string>
-    <string name="subject_heading_prefix">Kapitola</string>
+    <string name="unit_heading_prefix">Kapitola</string>
+    <string name="unit_heading_default">Kapitola %1$d</string>
+    <string name="units_create_new">Nová kapitola v životě</string>
+    <string name="units_overview">Přehled</string>
     <string name="subject_subheading_hint">Podnadpis</string>
     <string name="subject_add_bullet_point">Odrážka</string>
     <string name="subject_add_fact">Fakt</string>
@@ -55,10 +63,13 @@
     <string name="subject_paragraph_section_heading">Paragrafy</string>
     <string name="subject_facts_section_heading">Fakta</string>
     <string name="subject_bullet_points_section_heading">Odrážky</string>
+
     <string name="subject_generating_error_no_data">Není tu dost dat na vygenerování, musíš si prvně napsat poznámky</string>
     <string name="subject_generating_error_generic">Neznámá chyba, #sorry jako</string>
     <string name="subject_generating_error_update_failed">Nešlo aktualizovat kolekci s novými otázky, zkus odejít a znovu přijít do téhle kolekce, případně restartovat aplikaci.</string>
     <string name="subject_generating_success">Úspěšně jste vygenerovaly %1$d otázek.</string>
+    <string name="unit_generating_success_action">Ukáááž</string>
+
     <string name="list_item_generic_hint">bod</string>
     <string name="list_item_bulletin_hint">odrážka</string>
     <string name="list_item_first_bulletin_hint">přidat popis</string>
@@ -78,9 +89,11 @@
     <string name="fact_delete_dialog_title">Odstranění faktu</string>
 
 
-    <string name="subjects_delete_dialog_content">
-        Tohle vám asi chvilku trvalo udělat, jste si jistí, že chcete permanentně smazat "%1$s"?
+    <string name="units_delete_dialog_content">
+        Tohle vám asi chvilku trvalo udělat, jste si jistí, že chcete permanentně smazat %1$d kapitol?
+        \nNapište "permanentně smazat" pro potvrzení.
     </string>
+    <string name="units_delete_dialog_confirm_hint">permanentně smazat</string>
     <string name="fact_delete_dialog_description">
         Tohle vám asi chvilku trvalo udělat, jste si jistí, že chcete permanentně smazat vybraných %1$d faktů?
     </string>
@@ -90,11 +103,13 @@
         Tohle vám asi chvilku trvalo udělat, jste si jistí, že to chcete permanentně smazat?
     </string>
 
-    <string name="session_detail_default_toolbar">Nový test</string>
+    <string name="session_launcher_new">Vytvořit nový. Čas si hrát!</string>
+    <string name="session_launcher_action_confirm">Přidat</string>
+    <string name="session_detail_default_toolbar">Nový cvičení</string>
     <string name="session_lobby_screen_empty_text">Zatím netrénuješ znalosti…zatím!</string>
-    <string name="session_lobby_screen_delete_title">Smazání testu</string>
+    <string name="session_lobby_screen_delete_title">Smazání cvičení</string>
     <string name="session_lobby_screen_delete_text">
-        Tohle vám asi chvilku trvalo udělat, jste si jistí, že chcete permanentne smazat vybraných %1$d testů?
+        Tohle vám asi chvilku trvalo udělat, jste si jistí, že chcete permanentne smazat vybraných %1$d cvičení?
     </string>
     <string name="session_play_repeated_snackbar">
         Supr dupr! Tohle se brzo naučíš. My se o to postaráme:)
@@ -103,6 +118,11 @@
 
     <string name="add_new_collection">
         Sbírám otázky, jelikož nemám otázky. Zatím!
+    </string>
+    <string name="collection_questions_empty_error">
+        Končí to na otazník, ale musí to někde začít…
+        \nHlavním zdrojem otázek jsou tvé poznámky.
+        \nProstě si piš poznámky a následně z nich automagicky vygeneruj otázky.
     </string>
     <string name="collection_empty_error">
         Nejsou tu žádné kolce…zatím! Ale můžeš začít hned teď:)
@@ -124,9 +144,9 @@
     <string name="screen_settings_text_theme">Tmavý a tmavší</string>
 
     <string name="session_show_paragraph">Ukázat paragraf</string>
-    <string name="session_leave_dialog_title">Opustit tenhle test</string>
+    <string name="session_leave_dialog_title">Opuštění cvičení</string>
     <string name="session_leave_dialog_content">
-        Opravdu chceš odejít z tohoto probíhajícího testu?
+        Opravdu chceš odejít z tohoto probíhajícího cvičení?
     </string>
 
     <string name="leave_app_dialog_title">Zavření aplikace</string>
@@ -136,14 +156,15 @@
 
     <string name="question">Otázka</string>
     <string name="collection">Kolekce</string>
+    <string name="questions">Otázky kolekce</string>
 
     <string name="preference_chooser_preferences_show">Změnit nastavení</string>
     <string name="preference_chooser_preferences_hide">Zavřít nastavení</string>
     <string name="preference_chooser_field_name_hint">Název preference</string>
     <string name="preference_chooser_preferences_header">Tvoje preference</string>
     <string name="preference_chooser_studying_header">Studování</string>
-    <string name="preference_chooser_practicing_header">Cvičení</string>
-    <string name="preference_chooser_examination_header">Testy</string>
+    <string name="preference_chooser_practicing_header">Procvičování</string>
+    <string name="preference_chooser_examination_header">Cvičení</string>
     <string name="preference_chooser_add_new">Vytvořit</string>
     <string name="preference_wait_for_correct_answer_desc">
         Opravovat moje chyby odkud nevyberu správnou
@@ -204,14 +225,14 @@
     <string name="button_import">Importovat</string>
     <string name="button_export">Exportovat</string>
     <string name="button_scan">Skenovat</string>
-    <string name="button_start_session">Začít test</string>
+    <string name="button_start_session">Zacvičit</string>
     <string name="button_copy">Koprívovat</string>
     <string name="button_paste">Vložit</string>
     <string name="button_dismiss">Zrušit</string>
     <string name="button_confirm">Potvrdit</string>
     <string name="button_play">Začít</string>
     <string name="button_statistics">Statistiky</string>
-    <string name="button_test_play">Zkusit test</string>
+    <string name="button_test_play">Zkusit cvičení</string>
     <string name="button_preferences">Nastavení</string>
     <string name="button_continue">Pokračovat</string>
     <string name="button_validate">Opravit</string>

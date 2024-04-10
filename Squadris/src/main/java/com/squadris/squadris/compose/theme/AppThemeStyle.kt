@@ -146,6 +146,14 @@ class AppThemeStyle: ThemeStyle {
             fontWeight = FontWeight.Normal
         )
 
+    override val menuItem: TextStyle
+        @Composable
+        get() = TextStyle(
+            color = LocalTheme.colors.brandMainDark,
+            fontSize = 19.sp,
+            fontWeight = FontWeight.Medium
+        )
+
     override val linkText: TextStyle
         @Composable
         get() = TextStyle(

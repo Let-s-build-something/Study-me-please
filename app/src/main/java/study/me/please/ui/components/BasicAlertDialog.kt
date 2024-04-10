@@ -1,6 +1,7 @@
 package study.me.please.ui.components
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
@@ -25,8 +26,9 @@ fun BasicAlertDialog(
     content: String,
     confirmButtonState: ButtonState? = null,
     dismissButtonState: ButtonState? = null,
+    extraContent: @Composable (() -> Unit)? = null,
     properties: DialogProperties = dismissibleDialogProperties,
-    onDismissRequest: () -> Unit = { dismissButtonState?.onClick?.invoke() },
+    onDismissRequest: () -> Unit,
     icon: ImageVector,
 ) {
     AlertDialog(
@@ -54,13 +56,16 @@ fun BasicAlertDialog(
             }
         },
         text = {
-            Text(
-                text = content,
-                style = TextStyle(
-                    fontSize = 16.sp,
-                    color = LocalTheme.colors.primary
+            Column {
+                Text(
+                    text = content,
+                    style = TextStyle(
+                        fontSize = 16.sp,
+                        color = LocalTheme.colors.primary
+                    )
                 )
-            )
+                extraContent?.invoke()
+            }
         },
         onDismissRequest = {
             onDismissRequest()
@@ -69,7 +74,10 @@ fun BasicAlertDialog(
             if(confirmButtonState != null) {
                 OutlinedButton(
                     text = confirmButtonState.text,
-                    onClick = confirmButtonState.onClick,
+                    onClick = {
+                        confirmButtonState.onClick()
+                        onDismissRequest()
+                    },
                     enabled = confirmButtonState.enabled,
                     activeColor = LocalTheme.colors.brandMain
                 )
@@ -79,7 +87,10 @@ fun BasicAlertDialog(
             {
                 OutlinedButton(
                     text = dismissButtonState.text,
-                    onClick = dismissButtonState.onClick,
+                    onClick = {
+                        dismissButtonState.onClick()
+                        onDismissRequest()
+                    },
                     enabled = dismissButtonState.enabled,
                     activeColor = LocalTheme.colors.secondary
                 )

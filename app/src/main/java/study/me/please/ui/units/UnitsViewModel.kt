@@ -16,6 +16,7 @@ import kotlinx.coroutines.withContext
 import study.me.please.base.BaseViewModel
 import study.me.please.base.GeneralClipBoard
 import study.me.please.data.io.BaseResponse
+import study.me.please.data.io.CollectionIO
 import study.me.please.data.io.FactIO
 import study.me.please.data.io.QuestionIO
 import study.me.please.data.io.subjects.CategoryIO
@@ -46,6 +47,11 @@ class UnitsViewModel @Inject constructor(
 
     /** response from generating questions */
     private val _questionsGeneratingResponse = MutableSharedFlow<BaseResponse<List<QuestionIO>>>()
+
+    private val _collection = MutableStateFlow<CollectionIO?>(null)
+
+    /** current collection */
+    val collection = _collection.asStateFlow()
 
     /** Filter for current subjects */
     val filter = MutableStateFlow(UnitsFilter())
@@ -267,35 +273,44 @@ class UnitsViewModel @Inject constructor(
         collectionUid: String
     ) {
         viewModelScope.launch(Dispatchers.Default) {
-            val collection = repository.getCollection(collectionUid)
-            val response = questionGenerator.generateQuestions(
-                activity = activity,
-                subjects = _unitsList.value?.filter { checkedSubjectUids.contains(it.uid) }.orEmpty(),
-                allSubject = _unitsList.value.orEmpty(),
-                excludedList = repository.getAllQuestions(collectionUid = collectionUid)
-                    ?.map { it.uid }
-                    .orEmpty()
-            )
-            if(response.data?.isNotEmpty() == true && collection != null) {
-                repository.insertQuestions(response.data)
-                repository.updateCollectionQuestions(
-                    collectionUid = collection.uid,
-                    uidList = collection.questionUidList.plus(response.data.map { it.uid })
+            _collection.value= repository.getCollection(collectionUid)
+            collection.value?.let { safeCollection ->
+                val response = questionGenerator.generateQuestions(
+                    activity = activity,
+                    subjects = _unitsList.value?.filter { checkedSubjectUids.contains(it.uid) }.orEmpty(),
+                    allSubject = _unitsList.value.orEmpty(),
+                    excludedList = repository.getAllQuestions(collectionUid = collectionUid)
+                        ?.map { it.uid }
+                        .orEmpty()
                 )
+                if(response.data?.isNotEmpty() == true) {
+                    repository.insertQuestions(response.data)
+                    repository.updateCollectionQuestions(
+                        collectionUid = safeCollection.uid,
+                        uidList = safeCollection.questionUidList.plus(response.data.map { it.uid })
+                    )
+                }
             }
-            _questionsGeneratingResponse.emit(response.copy(
-                errorCode = if(collection == null) FAILED_INSERT else response.errorCode
-            ))
         }
     }
 
     /** Makes a request to return subjects */
-    fun requestSubjectsList(collectionUid: String) {
+    fun requestSubjectsList(
+        collectionUid: String,
+        defaultUnitPrefix: String
+    ) {
         viewModelScope.launch(Dispatchers.Default) {
+            //TODO remove categories
             _categories.value = repository.getAllCategories()
+
+            _collection.value = repository.getCollection(collectionUid) ?: CollectionIO(uid = collectionUid).also {
+                Log.d("kostka_test", "new collection, uid: $collectionUid")
+                repository.insertCollection(it)
+            }
+
             val res = repository.getSubjectsByCollection(collectionUid)
             _unitsList.value = if(res.isNullOrEmpty()) {
-                listOf(UnitIO(collectionUid = collectionUid))
+                listOf(UnitIO(collectionUid = collectionUid, name = defaultUnitPrefix.plus(" 1")))
             }else res.onEach { unit ->
                 if(unit.paragraphUidList.isNotEmpty()) {
                     unit.paragraphs.clear()
@@ -379,14 +394,14 @@ class UnitsViewModel @Inject constructor(
     }
 
     /** Makes a request for a unit deletion from the DB */
-    fun deleteUnit(unitUid: String) {
+    fun deleteUnits(unitUidList: List<String>) {
         viewModelScope.launch {
             _unitsList.update { previousSubjects ->
                 previousSubjects?.toMutableList()?.apply {
-                    removeIf { it.uid == unitUid }
+                    removeIf { unitUidList.contains(it.uid) }
                 }
             }
-            repository.deleteSubject(unitUid)
+            repository.deleteUnits(unitUidList)
         }
     }
 
