@@ -81,7 +81,7 @@ data class FactIO(
         get() = shortKeyInformation.isEmpty()
                 && longInformation.isEmpty()
                 && promptImage?.isEmpty != false
-                && (textList.isEmpty() || type.isListType.not())
+                && (textList.isEmpty() || type != FactType.LIST)
 
     /** Whether this data can be taken seriously */
     suspend fun isSeriousDataPoint() = withContext(Dispatchers.Default) {
@@ -95,68 +95,12 @@ data class FactIO(
                 && shortKeyInformation.isNotBlank()
     }
 
-    /**
-     * Explanation of an image prompt, which is combination of both [shortKeyInformation] and [longInformation]
-     */
-    @get:Ignore
-    val imageExplanationText: String
-        get() = "$shortKeyInformation\n$longInformation"
-
-    /** returns formulated prompt based on type and long information */
-    fun getLongPrompt(context: Context) = context.getString(
-        when(type) {
-            FactType.BULLET_POINTS -> R.string.facts_type_long_fact_prompt
-            FactType.DEFINITION -> R.string.facts_type_long_person_prompt
-            FactType.PERSON -> R.string.facts_type_long_person_prompt
-            FactType.DATE -> R.string.facts_type_long_date_prompt
-            /*FactType.QUOTE*/ else -> R.string.facts_type_long_quote_prompt
-        },
-        longInformation
-    )
-
-    /** returns formulated prompt based on type and short information */
-    fun getShortPrompt(context: Context) = context.getString(
-        when(type) {
-            FactType.BULLET_POINTS -> R.string.facts_type_short_fact_prompt
-            FactType.DEFINITION -> R.string.facts_type_short_definition_prompt
-            FactType.PERSON -> R.string.facts_type_short_person_prompt
-            FactType.DATE -> R.string.facts_type_short_date_prompt
-            FactType.QUOTE -> R.string.facts_type_short_quote_prompt
-            FactType.LIST -> R.string.facts_type_short_list_prompt
-        },
-        shortKeyInformation
-    )
-
-    /** returns formulated prompt for image based on type */
-    fun getImagePrompt(context: Context) = context.getString(
-        when(type) {
-            FactType.BULLET_POINTS -> R.string.facts_type_image_fact_prompt
-            FactType.DEFINITION -> R.string.facts_type_image_definition_prompt
-            FactType.PERSON -> R.string.facts_type_image_person_prompt
-            FactType.DATE -> R.string.facts_type_image_date_prompt
-            FactType.QUOTE -> R.string.facts_type_image_quote_prompt
-            FactType.LIST -> R.string.facts_type_image_fact_prompt
-        }
-    )
-
     /** returns formulated generic prompt and long information */
     @Deprecated("Need change of strategy")
     fun getGenericLongPrompt(context: Context) = context.getString(
         R.string.facts_information_generic_prompt,
         context.getString(type.getLongHeaderStringRes() ?: 0).lowercase(),
         longInformation
-    )
-
-    /** returns formulated generic prompt and short information */
-    fun getGenericShortPrompt(context: Context) = context.getString(
-        R.string.facts_information_generic_prompt,
-        context.getString(type.getStringRes()).lowercase(),
-        shortKeyInformation
-    )
-
-    /** returns formulated generic prompt and short information */
-    fun getGenericImagePrompt(context: Context) = context.getString(
-        R.string.facts_type_image_quote_prompt
     )
 
     /** Updates this object with new data */

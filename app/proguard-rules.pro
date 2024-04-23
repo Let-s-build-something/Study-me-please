@@ -35,7 +35,10 @@
 # Application classes that will be serialized/deserialized over Gson
 -keep class com.google.gson.examples.android.model.** { *; }
 
--keep class study.me.please.data.* { *; }
+-keep class study.me.please.data.** { *; }
+-keep class study.me.please.ui.units.** { *; }
+-keep class study.me.please.ui.components.** { *; }
+-keep class study.me.please.data.io.** { *; }
 -keep class study.me.please.data.io.*
 -keep class study.me.please.base.navigation.** { *; }
 -keep class * implements com.google.gson.TypeAdapterFactory
@@ -48,5 +51,9 @@
 -keepclassmembers,allowobfuscation class * {
   @com.google.gson.annotations.SerializedName <fields>;
 }
+
+-keep class * extends androidx.room.RoomDatabase
+-keep @androidx.room.Entity class *
+-dontwarn androidx.room.paging.**
 
 ##---------------End: proguard configuration for Gson  ----------

@@ -185,6 +185,7 @@ fun SessionLauncher(
                                                 )
                                             )
                                         )
+                                        onDismissRequest()
                                     },
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {
@@ -252,6 +253,7 @@ fun SessionLauncher(
                                                     )
                                                 )
                                             )
+                                            onDismissRequest()
                                         }
                                     }
                                 }

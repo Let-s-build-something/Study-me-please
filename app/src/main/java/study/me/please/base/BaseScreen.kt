@@ -132,10 +132,16 @@ fun BaseSnackbarHost(
                 shape = LocalTheme.shapes.componentShape,
                 containerColor = if((data.visuals as? CustomSnackbarVisuals)?.isError == true) {
                     Colors.RED_ERROR
-                }else LocalTheme.colors.brandMain,
+                }else LocalTheme.colors.tetrial,
                 contentColor = if((data.visuals as? CustomSnackbarVisuals)?.isError == true) {
                     Color.White
-                }else LocalTheme.colors.tetrial
+                }else LocalTheme.colors.brandMain,
+                actionColor = if((data.visuals as? CustomSnackbarVisuals)?.isError == true) {
+                    Color.White
+                }else LocalTheme.colors.brandMain,
+                dismissActionContentColor = if((data.visuals as? CustomSnackbarVisuals)?.isError == true) {
+                    Color.White
+                }else LocalTheme.colors.brandMain,
             )
         }
     )
@@ -143,8 +149,8 @@ fun BaseSnackbarHost(
 
 data class CustomSnackbarVisuals(
     override val actionLabel: String?,
-    override val duration: SnackbarDuration,
+    override val duration: SnackbarDuration = if (actionLabel == null) SnackbarDuration.Short else SnackbarDuration.Long,
     override val message: String,
-    override val withDismissAction: Boolean,
-    val isError: Boolean = false
+    val isError: Boolean = false,
+    override val withDismissAction: Boolean = true
 ): SnackbarVisuals

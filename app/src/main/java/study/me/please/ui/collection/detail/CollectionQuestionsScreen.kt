@@ -22,6 +22,7 @@ import com.squadris.squadris.compose.theme.LocalTheme
 import com.squadris.squadris.ext.brandShimmerEffect
 import com.squadris.squadris.utils.OnLifecycleEvent
 import study.me.please.R
+import study.me.please.ui.collection.RefreshableViewModel.Companion.requestData
 import study.me.please.ui.collection.detail.questions.QuestionsList
 import study.me.please.ui.components.pull_refresh.PullRefreshScreen
 

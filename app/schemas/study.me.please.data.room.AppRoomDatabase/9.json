@@ -1,8 +1,8 @@
 {
   "formatVersion": 1,
   "database": {
-    "version": 6,
-    "identityHash": "63c35d7eee641b00159c0fe82d17f95e",
+    "version": 9,
+    "identityHash": "532037c2f1715740418a311853702a6a",
     "entities": [
       {
         "tableName": "ROOM_COLLECTION_TABLE",
@@ -550,7 +550,7 @@
       },
       {
         "tableName": "ROOM_SUBJECT_TABLE",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`uid` TEXT NOT NULL, `bulletPoints` TEXT NOT NULL, `paragraphUidList` TEXT NOT NULL, `factUidList` TEXT NOT NULL, `name` TEXT NOT NULL, `collection_uid` TEXT NOT NULL, `date_created` INTEGER NOT NULL, `collapsedParagraphs` TEXT NOT NULL, PRIMARY KEY(`uid`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`uid` TEXT NOT NULL, `bulletPoints` TEXT NOT NULL, `paragraphUidList` TEXT NOT NULL, `factUidList` TEXT NOT NULL, `name` TEXT NOT NULL, `collection_uid` TEXT NOT NULL, `date_created` INTEGER NOT NULL, `collapsedParagraphs` TEXT NOT NULL, `firstVisibleItemIndex` INTEGER NOT NULL, `firstVisibleItemOffset` INTEGER NOT NULL, PRIMARY KEY(`uid`))",
         "fields": [
           {
             "fieldPath": "uid",
@@ -598,6 +598,18 @@
             "fieldPath": "collapsedParagraphs",
             "columnName": "collapsedParagraphs",
             "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "firstVisibleItemIndex",
+            "columnName": "firstVisibleItemIndex",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "firstVisibleItemOffset",
+            "columnName": "firstVisibleItemOffset",
+            "affinity": "INTEGER",
             "notNull": true
           }
         ],
@@ -685,12 +697,100 @@
         },
         "indices": [],
         "foreignKeys": []
+      },
+      {
+        "tableName": "ROOM_UNIT_ELEMENT_FACT",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`data` TEXT NOT NULL, `parentUid` TEXT NOT NULL, `isLastParagraph` INTEGER NOT NULL, `layer` INTEGER NOT NULL, `notLastLayers` TEXT NOT NULL, `elementUid` TEXT NOT NULL, PRIMARY KEY(`elementUid`))",
+        "fields": [
+          {
+            "fieldPath": "data",
+            "columnName": "data",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "parentUid",
+            "columnName": "parentUid",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isLastParagraph",
+            "columnName": "isLastParagraph",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "layer",
+            "columnName": "layer",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "notLastLayers",
+            "columnName": "notLastLayers",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "elementUid",
+            "columnName": "elementUid",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "elementUid"
+          ]
+        },
+        "indices": [],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "ROOM_UNIT_ELEMENT_PARAGRAPH",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`data` TEXT NOT NULL, `layer` INTEGER NOT NULL, `notLastLayers` TEXT NOT NULL, `elementUid` TEXT NOT NULL, PRIMARY KEY(`elementUid`))",
+        "fields": [
+          {
+            "fieldPath": "data",
+            "columnName": "data",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "layer",
+            "columnName": "layer",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "notLastLayers",
+            "columnName": "notLastLayers",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "elementUid",
+            "columnName": "elementUid",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "elementUid"
+          ]
+        },
+        "indices": [],
+        "foreignKeys": []
       }
     ],
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '63c35d7eee641b00159c0fe82d17f95e')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '532037c2f1715740418a311853702a6a')"
     ]
   }
 }

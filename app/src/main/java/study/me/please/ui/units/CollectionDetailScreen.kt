@@ -73,7 +73,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import study.me.please.R
-import study.me.please.base.BrandBaseScreen
+import study.me.please.base.CustomSnackbarVisuals
 import study.me.please.base.LocalActivity
 import study.me.please.base.LocalIsTablet
 import study.me.please.base.LocalNavController
@@ -82,14 +82,17 @@ import study.me.please.base.navigation.ActionBarIcon
 import study.me.please.base.navigation.NavIconType
 import study.me.please.base.navigation.NavigationNode.Companion.navigate
 import study.me.please.base.navigation.NavigationRoot
+import study.me.please.data.io.subjects.ParagraphIO
+import study.me.please.ui.collection.RefreshableViewModel.Companion.requestData
 import study.me.please.ui.components.BasicAlertDialog
 import study.me.please.ui.components.ButtonState
 import study.me.please.ui.components.ComponentHeaderButton
 import study.me.please.ui.components.ExpandableContent
 import study.me.please.ui.components.ImageAction
-import study.me.please.ui.components.LineButton
+import study.me.please.ui.components.pull_refresh.PullRefreshScreen
 import study.me.please.ui.components.session.launcher.SessionLauncher
-import study.me.please.ui.units.UnitsViewModel.Companion.FAILED_INSERT
+import study.me.please.ui.units.CollectionUnitsViewModel.Companion.FAILED_INSERT
+import study.me.please.data.io.UnitsFilter
 
 /**
  * List of subjects specific to a collection
@@ -101,7 +104,7 @@ import study.me.please.ui.units.UnitsViewModel.Companion.FAILED_INSERT
 fun CollectionDetailScreen(
     collectionUid: String,
     toolbarTitle: String? = "",
-    viewModel: UnitsViewModel = hiltViewModel()
+    viewModel: CollectionUnitsViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
     val navController = LocalNavController.current
@@ -111,26 +114,25 @@ fun CollectionDetailScreen(
     val coroutineScope = rememberCoroutineScope()
     val drawerState = rememberEmbeddedDrawerState(defaultValue = false)
 
-    val subjects = viewModel.subjects.collectAsState(initial = listOf())
+    val units = viewModel.subjects.collectAsState(initial = listOf())
 
     val currentPagerIndex = rememberSaveable(collectionUid) { mutableIntStateOf(0) }
     val lastIndex = remember {
-        mutableIntStateOf((subjects.value?.lastIndex ?: 0).coerceAtLeast(0))
+        mutableIntStateOf((units.value?.lastIndex ?: 0).coerceAtLeast(0))
     }
     val showSessionLauncher = remember { mutableStateOf(false) }
 
     val pagerState = rememberPagerState(
         initialPage = lastIndex.intValue,
         pageCount = {
-            subjects.value?.size ?: 0
+            units.value?.size ?: 0
         }
     )
 
     LaunchedEffect(Unit) {
-        viewModel.requestSubjectsList(
-            collectionUid = collectionUid,
-            defaultUnitPrefix = context.getString(R.string.unit_heading_prefix)
-        )
+        viewModel.collectionUid = collectionUid
+        viewModel.defaultUnitPrefix = context.getString(R.string.unit_heading_prefix)
+        viewModel.requestData(isSpecial = true)
     }
 
     if(showSessionLauncher.value) {
@@ -143,8 +145,9 @@ fun CollectionDetailScreen(
         )
     }
 
-    BrandBaseScreen(
-        title = (subjects.value?.getOrNull(currentPagerIndex.intValue)?.name ?: "").ifEmpty {
+    PullRefreshScreen(
+        viewModel = viewModel,
+        title = (units.value?.getOrNull(currentPagerIndex.intValue)?.name ?: "").ifEmpty {
             stringResource(R.string.unit_heading_default, currentPagerIndex.intValue + 1)
         },
         subtitle = toolbarTitle,
@@ -208,7 +211,7 @@ fun CollectionDetailScreen(
                 collectionUid = collectionUid,
                 onIndexChange = { index ->
                     coroutineScope.launch {
-                        pagerState.scrollToPage(index)
+                        pagerState.animateScrollToPage(index)
                     }
                 }
             )
@@ -221,18 +224,22 @@ fun CollectionDetailScreen(
                         y = 0.dp
                     )
             ) {
-                if(subjects.value != null) {
+                if(units.value != null) {
                     LaunchedEffect(pagerState) {
                         snapshotFlow { pagerState.currentPage }.collect { index ->
                             currentPagerIndex.intValue = index
-                            viewModel.currentUnit = subjects.value?.getOrNull(index)
+                            viewModel.currentUnit = units.value?.getOrNull(index)
                         }
                     }
-                    LaunchedEffect(subjects.value?.size) {
+                    LaunchedEffect(units.value?.size) {
                         coroutineScope.launch {
-                            lastIndex.intValue = (subjects.value?.lastIndex ?: 0).coerceAtLeast(0)
+                            lastIndex.intValue = (units.value?.lastIndex ?: 0).coerceAtLeast(0)
                             pagerState.animateScrollToPage(lastIndex.intValue)
                         }
+                    }
+
+                    val unitActionType = rememberSaveable {
+                        mutableStateOf(UnitActionType.DEFAULT)
                     }
 
                     HorizontalPager(
@@ -241,17 +248,21 @@ fun CollectionDetailScreen(
                             .pointerInput(Unit) {
                                 detectTapGestures(onTap = {
                                     drawerState.isExpanded.value = false
+                                    unitActionType.value = UnitActionType.DEFAULT
                                     localFocusManager.clearFocus()
                                 })
                             },
                         state = pagerState,
-                        // causes crashes if 0
                         beyondBoundsPageCount = 2
                     ) { index ->
-                        subjects.value?.getOrNull(index)?.let { subject ->
+                        units.value?.getOrNull(index)?.let { unit ->
                             UnitContent(
-                                unit = subject,
-                                viewModel = viewModel
+                                unit = unit,
+                                collectionViewModel = viewModel,
+                                unitActionType = unitActionType,
+                                requestRefresh = {
+                                    viewModel.requestData(isSpecial = true)
+                                }
                             )
                         }
                     }
@@ -314,7 +325,7 @@ fun rememberEmbeddedDrawerState(
 @Composable
 private fun CollectionDrawer(
     modifier: Modifier = Modifier,
-    viewModel: UnitsViewModel,
+    viewModel: CollectionUnitsViewModel,
     onIndexChange: (index: Int) -> Unit,
     collectionUid: String,
     state: EmbeddedDrawerState = rememberEmbeddedDrawerState()
@@ -325,11 +336,12 @@ private fun CollectionDrawer(
     val activity = LocalActivity.current
     val navController = LocalNavController.current
 
-    val subjects = viewModel.subjects.collectAsState(initial = listOf())
+    val units = viewModel.subjects.collectAsState(initial = listOf())
     val filter = viewModel.filter.collectAsState()
     val columnState = rememberLazyListState()
 
     val showDeleteDialog = remember(viewModel) { mutableStateOf(false) }
+    val showGenerateDialog = remember(viewModel) { mutableStateOf(false) }
     val isSearchChipChecked = remember(viewModel) { mutableStateOf(false) }
     val checkedUnits = remember(collectionUid) { mutableStateListOf<String>() }
     val expandedUnits = remember { mutableStateListOf<String>() }
@@ -338,7 +350,7 @@ private fun CollectionDrawer(
         val input = remember { mutableStateOf("") }
 
         BasicAlertDialog(
-            title = stringResource(id = R.string.subjects_delete_dialog_title),
+            title = stringResource(id = R.string.units_delete_dialog_title),
             content = stringResource(
                 id = R.string.units_delete_dialog_content,
                 checkedUnits.size
@@ -370,6 +382,31 @@ private fun CollectionDrawer(
         )
     }
 
+    if(showGenerateDialog.value) {
+        BasicAlertDialog(
+            title = stringResource(id = R.string.units_button_generate_questions),
+            content = stringResource(R.string.units_generate_explanation),
+            icon = Icons.Outlined.LibraryAdd,
+            confirmButtonState = ButtonState(
+                text = stringResource(id = R.string.units_button_generate)
+            ) {
+                if(activity != null) {
+                    viewModel.generateQuestions(
+                        checkedUnitUidList = checkedUnits,
+                        activity = activity,
+                        collectionUid = collectionUid
+                    )
+                }
+            },
+            dismissButtonState = ButtonState(
+                text = stringResource(id = R.string.button_dismiss)
+            ),
+            onDismissRequest = {
+                showGenerateDialog.value = false
+            }
+        )
+    }
+
     LaunchedEffect(Unit) {
         viewModel.questionsGeneratingResponse.collectLatest { response ->
             checkedUnits.clear()
@@ -389,8 +426,13 @@ private fun CollectionDrawer(
             }
 
             if(snackbarHostState?.showSnackbar(
-                message = snackbarMessage,
-                actionLabel = context.getString(R.string.unit_generating_success_action)
+                CustomSnackbarVisuals(
+                    message = snackbarMessage,
+                    actionLabel = if(response.errorCode == null) {
+                        context.getString(R.string.unit_generating_success_action)
+                    }else null,
+                    isError = response.errorCode != null
+                )
             ) == SnackbarResult.ActionPerformed) {
                 viewModel.collection.value?.let { collection ->
                     navController?.navigate(
@@ -479,7 +521,7 @@ private fun CollectionDrawer(
                     label = ""
                 ) { isAnyChecked ->
                     if(isAnyChecked) {
-                        Row {
+                        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                             ImageAction(
                                 leadingImageVector = Icons.Outlined.DeleteSweep,
                                 text = stringResource(id = R.string.button_delete),
@@ -490,15 +532,9 @@ private fun CollectionDrawer(
                             ImageAction(
                                 modifier = Modifier.weight(1f, fill = true),
                                 leadingImageVector = Icons.Outlined.LibraryAdd,
-                                text = stringResource(id = R.string.subjects_button_generate)
+                                text = stringResource(id = R.string.units_button_generate_questions)
                             ) {
-                                if(activity != null) {
-                                    viewModel.generateQuestions(
-                                        checkedSubjectUids = checkedUnits,
-                                        activity = activity,
-                                        collectionUid = collectionUid
-                                    )
-                                }
+                                showGenerateDialog.value = true
                             }
                         }
                     }else {
@@ -512,7 +548,7 @@ private fun CollectionDrawer(
                                     collectionUid = collectionUid,
                                     prefix = context.getString(R.string.unit_heading_prefix)
                                 )
-                                onIndexChange(subjects.value?.size ?: 0)
+                                onIndexChange(units.value?.size ?: 0)
                                 state.isExpanded.value = false
                             },
                             text = stringResource(R.string.units_create_new),
@@ -522,90 +558,139 @@ private fun CollectionDrawer(
                 }
             }
             itemsIndexed(
-                subjects.value.orEmpty()
+                units.value.orEmpty()
             ) { index, unit ->
                 Row(modifier = Modifier.padding(start = 8.dp)) {
+                    AnimatedVisibility(visible = checkedUnits.size > 0) {
+                        Checkbox(
+                            modifier = Modifier.offset(x = -(12).dp),
+                            checked = checkedUnits.contains(unit.uid),
+                            onCheckedChange = { isChecked ->
+                                checkedUnits.run {
+                                    if(isChecked) {
+                                        add(unit.uid)
+                                    } else {
+                                        remove(unit.uid)
+                                    }
+                                }
+                            },
+                            colors = LocalTheme.styles.checkBoxColorsDefault
+                        )
+                    }
                     ExpandableContent(
                         modifier = Modifier
                             .fillMaxWidth()
                             .combinedClickable(
-                                interactionSource = remember {
-                                    MutableInteractionSource()
-                                },
+                                interactionSource = remember { MutableInteractionSource() },
                                 indication = rememberRipple(),
                                 onClick = {
                                     // checking mode vs regular click
-                                    if(checkedUnits.size > 0) {
+                                    if (checkedUnits.size > 0) {
                                         checkedUnits.run {
-                                            if(checkedUnits.contains(unit.uid)) {
+                                            if (checkedUnits.contains(unit.uid)) {
                                                 remove(unit.uid)
                                             } else {
                                                 add(unit.uid)
                                             }
                                         }
-                                    }else {
-                                        if (expandedUnits.contains(unit.uid)) {
-                                            expandedUnits.remove(unit.uid)
-                                        } else expandedUnits.add(unit.uid)
-                                        onIndexChange(index)
+                                    } else {
+                                        onIndexChange(units.value?.indexOf(unit) ?: 0)
                                     }
                                 },
                                 onLongClick = {
                                     checkedUnits.add(unit.uid)
                                 }
                             ),
+                        arrowModifier = Modifier.clickable(
+                            onClick = {
+                                if (expandedUnits.contains(unit.uid)) {
+                                    expandedUnits.remove(unit.uid)
+                                } else expandedUnits.add(unit.uid)
+                            },
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = rememberRipple()
+                        ),
+                        text = unit.name.ifEmpty {
+                            stringResource(R.string.unit_heading_default, index + 1)
+                        },
                         collapsedPadding = 8.dp,
-                        isExpanded = expandedUnits.contains(unit.uid),
-                        collapsedContent = {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                AnimatedVisibility(visible = checkedUnits.size > 0) {
-                                    Checkbox(
-                                        modifier = Modifier.offset(x = -(12).dp),
-                                        checked = checkedUnits.contains(unit.uid),
-                                        onCheckedChange = { isChecked ->
-                                            checkedUnits.run {
-                                                if(isChecked) {
-                                                    add(unit.uid)
-                                                } else {
-                                                    remove(unit.uid)
-                                                }
-                                            }
-                                        },
-                                        colors = LocalTheme.styles.checkBoxColorsDefault
+                        isExpanded = expandedUnits.contains(unit.uid)
+                    ) {
+                        unit.paragraphs.forEach { paragraph ->
+                            DashboardChildParagraph(
+                                paragraph = paragraph,
+                                openParagraph = { uidPath ->
+                                    onIndexChange(units.value?.indexOf(unit) ?: 0)
+                                    viewModel.scrollToElement.value = CollectionUnitsViewModel.ScrollToElement(
+                                        elementUidList = uidPath,
+                                        unitUid = unit.uid
                                     )
                                 }
-                                Text(
-                                    text = unit.name.ifEmpty {
-                                        stringResource(R.string.unit_heading_default, index + 1)
-                                    },
-                                    style = LocalTheme.styles.linkText.copy(color = LocalTheme.colors.secondary)
-                                )
-                            }
-                        }
-                    ) {
-                        Column(
-                            modifier = modifier.fillMaxWidth()
-                        ) {
-                            unit.paragraphs.forEach { paragraph ->
-                                //TODO remove categories
-                                LineButton(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .clickable(
-                                            onClick = {
-                                                //TODO navigate and scroll to given paragraph
-                                            },
-                                            interactionSource = remember { MutableInteractionSource() },
-                                            indication = rememberRipple()
-                                        ),
-                                    text = paragraph.localCategory?.name ?: "",
-                                )
-                            }
+                            )
                         }
                     }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun DashboardChildParagraph(
+    paragraph: ParagraphIO,
+    openParagraph: (uidPath: MutableList<String>) -> Unit,
+    uidPath: MutableList<String> = mutableListOf(paragraph.uid)
+) {
+    paragraph.paragraphs.forEach { nestedParagraph ->
+        if(nestedParagraph.paragraphs.isEmpty()) {
+            Text(
+                modifier = Modifier
+                    .padding(start = 8.dp)
+                    .fillMaxWidth()
+                    .clickable(
+                        onClick = {
+                            openParagraph(uidPath.apply { add(nestedParagraph.uid) })
+                        },
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = rememberRipple()
+                    )
+                    .padding(8.dp),
+                text = nestedParagraph.name,
+                style = LocalTheme.styles.category
+            )
+        }else {
+            val isExpanded = remember(paragraph.uid) {
+                mutableStateOf(false)
+            }
+
+            ExpandableContent(
+                modifier = Modifier
+                    .padding(start = 8.dp)
+                    .fillMaxWidth()
+                    .clickable(
+                        onClick = {
+                            openParagraph(uidPath.apply { add(nestedParagraph.uid) })
+                        },
+                        interactionSource = remember(paragraph.uid) { MutableInteractionSource() },
+                        indication = rememberRipple()
+                    ),
+                arrowModifier = Modifier.clickable(
+                    onClick = {
+                        isExpanded.value = !isExpanded.value
+                    },
+                    interactionSource = remember(paragraph.uid) { MutableInteractionSource() },
+                    indication = rememberRipple()
+                ),
+                text = nestedParagraph.name.ifEmpty { stringResource(R.string.subject_add_paragraph) },
+                collapsedPadding = 8.dp,
+                textStyle = LocalTheme.styles.category,
+                isExpanded = isExpanded.value
+            ) {
+                DashboardChildParagraph(
+                    paragraph = nestedParagraph,
+                    uidPath = uidPath.apply { add(nestedParagraph.uid) },
+                    openParagraph = openParagraph
+                )
             }
         }
     }

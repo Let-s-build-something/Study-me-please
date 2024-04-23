@@ -219,7 +219,7 @@ class AppDatabaseConverter @Inject constructor(private val gson: Gson) {
 
     /** Converts string to [ParagraphIO] array */
     @TypeConverter
-    fun toParticleIOList(value: String): List<ParagraphIO> {
+    fun toParagraphIOList(value: String): List<ParagraphIO> {
         return gson.fromJson(
             value,
             TypeToken.getParameterized(List::class.java, ParagraphIO::class.java).type
@@ -232,6 +232,24 @@ class AppDatabaseConverter @Inject constructor(private val gson: Gson) {
         return gson.toJson(
             value,
             TypeToken.getParameterized(List::class.java, ParagraphIO::class.java).type
+        )
+    }
+
+    /** Converts string to [ParagraphIO] */
+    @TypeConverter
+    fun toParagraphIO(value: String): ParagraphIO {
+        return gson.fromJson(
+            value,
+            TypeToken.getParameterized(ParagraphIO::class.java).type
+        )
+    }
+
+    /** Converts [ParagraphIO] object to string */
+    @TypeConverter
+    fun fromParagraphIO(value: ParagraphIO): String {
+        return gson.toJson(
+            value,
+            TypeToken.getParameterized(ParagraphIO::class.java).type
         )
     }
 
@@ -250,6 +268,24 @@ class AppDatabaseConverter @Inject constructor(private val gson: Gson) {
         return gson.toJson(
             value,
             TypeToken.getParameterized(List::class.java, FactIO::class.java).type
+        )
+    }
+
+    /** Converts string to [FactIO] */
+    @TypeConverter
+    fun toFactIO(value: String): FactIO {
+        return gson.fromJson(
+            value,
+            TypeToken.getParameterized(FactIO::class.java).type
+        )
+    }
+
+    /** Converts [FactIO] object to string */
+    @TypeConverter
+    fun fromFactIO(value: FactIO): String {
+        return gson.toJson(
+            value,
+            TypeToken.getParameterized(FactIO::class.java).type
         )
     }
 
@@ -449,6 +485,19 @@ class AppDatabaseConverter @Inject constructor(private val gson: Gson) {
             value,
             TypeToken.getParameterized(MutableList::class.java, String::class.java).type
         ) ?: mutableListOf()
+    }
+
+    /** Converts list of integers to string */
+    @TypeConverter
+    fun fromIntList(value: MutableList<Int>): String {
+        return gson.toJson(value)
+    }
+
+    /** Converts string to list of integers */
+    @TypeConverter
+    fun toIntList(value: String): MutableList<Int> {
+        val type = object : TypeToken<List<Int>>() {}.type
+        return gson.fromJson(value, type) ?: mutableListOf()
     }
 
     /** Converts date to string */

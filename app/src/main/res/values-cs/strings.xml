@@ -47,8 +47,13 @@
     <string name="questions_list_chip_has_image">má obrázek</string>
     <string name="questions_list_chip_is_invalid">je špatně</string>
 
-    <string name="subjects_button_generate">Generovat otázky</string>
-    <string name="subjects_delete_dialog_title">Smazání kapitoly</string>
+    <string name="units_button_generate_questions">Generovat otázky</string>
+    <string name="units_button_generate">Generovat</string>
+    <string name="units_generate_explanation">
+        Můžeš automaticky generovat otázky ze svých poznámek a následně začít cvičení,
+        které bude používat vygenerované otázky.
+    </string>
+    <string name="units_delete_dialog_title">Smazání kapitoly</string>
     <string name="subject_heading_hint">Název kapitoly</string>
     <string name="unit_heading_prefix">Kapitola</string>
     <string name="unit_heading_default">Kapitola %1$d</string>
@@ -58,7 +63,7 @@
     <string name="subject_add_bullet_point">Odrážka</string>
     <string name="subject_add_fact">Fakt</string>
     <string name="subject_add_paragraph">Paragraf</string>
-    <string name="subject_categorize_paragraph">pojmenuj paragraf</string>
+    <string name="subject_categorize_paragraph">název paragrafu</string>
     <string name="edit_field_item_picked_create">Vytvořit nový</string>
     <string name="subject_paragraph_section_heading">Paragrafy</string>
     <string name="subject_facts_section_heading">Fakta</string>
@@ -101,6 +106,12 @@
     <string name="generic_delete_dialog_title">Smazání</string>
     <string name="generic_delete_dialog_description">
         Tohle vám asi chvilku trvalo udělat, jste si jistí, že to chcete permanentně smazat?
+    </string>
+
+    <string name="dialog_clear_clipboard_title">Vyčištění schránky</string>
+    <string name="dialog_clear_clipboard_content">
+        Tímto se vymažou všechny zkopírované a archivované položky ze schránky.
+        \nJste si jistí?
     </string>
 
     <string name="session_launcher_new">Vytvořit nový. Čas si hrát!</string>
@@ -247,17 +258,18 @@
 
 
     <!--- ============================= ACCESSIBILITY ==================================== -->
-    <string name="btn_clear_content_description">Clear</string>
-    <string name="add_new_content_description">Add new item</string>
-    <string name="image_icon_content_description">Icon</string>
-    <string name="close_content_description">Close</string>
-    <string name="play_content_description">Play</string>
-    <string name="edit_content_description">Edit</string>
-    <string name="expand_content_description">Expand</string>
-    <string name="collapse_content_description">Collapse</string>
-    <string name="accessibility_add_content">Add new content</string>
-    <string name="accessibility_add_bullet_point">bulletin</string>
-    <string name="accessibility_add_fact">fact</string>
-    <string name="accessibility_add_paragraph">paragraph</string>
-    <string name="accessibility_delete">Delete</string>
+    <string name="btn_clear_content_description">Vyčistit</string>
+    <string name="add_new_content_description">Přidat nový item</string>
+    <string name="image_icon_content_description">Ikona</string>
+    <string name="close_content_description">Zavřít</string>
+    <string name="play_content_description">Spustit</string>
+    <string name="edit_content_description">Upravit</string>
+    <string name="expand_content_description">Rozevřít</string>
+    <string name="collapse_content_description">Uzavřít</string>
+    <string name="accessibility_add_content">Přidat nový obsah</string>
+    <string name="accessibility_add_bullet_point">odrážka</string>
+    <string name="accessibility_add_fact">Fakt</string>
+    <string name="accessibility_add_paragraph">paragraf</string>
+    <string name="accessibility_delete">Smazat</string>
+    <string name="accessibility_clipboard">Schránka</string>
 </resources>

@@ -38,13 +38,9 @@ class SessionLobbyViewModel @Inject constructor(
     /** Received sessions from database */
     val sessions: StateFlow<List<SessionIO>?> = dataManager.sessions.asStateFlow()
 
-    override fun requestData(isSpecial: Boolean, isPullRefresh: Boolean) {
-        viewModelScope.launch {
-            if(isPullRefresh) setRefreshing(true)
-            repository.getAllSessions()?.let {
-                dataManager.sessions.value = it
-            }
-            if(isPullRefresh) setRefreshing(false)
+    override suspend fun onDataRequest(isSpecial: Boolean, isPullRefresh: Boolean) {
+        repository.getAllSessions()?.let {
+            dataManager.sessions.value = it
         }
     }
 

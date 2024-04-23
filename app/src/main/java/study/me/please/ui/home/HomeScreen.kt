@@ -46,9 +46,11 @@ import study.me.please.base.navigation.NavIconType
 import study.me.please.base.navigation.NavigationRoot
 import study.me.please.data.io.CollectionIO
 import study.me.please.data.io.session.SessionIO
+import study.me.please.ui.collection.RefreshableViewModel.Companion.requestData
 import study.me.please.ui.components.BasicAlertDialog
 import study.me.please.ui.components.ButtonState
 import study.me.please.ui.components.CollectionCard
+import study.me.please.ui.components.ComponentHeaderButton
 import study.me.please.ui.components.ImageAction
 import study.me.please.ui.components.InteractiveCardState
 import study.me.please.ui.components.OutlinedButton
@@ -110,8 +112,6 @@ fun HomeScreen(
             }
         )
     }
-
-
 
     PullRefreshScreen(
         viewModel = viewModel,
@@ -245,7 +245,8 @@ private fun CollectionsRow(
     }else {
         LazyRow(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.animateContentSize()
+            modifier = Modifier.animateContentSize(),
+            verticalAlignment = Alignment.CenterVertically
         ) {
             item {
                 Spacer(modifier = Modifier.width(6.dp))
@@ -268,6 +269,13 @@ private fun CollectionsRow(
                         state = state
                     )
                 }
+            }
+            item {
+                ComponentHeaderButton(
+                    onClick = {
+                        onNavigationToLobby(true)
+                    }
+                )
             }
             item {
                 Spacer(modifier = Modifier.width(6.dp))

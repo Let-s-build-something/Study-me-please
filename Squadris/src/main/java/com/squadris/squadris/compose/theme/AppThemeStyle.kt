@@ -143,7 +143,7 @@ class AppThemeStyle: ThemeStyle {
         get() = TextStyle(
             color = LocalTheme.colors.secondary,
             fontSize = 16.sp,
-            fontWeight = FontWeight.Normal
+            fontWeight = FontWeight.Medium
         )
 
     override val menuItem: TextStyle

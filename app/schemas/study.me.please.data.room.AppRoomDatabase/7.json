@@ -1,8 +1,8 @@
 {
   "formatVersion": 1,
   "database": {
-    "version": 6,
-    "identityHash": "63c35d7eee641b00159c0fe82d17f95e",
+    "version": 7,
+    "identityHash": "fb8a8b3acd8af7c059c9b9ba7d727367",
     "entities": [
       {
         "tableName": "ROOM_COLLECTION_TABLE",
@@ -550,7 +550,7 @@
       },
       {
         "tableName": "ROOM_SUBJECT_TABLE",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`uid` TEXT NOT NULL, `bulletPoints` TEXT NOT NULL, `paragraphUidList` TEXT NOT NULL, `factUidList` TEXT NOT NULL, `name` TEXT NOT NULL, `collection_uid` TEXT NOT NULL, `date_created` INTEGER NOT NULL, `collapsedParagraphs` TEXT NOT NULL, PRIMARY KEY(`uid`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`uid` TEXT NOT NULL, `bulletPoints` TEXT NOT NULL, `paragraphUidList` TEXT NOT NULL, `factUidList` TEXT NOT NULL, `name` TEXT NOT NULL, `collection_uid` TEXT NOT NULL, `date_created` INTEGER NOT NULL, `collapsedParagraphs` TEXT NOT NULL, `firstVisibleItemIndex` INTEGER NOT NULL, `firstVisibleItemOffset` INTEGER NOT NULL, PRIMARY KEY(`uid`))",
         "fields": [
           {
             "fieldPath": "uid",
@@ -598,6 +598,18 @@
             "fieldPath": "collapsedParagraphs",
             "columnName": "collapsedParagraphs",
             "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "firstVisibleItemIndex",
+            "columnName": "firstVisibleItemIndex",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "firstVisibleItemOffset",
+            "columnName": "firstVisibleItemOffset",
+            "affinity": "INTEGER",
             "notNull": true
           }
         ],
@@ -690,7 +702,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '63c35d7eee641b00159c0fe82d17f95e')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'fb8a8b3acd8af7c059c9b9ba7d727367')"
     ]
   }
 }

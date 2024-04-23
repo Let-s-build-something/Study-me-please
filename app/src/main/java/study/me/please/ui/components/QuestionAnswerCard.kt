@@ -17,6 +17,8 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.FormatListBulleted
+import androidx.compose.material.icons.automirrored.outlined.ShortText
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Edit
@@ -169,7 +171,6 @@ private fun DataCard(
     ) {
         val (checkBox,
             imgRightAction,
-            txtAnswerHeader,
             txtAnswerContainer,
             txtExplanation,
             txtExplanationHeader,
@@ -247,9 +248,9 @@ private fun DataCard(
                     state = switchTypeState,
                     onItemCreation = { modifier, index, animatedColor ->
                         listOf(
-                            FactType.DEFINITION,
-                            FactType.BULLET_POINTS
-                        ).getOrNull(index)?.getIconImageVector()?.let { imageVector ->
+                            Icons.AutoMirrored.Outlined.ShortText,
+                            Icons.AutoMirrored.Outlined.FormatListBulleted
+                        ).getOrNull(index)?.let { imageVector ->
                             MinimalisticIcon(
                                 modifier = modifier,
                                 indication = null,

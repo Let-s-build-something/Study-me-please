@@ -1,6 +1,7 @@
 package study.me.please.ui.components
 
 import android.annotation.SuppressLint
+import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateContentSize
@@ -36,6 +37,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
@@ -54,13 +56,11 @@ import com.squadris.squadris.compose.theme.LocalTheme
 import com.squadris.squadris.compose.theme.StudyMeAppTheme
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import study.me.please.R
 import study.me.please.data.io.FactIO
 import study.me.please.data.io.FactType
 import study.me.please.data.io.LargePathAsset
-import study.me.please.data.io.subjects.CategoryIO
 import study.me.please.ui.collection.detail.questions.detail.INPUT_DELAYED_RESPONSE_MILLIS
 import study.me.please.ui.components.tab_switch.MultiChoiceSwitch
 import study.me.please.ui.components.tab_switch.TabSwitchState
@@ -90,43 +90,6 @@ fun FactCard(
                 requestDataSave = requestDataSave,
                 onClick = {
                     onClick()
-                }
-            )
-        }
-    }
-}
-
-/** Card with the option of editing data inside */
-@Composable
-fun FactCard(
-    modifier: Modifier = Modifier,
-    thenModifier: Modifier = Modifier,
-    state: InteractiveCardState = rememberInteractiveCardState(),
-    data: FactIO?,
-    isReadOnly: Boolean = false,
-    requestDataSave: (FactIO) -> Unit
-) {
-    Crossfade(targetState = data == null, label = "") { isShimmer ->
-        if(isShimmer) {
-            ShimmerLayout()
-        }else if(data != null) {
-            ContentLayout(
-                modifier = modifier,
-                thenModifier = thenModifier,
-                data = data,
-                isReadOnly = isReadOnly,
-                mode = state.mode.value,
-                requestDataSave = requestDataSave,
-                onClick = {
-                    when(state.mode.value) {
-                        InteractiveCardMode.CHECKING -> {
-                            state.isChecked.value = state.isChecked.value.not()
-                        }
-                        InteractiveCardMode.DATA_DISPLAY -> {
-                            state.mode.value = InteractiveCardMode.EDIT
-                        }
-                        else -> {}
-                    }
                 }
             )
         }
@@ -173,13 +136,12 @@ private fun DataCard(
     val inputScope = rememberCoroutineScope()
     val scope = rememberCoroutineScope()
     val focusManager = LocalFocusManager.current
-    val focusRequester = remember {
-        FocusRequester()
-    }
+    val focusRequester = remember(data.uid) { FocusRequester() }
+    val singleInputFocusRequester = remember(data.uid) { FocusRequester() }
 
-    val selectedFactType = remember(data) { mutableStateOf(data.type) }
+    val selectedFactType = remember(data.type) { mutableStateOf(data.type) }
     val switchTypeState = TabSwitchState(
-        selectedTabIndex = remember(data) { mutableIntStateOf(data.type.ordinal) },
+        selectedTabIndex = remember(data.type.ordinal) { mutableIntStateOf(data.type.ordinal) },
         tabs = arrayOfNulls<String?>(FactType.values().size).map { "" }.toMutableList(),
         onSelectionChange = { index ->
             FactType.values().getOrNull(index)?.let { factType ->
@@ -191,23 +153,24 @@ private fun DataCard(
         scrollState = rememberScrollState()
     )
 
-    val promptImage = remember(data) { mutableStateOf(data.promptImage) }
-    val listItems = remember { mutableStateListOf<String>() }
+    val promptImage = remember(data.promptImage) { mutableStateOf(data.promptImage) }
+    val listItems = remember(data.uid, data.type) {
+        mutableStateListOf(
+            *data.textList.ifEmpty { listOf("") }.toTypedArray()
+        )
+    }
 
     LaunchedEffect(mode) {
         if(mode == InteractiveCardMode.EDIT && data.shortKeyInformation.isBlank()) {
             focusRequester.requestFocus()
         }
     }
-    LaunchedEffect(selectedFactType.value) {
-        if(selectedFactType.value == FactType.BULLET_POINTS || selectedFactType.value == FactType.LIST) {
-            listItems.clear()
-            listItems.addAll(data.textList.ifEmpty { listOf("") })
-        }
-    }
     LaunchedEffect(listItems.size) {
-        data.textList = listItems.toList()
-        requestDataSave()
+        if(data.textList.size != listItems.size) {
+            data.textList = listItems.toList()
+            Log.d("kostka_test", "factCard listItems.size")
+            requestDataSave()
+        }
     }
 
     Column(
@@ -295,8 +258,12 @@ private fun DataCard(
                         EditFieldInput(
                             modifier = Modifier.fillMaxWidth(),
                             focusRequester = focusRequester,
-                            prefix = if(selectedFactType.value == FactType.QUOTE) { { QuoteIcon() } }else null,
-                            suffix = if(selectedFactType.value == FactType.QUOTE) { { QuoteIcon() } }else null,
+                            prefix = if(selectedFactType.value == FactType.QUOTE) {
+                                { QuoteIcon() }
+                            } else null,
+                            suffix = if(selectedFactType.value == FactType.QUOTE) {
+                                { QuoteIcon() }
+                            } else null,
                             value = data.shortKeyInformation,
                             hint = stringResource(selectedFactType.value.getShortHintStringRes()),
                             textStyle = TextStyle(
@@ -330,7 +297,7 @@ private fun DataCard(
                                             color = LocalTheme.colors.primary,
                                             fontStyle = FontStyle.Italic
                                         ),
-                                        maxLines = 2,
+                                        maxLines = if(isReadOnly) Int.MAX_VALUE else 2,
                                         overflow = TextOverflow.Ellipsis
                                     )
                                     QuoteIcon()
@@ -342,7 +309,7 @@ private fun DataCard(
                                         fontSize = 18.sp,
                                         color = LocalTheme.colors.primary
                                     ),
-                                    maxLines = if(isReadOnly) Int.MAX_VALUE else 2,
+                                    maxLines = if(isReadOnly) Int.MAX_VALUE else 3,
                                     overflow = TextOverflow.Ellipsis
                                 )
                             }
@@ -400,9 +367,8 @@ private fun DataCard(
         }
 
         Crossfade(
-            targetState = data.type == FactType.LIST || data.type == FactType.BULLET_POINTS,
-            modifier = Modifier
-                .animateContentSize(),
+            targetState = selectedFactType.value == FactType.LIST || selectedFactType.value == FactType.DEFINITION,
+            modifier = Modifier.animateContentSize(),
             label = "",
             animationSpec = tween(durationMillis = DEFAULT_ANIMATION_LENGTH_SHORT)
         ) { isListType ->
@@ -413,42 +379,97 @@ private fun DataCard(
                     val isIrremovable = listItems.size <= 1
 
                     listItems.forEachIndexed { index, listItem ->
-                        ListItemEditField(
-                            modifier = Modifier.padding(bottom = 2.dp),
-                            prefix = if(selectedFactType.value == FactType.BULLET_POINTS) {
-                                FactType.BULLET_POINT_PREFIX
-                            }else "${index.plus(1)}.\t\t",
-                            onBackspaceKey = {
-                                if(it.isEmpty() && isIrremovable.not()) {
-                                    if(index > 0) {
-                                        focusManager.moveFocus(FocusDirection.Up)
+                        Crossfade(
+                            modifier = Modifier.animateContentSize(),
+                            targetState = selectedFactType.value == FactType.DEFINITION && listItems.size == 1,
+                            label = "SingleEditToMultipleCrossfade"
+                        ) { isSingleItem ->
+                            if(isSingleItem) {
+                                Crossfade(
+                                    targetState = isInEdit,
+                                    label = "",
+                                    animationSpec = tween(durationMillis = DEFAULT_ANIMATION_LENGTH_SHORT)
+                                ) { inEditMode ->
+                                    if(inEditMode) {
+                                        EditFieldInput(
+                                            modifier = Modifier
+                                                .focusRequester(singleInputFocusRequester)
+                                                .fillMaxWidth(),
+                                            value = listItem,
+                                            hint = stringResource(selectedFactType.value.getLongHintStringRes() ?: R.string.facts_type_long_fact_header),
+                                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                                            keyboardActions = KeyboardActions(
+                                                onNext = {
+                                                    listItems.add("")
+                                                    scope.launch {
+                                                        delay(50)
+                                                        focusManager.moveFocus(FocusDirection.Down)
+                                                    }
+                                                }
+                                            ),
+                                            minLines = 3,
+                                            maxLines = 3
+                                        ) { output ->
+                                            listItems[0] = output
+                                            data.textList = listOf(output)
+                                            requestDataSave()
+                                        }
+                                    }else {
+                                        BulletPoint(
+                                            text = listItem,
+                                            textStyle = LocalTheme.styles.category,
+                                            maxLines = if(isReadOnly) Int.MAX_VALUE else 5,
+                                            overflow = TextOverflow.Ellipsis,
+                                            prefix = if(data.longInformation.isNotEmpty()) "-" else null
+                                        )
                                     }
-                                    listItems.removeAt(index)
                                 }
-                            },
-                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-                            keyboardActions = KeyboardActions(
-                                onNext = {
-                                    listItems.add(index + 1, "")
-                                    scope.launch {
-                                        delay(50)
-                                        focusManager.moveFocus(FocusDirection.Down)
+                            }else {
+                                ListItemEditField(
+                                    modifier = Modifier.padding(bottom = 2.dp),
+                                    prefix = if(selectedFactType.value == FactType.DEFINITION) {
+                                        FactType.BULLET_POINT_PREFIX
+                                    }else "${index.plus(1)}.\t\t",
+                                    onBackspaceKey = {
+                                        if(it.isEmpty() && isIrremovable.not()) {
+                                            if(index > 0) {
+                                                if(listItems.size == 2) {
+                                                    scope.launch {
+                                                        delay(100)
+                                                        singleInputFocusRequester.requestFocus()
+                                                    }
+                                                }else {
+                                                    focusManager.moveFocus(FocusDirection.Up)
+                                                }
+                                            }
+                                            listItems.removeAt(index)
+                                        }
+                                    },
+                                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                                    keyboardActions = KeyboardActions(
+                                        onNext = {
+                                            listItems.add(index + 1, "")
+                                            scope.launch {
+                                                delay(50)
+                                                focusManager.moveFocus(FocusDirection.Down)
+                                            }
+                                        }
+                                    ),
+                                    hint = stringResource(
+                                        if(selectedFactType.value == FactType.LIST) {
+                                            R.string.list_item_generic_hint
+                                        }else R.string.list_item_bulletin_hint
+                                    ),
+                                    value = listItem,
+                                    enabled = isInEdit,
+                                    onValueChange = { output ->
+                                        listItems[index] = output
+                                        data.textList = listItems.toList()
+                                        requestDataSave()
                                     }
-                                }
-                            ),
-                            hint = stringResource(
-                                if(selectedFactType.value == FactType.LIST) {
-                                    R.string.list_item_generic_hint
-                                }else R.string.list_item_bulletin_hint
-                            ),
-                            value = listItem,
-                            enabled = isInEdit,
-                            onValueChange = { output ->
-                                listItems[index] = output
-                                data.textList = listItems.toList()
-                                requestDataSave()
+                                )
                             }
-                        )
+                        }
                     }
                 }
             }else {
@@ -458,13 +479,12 @@ private fun DataCard(
                     animationSpec = tween(durationMillis = DEFAULT_ANIMATION_LENGTH_SHORT)
                 ) { inEditMode ->
                     if(inEditMode) {
-                        val hint = selectedFactType.value.getLongHintStringRes()
                         EditFieldInput(
                             modifier = Modifier.fillMaxWidth(),
                             value = data.longInformation,
-                            hint = if(hint != null) stringResource(hint) else "",
-                            minLines = 5,
-                            maxLines = 5
+                            hint = stringResource(selectedFactType.value.getLongHintStringRes() ?: R.string.facts_type_long_fact_header),
+                            minLines = 3,
+                            maxLines = 3
                         ) { output ->
                             data.longInformation = output
                             requestDataSave()
@@ -497,19 +517,6 @@ private fun QuoteIcon() {
         contentDescription = null,
         tint = LocalTheme.colors.brandMain
     )
-}
-
-/** Use case for categorizing facts */
-interface FactCardCategoryUseCase {
-
-    /** List of all current categories */
-    val categories: StateFlow<List<CategoryIO>?>
-
-    /** Requests for a new category */
-    fun requestAddNewCategory(category: CategoryIO)
-
-    /** Makes a request for all existing categories */
-    fun requestAllCategories()
 }
 
 @SuppressLint("UnrememberedMutableState")

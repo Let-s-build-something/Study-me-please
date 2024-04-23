@@ -1,6 +1,5 @@
 package study.me.please.ui.collection.detail.questions.detail
 
-import android.util.Log
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -34,13 +33,9 @@ class QuestionDetailViewModel @Inject constructor(
     /** state for scrollable collapsing layout above everything else */
     val collapsingLayoutState = CollapsingLayoutState()
 
-    override fun requestData(isSpecial: Boolean, isPullRefresh: Boolean) {
-        viewModelScope.launch {
-            if(isPullRefresh) setRefreshing(true)
-            (repository.getQuestionByUid(questionUid) ?: QuestionIO(uid = questionUid)).let { questionDetail ->
-                dataManager.questionDetail.value = questionDetail
-            }
-            if(isPullRefresh) setRefreshing(false)
+    override suspend fun onDataRequest(isSpecial: Boolean, isPullRefresh: Boolean) {
+        (repository.getQuestionByUid(questionUid) ?: QuestionIO(uid = questionUid)).let { questionDetail ->
+            dataManager.questionDetail.value = questionDetail
         }
     }
 

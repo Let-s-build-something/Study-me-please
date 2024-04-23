@@ -18,9 +18,6 @@ data class ParagraphIO(
     @PrimaryKey
     val uid: String = UUID.randomUUID().toString(),
 
-    /** By what category this object is identified */
-    var categoryUid: String? = null,
-
     /** Basic text information about this paragraph */
     var bulletPoints: MutableList<String> = mutableListOf(""),
 
@@ -29,6 +26,9 @@ data class ParagraphIO(
 
     /** list of fact unique identifiers */
     var factUidList: MutableList<String> = mutableListOf(),
+
+    /** Name of the paragraph */
+    var name: String = ""
 ): Serializable {
 
     /** Further categorized content */
@@ -42,10 +42,10 @@ data class ParagraphIO(
     /** Makes a full copy with a new UID */
     fun deepCopy() = ParagraphIO(
         uid = UUID.randomUUID().toString(),
-        categoryUid = categoryUid,
         bulletPoints = bulletPoints,
         paragraphUidList = paragraphUidList,
-        factUidList = factUidList
+        factUidList = factUidList,
+        name = name
     ).apply {
         paragraphs = this@ParagraphIO.paragraphs
         facts = this@ParagraphIO.facts
@@ -53,7 +53,7 @@ data class ParagraphIO(
 
     /** Whether this data can be taken seriously */
     suspend fun isSeriousDataPoint() = withContext(Dispatchers.Default) {
-        bulletPoints.any { it.isNotBlank() } && categoryUid.isNullOrEmpty().not()
+        bulletPoints.any { it.isNotBlank() } && name.isBlank().not()
     }
 
     /** attempts to remove a paragraph */
@@ -65,14 +65,16 @@ data class ParagraphIO(
 
     /** adds a paragraph */
     fun addParagraph(index: Int, paragraph: ParagraphIO) {
-        paragraphUidList.add(index, paragraph.uid)
-        paragraphs.add(index, paragraph)
+        val safeIndex = index.coerceIn(0, paragraphs.size)
+        paragraphUidList.add(safeIndex, paragraph.uid)
+        paragraphs.add(safeIndex, paragraph)
     }
 
     /** adds a fact */
     fun addFact(index: Int, fact: FactIO) {
-        factUidList.add(index, fact.uid)
-        facts.add(index, fact)
+        val safeIndex = index.coerceIn(0, facts.size)
+        factUidList.add(safeIndex, fact.uid)
+        facts.add(safeIndex, fact)
     }
 
     /** attempts to remove a fact */
@@ -86,30 +88,26 @@ data class ParagraphIO(
     val isEmpty: Boolean
         get() = bulletPoints.isEmpty() && paragraphs.isEmpty() && facts.isEmpty()
 
-    /** Locally saved category associated with this paragraph */
-    var localCategory: CategoryIO? = null
-
     /** Updates this object with new object */
     fun updateTO(newTO: ParagraphIO) {
-        categoryUid = newTO.categoryUid
         bulletPoints = newTO.bulletPoints
         paragraphUidList = newTO.paragraphUidList
         factUidList = newTO.factUidList
+        name = newTO.name
         paragraphs = newTO.paragraphs
         facts = newTO.facts
-        localCategory = newTO.localCategory
     }
 
     override fun toString(): String {
         return super.toString() +
                 "{" +
                 "uid: $uid," +
-                "categoryUid: $categoryUid," +
                 "bulletPoints: $bulletPoints," +
                 "paragraphs: $paragraphs," +
                 "paragraphUidList: $paragraphUidList," +
                 "factUidList: $factUidList" +
                 "facts: $facts" +
+                "name: $name" +
                 "}"
     }
 }

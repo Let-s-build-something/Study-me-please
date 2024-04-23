@@ -17,7 +17,7 @@ sealed class NavigationNotepadScreen<T>(
         data class ParagraphArgument(
 
             /** unique identifier for the paragraph to be displayed */
-            val paragraphUid: String,
+            val paragraphUid: String?,
 
             /** unique identifier for specific fact */
             val factUid: String = ""

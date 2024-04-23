@@ -204,6 +204,7 @@ fun PromptLayout(
                                     .padding(
                                         bottom = 6.dp
                                     ),
+                                prefix = if(promptList.size > 1) "\u2022" else null,
                                 text = prompt,
                                 textStyle = promptStyle
                             )
@@ -236,10 +237,10 @@ fun PromptLayout(
                         style = promptStyle,
                         maxLines = 100,
                         softWrap = true,
-                        linkStyle = if(isFinished.value) LocalTheme.styles.linkText.copy(
+                        linkStyle = LocalTheme.styles.linkText.copy(
                             fontSize = promptStyle.fontSize,
                             fontWeight = promptStyle.fontWeight
-                        ) else promptStyle,
+                        ),
                         onLinkClick = { uri ->
                             if(isFinished.value) {
                                 navController?.handleDeepLink(

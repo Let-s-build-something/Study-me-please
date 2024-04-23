@@ -21,9 +21,6 @@ data class UnitIO(
     @PrimaryKey
     val uid: String = UUID.randomUUID().toString(),
 
-    /** list of all categories by which this subject is categorized */
-    var categoryUids: List<String> = listOf(),
-
     /**
      * Text-based points ideally specific to this subject,
      * non-specificity should be handled by quantity
@@ -50,7 +47,13 @@ data class UnitIO(
     val dateCreated: Long = DateUtils.now.timeInMillis,
 
     /** list of all collapsed paragraphs - they are expanded by default */
-    var collapsedParagraphs: List<String> = listOf()
+    var collapsedParagraphs: List<String> = listOf(),
+
+    /** last visible item within scroll field */
+    var firstVisibleItemIndex: Int = 0,
+
+    /** last Y direction scroll offset from [firstVisibleItemIndex] */
+    var firstVisibleItemOffset: Int = 0
 ): Serializable {
 
     /** Categorized content */
@@ -70,14 +73,16 @@ data class UnitIO(
 
     /** adds a paragraph */
     fun addParagraph(index: Int, paragraph: ParagraphIO) {
-        paragraphUidList.add(index, paragraph.uid)
-        paragraphs.add(index, paragraph)
+        val safeIndex = index.coerceIn(0, paragraphs.size)
+        paragraphUidList.add(safeIndex, paragraph.uid)
+        paragraphs.add(safeIndex, paragraph)
     }
 
     /** adds a fact */
     fun addFact(index: Int, fact: FactIO) {
-        factUidList.add(index, fact.uid)
-        facts.add(index, fact)
+        val safeIndex = index.coerceIn(0, facts.size)
+        factUidList.add(safeIndex, fact.uid)
+        facts.add(safeIndex, fact)
     }
 
     /** attempts to remove a fact */
@@ -94,7 +99,6 @@ data class UnitIO(
 
     /** Updates this object with new subject [subject] */
     fun updateTO(subject: UnitIO) {
-        this.categoryUids = subject.categoryUids
         this.bulletPoints = subject.bulletPoints
         this.paragraphs.clear()
         this.facts.clear()
@@ -110,7 +114,6 @@ data class UnitIO(
         return super.toString() +
                 "{" +
                 "uid: $uid" +
-                "categoryUids: $categoryUids," +
                 "bulletPoints: $bulletPoints," +
                 "paragraphUidList: $paragraphUidList," +
                 "factUidList: $factUidList," +

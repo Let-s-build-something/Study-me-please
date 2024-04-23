@@ -1,6 +1,5 @@
 package study.me.please.ui.collection.detail
 
-import android.content.Context
 import androidx.lifecycle.viewModelScope
 import com.squadris.squadris.utils.DateUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -17,16 +16,11 @@ import study.me.please.base.GeneralClipBoard
 import study.me.please.data.io.CollectionIO
 import study.me.please.data.io.FactIO
 import study.me.please.data.io.FactType
-import study.me.please.data.io.ImportSourceType
-import study.me.please.data.io.ImportedSource
-import study.me.please.data.io.QuestionAnswerIO
 import study.me.please.data.io.QuestionIO
-import study.me.please.data.io.subjects.CategoryIO
 import study.me.please.ui.collection.RefreshableViewModel
 import study.me.please.ui.collection.detail.facts.FactsFilter
 import study.me.please.ui.collection.detail.questions.QuestionsFilter
 import study.me.please.ui.collection.detail.questions.SortByType
-import study.me.please.ui.components.FactCardCategoryUseCase
 import java.util.UUID
 import javax.inject.Inject
 
@@ -35,24 +29,10 @@ class CollectionDetailViewModel @Inject constructor(
     private val repository: CollectionDetailRepository,
     private val dataManager: CollectionDetailDataManager,
     val clipBoard: GeneralClipBoard
-): BaseViewModel(), RefreshableViewModel, FactCardCategoryUseCase {
-
-    companion object {
-        /** The minimum amount of facts required to make a question - 1 prompt 2 answers */
-        private const val QUESTION_GENERATION_MINIMUM_FACTS = 3
-
-        /** The maximum amount of answers in a generated question - 1 prompt 4 answers */
-        private const val QUESTION_GENERATION_MAXIMUM_ANSWERS = 4
-    }
+): BaseViewModel(), RefreshableViewModel {
 
     override val isRefreshing: MutableStateFlow<Boolean> = MutableStateFlow(false)
     override var lastRefreshTimeMillis: Long = 0L
-
-    override val categories = dataManager.categories.asStateFlow()
-        get() {
-            if(field.value == null) requestAllCategories()
-            return field
-        }
 
     /** response from question generation */
     var questionGenerationResponse = MutableSharedFlow<QuestionGenerationResponse>()
@@ -104,14 +84,10 @@ class CollectionDetailViewModel @Inject constructor(
     /** currently displayed colection identifier */
     var collectionUid: String = ""
 
-    override fun requestData(isSpecial: Boolean, isPullRefresh: Boolean) {
-        viewModelScope.launch {
-            if(isPullRefresh) setRefreshing(true)
-            repository.getCollectionByUid(collectionUid)?.let { collectionDetail ->
-                dataManager.collectionDetail.value = collectionDetail
-                requestCachedQuestions(questionUidList = collectionDetail.questionUidList.toList())
-            }
-            if(isPullRefresh) setRefreshing(false)
+    override suspend fun onDataRequest(isSpecial: Boolean, isPullRefresh: Boolean) {
+        repository.getCollectionByUid(collectionUid)?.let { collectionDetail ->
+            dataManager.collectionDetail.value = collectionDetail
+            requestCachedQuestions(questionUidList = collectionDetail.questionUidList.toList())
         }
     }
 
@@ -123,22 +99,6 @@ class CollectionDetailViewModel @Inject constructor(
                     dateModified = DateUtils.now.timeInMillis
                     if(collection.dateCreated == null) dateCreated = DateUtils.now.timeInMillis
                 })
-            }
-        }
-    }
-
-    override fun requestAllCategories() {
-        viewModelScope.launch {
-            dataManager.categories.value = repository.getAllCategories()
-        }
-    }
-
-    override fun requestAddNewCategory(category: CategoryIO) {
-        viewModelScope.launch {
-            dataManager.categories.update { previousCategories ->
-                previousCategories?.toMutableList()?.apply {
-                    add(category)
-                }
             }
         }
     }
@@ -157,7 +117,7 @@ class CollectionDetailViewModel @Inject constructor(
         }
     }
 
-    /** Generates questions from facts */
+    /** Generates questions from facts *//*
     fun requestQuestionGeneration(
         context: Context,
         selectedFactUids: List<String>,
@@ -189,7 +149,7 @@ class CollectionDetailViewModel @Inject constructor(
 
                 if(factsToGenerateTyped.isNotEmpty()) {
                     if(factsToShuffle.size >= QUESTION_GENERATION_MINIMUM_FACTS) {
-                        generateQuestions(
+                        *//*generateQuestions(
                             factsToShuffle = factsToShuffle,
                             factsToGenerate = factsToGenerateTyped,
                             context = context
@@ -198,20 +158,20 @@ class CollectionDetailViewModel @Inject constructor(
                             if(res.isNotEmpty()) {
                                 newQuestions.addAll(0, res)
                             }else leftOverFacts.addAll(0, factsToGenerateTyped)
-                        }
+                        }*//*
                     }else {
                         leftOverFacts.addAll(0, factsToGenerateTyped)
                     }
                 }
             }
-            newQuestions.addAll(0,
+            *//*newQuestions.addAll(0,
                 generateQuestions(
                     factsToGenerate = leftOverFacts,
                     factsToShuffle = facts,
                     context = context,
                     isLeftOvers = true
                 )
-            )
+            )*//*
             questionGenerationResponse.emit(
                 if(newQuestions.size > 0) {
                     QuestionGenerationResponse(
@@ -235,9 +195,9 @@ class CollectionDetailViewModel @Inject constructor(
                 newQuestions.plus(it)
             }
         }
-    }
+    }*/
 
-    private suspend fun generateQuestions(
+    /*private suspend fun generateQuestions(
         context: Context,
         isLeftOvers: Boolean = false,
         factsToGenerate: List<FactIO>,
@@ -401,10 +361,10 @@ class CollectionDetailViewModel @Inject constructor(
             }
             questions
         }
-    }
+    }*/
 
     /** Requests for a question data save */
-    fun requestQuestionSave(question: QuestionIO) {
+    private fun requestQuestionSave(question: QuestionIO) {
         viewModelScope.launch(Dispatchers.Default) {
             repository.saveQuestion(question)
         }
@@ -444,7 +404,7 @@ class CollectionDetailViewModel @Inject constructor(
             val newFact = if(isEmpty && factsFilter.value.isEmpty().not()) {
                 FactIO(
                     shortKeyInformation = factsFilter.value.textFilter,
-                    type = factsFilter.value.types.firstOrNull() ?: FactType.BULLET_POINTS
+                    type = factsFilter.value.types.firstOrNull() ?: FactType.DEFINITION
                 )
             }else FactIO()
             dataManager.collectionFacts.update {

@@ -13,6 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.IntOffset
@@ -38,12 +39,14 @@ fun PullRefreshScreen(
     onBackPressed: () -> Boolean = { true },
     actionIcons: (@Composable RowScope.() -> Unit)? = null,
     appBarVisible: Boolean = true,
+    onNavigationIconClick: (() -> Unit)? = null,
     containerColor: Color = Color.Transparent,
     contentColor: Color = Color.Transparent,
     floatingActionButtonPosition: FabPosition = FabPosition.End,
     floatingActionButton: @Composable () -> Unit = {},
     content: @Composable (PaddingValues) -> Unit,
 ) {
+    val refreshScope = rememberCoroutineScope()
     val isTablet = LocalIsTablet.current
     val pullRefreshSize = getDefaultPullRefreshSize(isTablet = isTablet)
     val indicatorOffset = remember { mutableStateOf(0.dp) }
@@ -53,7 +56,7 @@ fun PullRefreshScreen(
     val pullRefreshState = rememberPullRefreshState(
         refreshing = isRefreshing.value,
         onRefresh = {
-            viewModel.requestData(isSpecial = true, isPullRefresh = true)
+            viewModel.requestData(scope = refreshScope, isSpecial = true, isPullRefresh = true)
         },
         refreshingOffset = pullRefreshSize,
         refreshThreshold = pullRefreshSize
@@ -66,6 +69,7 @@ fun PullRefreshScreen(
         subtitle = subtitle,
         onBackPressed = onBackPressed,
         actionIcons = actionIcons,
+        onNavigationIconClick = onNavigationIconClick,
         appBarVisible = appBarVisible,
         containerColor = containerColor,
         contentColor = contentColor,

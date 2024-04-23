@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.ripple.rememberRipple
@@ -26,7 +27,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -44,6 +44,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -53,7 +54,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import study.me.please.R
-import study.me.please.data.io.subjects.CategoryIO
 
 /**
  * Component for finding item within provided [values]
@@ -63,15 +63,13 @@ import study.me.please.data.io.subjects.CategoryIO
 @Composable
 fun EditFieldItemPicker(
     modifier: Modifier = Modifier,
-    values: List<CategoryIO>,
+    values: Map<String, Int>,
     defaultValue: String,
-    emptyContent: (@Composable (inputValue: String) -> Unit)? = null,
-    onValueChosen: (category: CategoryIO) -> Unit,
     onFocusLost: () -> Unit = {},
+    onValueChanged: (String) -> Unit,
     hint: String,
     enabled: Boolean = true,
-    textStyle: TextStyle = LocalTheme.styles.subheading,
-    onEmptyStateClicked: (inputValue: String) -> Unit = {}
+    textStyle: TextStyle = LocalTheme.styles.subheading
 ) {
     val listShape = RoundedCornerShape(
         topStart = 0.dp,
@@ -86,17 +84,7 @@ fun EditFieldItemPicker(
 
     var inputValue by remember(defaultValue) { mutableStateOf(defaultValue) }
     var isFocused by remember { mutableStateOf(false) }
-    val filteredValues = remember { mutableStateOf(values) }
-    val isValid = remember {
-        derivedStateOf {
-            inputValue.isNotEmpty() && values.none { it.name.lowercase() == inputValue.lowercase() }
-        }
-    }
-    val showAddMore = remember {
-        derivedStateOf {
-            filteredValues.value.isEmpty().not() && isValid.value
-        }
-    }
+    val filteredValues = remember { mutableStateOf(values.keys.toList()) }
 
     val inputShape = if(isFocused) {
         RoundedCornerShape(
@@ -107,19 +95,32 @@ fun EditFieldItemPicker(
         )
     }else LocalTheme.shapes.componentShape
 
+    val normalizer = remember { Normalizer2.getNFDInstance() }
+
     LaunchedEffect(inputValue) {
         coroutineScope.launch {
             withContext(Dispatchers.Default) {
-                filteredValues.value = values.filter { value ->
-                    value.name != defaultValue
-                            && Normalizer2.getNFDInstance().normalize(
-                        value.name.filter { it.isWhitespace().not() }
-                    ).lowercase().contains(
-                        Normalizer2.getNFDInstance().normalize(
-                            inputValue.filter { it.isWhitespace().not() }
-                        ).lowercase()
-                    )
-                }
+                /*filteredValues.value = values.filter { (key, _) ->
+                    key != defaultValue && normalizer
+                        .normalize(key.filterNot(Char::isWhitespace)).lowercase().contains(
+                            normalizer.normalize(inputValue.filterNot(Char::isWhitespace)).lowercase()
+                        )
+                }.toList()
+                    .sortedByDescending { it.second }
+                    .take(4)
+                    .map { it.first }*/
+
+                filteredValues.value = values.asSequence()
+                    .filter {
+                        it.key != inputValue && normalizer
+                            .normalize(it.key.filterNot(Char::isWhitespace)).lowercase().contains(
+                                normalizer.normalize(inputValue.filterNot(Char::isWhitespace)).lowercase()
+                            )
+                    }
+                    .sortedByDescending { it.value }
+                    .take(4)
+                    .map { it.key }
+                    .toList()
             }
         }
     }
@@ -147,20 +148,24 @@ fun EditFieldItemPicker(
                     isFocused = state.hasFocus
                 }
                 .onKeyEvent {
-                    when(it.key) {
+                    when (it.key) {
                         Key.Tab -> {
                             focusManager.moveFocus(FocusDirection.Next)
                         }
+
                         Key.DirectionUp -> {
                             focusManager.moveFocus(FocusDirection.Up)
                         }
+
                         Key.DirectionDown -> {
                             focusManager.moveFocus(FocusDirection.Down)
                         }
+
                         else -> false
                     }
                 },
             shape = inputShape,
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
             value = inputValue,
             textStyle = textStyle,
             isUnfocusedTransparent = true,
@@ -173,7 +178,7 @@ fun EditFieldItemPicker(
                     lineCount.value = result.lineCount.coerceAtMost(3)
                 }
             },
-            hint = hint,
+            hint = if(enabled) hint else "",
             enabled = enabled,
             // only if needed, so it doesn't get pushed up
             maxLines = 3,
@@ -181,9 +186,10 @@ fun EditFieldItemPicker(
             paddingValues = PaddingValues(horizontal = 8.dp),
             onValueChange = { output ->
                 inputValue = output
+                onValueChanged(output)
             }
         )
-        //TODO richtooltip
+        //TODO richtooltip?
         AnimatedVisibility(visible = isFocused && inputValue.isNotEmpty()) {
             LazyColumn(
                 modifier = Modifier
@@ -194,16 +200,7 @@ fun EditFieldItemPicker(
                     .fillMaxWidth(0.5f)
                     .heightIn(max = localConfiguration.screenHeightDp.div(4).dp)
             ) {
-                item {
-                    AnimatedVisibility(visible = showAddMore.value) {
-                        AddMoreRow(
-                            onClick = {
-                                onEmptyStateClicked(inputValue)
-                            }
-                        )
-                    }
-                }
-                itemsIndexed(filteredValues.value) { index, category ->
+                itemsIndexed(filteredValues.value) { index, name ->
                     Column {
                         if(index == 0) {
                             HorizontalDivider(
@@ -219,13 +216,13 @@ fun EditFieldItemPicker(
                                     indication = rememberRipple(bounded = true),
                                     interactionSource = remember { MutableInteractionSource() }
                                 ) {
+                                    inputValue = name
                                     focusManager.clearFocus()
-                                    onValueChosen(category)
-                                    inputValue = category.name
+                                    onValueChanged(name)
                                 }
                                 .padding(12.dp)
                                 .padding(start = 4.dp),
-                            text = category.name,
+                            text = name,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                             style = LocalTheme.styles.category
@@ -237,19 +234,6 @@ fun EditFieldItemPicker(
                                 color = LocalTheme.colors.secondary
                             )
                         }
-                    }
-                }
-                item {
-                    AnimatedVisibility(
-                        visible = filteredValues.value.isEmpty() && isValid.value
-                    ) {
-                        if(emptyContent == null) {
-                            AddMoreRow(
-                                onClick = {
-                                    onEmptyStateClicked(inputValue)
-                                }
-                            )
-                        }else emptyContent(inputValue)
                     }
                 }
             }

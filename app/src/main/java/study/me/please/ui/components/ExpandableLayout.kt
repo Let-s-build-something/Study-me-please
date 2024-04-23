@@ -47,6 +47,7 @@ fun ExpandableContent(
     textStyle: TextStyle = LocalTheme.styles.menuItem,
     isExpanded: Boolean = false,
     collapsedPadding: Dp = 0.dp,
+    arrowModifier: Modifier = Modifier,
     shape: Shape = RectangleShape,
     collapsedContent: (@Composable () -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit
@@ -67,7 +68,7 @@ fun ExpandableContent(
             containerColor = containerColor,
             contentColor = contentColor,
             textStyle = textStyle,
-            arrowModifier = Modifier.graphicsLayer {
+            arrowModifier = arrowModifier.graphicsLayer {
                 rotationZ = arrowDegreeRotation.value
             },
             shape = shape,

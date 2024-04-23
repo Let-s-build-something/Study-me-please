@@ -18,7 +18,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.draganddrop.DragAndDropEvent
@@ -59,7 +58,7 @@ fun DropTargetContainer(
     isEnabled: Boolean = true,
     dragAndDropTarget: MutableState<String>,
     type: ElementType,
-    collapsedParagraphs: SnapshotStateList<String>,
+    collapsedParagraphs: List<String>,
     onDropped: () -> Unit,
     onCanceled: () -> Unit,
     identifier: String,
@@ -77,7 +76,7 @@ fun DropTargetContainer(
                 cancelableScope.launch {
                     delay(1000)
                     if(collapsedParagraphs.contains(identifier)) {
-                        collapsedParagraphs.remove(identifier)
+                        //TODO collapsedParagraphs.remove(identifier)
                     }
                 }
             }
@@ -150,7 +149,7 @@ fun DropTargetContainer(
                     .background(
                         color = LocalTheme.colors.brandMain,
                     )
-                    //.then(enterModifier)
+                    .then(enterModifier)
             )
         }
     }

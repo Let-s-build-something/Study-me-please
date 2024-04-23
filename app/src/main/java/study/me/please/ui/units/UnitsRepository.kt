@@ -13,43 +13,43 @@ import study.me.please.data.room.CategoryDao
 import study.me.please.data.room.CollectionDao
 import study.me.please.data.room.FactDao
 import study.me.please.data.room.QuestionDao
-import study.me.please.data.room.SubjectDao
+import study.me.please.data.room.UnitDao
 import javax.inject.Inject
 
 /** Proxy for calling network end points */
 class UnitsRepository @Inject constructor(
-    private val subjectsDao: SubjectDao,
+    private val unitDao: UnitDao,
     private val categoryDao: CategoryDao,
     private val factsDao: FactDao,
     private val collectionDao: CollectionDao,
     private val questionDao: QuestionDao
 ) {
 
-    /** Returns list of subjects based off of a collection uid [collectionUid] */
-    suspend fun getSubjectsByCollection(collectionUid: String): List<UnitIO>? {
+    /** Returns list of units based off of a collection uid [collectionUid] */
+    suspend fun getUnitsByCollection(collectionUid: String): List<UnitIO>? {
         return withContext(Dispatchers.IO) {
-            subjectsDao.getSubjectsByCollectionUid(collectionUid)
+            unitDao.getSubjectsByCollectionUid(collectionUid)
         }
     }
 
-    /** Creates a new record of a subject or replaces it if it already exists */
-    suspend fun updateUnit(subject: UnitIO) {
+    /** Creates a new record of a unit or replaces it if it already exists */
+    suspend fun updateUnit(unit: UnitIO) {
         return withContext(Dispatchers.IO) {
-            subjectsDao.insertUnit(subject)
+            unitDao.insertUnit(unit)
         }
     }
 
     /** Creates a new record of a paragraph or replaces it if it already exists */
     suspend fun updateParagraph(paragraph: ParagraphIO) {
         return withContext(Dispatchers.IO) {
-            subjectsDao.insertParagraph(paragraph)
+            unitDao.insertParagraph(paragraph)
         }
     }
 
     /** Removes a paragraph from the DB */
     suspend fun deleteParagraph(paragraphUid: String) {
         return withContext(Dispatchers.IO) {
-            subjectsDao.deleteParagraph(paragraphUid)
+            unitDao.deleteParagraph(paragraphUid)
         }
     }
 
@@ -63,7 +63,7 @@ class UnitsRepository @Inject constructor(
     /** Deletes units from the DB */
     suspend fun deleteUnits(unitUidList: List<String>) {
         return withContext(Dispatchers.IO) {
-            subjectsDao.deleteUnits(unitUidList = unitUidList)
+            unitDao.deleteUnits(unitUidList = unitUidList)
         }
     }
 
@@ -77,7 +77,7 @@ class UnitsRepository @Inject constructor(
     /** Returns all categories similiar to the given [query] */
     suspend fun getParagraphsBy(uidList: List<String>): List<ParagraphIO>? {
         return withContext(Dispatchers.IO) {
-            subjectsDao.getParagraphsByUidList(uidList)
+            unitDao.getParagraphsByUidList(uidList)
         }
     }
 
@@ -95,10 +95,10 @@ class UnitsRepository @Inject constructor(
         }
     }
 
-    /** Returns all categories */
-    suspend fun getAllCategories(): List<CategoryIO>? {
+    /** Returns all paragraphs */
+    suspend fun getAllParagraphs(): List<ParagraphIO>? {
         return withContext(Dispatchers.IO) {
-            categoryDao.getAllCategories()
+            unitDao.getParagraphs()
         }
     }
 

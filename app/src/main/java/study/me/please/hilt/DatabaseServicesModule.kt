@@ -11,9 +11,6 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.android.scopes.ActivityRetainedScoped
 import study.me.please.data.room.AppDatabaseConverter
 import study.me.please.data.room.AppRoomDatabase
-import study.me.please.data.room.AppRoomDatabase.Companion.MIGRATION_3_4
-import study.me.please.data.room.AppRoomDatabase.Companion.MIGRATION_4_5
-import study.me.please.data.room.AppRoomDatabase.Companion.MIGRATION_5_6
 
 /** Main module provider for accessing interfaces for local Room database */
 @Module
@@ -50,11 +47,15 @@ object DatabaseServicesModule {
 
     /** Interface for accessing preferences data in local Room database */
     @Provides
-    fun provideSubjectsDao(appDatabase: AppRoomDatabase) = appDatabase.subjectDbDao()
+    fun provideSubjectsDao(appDatabase: AppRoomDatabase) = appDatabase.unitDao()
 
     /** Interface for accessing preferences data in local Room database */
     @Provides
     fun provideCategoryDao(appDatabase: AppRoomDatabase) = appDatabase.categoryDbDao()
+
+    /** Interface for accessing preferences data in local Room database */
+    @Provides
+    fun provideClipBoardDao(appDatabase: AppRoomDatabase) = appDatabase.clipboardDao()
 
     /** Local main Room database */
     @ActivityRetainedScoped
@@ -67,9 +68,6 @@ object DatabaseServicesModule {
         AppRoomDatabase::class.java,
         AppRoomDatabase.ROOM_DATABASE_NAME
     ).addTypeConverter(AppDatabaseConverter(gson))
-        .addMigrations(MIGRATION_3_4)
-        .addMigrations(MIGRATION_4_5)
-        .addMigrations(MIGRATION_5_6)
         .build()
 
     /** Singleton instance of a Gson converter, since it's a costly initiated, it's faster this way */

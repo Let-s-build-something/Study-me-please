@@ -9,11 +9,15 @@ import study.me.please.data.io.subjects.UnitIO
 
 /** Interface for communication with local Room database */
 @Dao
-interface SubjectDao {
+interface UnitDao {
 
     /** Returns a list of subjects based on their collection identification [collectionUid] */
     @Query("SELECT * FROM ${AppRoomDatabase.ROOM_UNIT_TABLE} WHERE collection_uid == :collectionUid ORDER BY date_created ASC")
     suspend fun getSubjectsByCollectionUid(collectionUid: String): List<UnitIO>?
+
+    /** returns all paragraphs */
+    @Query("SELECT * FROM ${AppRoomDatabase.ROOM_PARAGRAPH_TABLE}")
+    suspend fun getParagraphs(): List<ParagraphIO>?
 
     /** returns all paragraph that are contained in given list */
     @Query("SELECT * FROM ${AppRoomDatabase.ROOM_PARAGRAPH_TABLE} WHERE uid IN (:uidList)")

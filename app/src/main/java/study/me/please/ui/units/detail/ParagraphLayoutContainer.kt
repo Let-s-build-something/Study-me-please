@@ -1,5 +1,7 @@
 package study.me.please.ui.units.detail
 
+import androidx.activity.OnBackPressedDispatcher
+import androidx.activity.OnBackPressedDispatcherOwner
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
@@ -10,6 +12,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.KeyboardReturn
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -17,7 +20,9 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.Velocity
+import androidx.lifecycle.Lifecycle
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
 import com.squadris.squadris.compose.components.MinimalisticIcon
@@ -99,18 +104,25 @@ fun ParagraphLayoutContainer(
                 }
             } to CollapsingBehavior.ALWAYS,
             @Composable {
-                NavHost(
-                    modifier = Modifier.background(color = LocalTheme.colors.backgroundLight),
-                    navController = navController,
-                    startDestination = NavigationNotepadScreen.Paragraph.route
+                CompositionLocalProvider(
+                    androidx.activity.compose.LocalOnBackPressedDispatcherOwner provides object: OnBackPressedDispatcherOwner {
+                        override val lifecycle: Lifecycle = LocalLifecycleOwner.current.lifecycle
+                        override val onBackPressedDispatcher: OnBackPressedDispatcher = OnBackPressedDispatcher()
+                    }
                 ) {
-                    composableNode(NavigationNotepadScreen.Paragraph) { _, argument ->
-                        ParagraphLayout(
-                            paragraphUid = argument?.paragraphUid ?: currentImportedSource.value?.sourceUid,
-                            factUid = if(currentImportedSource.value?.type == ImportSourceType.FACT) {
-                                currentImportedSource.value?.sourceUid
-                            }else null
-                        )
+                    NavHost(
+                        modifier = Modifier.background(color = LocalTheme.colors.backgroundLight),
+                        navController = navController,
+                        startDestination = NavigationNotepadScreen.Paragraph.route
+                    ) {
+                        composableNode(NavigationNotepadScreen.Paragraph) { _, argument ->
+                            ParagraphLayout(
+                                paragraphUid = argument?.paragraphUid ?: currentImportedSource.value?.sourceUid,
+                                factUid = if(currentImportedSource.value?.type == ImportSourceType.FACT) {
+                                    currentImportedSource.value?.sourceUid
+                                }else null
+                            )
+                        }
                     }
                 }
 

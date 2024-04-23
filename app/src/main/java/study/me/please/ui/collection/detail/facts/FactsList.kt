@@ -2,8 +2,6 @@ package study.me.please.ui.collection.detail.facts
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.LinearOutSlowInEasing
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -12,7 +10,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -42,7 +39,6 @@ import androidx.constraintlayout.compose.Dimension
 import com.squadris.squadris.compose.components.ChipState
 import com.squadris.squadris.compose.components.CustomChipGroup
 import com.squadris.squadris.compose.components.CustomChipType
-import com.squadris.squadris.compose.components.DEFAULT_ANIMATION_LENGTH_SHORT
 import com.squadris.squadris.compose.components.rememberCustomChipGroupState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancelChildren
@@ -59,7 +55,6 @@ import study.me.please.ui.collection.detail.questions.detail.INPUT_DELAYED_RESPO
 import study.me.please.ui.components.BasicAlertDialog
 import study.me.please.ui.components.BrandHeaderButton
 import study.me.please.ui.components.ButtonState
-import study.me.please.ui.components.FactCard
 import study.me.please.ui.components.InteractiveCardMode
 import study.me.please.ui.components.OptionsLayout
 import study.me.please.ui.components.ScrollBarProgressIndicator
@@ -213,11 +208,11 @@ fun FactsList(
         override fun onGenerateQuestionsRequest() {
             if(selectedFactUids.size > 0) {
                 coroutineScope.launch {
-                    viewModel.requestQuestionGeneration(
+                    /*viewModel.requestQuestionGeneration(
                         context = context,
                         selectedFactUids = selectedFactUids,
                         facts = facts.value
-                    )
+                    )*/
                     delay(300)
                     stopChecking()
                 }
@@ -389,21 +384,6 @@ fun FactsList(
                 facts.value,
                 key = { _, fact -> fact.uid }
             ) { index, fact ->
-                FactCard(
-                    modifier = Modifier
-                        .padding(bottom = 6.dp)
-                        .animateItemPlacement(
-                            tween(
-                                durationMillis = DEFAULT_ANIMATION_LENGTH_SHORT,
-                                easing = LinearOutSlowInEasing
-                            )
-                        ),
-                    data = fact,
-                    state = (interactiveStates.getOrNull(index) ?: rememberInteractiveCardState()),
-                    requestDataSave = {
-                        viewModel.requestFactSave(it)
-                    }
-                )
             }
         }
     }

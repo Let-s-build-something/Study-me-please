@@ -51,34 +51,28 @@ class SessionDetailViewModel @Inject constructor(
     var collectionUidList: List<String> = listOf()
     var questionUidList: List<String> = listOf()
 
-    override fun requestData(isSpecial: Boolean, isPullRefresh: Boolean) {
-        viewModelScope.launch {
-            if(isPullRefresh) setRefreshing(true)
-            viewModelScope.launch {
-                if(sessionUid.isNullOrEmpty()) {
-                    if(dataManager.session.value == null) {
-                        requestQuestions(questionUidList)
-                        requestCollections(collectionUidList)
+    override suspend fun onDataRequest(isSpecial: Boolean, isPullRefresh: Boolean) {
+        if(sessionUid.isNullOrEmpty()) {
+            if(dataManager.session.value == null) {
+                requestQuestions(questionUidList)
+                requestCollections(collectionUidList)
 
-                        val collections = dataManager.collections.value.orEmpty()
-                        val componentName = if(collections.size == 1) {
-                            collections.firstOrNull()?.name ?: ""
-                        }else ""
+                val collections = dataManager.collections.value.orEmpty()
+                val componentName = if(collections.size == 1) {
+                    collections.firstOrNull()?.name ?: ""
+                }else ""
 
-                        dataManager.session.value = SessionIO(
-                            name = "$defaultName $componentName",
-                            collectionUidList = collectionUidList.toMutableSet(),
-                            questionUidList = questionUidList.toMutableSet()
-                        )
-                        saveSessionDetail()
-                    }
-                }else {
-                    dataManager.session.value = repository.getSessionDetail(sessionUid ?: "")?.also {
-                        requestCollections(it.collectionUidList.toList())
-                    }
-                }
+                dataManager.session.value = SessionIO(
+                    name = "$defaultName $componentName",
+                    collectionUidList = collectionUidList.toMutableSet(),
+                    questionUidList = questionUidList.toMutableSet()
+                )
+                saveSessionDetail()
             }
-            if(isPullRefresh) setRefreshing(false)
+        }else {
+            dataManager.session.value = repository.getSessionDetail(sessionUid ?: "")?.also {
+                requestCollections(it.collectionUidList.toList())
+            }
         }
     }
 

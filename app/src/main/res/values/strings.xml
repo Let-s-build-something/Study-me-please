@@ -48,8 +48,13 @@
     <string name="questions_list_chip_has_image">has image</string>
     <string name="questions_list_chip_is_invalid">is invalid</string>
 
-    <string name="subjects_button_generate">Generate questions</string>
-    <string name="subjects_delete_dialog_title">Unit deletion</string>
+    <string name="units_button_generate_questions">Generate questions</string>
+    <string name="units_button_generate">Generate</string>
+    <string name="units_generate_explanation">
+        You can automagically generate questions from your notes and then start an examination,
+        which will use the generated questions.
+    </string>
+    <string name="units_delete_dialog_title">Unit deletion</string>
     <string name="units_delete_dialog_content">
         You\'ve spent time on this, are you sure you want permanently delete %1$d units?
         \nType in "permanently delete" to confirm.
@@ -64,7 +69,7 @@
     <string name="subject_add_bullet_point">Bullet point</string>
     <string name="subject_add_fact">Fact</string>
     <string name="subject_add_paragraph">Paragraph</string>
-    <string name="subject_categorize_paragraph">identify Paragraph</string>
+    <string name="subject_categorize_paragraph">paragraph name</string>
     <string name="edit_field_item_picked_create">Create new item</string>
     <string name="subject_paragraph_section_heading">Paragraphs</string>
     <string name="subject_facts_section_heading">Facts</string>
@@ -153,6 +158,12 @@
     <string name="generic_delete_dialog_title">Deletion</string>
     <string name="generic_delete_dialog_description">
         You\'ve spent time on this, are you sure you want permanently delete it?
+    </string>
+
+    <string name="dialog_clear_clipboard_title">Clear clipboard</string>
+    <string name="dialog_clear_clipboard_content">
+        This will clear all copied and archived items from the clipboard.
+        \nAre you sure?
     </string>
 
     <string name="session_launcher_new">New examination. Play time!</string>
@@ -324,4 +335,5 @@
     <string name="accessibility_add_fact">fact</string>
     <string name="accessibility_add_paragraph">paragraph</string>
     <string name="accessibility_delete">Delete</string>
+    <string name="accessibility_clipboard">Clipboard</string>
 </resources>

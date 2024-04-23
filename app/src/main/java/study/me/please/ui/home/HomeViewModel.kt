@@ -22,16 +22,12 @@ class HomeViewModel @Inject constructor(
     override val isRefreshing: MutableStateFlow<Boolean> = MutableStateFlow(false)
     override var lastRefreshTimeMillis: Long = 0L
 
-    override fun requestData(isSpecial: Boolean, isPullRefresh: Boolean) {
-        viewModelScope.launch {
-            if(isPullRefresh) setRefreshing(true)
-            repository.getLatestCollections(ITEMS_LIMIT)?.let { collections ->
-                dataManager.collections.value = collections
-            }
-            repository.getLatestSessions(ITEMS_LIMIT)?.let { sessions ->
-                dataManager.sessions.value = sessions
-            }
-            if(isPullRefresh) setRefreshing(false)
+    override suspend fun onDataRequest(isSpecial: Boolean, isPullRefresh: Boolean) {
+        repository.getLatestCollections(ITEMS_LIMIT)?.let { collections ->
+            dataManager.collections.value = collections
+        }
+        repository.getLatestSessions(ITEMS_LIMIT)?.let { sessions ->
+            dataManager.sessions.value = sessions
         }
     }
 }

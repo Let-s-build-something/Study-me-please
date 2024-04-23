@@ -31,6 +31,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import study.me.please.R
 import study.me.please.data.io.CollectionIO
+import study.me.please.ui.collection.RefreshableViewModel.Companion.requestData
 import study.me.please.ui.components.pull_refresh.PullRefreshScreen
 
 const val REQUEST_DATA_SAVE_DELAY = 200L

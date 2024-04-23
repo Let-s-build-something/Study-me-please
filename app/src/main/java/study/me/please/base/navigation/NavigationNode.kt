@@ -1,6 +1,5 @@
 package study.me.please.base.navigation
 
-import android.util.Log
 import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.EnterTransition
@@ -106,7 +105,6 @@ abstract class NavigationNode<T>(
         return if(navBackStackEntry.arguments?.isEmpty == false) {
             val arguments = mutableListOf<Any?>()
             val constructor = argumentKClass?.primaryConstructor
-            Log.d("kostka_test", "createArgumentInstance, constructorParameters: $constructorParameters")
 
             val isOptionalConstructor = constructor?.parameters?.all { it.isOptional } ?: false
             val constructorInstance = if(isOptionalConstructor) {
@@ -155,7 +153,7 @@ abstract class NavigationNode<T>(
         type: KType,
         defaultValue: Any?
     ): Any? {
-        return when(val classifier = type.classifier) {
+        return if(type.isMarkedNullable) null else when(val classifier = type.classifier) {
             Boolean::class -> value?.toBooleanStrictOrNull() ?: defaultValue ?: false
             Int::class -> value?.toIntOrNull() ?: defaultValue ?: 0
             Float::class -> value?.toFloatOrNull() ?: defaultValue ?: 0f

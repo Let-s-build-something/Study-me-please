@@ -6,6 +6,7 @@ import android.text.style.StrikethroughSpan
 import android.text.style.StyleSpan
 import android.text.style.URLSpan
 import android.text.style.UnderlineSpan
+import android.util.Log
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.runtime.Composable
@@ -38,14 +39,16 @@ fun HtmlClickableText(
     onClick: () -> Unit = {},
 ) {
     val spanned = Html.fromHtml(text, Html.FROM_HTML_MODE_COMPACT)
+    Log.d("kostka_test", "text: $text, spanned: $spanned")
 
-    val annotatedText = remember(spanned, linkStyle) {
+    val annotatedText = remember(text) {
         buildAnnotatedString {
             append(spanned.toString())
 
             spanned.getSpans(0, spanned.length, Any::class.java).forEach { span ->
                 val startIndex = spanned.getSpanStart(span)
                 val endIndex = spanned.getSpanEnd(span)
+                Log.d("kostka_test", "new span: ${span.javaClass.simpleName}, indexes: $startIndex - $endIndex")
 
                 when(span) {
                     is URLSpan -> {

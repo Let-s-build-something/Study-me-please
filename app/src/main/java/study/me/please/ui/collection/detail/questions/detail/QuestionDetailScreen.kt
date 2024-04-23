@@ -60,6 +60,7 @@ import study.me.please.base.navigation.NavigationRoot
 import study.me.please.data.io.FactType
 import study.me.please.data.io.LargePathAsset
 import study.me.please.data.io.QuestionAnswerIO
+import study.me.please.ui.collection.RefreshableViewModel.Companion.requestData
 import study.me.please.ui.collection.detail.REQUEST_DATA_SAVE_DELAY
 import study.me.please.ui.components.BasicAlertDialog
 import study.me.please.ui.components.BrandHeaderButton
@@ -179,6 +180,7 @@ fun QuestionDetailScreen(
         viewModel.questionUid = questionUid
         viewModel.requestData(isSpecial = true)
     }
+
     LaunchedEffect(bridge.selectedAnswerUids.size) {
         if(bridge.selectedAnswerUids.size > 0) {
             answers.forEach {
@@ -188,6 +190,7 @@ fun QuestionDetailScreen(
             bridge.stopChecking()
         }
     }
+
     LaunchedEffect(answers.size) {
         if((question.value?.answers?.size ?: 0) < answers.size) {
             question.value?.copy(answers = answers.map { it.first }.toMutableList())?.let {

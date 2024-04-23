@@ -87,13 +87,6 @@ class CollectionDetailRepository @Inject constructor(
 
     //========= FACTS ===========
 
-    /** Returns a list of facts by their identifiers - [factsUidList] */
-    suspend fun getFactsByUid(factsUidList: List<String>): List<FactIO>? {
-        return withContext(Dispatchers.IO) {
-            factDao.getFactsByUid(factsUidList)
-        }
-    }
-
     /** removes all facts with uid from the provided list [uidList] */
     suspend fun deleteFacts(uidList: List<String>) {
         withContext(Dispatchers.IO) {
