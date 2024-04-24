@@ -9,7 +9,6 @@
     <string name="screen_account_title">Můj byznys</string>
     <string name="screen_session_lobby_title">Moje cvičky</string>
     <string name="screen_collection_detail_new">Nová kolekce</string>
-    <string name="screen_units">Poznámky</string>
     <string name="screen_questions">Otázky</string>
     <string name="screen_collection_about">Informace</string>
 
@@ -18,19 +17,10 @@
     <string name="navigate_hamburger_menu">Menu</string>
     <string name="home_screen_sessions_empty_action">Čas trénovat</string>
     <string name="collection_detail_start_session">Do cviku</string>
-    <string name="collection_detail_basic_information">Základní informace</string>
-    <string name="collection_detail_page_questions">Otázky</string>
-    <string name="collection_detail_page_facts">Fakta</string>
     <string name="collection_detail_add_question">Pančeli, mám otázku</string>
-    <string name="collection_detail_save">Uložit mojí zlost</string>
     <string name="collection_detail_name_hint">Název</string>
     <string name="collection_detail_description_hint">Popis</string>
     <string name="collection_detail_questions_heading">Otázky</string>
-    <string name="collection_detail_new_response">Vlastní</string>
-    <string name="collection_detail_old_response">Náhodný</string>
-    <string name="collection_detail_no_old_response">V kolekci nejsou žádné jiné</string>
-    <string name="question_answers">Odpovědi</string>
-    <string name="question_edit_field_prompt_hint">Ptej se…</string>
     <string name="question_edit_field_prompt_header">Podnět</string>
     <string name="question_edit_field_prompt_image">Podnětový obrázek</string>
     <string name="question_edit_field_explanation_image">Vysvětlující obrázek</string>
@@ -38,7 +28,6 @@
     <string name="question_edit_field_hint_explanation">Bližší vysvětlení ke správné otázce</string>
     <string name="answer_edit_field_hint_content">Odpověď je…nemám tucha</string>
     <string name="home_screen_collections_empty_action">Pojďme sbírat motýly do kolekce</string>
-    <string name="answer_edit_field_hint_explanation">Vysvětlení této odpovědi</string>
     <string name="answer_field_content_header">Textová odpověd</string>
     <string name="answer_field_content_header_list">List odpovědí</string>
     <string name="answer_field_explanation_header">Vysvětlení</string>
@@ -54,20 +43,13 @@
         které bude používat vygenerované otázky.
     </string>
     <string name="units_delete_dialog_title">Smazání kapitoly</string>
-    <string name="subject_heading_hint">Název kapitoly</string>
     <string name="unit_heading_prefix">Kapitola</string>
     <string name="unit_heading_default">Kapitola %1$d</string>
     <string name="units_create_new">Nová kapitola v životě</string>
     <string name="units_overview">Přehled</string>
-    <string name="subject_subheading_hint">Podnadpis</string>
-    <string name="subject_add_bullet_point">Odrážka</string>
-    <string name="subject_add_fact">Fakt</string>
     <string name="subject_add_paragraph">Paragraf</string>
     <string name="subject_categorize_paragraph">název paragrafu</string>
     <string name="edit_field_item_picked_create">Vytvořit nový</string>
-    <string name="subject_paragraph_section_heading">Paragrafy</string>
-    <string name="subject_facts_section_heading">Fakta</string>
-    <string name="subject_bullet_points_section_heading">Odrážky</string>
 
     <string name="subject_generating_error_no_data">Není tu dost dat na vygenerování, musíš si prvně napsat poznámky</string>
     <string name="subject_generating_error_generic">Neznámá chyba, #sorry jako</string>
@@ -80,9 +62,6 @@
     <string name="list_item_first_bulletin_hint">přidat popis</string>
     <string name="facts_list_add_new">Přidat fakt</string>
     <string name="facts_list_generate_questions">Vygenerovat otázky</string>
-    <string name="facts_field_short_information_header">Krátká klíčová informace</string>
-    <string name="facts_field_long_information_header">Dlouhá informace</string>
-    <string name="facts_type_bullet_points">Odrážky</string>
     <string name="facts_type_definition">Definice</string>
     <string name="facts_type_person">Osoba</string>
     <string name="facts_type_date">Datum</string>
@@ -90,7 +69,6 @@
     <string name="facts_type_quote">Citát</string>
     <string name="facts_type_long_fact_header">Vysvětlení informace</string>
     <string name="facts_type_long_definition_header">Definice</string>
-    <string name="facts_type_short_definition_prompt">Co to je %1$s?</string>
     <string name="fact_delete_dialog_title">Odstranění faktu</string>
 
 
@@ -118,10 +96,6 @@
     <string name="session_launcher_action_confirm">Přidat</string>
     <string name="session_detail_default_toolbar">Nový cvičení</string>
     <string name="session_lobby_screen_empty_text">Zatím netrénuješ znalosti…zatím!</string>
-    <string name="session_lobby_screen_delete_title">Smazání cvičení</string>
-    <string name="session_lobby_screen_delete_text">
-        Tohle vám asi chvilku trvalo udělat, jste si jistí, že chcete permanentne smazat vybraných %1$d cvičení?
-    </string>
     <string name="session_play_repeated_snackbar">
         Supr dupr! Tohle se brzo naučíš. My se o to postaráme:)
     </string>
@@ -166,8 +140,6 @@
     </string>
 
     <string name="question">Otázka</string>
-    <string name="collection">Kolekce</string>
-    <string name="questions">Otázky kolekce</string>
 
     <string name="preference_chooser_preferences_show">Změnit nastavení</string>
     <string name="preference_chooser_preferences_hide">Zavřít nastavení</string>
@@ -223,7 +195,6 @@
     <string name="statistics_time_spent_total">Ztrávili jste %1$szodpovídání %2$d z %3$d otázek.</string>
     <string name="statistics_time_spent_average">Průměrně, odpovídáte během %1$s</string>
     <string name="statistics_success_rate">Známka: %1$s (%2$s\%%)</string>
-    <string name="statistics_ratio_time_success">Time/success ratio: %1$s</string>
     <string name="statistics_progress_percentage">%1$s \%% zodpovězeno</string>
 
     <!--- =================================== BUTTONS ========================================== -->
@@ -232,10 +203,6 @@
     <string name="button_add_image">Přidat obrázek</string>
     <string name="button_add_prompt_image">Přidat podnětový obrázek</string>
     <string name="button_add_explanation_image">Přidat vysvětlující obrázek</string>
-    <string name="button_change_image">Změnit obrázek</string>
-    <string name="button_import">Importovat</string>
-    <string name="button_export">Exportovat</string>
-    <string name="button_scan">Skenovat</string>
     <string name="button_start_session">Zacvičit</string>
     <string name="button_copy">Koprívovat</string>
     <string name="button_paste">Vložit</string>
@@ -245,10 +212,7 @@
     <string name="button_statistics">Statistiky</string>
     <string name="button_test_play">Zkusit cvičení</string>
     <string name="button_preferences">Nastavení</string>
-    <string name="button_continue">Pokračovat</string>
-    <string name="button_validate">Opravit</string>
     <string name="button_repeat">Opakovat tuhle otázku</string>
-    <string name="button_leave">Opustit</string>
     <string name="button_skip_to_front">Zpátky dopředu</string>
     <string name="button_delete">Smazat</string>
     <string name="button_archive">Archivovat</string>
@@ -258,16 +222,11 @@
 
 
     <!--- ============================= ACCESSIBILITY ==================================== -->
-    <string name="btn_clear_content_description">Vyčistit</string>
     <string name="add_new_content_description">Přidat nový item</string>
-    <string name="image_icon_content_description">Ikona</string>
     <string name="close_content_description">Zavřít</string>
     <string name="play_content_description">Spustit</string>
     <string name="edit_content_description">Upravit</string>
-    <string name="expand_content_description">Rozevřít</string>
-    <string name="collapse_content_description">Uzavřít</string>
     <string name="accessibility_add_content">Přidat nový obsah</string>
-    <string name="accessibility_add_bullet_point">odrážka</string>
     <string name="accessibility_add_fact">Fakt</string>
     <string name="accessibility_add_paragraph">paragraf</string>
     <string name="accessibility_delete">Smazat</string>

@@ -274,3 +274,10 @@ fun Modifier.drawSegmentedBorder(
         }
     }
 )
+
+/** type of the element in the paragraph */
+enum class ElementType {
+    FACT,
+    EMPTY_SPACE,
+    PARAGRAPH
+}

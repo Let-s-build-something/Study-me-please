@@ -1,7 +1,5 @@
 package study.me.please.ui.units
 
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
 import study.me.please.data.io.FactIO
 import study.me.please.data.io.subjects.ParagraphIO
 
@@ -115,10 +113,3 @@ val paragraphMockData = ParagraphIO(
         }
     )
 }
-
-val paragraphBlockMockDataState = ParagraphBlockState(
-    parentLayer = -1,
-    selectedFact = mutableStateOf(null),
-    clipBoard = null,
-    isReadOnly = false
-)

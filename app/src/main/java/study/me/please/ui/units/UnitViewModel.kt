@@ -12,10 +12,10 @@ import kotlinx.coroutines.withContext
 import study.me.please.base.BaseViewModel
 import study.me.please.base.GeneralClipBoard
 import study.me.please.data.io.FactIO
+import study.me.please.data.io.UnitElement
 import study.me.please.data.io.subjects.ParagraphIO
 import study.me.please.data.io.subjects.UnitIO
 import study.me.please.ui.units.CollectionUnitsViewModel.ScrollToElement
-import study.me.please.data.io.UnitElement
 import javax.inject.Inject
 
 /** Communication bridge between UI and DB */
@@ -234,7 +234,6 @@ class UnitViewModel @Inject constructor(
                         isNewElement = isNewElement
                     )
                 }
-                //TODO moving an element from unit to first paragraph doesn't move it there (doesn't save it correctly)
                 dataManager.elements.update {
                     it.toMutableList().apply {
                         add(targetIndex.coerceIn(0, this.size), element)
