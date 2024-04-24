@@ -8,8 +8,8 @@ import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material.pullrefresh.PullRefreshState
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -162,6 +162,11 @@ fun ConstraintLayoutScope.ProgressBarRefreshIndicator(
     val (progressIndicatorLeft, progressIndicatorRight) = createRefs()
 
     LinearProgressIndicator(
+        progress = {
+            if(isRefreshing) 1f else {
+                kotlin.math.min(state.progress, 1f)
+            }
+        },
         modifier = Modifier
             .requiredHeight(4.dp)
             .rotate(180f)
@@ -171,13 +176,11 @@ fun ConstraintLayoutScope.ProgressBarRefreshIndicator(
                 top.linkTo(parent.top, (-4).dp)
                 width = Dimension.fillToConstraints
             },
-        progress = if(isRefreshing) 1f else {
-            kotlin.math.min(state.progress, 1f)
-        },
         color = LocalTheme.colors.tetrial,
-        trackColor = Color.Transparent
+        trackColor = Color.Transparent,
     )
     LinearProgressIndicator(
+        progress = { if(isRefreshing) 1f else kotlin.math.min(state.progress, 1f) },
         modifier = Modifier
             .requiredHeight(4.dp)
             .constrainAs(progressIndicatorLeft) {
@@ -186,8 +189,7 @@ fun ConstraintLayoutScope.ProgressBarRefreshIndicator(
                 top.linkTo(parent.top, (-4).dp)
                 width = Dimension.fillToConstraints
             },
-        progress = if(isRefreshing) 1f else kotlin.math.min(state.progress, 1f),
         color = LocalTheme.colors.tetrial,
-        trackColor = Color.Transparent
+        trackColor = Color.Transparent,
     )
 }

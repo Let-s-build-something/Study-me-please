@@ -39,10 +39,10 @@ fun ScrollBarProgressIndicator(
         visible = totalItems > 0
     ) {
         LinearProgressIndicator(
+            progress = { scrollLastIndex.value.div(totalItems.toFloat()) },
             color = LocalTheme.colors.brandMain,
             trackColor = LocalTheme.colors.secondary,
-            progress = scrollLastIndex.value.div(totalItems.toFloat()),
-            strokeCap = StrokeCap.Round
+            strokeCap = StrokeCap.Round,
         )
     }
 }

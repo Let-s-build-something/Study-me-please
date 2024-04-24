@@ -105,14 +105,14 @@ dependencies {
     implementation"androidx.multidex:multidex:2.0.1"
 
     // Kotlin
-    implementation 'androidx.core:core-ktx:1.12.0'
+    implementation 'androidx.core:core-ktx:1.13.0'
     implementation 'org.jetbrains.kotlin:kotlin-reflect:1.9.22'
 
     // security crypto - EncryptedSharedPreferences
     implementation("androidx.security:security-crypto:1.0.0")
 
     //Dagger, Hilt, Navigation
-    implementation "com.google.dagger:hilt-android:2.48"
+    implementation "com.google.dagger:hilt-android:2.49"
     kapt "com.google.dagger:hilt-compiler:2.46.1"
     kapt("org.jetbrains.kotlinx:kotlinx-metadata-jvm:0.5.0")
     implementation "androidx.hilt:hilt-navigation-compose:1.2.0"
@@ -123,7 +123,7 @@ dependencies {
     implementation "com.squareup.retrofit2:converter-gson:$retrofit"
 
     //Jetpack compose
-    implementation platform('androidx.compose:compose-bom:2024.03.00')
+    implementation platform('androidx.compose:compose-bom:2024.04.01')
     implementation "androidx.compose.material3:material3"
     implementation "androidx.compose.material:material"
     // Android Studio Preview support
@@ -131,17 +131,17 @@ dependencies {
     implementation 'androidx.compose.ui:ui-tooling-preview'
     debugImplementation 'androidx.compose.ui:ui-tooling'
 
-    implementation "androidx.compose.foundation:foundation:1.6.4"
+    implementation "androidx.compose.foundation:foundation:1.6.6"
     implementation "androidx.constraintlayout:constraintlayout-compose:1.0.1"
     implementation "androidx.compose.material3:material3-window-size-class:1.2.1"
     // Optional - Add full set of material icons
-    implementation 'androidx.compose.material:material-icons-extended:1.6.4'
+    implementation 'androidx.compose.material:material-icons-extended:1.6.6'
     // Optional - Integration with activities
-    implementation 'androidx.activity:activity-compose:1.8.2'
+    implementation 'androidx.activity:activity-compose:1.9.0'
     // Optional - Integration with ViewModels
     implementation 'androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0'
     // Optional - Integration with LiveData
-    implementation 'androidx.compose.runtime:runtime-livedata:1.6.4'
+    implementation 'androidx.compose.runtime:runtime-livedata:1.6.6'
 
     //graphics
     implementation "com.airbnb.android:lottie-compose:6.0.1"

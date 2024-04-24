@@ -1,12 +1,10 @@
 package study.me.please.ui.units
 
-import com.squadris.squadris.utils.DateUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import study.me.please.data.io.CollectionIO
 import study.me.please.data.io.FactIO
 import study.me.please.data.io.QuestionIO
-import study.me.please.data.io.subjects.CategoryIO
 import study.me.please.data.io.subjects.ParagraphIO
 import study.me.please.data.io.subjects.UnitIO
 import study.me.please.data.room.CategoryDao
@@ -67,14 +65,7 @@ class UnitsRepository @Inject constructor(
         }
     }
 
-    /** Returns all categories similiar to the given [query] */
-    suspend fun getCategoriesBy(query: String): List<CategoryIO>? {
-        return withContext(Dispatchers.IO) {
-            categoryDao.getCategoriesByNameLike(query)
-        }
-    }
-
-    /** Returns all categories similiar to the given [query] */
+    /** Returns all categories similiar to the given [uidList] */
     suspend fun getParagraphsBy(uidList: List<String>): List<ParagraphIO>? {
         return withContext(Dispatchers.IO) {
             unitDao.getParagraphsByUidList(uidList)
@@ -116,16 +107,6 @@ class UnitsRepository @Inject constructor(
         }
     }
 
-    /** Updates a collection with new data */
-    suspend fun updateCollectionDateModified(collectionUid: String) {
-        return withContext(Dispatchers.IO) {
-            collectionDao.updateCollectionDateModified(
-                collectionUid = collectionUid,
-                dateModified = DateUtils.now.time
-            )
-        }
-    }
-
     /** Updates a collection with new questions */
     suspend fun updateCollectionQuestions(uidList: Set<String>, collectionUid: String) {
         return withContext(Dispatchers.IO) {
@@ -142,23 +123,6 @@ class UnitsRepository @Inject constructor(
             questionDao.getQuestionsByUid(
                 collectionDao.getCollectionByUid(collectionUid)?.questionUidList?.toList().orEmpty()
             )
-        }
-    }
-
-    /** Updates an existing record of category */
-    suspend fun updateCategory(category: CategoryIO) {
-        return withContext(Dispatchers.IO) {
-            categoryDao.updateCategory(category)
-        }
-    }
-
-    /** Creates a new record of category or replaces existing */
-    suspend fun insertCategory(category: CategoryIO): Boolean {
-        return withContext(Dispatchers.IO) {
-            val exists = categoryDao.getCategoriesByNameExact(category.name) != null
-            // we create a new record if it doesn't exist yet
-            if(exists.not()) categoryDao.insertCategory(category)
-            exists
         }
     }
 

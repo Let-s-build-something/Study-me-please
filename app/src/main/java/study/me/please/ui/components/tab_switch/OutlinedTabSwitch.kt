@@ -8,18 +8,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import com.squadris.squadris.compose.theme.LocalTheme
 import com.squadris.squadris.compose.theme.StudyMeAppTheme
 import study.me.please.ui.components.OutlinedButton
 
 /**
- * Component with similiar behaviour to a [TabRow] but made out of [OutlinedButton]
+ * Component with similiar behaviour made out of [OutlinedButton]
  */
 @Composable
 fun OutlinedTabSwitch(

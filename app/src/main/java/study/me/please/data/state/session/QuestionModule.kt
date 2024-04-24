@@ -11,6 +11,7 @@ import kotlinx.coroutines.withContext
 import study.me.please.data.io.QuestionIO
 import study.me.please.data.io.session.QuestionItem
 import study.me.please.data.io.session.SessionHistoryItem
+import study.me.please.data.io.session.SessionIO
 import study.me.please.data.io.session.SessionItem
 import study.me.please.data.room.AppRoomDatabase
 import java.util.UUID
@@ -20,6 +21,7 @@ import java.util.UUID
  */
 @Entity(tableName = AppRoomDatabase.ROOM_QUESTION_MODULE_TABLE)
 data class QuestionModule(
+
     /** foreign key for a [SessionIO] item that holds this module */
     var sessionUid: String? = null,
 

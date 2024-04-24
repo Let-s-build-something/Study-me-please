@@ -46,38 +46,6 @@ import androidx.compose.ui.text.input.VisualTransformation
  *
  * If you are looking for an outlined version, see [OutlinedTextField].
  *
- * A simple single line text field looks like:
- *
- * @sample androidx.compose.material3.samples.SimpleTextFieldSample
- *
- * You may provide a placeholder:
- *
- * @sample androidx.compose.material3.samples.TextFieldWithPlaceholder
- *
- * You can also provide leading and trailing icons:
- *
- * @sample androidx.compose.material3.samples.TextFieldWithIcons
- *
- * You can also provide a prefix or suffix to the text:
- *
- * @sample androidx.compose.material3.samples.TextFieldWithPrefixAndSuffix
- *
- * To handle the error input state, use [isError] parameter:
- *
- * @sample androidx.compose.material3.samples.TextFieldWithErrorState
- *
- * Additionally, you may provide additional message at the bottom:
- *
- * @sample androidx.compose.material3.samples.TextFieldWithSupportingText
- *
- * Password text field example:
- *
- * @sample androidx.compose.material3.samples.PasswordTextField
- *
- * Hiding a software keyboard on IME action performed:
- *
- * @sample androidx.compose.material3.samples.TextFieldWithHideKeyboardOnImeAction
- *
  * If apart from input text change you also want to observe the cursor location, selection range,
  * or IME composition use the TextField overload with the [TextFieldValue] parameter instead.
  *

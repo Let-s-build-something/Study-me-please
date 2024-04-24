@@ -8,7 +8,6 @@
     <string name="screen_account_title">My business</string>
     <string name="screen_session_lobby_title">My exams</string>
     <string name="screen_collection_detail_new">New collection</string>
-    <string name="screen_units">Notepad</string>
     <string name="screen_questions">Questions</string>
     <string name="screen_collection_about">About</string>
     <string name="navigate_back">Back</string>
@@ -19,26 +18,16 @@
     <string name="home_screen_sessions_empty_action">Time to practice</string>
 
     <string name="collection_detail_start_session">To exam</string>
-    <string name="collection_detail_basic_information">Basic information</string>
-    <string name="collection_detail_page_questions">Questions</string>
-    <string name="collection_detail_page_facts">Facts</string>
     <string name="collection_detail_add_question">Sir, I have a question</string>
-    <string name="collection_detail_save">Save my madness</string>
     <string name="collection_detail_name_hint">Name</string>
     <string name="collection_detail_description_hint">Description</string>
     <string name="collection_detail_questions_heading">Questions</string>
-    <string name="collection_detail_new_response">Custom</string>
-    <string name="collection_detail_old_response">Random</string>
-    <string name="collection_detail_no_old_response">There are no other answers in this collection.</string>
-    <string name="question_answers">Answers</string>
-    <string name="question_edit_field_prompt_hint">Ask away…</string>
     <string name="question_edit_field_prompt_header">Prompt</string>
     <string name="question_edit_field_prompt_image">Prompt image</string>
     <string name="question_edit_field_explanation_image">Explanation image</string>
     <string name="question_field_explanation_header">Explanation</string>
     <string name="question_edit_field_hint_explanation">Further explanation for the correct answer(s)</string>
     <string name="answer_edit_field_hint_content">Answer is - …idk</string>
-    <string name="answer_edit_field_hint_explanation">Explanation of this answer</string>
     <string name="answer_field_content_header">Answer text</string>
     <string name="answer_field_content_header_list">Answer list</string>
     <string name="answer_field_explanation_header">Explanation</string>
@@ -60,20 +49,13 @@
         \nType in "permanently delete" to confirm.
     </string>
     <string name="units_delete_dialog_confirm_hint">permanently delete</string>
-    <string name="subject_heading_hint">Unit name</string>
     <string name="unit_heading_prefix">Unit</string>
     <string name="unit_heading_default">Unit %1$d</string>
     <string name="units_create_new">New chapter in life</string>
     <string name="units_overview">Overview</string>
-    <string name="subject_subheading_hint">Subheading</string>
-    <string name="subject_add_bullet_point">Bullet point</string>
-    <string name="subject_add_fact">Fact</string>
     <string name="subject_add_paragraph">Paragraph</string>
     <string name="subject_categorize_paragraph">paragraph name</string>
     <string name="edit_field_item_picked_create">Create new item</string>
-    <string name="subject_paragraph_section_heading">Paragraphs</string>
-    <string name="subject_facts_section_heading">Facts</string>
-    <string name="subject_bullet_points_section_heading">Bullet points</string>
     <string name="subject_generating_error_no_data">There is not enough data to generate anything, you gotta write something down first.</string>
     <string name="subject_generating_error_generic">Unknown error</string>
     <string name="subject_generating_error_update_failed">
@@ -89,12 +71,7 @@
 
     <string name="facts_list_add_new">Add a fact</string>
     <string name="facts_list_generate_questions">Generate questions</string>
-    <string name="facts_field_short_information_header">Short key information</string>
-    <string name="facts_field_long_information_header">Long key information</string>
-    <string name="tags_add_new" translatable="false">Add tag</string>
-    <string name="tags_explanation" translatable="false">Tags are a way of categorizing your facts and connecting them between each-other</string>
 
-    <string name="facts_type_bullet_points">Bullet points</string>
     <string name="facts_type_definition">Definition</string>
     <string name="facts_type_person">Person</string>
     <string name="facts_type_date">Date</string>
@@ -102,7 +79,6 @@
     <string name="facts_type_quote">Quote</string>
 
     <!-- short information -->
-    <string name="facts_type_short_bullet_point_hint" translatable="false">The French orchestra</string>
     <string name="facts_type_short_definition_hint" translatable="false">Social loafing</string>
     <string name="facts_type_short_person_hint" translatable="false">Keanu Reeves</string>
     <string name="facts_type_short_date_hint" translatable="false">Nov 17, 1989 - Dec 29, 1989</string>
@@ -111,18 +87,14 @@
 
     <string name="facts_type_long_fact_header">Information explanation</string>
     <string name="facts_type_long_definition_header">Definition</string>
-    <string name="facts_type_long_fact_hint" translatable="false">How would you explain the information?</string>
     <string name="facts_type_long_definition_hint" translatable="false">Explain the definition</string>
     <string name="facts_type_long_person_header" translatable="false">Information about the person</string>
-    <string name="facts_type_long_list_header" translatable="false">Explanation of the list</string>
     <string name="facts_type_long_person_hint" translatable="false">What information is relevant about the person?</string>
     <string name="facts_type_long_date_header" translatable="false">Date explanation</string>
     <string name="facts_type_long_date_hint" translatable="false">What happened on that date or what is it related to?</string>
     <string name="facts_type_long_quote_header" translatable="false">Quote explanation</string>
     <string name="facts_type_long_quote_hint" translatable="false">Who/what is the quote related to?</string>
     <!-- long information -->
-    <string name="facts_type_short_fact_header" translatable="false">What is the information?</string>
-    <string name="facts_type_short_definition_header" translatable="false">What are we defining?</string>
     <string name="facts_type_short_person_header" translatable="false">Who is the person?</string>
     <string name="facts_type_short_date_header" translatable="false">What is the date?</string>
     <string name="facts_type_short_quote_header" translatable="false">What is the quote?</string>
@@ -131,24 +103,8 @@
     <!-- prompts -->
     <string name="facts_information_generic_prompt" translatable="false">To who/what is the following %1$s related to?\n%2$s</string>
     <!-- short prompts -->
-    <string name="facts_type_short_fact_prompt" translatable="false">How would you explain %1$s?</string>
-    <string name="facts_type_short_definition_prompt">What is %1$s?</string>
-    <string name="facts_type_short_person_prompt" translatable="false">What information is relevant about %1$s?</string>
-    <string name="facts_type_short_date_prompt" translatable="false">What happened on %1$s or what is it related to?</string>
-    <string name="facts_type_short_quote_prompt" translatable="false">Who/what is the quote "%1$s" related to?</string>
-    <string name="facts_type_short_list_prompt" translatable="false">TODO list</string>
     <!-- long prompts -->
-    <string name="facts_type_long_fact_prompt" translatable="false">What is the explanation "%1$s" related to?</string>
-    <string name="facts_type_long_definition_prompt" translatable="false">What defines "%1$s"?</string>
-    <string name="facts_type_long_person_prompt" translatable="false">Who could be best described by "%1$s"?</string>
-    <string name="facts_type_long_date_prompt" translatable="false">To what date is following information "%1$s" related to?</string>
-    <string name="facts_type_long_quote_prompt" translatable="false">What quote is relevant to %1$s?</string>
     <!-- image prompts -->
-    <string name="facts_type_image_definition_prompt" translatable="false">To what is following image related to?</string>
-    <string name="facts_type_image_fact_prompt" translatable="false">To what information is following image related to?</string>
-    <string name="facts_type_image_person_prompt" translatable="false">To who is following image related to?</string>
-    <string name="facts_type_image_date_prompt" translatable="false">To what date is following image related to?</string>
-    <string name="facts_type_image_quote_prompt" translatable="false">To who/what is following image related to?</string>
 
     <string name="fact_delete_dialog_title">Fact deletion</string>
     <string name="fact_delete_dialog_description">
@@ -170,10 +126,6 @@
     <string name="session_launcher_action_confirm">Add</string>
     <string name="session_detail_default_toolbar">New examination</string>
     <string name="session_lobby_screen_empty_text">No knowledge growth…yet!:(</string>
-    <string name="session_lobby_screen_delete_title">Examination deletion</string>
-    <string name="session_lobby_screen_delete_text">
-        You\'ve spent time on this, are you sure you want permanently delete the selected (%1$d) exams?
-    </string>
     <string name="session_play_repeated_snackbar">Well done! You will learn this one better soon. We will make sure:)</string>
     <string name="session_play_see_more">See more</string>
 
@@ -208,8 +160,6 @@
     <string name="leave_app_dialog_content">Are you sure you want close this app? :(</string>
 
     <string name="question">Question</string>
-    <string name="collection">Collection</string>
-    <string name="questions">Collection questions</string>
 
     <string name="preference_chooser_preferences_show">Edit preference</string>
     <string name="preference_chooser_preferences_hide">Close preference</string>
@@ -279,13 +229,11 @@
     <string name="statistics_time_spent_total">You\'ve spent %1$sanswering %2$d out of %3$d questions.</string>
     <string name="statistics_time_spent_average">On average, you answer within %1$s</string>
     <string name="statistics_success_rate">Grade: %1$s (%2$s\%%)</string>
-    <string name="statistics_ratio_time_success">Time/success ratio: %1$s</string>
     <string name="statistics_progress_percentage">%1$s \%% answered</string>
 
     <string name="grade_a1" translatable="false">A+</string>
     <string name="grade_a2" translatable="false">A</string>
     <string name="grade_b1" translatable="false">B+</string>
-    <string name="grade_b2" translatable="false">B</string>
     <string name="grade_c1" translatable="false">C+</string>
     <string name="grade_c2" translatable="false">C</string>
     <string name="grade_d" translatable="false">D</string>
@@ -296,10 +244,6 @@
     <string name="button_add_image">Add an image</string>
     <string name="button_add_prompt_image">Add a prompt image</string>
     <string name="button_add_explanation_image">Add an explanation image</string>
-    <string name="button_change_image">Change the image</string>
-    <string name="button_import">Import</string>
-    <string name="button_export">Export</string>
-    <string name="button_scan">Scan</string>
     <string name="button_start_session">Start examination</string>
     <string name="button_copy">Copy</string>
     <string name="button_paste">Paste</string>
@@ -309,10 +253,7 @@
     <string name="button_statistics">Statistics</string>
     <string name="button_test_play">Test play</string>
     <string name="button_preferences">Preferences</string>
-    <string name="button_continue">Continue</string>
-    <string name="button_validate">Validate</string>
     <string name="button_repeat">Repeat this question</string>
-    <string name="button_leave">Leave</string>
     <string name="button_skip_to_front">Skip to front</string>
     <string name="button_delete">Delete</string>
     <string name="button_archive">Archive</string>
@@ -322,16 +263,11 @@
 
 
     <!--- ============================= ACCESSIBILITY ==================================== -->
-    <string name="btn_clear_content_description">Clear</string>
     <string name="add_new_content_description">Add new item</string>
-    <string name="image_icon_content_description">Icon</string>
     <string name="close_content_description">Close</string>
     <string name="play_content_description">Play</string>
     <string name="edit_content_description">Edit</string>
-    <string name="expand_content_description">Expand</string>
-    <string name="collapse_content_description">Collapse</string>
     <string name="accessibility_add_content">Add new content</string>
-    <string name="accessibility_add_bullet_point">bulletin</string>
     <string name="accessibility_add_fact">fact</string>
     <string name="accessibility_add_paragraph">paragraph</string>
     <string name="accessibility_delete">Delete</string>

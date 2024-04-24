@@ -75,15 +75,15 @@ fun EditableImageAsset(
     ) {
         if(asset != null) {
             if(isLoading.value) {
+
                 CircularProgressIndicator(
                     modifier = Modifier
                         .padding(bottom = 16.dp)
                         .size(32.dp)
                         .animateContentSize(),
-                    trackColor = LocalTheme.colors.secondary,
-                    strokeWidth = 2.dp,
                     color = LocalTheme.colors.brandMain,
-                    progress = currentProgress.floatValue
+                    strokeWidth = 2.dp,
+                    trackColor = LocalTheme.colors.secondary,
                 )
             }
             if(!asset.isEmpty) {
