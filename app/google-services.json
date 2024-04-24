@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "708985154187",
+    "project_id": "study-me-please",
+    "storage_bucket": "study-me-please.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:708985154187:android:096d2ac6e9783a8aeac28e",
+        "android_client_info": {
+          "package_name": "study.me.please"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCS_NBSkng7bl3qGj2Dey6CRYEVfRScLmg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
