@@ -81,7 +81,7 @@ class CollectionDetailViewModel @Inject constructor(
         }
     }
 
-    /** currently displayed colection identifier */
+    /** currently displayed collection identifier */
     var collectionUid: String = ""
 
     override suspend fun onDataRequest(isSpecial: Boolean, isPullRefresh: Boolean) {
@@ -111,271 +111,16 @@ class CollectionDetailViewModel @Inject constructor(
                 if(newList.isNotEmpty()
                     && newList.size != dataManager.collectionDetail.value?.questionUidList?.size
                 ) {
-                    dataManager.collectionDetail.value?.questionUidList = newList.map { it.uid }.toMutableSet()
+                    dataManager.collectionDetail.value?.questionUidList = newList.map { it.uid }.toMutableList()
                 }
             }
         }
     }
-
-    /** Generates questions from facts *//*
-    fun requestQuestionGeneration(
-        context: Context,
-        selectedFactUids: List<String>,
-        facts: List<FactIO>
-    ) {
-        // chunk facts into types
-        // go fact by fact and generate 2 questions for each fact
-        // any leftover facts match together
-
-        viewModelScope.launch(Dispatchers.Default) {
-            // we shouldn't be here at all, return error
-            if(facts.size < QUESTION_GENERATION_MINIMUM_FACTS) {
-                questionGenerationResponse.emit(
-                    QuestionGenerationResponse(errorType = ErrorType.NOT_ENOUGH_FACTS)
-                )
-            }
-
-            val existingQuestions = dataManager.collectionQuestions.value.mapNotNull { it.importedSource?.sourceUid }
-            val newQuestions = mutableListOf<QuestionIO>()
-            val factsToGenerate = facts.filter {
-                selectedFactUids.contains(it.uid)
-                        && existingQuestions.contains(it.uid).not()
-            }.toMutableList()
-            val leftOverFacts = mutableListOf<FactIO>()
-
-            FactType.values().forEach { factType ->
-                val factsToGenerateTyped = factsToGenerate.filter { it.type == factType }
-                val factsToShuffle = facts.filter { it.type == factType }
-
-                if(factsToGenerateTyped.isNotEmpty()) {
-                    if(factsToShuffle.size >= QUESTION_GENERATION_MINIMUM_FACTS) {
-                        *//*generateQuestions(
-                            factsToShuffle = factsToShuffle,
-                            factsToGenerate = factsToGenerateTyped,
-                            context = context
-                        ).let { res ->
-                            // if logic wasn't able to generate anything, pass on the facts that failed
-                            if(res.isNotEmpty()) {
-                                newQuestions.addAll(0, res)
-                            }else leftOverFacts.addAll(0, factsToGenerateTyped)
-                        }*//*
-                    }else {
-                        leftOverFacts.addAll(0, factsToGenerateTyped)
-                    }
-                }
-            }
-            *//*newQuestions.addAll(0,
-                generateQuestions(
-                    factsToGenerate = leftOverFacts,
-                    factsToShuffle = facts,
-                    context = context,
-                    isLeftOvers = true
-                )
-            )*//*
-            questionGenerationResponse.emit(
-                if(newQuestions.size > 0) {
-                    QuestionGenerationResponse(
-                        isSuccessful = true,
-                        questionsGenerated = newQuestions.size
-                    )
-                }else {
-                    QuestionGenerationResponse(errorType = ErrorType.NOT_ENOUGH_FACTS)
-                }
-            )
-
-            // save data
-            dataManager.collectionDetail.update { collection ->
-                collection?.apply {
-                    questionUidList.addAll(newQuestions.map { it.uid })
-                }
-            }
-            dataManager.collectionDetail.value?.let { requestCollectionSave(it) }
-            requestQuestionsSave(newQuestions)
-            dataManager.collectionQuestions.update {
-                newQuestions.plus(it)
-            }
-        }
-    }*/
-
-    /*private suspend fun generateQuestions(
-        context: Context,
-        isLeftOvers: Boolean = false,
-        factsToGenerate: List<FactIO>,
-        factsToShuffle: List<FactIO>
-    ): List<QuestionIO> {
-        return withContext(Dispatchers.Default) {
-            val questions = mutableListOf<QuestionIO>()
-            factsToGenerate.forEach { coreFact ->
-                // short information as a prompt, long information as answers
-                if(coreFact.shortKeyInformation.isNotEmpty()) {
-                    val usableFacts = factsToShuffle
-                        .filter { it.uid != coreFact.uid && it.longInformation.isNotEmpty() }
-                    // do we have enough answers to generate question?
-                    if(usableFacts.size >= QUESTION_GENERATION_MINIMUM_FACTS.minus(1)) {
-                        questions.add(0,
-                            QuestionIO(
-                                importedSource = ImportedSource(ImportSourceType.FACT, sourceUid = coreFact.uid),
-                                prompt = if(isLeftOvers) {
-                                    coreFact.getGenericShortPrompt(context)
-                                } else coreFact.getShortPrompt(context),
-                                textExplanation = coreFact.longInformation,
-                                imageExplanationUrl = coreFact.promptImage,
-                                answers = usableFacts
-                                    .shuffled()
-                                    .take(usableFacts.size.coerceIn(
-                                        QUESTION_GENERATION_MINIMUM_FACTS.minus(1),
-                                        QUESTION_GENERATION_MAXIMUM_ANSWERS.minus(1),
-                                    ))
-                                    .map {
-                                        QuestionAnswerIO(
-                                            text = it.longInformation,
-                                            explanationMessage = it.shortKeyInformation,
-                                            imageExplanation = it.promptImage
-                                        )
-                                    }
-                                    .plus(
-                                        QuestionAnswerIO(
-                                            text = coreFact.longInformation,
-                                            explanationMessage = coreFact.shortKeyInformation,
-                                            imageExplanation = coreFact.promptImage,
-                                            isCorrect = true
-                                        )
-                                    )
-                                    .toMutableList()
-                            )
-                        )
-                    }
-                    //TODO add image answers?
-                }
-                // long information as a prompt, short information as answers
-                if(coreFact.longInformation.isNotEmpty()) {
-                    val usableFacts = factsToShuffle
-                        .filter { it.uid != coreFact.uid && it.shortKeyInformation.isNotEmpty() }
-                    // do we have enough answers to generate question?
-                    if(usableFacts.size >= QUESTION_GENERATION_MINIMUM_FACTS.minus(1)) {
-                        questions.add(0,
-                            QuestionIO(
-                                importedSource = ImportedSource(ImportSourceType.FACT, sourceUid = coreFact.uid),
-                                prompt = if(isLeftOvers) {
-                                    coreFact.getGenericLongPrompt(context)
-                                }else coreFact.getLongPrompt(context),
-                                imageExplanationUrl = coreFact.promptImage,
-                                answers = usableFacts
-                                    .shuffled()
-                                    .take(usableFacts.size.coerceIn(
-                                        QUESTION_GENERATION_MINIMUM_FACTS.minus(1),
-                                        QUESTION_GENERATION_MAXIMUM_ANSWERS.minus(1),
-                                    ))
-                                    .map {
-                                        QuestionAnswerIO(
-                                            text = it.shortKeyInformation,
-                                            explanationMessage = it.longInformation,
-                                            imageExplanation = it.promptImage
-                                        )
-                                    }
-                                    .plus(
-                                        QuestionAnswerIO(
-                                            text = coreFact.shortKeyInformation,
-                                            explanationMessage = coreFact.longInformation,
-                                            imageExplanation = coreFact.promptImage,
-                                            isCorrect = true
-                                        )
-                                    )
-                                    .toMutableList()
-                            )
-                        )
-                    }
-                    //TODO add image answers?
-                }
-                // Image as a prompt, both short and long information as answers
-                if(coreFact.promptImage?.isEmpty == false) {
-                    val usableFactsShort = factsToShuffle
-                        .filter { it.uid != coreFact.uid && it.shortKeyInformation.isNotEmpty() }
-                    if(usableFactsShort.size >= QUESTION_GENERATION_MINIMUM_FACTS.minus(1)) {
-                        questions.add(0,
-                            QuestionIO(
-                                importedSource = ImportedSource(ImportSourceType.FACT, sourceUid = coreFact.uid),
-                                prompt = if(isLeftOvers) {
-                                    coreFact.getGenericImagePrompt(context)
-                                } else coreFact.getImagePrompt(context),
-                                imagePromptUrl = coreFact.promptImage,
-                                textExplanation = coreFact.imageExplanationText,
-                                answers = usableFactsShort
-                                    .shuffled()
-                                    .take(usableFactsShort.size.coerceIn(
-                                        QUESTION_GENERATION_MINIMUM_FACTS.minus(1),
-                                        QUESTION_GENERATION_MAXIMUM_ANSWERS.minus(1),
-                                    ))
-                                    .map {
-                                        QuestionAnswerIO(
-                                            text = it.shortKeyInformation,
-                                            explanationMessage = it.longInformation
-                                        )
-                                    }
-                                    .plus(
-                                        QuestionAnswerIO(
-                                            text = coreFact.shortKeyInformation,
-                                            explanationMessage = coreFact.longInformation,
-                                            isCorrect = true
-                                        )
-                                    )
-                                    .toMutableList()
-                            )
-                        )
-                    }
-                    val usableFactsLong = factsToShuffle
-                        .filter { it.uid != coreFact.uid && it.shortKeyInformation.isNotEmpty() }
-                    if(usableFactsLong.size >= QUESTION_GENERATION_MINIMUM_FACTS.minus(1)) {
-                        questions.add(0,
-                            QuestionIO(
-                                importedSource = ImportedSource(ImportSourceType.FACT, sourceUid = coreFact.uid),
-                                prompt = if(isLeftOvers) {
-                                    coreFact.getGenericImagePrompt(context)
-                                } else coreFact.getImagePrompt(context),
-                                imagePromptUrl = coreFact.promptImage,
-                                textExplanation = coreFact.imageExplanationText,
-                                answers = usableFactsLong
-                                    .shuffled()
-                                    .take(usableFactsLong.size.coerceIn(
-                                        QUESTION_GENERATION_MINIMUM_FACTS.minus(1),
-                                        QUESTION_GENERATION_MAXIMUM_ANSWERS.minus(1),
-                                    ))
-                                    .map {
-                                        QuestionAnswerIO(
-                                            text = it.longInformation,
-                                            explanationMessage = it.shortKeyInformation
-                                        )
-                                    }
-                                    .plus(
-                                        QuestionAnswerIO(
-                                            text = coreFact.longInformation,
-                                            explanationMessage = coreFact.shortKeyInformation,
-                                            isCorrect = true
-                                        )
-                                    )
-                                    .toMutableList()
-                            )
-                        )
-                    }
-                }
-            }
-            questions
-        }
-    }*/
 
     /** Requests for a question data save */
     private fun requestQuestionSave(question: QuestionIO) {
         viewModelScope.launch(Dispatchers.Default) {
             repository.saveQuestion(question)
-        }
-    }
-
-    /** Requests for a question data save */
-    private fun requestQuestionsSave(questions: List<QuestionIO>) {
-        viewModelScope.launch(Dispatchers.Default) {
-            questions.forEach { question ->
-                repository.saveQuestion(question)
-            }
         }
     }
 
@@ -392,7 +137,7 @@ class CollectionDetailViewModel @Inject constructor(
     }
 
     /** Requests for a fact data save */
-    fun requestFactSave(fact: FactIO) {
+    private fun requestFactSave(fact: FactIO) {
         viewModelScope.launch {
             repository.saveFact(fact)
         }

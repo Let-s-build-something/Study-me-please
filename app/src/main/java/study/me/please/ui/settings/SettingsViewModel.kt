@@ -5,14 +5,16 @@ import androidx.core.content.edit
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
-import study.me.please.base.BaseViewModel
+import study.me.please.data.shared.SharedDataManager
+import study.me.please.data.shared.SharedViewModel
 import study.me.please.hilt.SharedPreferencesModule
 import javax.inject.Inject
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
-    val sharedPreferences: SharedPreferences
-): BaseViewModel() {
+    sharedDataManager: SharedDataManager, sharedPreferences: SharedPreferences
+): SharedViewModel(sharedDataManager, sharedPreferences) {
+
 
     /** Requests for a theme preference change */
     fun requestThemeChange(

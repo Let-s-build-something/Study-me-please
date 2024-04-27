@@ -2,11 +2,11 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "532037c2f1715740418a311853702a6a",
+    "identityHash": "48b6d303b2522c7114e8059583ac2968",
     "entities": [
       {
         "tableName": "ROOM_COLLECTION_TABLE",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`defaultPreference` TEXT NOT NULL, `name` TEXT NOT NULL, `description` TEXT NOT NULL, `icon` TEXT, `date_created` INTEGER, `date_modified` INTEGER, `uid` TEXT NOT NULL, `questionUidList` TEXT NOT NULL, `factUidList` TEXT NOT NULL, `subjectUid` TEXT NOT NULL, PRIMARY KEY(`uid`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`defaultPreference` TEXT NOT NULL, `name` TEXT NOT NULL, `description` TEXT NOT NULL, `icon` TEXT, `date_created` INTEGER, `date_modified` INTEGER NOT NULL, `uid` TEXT NOT NULL, `questionUidList` TEXT NOT NULL, `factUidList` TEXT NOT NULL, `userUid` TEXT, PRIMARY KEY(`uid`))",
         "fields": [
           {
             "fieldPath": "defaultPreference",
@@ -42,7 +42,7 @@
             "fieldPath": "dateModified",
             "columnName": "date_modified",
             "affinity": "INTEGER",
-            "notNull": false
+            "notNull": true
           },
           {
             "fieldPath": "uid",
@@ -63,10 +63,10 @@
             "notNull": true
           },
           {
-            "fieldPath": "subjectUid",
-            "columnName": "subjectUid",
+            "fieldPath": "userUid",
+            "columnName": "userUid",
             "affinity": "TEXT",
-            "notNull": true
+            "notNull": false
           }
         ],
         "primaryKey": {
@@ -790,7 +790,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '532037c2f1715740418a311853702a6a')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '48b6d303b2522c7114e8059583ac2968')"
     ]
   }
 }

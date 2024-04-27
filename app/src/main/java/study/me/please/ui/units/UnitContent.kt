@@ -250,10 +250,10 @@ fun UnitContent(
                                         data = paragraph.data,
                                         layer = element.layer.plus(1),
                                         notLastLayers = element.notLastLayers.toMutableList().apply {
-                                            if(element.data.paragraphs.isNotEmpty()) add(element.layer.plus(2))
+                                            if(element.data.paragraphs.isNotEmpty()) add(element.layer.plus(1))
                                         }
                                     )
-                                    targetIndex = superiorIndex + element.data.facts.size
+                                    targetIndex = superiorIndex + element.data.facts.size + 1
                                 }
                                 (droppedElement.first as? UnitElement.Fact)?.let { fact ->
                                     data = UnitElement.Fact(
@@ -796,7 +796,7 @@ fun UnitContent(
                                     .times(lineCount.intValue)
                                     .plus(16.dp)
                             }),
-                        value = viewModel.currentUnit?.name ?: "",
+                        value = viewModel.currentUnit?.name ?: unit.name,
                         onTextLayout = { result ->
                             lineCount.intValue = result.lineCount
                         },

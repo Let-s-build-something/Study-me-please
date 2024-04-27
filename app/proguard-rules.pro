@@ -56,4 +56,9 @@
 -keep @androidx.room.Entity class *
 -dontwarn androidx.room.paging.**
 
+-if class androidx.credentials.CredentialManager
+-keep class androidx.credentials.playservices.** {
+  *;
+}
+
 ##---------------End: proguard configuration for Gson  ----------

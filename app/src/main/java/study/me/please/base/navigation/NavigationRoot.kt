@@ -16,6 +16,9 @@ sealed class NavigationRoot<T>(
     /** list of all collections screen */
     object CollectionLobby: NavigationScreen(identification = "collection_lobby")
 
+    /** User profile dashboard with action */
+    object UserAccountDashboard: NavigationScreen(identification = "account")
+
     /** list of all sessions screen */
     object SessionLobby: NavigationScreen(identification = "session_lobby")
 
@@ -58,11 +61,14 @@ sealed class NavigationRoot<T>(
         )
     }
 
-    /** screen with concrete collection detail */
+    /** screen with collection detail general info */
     object CollectionAbout: NavigationRoot<CollectionQuestions.CollectionQuestionsArgument>(
         identification = "collection/about",
         argumentKClass = CollectionQuestions.CollectionQuestionsArgument::class
     )
+
+    /** screen for signing up */
+    object SignUp: NavigationScreen(identification = "sign-up")
 
     /** screen for session - questioning play-through */
     object SessionPlay: NavigationRoot<SessionPlay.SessionPlayArgument>(

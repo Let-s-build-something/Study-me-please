@@ -2,8 +2,10 @@
     <string name="app_name">Study me, please</string>
     <string name="home_screen_title">Home</string>
     <string name="screen_sessions_title">Examinations</string>
+    <string name="screen_sign_up">It\'s show time!</string>
+    <string name="screen_sign_up_subtitle">Sign up</string>
     <string name="screen_collection_title">Collections</string>
-    <string name="screen_register_title">I\'m new</string>
+    <string name="screen_register_title">Me likey</string>
     <string name="screen_settings_title">Changing room</string>
     <string name="screen_account_title">My business</string>
     <string name="screen_session_lobby_title">My exams</string>
@@ -16,6 +18,9 @@
 
     <string name="home_screen_collections_empty_action">Let\'s start collecting</string>
     <string name="home_screen_sessions_empty_action">Time to practice</string>
+
+    <string name="sign_up_username_helper">Choose your username</string>
+    <string name="sign_up_username_hint">Call me daddy</string>
 
     <string name="collection_detail_start_session">To exam</string>
     <string name="collection_detail_add_question">Sir, I have a question</string>
@@ -260,6 +265,7 @@
     <string name="button_select_all">Select all</string>
     <string name="button_deselect">Deselect all</string>
     <string name="button_cancel">Cancel</string>
+    <string name="account_dashboard_button_logout">Log out</string>
 
 
     <!--- ============================= ACCESSIBILITY ==================================== -->
@@ -272,4 +278,11 @@
     <string name="accessibility_add_paragraph">paragraph</string>
     <string name="accessibility_delete">Delete</string>
     <string name="accessibility_clipboard">Clipboard</string>
+    <string name="accessibility_sign_up_illustration">Young woman smiling and sitting with a phone in her hands with a cat on her lap.</string>
+    <string name="accessibility_sign_in_illustration">A man smiling and sitting with a phone in his hands, there is a galaxy coming out of the phone.</string>
+
+
+
+    <!--- ============================= FIREBASE ==================================== -->
+    <string name="firebase_web_client_id" translatable="false">708985154187-5ubir4ak06i3dctfs5qfmrimb27qm9ob.apps.googleusercontent.com</string>
 </resources>

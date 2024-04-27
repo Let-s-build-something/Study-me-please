@@ -10,7 +10,9 @@ import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
+import androidx.navigation.compose.currentBackStackEntryAsState
 import study.me.please.R
+import study.me.please.base.LocalNavController
 
 /**
  * The default layout of action in top action bar
@@ -19,29 +21,32 @@ import study.me.please.R
 @Composable
 fun DefaultAppBarActions(
     isUserSignedIn: Boolean = false,
-    currentRoute: String? = NavigationRoot.Home.route,
-    actionNavigation: (screen: String) -> Unit = {}
+    userPhotoUrl: String? = null
 ) {
+    val navController = LocalNavController.current
+    val currentEntry = navController?.currentBackStackEntryAsState()
+
     // first action
-    when(currentRoute) {
+    when(currentEntry?.value?.destination?.route) {
         // lobby destinations
         NavigationRoot.Home.route,
         NavigationRoot.Settings.route -> {
-            if(currentRoute != NavigationRoot.Settings.route) {
+            if(currentEntry.value?.destination?.route != NavigationRoot.Settings.route) {
                 ActionBarIcon(
                     text = stringResource(id = R.string.screen_settings_title),
                     imageVector = Icons.Outlined.Settings,
                     onClick = {
-                        actionNavigation(NavigationRoot.Settings.route)
+                        navController.navigate(NavigationRoot.Settings.route)
                     }
                 )
             }
             if(isUserSignedIn) {
                 ActionBarIcon(
                     text = stringResource(id = R.string.screen_account_title),
+                    imageUrl = userPhotoUrl,
                     imageVector = Icons.Outlined.PersonOutline,
                     onClick = {
-                        //TODO
+                        navController.navigate(NavigationRoot.UserAccountDashboard.route)
                     }
                 )
             }else {
@@ -49,20 +54,20 @@ fun DefaultAppBarActions(
                     text = stringResource(id = R.string.screen_register_title),
                     imageVector = Icons.Outlined.PersonAddAlt,
                     onClick = {
-                        //TODO
+                        navController.navigate(NavigationRoot.SignUp.route)
                     }
                 )
             }
         }
     }
     // second action
-    when(currentRoute) {
+    when(currentEntry?.value?.destination?.route) {
         NavigationRoot.SessionLobby.route -> {
             ActionBarIcon(
                 text = stringResource(id = R.string.screen_collection_title),
                 imageVector = Icons.Outlined.Inventory2,
                 onClick = {
-                    actionNavigation.invoke(NavigationRoot.CollectionLobby.route)
+                    navController.navigate(NavigationRoot.CollectionLobby.route)
                 }
             )
         }
@@ -71,7 +76,7 @@ fun DefaultAppBarActions(
                 text = stringResource(id = R.string.screen_sessions_title),
                 imageVector = Icons.Outlined.PlayArrow,
                 onClick = {
-                    actionNavigation.invoke(NavigationRoot.SessionLobby.route)
+                    navController.navigate(NavigationRoot.SessionLobby.route)
                 }
             )
         }

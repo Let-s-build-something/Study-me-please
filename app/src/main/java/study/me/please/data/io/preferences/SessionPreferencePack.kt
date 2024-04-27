@@ -3,6 +3,7 @@ package study.me.please.data.io.preferences
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import com.google.firebase.firestore.Exclude
 import com.google.gson.annotations.SerializedName
 import com.squadris.squadris.utils.DateUtils
 import study.me.please.data.io.QuestionMode
@@ -10,7 +11,6 @@ import study.me.please.data.room.AppRoomDatabase
 import java.io.Serializable
 import java.math.BigDecimal
 import java.math.MathContext
-import java.util.Date
 import java.util.UUID
 
 /** Prompt preferences for difficulty */
@@ -30,21 +30,18 @@ data class SessionPreferencePack (
     @SerializedName("wait_for_correct_answer")
     val waitForCorrectAnswer: SessionPreference = SessionPreference(
         false,
-        mapOf(null to ""),
         QuestionMode.LEARNING
     ),
 
     @SerializedName("manual_validation")
     val manualValidation: SessionPreference = SessionPreference(
         false,
-        mapOf(null to ""),
         QuestionMode.TEST
     ),
 
     @SerializedName("repeat_on_mistake")
     val repeatOnMistake: SessionPreference = SessionPreference(
         true,
-        mapOf(null to ""),
         QuestionMode.PRACTICING
     ),
 
@@ -63,6 +60,7 @@ data class SessionPreferencePack (
     }
 
     /** sum of all difficulty mode scored */
+    @get:Exclude
     private val sumScore: Double
         get() {
             var result = 0.0
@@ -85,6 +83,7 @@ data class SessionPreferencePack (
         }
 
     /** Odhadnuty typ na zaklade vybranych moznosti */
+    @get:Exclude
     val estimatedMode: QuestionMode
         get() = QuestionMode.values().getOrNull(
             BigDecimal(sumScore).round(MathContext(0)).toInt()

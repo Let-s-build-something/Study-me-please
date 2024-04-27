@@ -6,7 +6,6 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
@@ -23,8 +22,10 @@ import com.squadris.squadris.ext.isTablet
 import dagger.hilt.android.AndroidEntryPoint
 import study.me.please.base.navigation.NavigationNode.Companion.composableNode
 import study.me.please.base.navigation.NavigationRoot
+import study.me.please.data.shared.SharedViewModel
 import study.me.please.data.state.session.SessionScreen
 import study.me.please.hilt.SharedPreferencesModule
+import study.me.please.ui.account.AccountDashboardScreen
 import study.me.please.ui.collection.CollectionLobbyScreen
 import study.me.please.ui.collection.detail.CollectionAboutScreen
 import study.me.please.ui.collection.detail.CollectionQuestionsScreen
@@ -33,7 +34,7 @@ import study.me.please.ui.home.HomeScreen
 import study.me.please.ui.session.detail.SessionDetailScreen
 import study.me.please.ui.session.lobby.SessionLobbyScreen
 import study.me.please.ui.settings.SettingsScreen
-import study.me.please.ui.settings.SettingsViewModel
+import study.me.please.ui.sign_up.SignUpScreen
 import study.me.please.ui.units.CollectionDetailScreen
 import java.lang.reflect.Field
 
@@ -41,10 +42,9 @@ import java.lang.reflect.Field
 @AndroidEntryPoint
 class MainActivity: ComponentActivity(), BackboneChannel {
 
-    private val settingsViewModel: SettingsViewModel by viewModels()
+    private val sharedViewModel: SharedViewModel by viewModels()
 
-    @OptIn(ExperimentalFoundationApi::class)
-    @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
+    @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter", "DiscouragedPrivateApi")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         try {
@@ -59,7 +59,7 @@ class MainActivity: ComponentActivity(), BackboneChannel {
         setContent {
             // Whether this app is in dark theme
             val isDarkTheme = remember { mutableStateOf(
-                settingsViewModel.sharedPreferences.getBoolean(
+                sharedViewModel.sharedPreferences.getBoolean(
                     SharedPreferencesModule.SP_IS_DARK_THEME,
                     true
                 )
@@ -93,13 +93,11 @@ class MainActivity: ComponentActivity(), BackboneChannel {
                             composableNode(NavigationRoot.CollectionLobby) { _, _ ->
                                 CollectionLobbyScreen()
                             }
+                            composableNode(NavigationRoot.UserAccountDashboard) { _, _ ->
+                                AccountDashboardScreen()
+                            }
                             composableNode(NavigationRoot.Settings) { _, _ ->
-                                SettingsScreen(
-                                    isDarkTheme = isDarkTheme.value,
-                                    viewModel = settingsViewModel
-                                ) { newValue ->
-                                    isDarkTheme.value = newValue
-                                }
+                                SettingsScreen(isDarkTheme = isDarkTheme)
                             }
                             composableNode(NavigationRoot.SessionLobby) {  _, _ ->
                                 SessionLobbyScreen()
@@ -139,6 +137,9 @@ class MainActivity: ComponentActivity(), BackboneChannel {
                                     questionUids = argument?.questionUids,
                                     collectionUid = argument?.collectionUid ?: ""
                                 )
+                            }
+                            composableNode(NavigationRoot.SignUp) { _, _ ->
+                                SignUpScreen()
                             }
                             composableNode(NavigationRoot.QuestionDetail) { _, argument ->
                                 QuestionDetailScreen(

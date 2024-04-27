@@ -4,6 +4,7 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Ignore
 import androidx.room.PrimaryKey
+import com.google.firebase.firestore.Exclude
 import com.google.gson.annotations.SerializedName
 import com.squadris.squadris.utils.DateUtils
 import kotlinx.coroutines.Dispatchers
@@ -65,6 +66,7 @@ data class UnitIO(
     val facts: MutableList<FactIO> = mutableListOf()
 
     /** attempts to remove a paragraph */
+    @Exclude
     fun removeParagraph(uid: String): Boolean {
         return paragraphUidList.remove(uid).also {
             if(it) paragraphs.removeIf { data -> data.uid == uid }
@@ -86,6 +88,7 @@ data class UnitIO(
     }
 
     /** attempts to remove a fact */
+    @Exclude
     fun removeFact(uid: String): Boolean {
         return factUidList.remove(uid).also {
             if(it) facts.removeIf { data -> data.uid == uid }
@@ -93,6 +96,7 @@ data class UnitIO(
     }
 
     /** Whether this data can be taken seriously */
+    @Exclude
     suspend fun isSeriousDataPoint(): Boolean = withContext(Dispatchers.Default) {
         bulletPoints.any { it.isNotBlank() } && name.isNotEmpty()
     }

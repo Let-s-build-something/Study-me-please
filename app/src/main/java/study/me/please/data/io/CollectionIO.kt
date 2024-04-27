@@ -4,12 +4,13 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Ignore
 import androidx.room.PrimaryKey
+import com.google.firebase.firestore.Exclude
 import com.google.gson.annotations.SerializedName
 import com.squadris.squadris.utils.DateUtils
 import study.me.please.data.io.preferences.SessionPreferencePack
+import study.me.please.data.io.subjects.UnitIO
 import study.me.please.data.room.AppRoomDatabase
 import java.io.Serializable
-import java.util.Date
 import java.util.UUID
 
 /** Collection of questions */
@@ -37,23 +38,28 @@ data class CollectionIO(
     /** last time this data object was modified */
     @SerializedName("date_modified")
     @ColumnInfo(name = "date_modified")
-    var dateModified: Long? = DateUtils.now.timeInMillis,
+    var dateModified: Long = DateUtils.now.timeInMillis,
 
     /** unique identifier */
     @PrimaryKey
     val uid: String = UUID.randomUUID().toString(),
 
     /** list of all question identifiers contained in this collection */
-    var questionUidList: MutableSet<String> = mutableSetOf(),
+    var questionUidList: MutableList<String> = mutableListOf(),
 
     /** list of all fact identifiers related to this collection */
-    var factUidList: MutableSet<String> = mutableSetOf(),
+    var factUidList: MutableList<String> = mutableListOf(),
 
-    /** uid for this collection's subject */
-    val subjectUid: String = UUID.randomUUID().toString()
+    /** user who manages this collection */
+    var userUid: String? = null
 ): Serializable {
 
+    /** list of all units, received only from firebase */
+    @Ignore
+    val units: Map<String, UnitIO> = mapOf()
+
     /** Checks whether object contains any non-default data */
+    @get:Exclude
     val isNotEmpty: Boolean
         get() = (dateCreated != null
             || name.isNotEmpty()

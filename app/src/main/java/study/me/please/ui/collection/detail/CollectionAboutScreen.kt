@@ -136,33 +136,6 @@ private fun ContentLayout(
             .fillMaxWidth()
             .padding(horizontal = 12.dp)
     ) {
-        /*Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .horizontalScroll(rememberScrollState())
-                .padding(start = 6.dp, top = 6.dp, end = 6.dp),
-            horizontalArrangement = Arrangement.spacedBy(
-                LocalTheme.shapes.betweenItemsSpace
-            )
-        ) {
-            ImageAction(
-                modifier = Modifier,
-                leadingImageVector = Icons.Outlined.FileUpload,
-                text = stringResource(id = R.string.button_export)
-            ) {
-                viewModel.getExportString { json ->
-                    clipboardManager.setText(AnnotatedString(json))
-                }
-            }
-            ImageAction(
-                modifier = Modifier,
-                leadingImageVector = Icons.Outlined.DocumentScanner,
-                text = stringResource(id = R.string.button_scan)
-            ) {
-
-            }
-        }*/
-
         EditFieldInput(
             modifier = itemModifier,
             value = collectionDetail.name,

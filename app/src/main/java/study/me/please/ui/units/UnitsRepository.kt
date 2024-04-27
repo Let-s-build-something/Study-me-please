@@ -1,5 +1,9 @@
 package study.me.please.ui.units
 
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.firestore.FieldValue
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import study.me.please.data.io.CollectionIO
@@ -86,6 +90,39 @@ class UnitsRepository @Inject constructor(
         }
     }
 
+    /** updates a specific unit within a collection */
+    suspend fun updateFirebaseUnit(
+        unit: UnitIO,
+        collectionUid: String
+    ) {
+        if(Firebase.auth.currentUser == null) return
+        withContext(Dispatchers.IO) {
+            Firebase.firestore
+                .collection(FirebaseCollections.COLLECTIONS.name)
+                .document(collectionUid)
+                .update("units.${unit.uid}", unit)
+        }
+    }
+
+    /** updates a specific unit within a collection */
+    suspend fun deleteFirebaseUnits(
+        unitUidList: List<String>,
+        collectionUid: String
+    ) {
+        if(Firebase.auth.currentUser == null) return
+
+        val updateMap = mutableMapOf<String, Any>()
+        unitUidList.forEach {
+            updateMap["units.$it"] = FieldValue.delete()
+        }
+        withContext(Dispatchers.IO) {
+            Firebase.firestore
+                .collection(FirebaseCollections.COLLECTIONS.name)
+                .document(collectionUid)
+                .update(updateMap)
+        }
+    }
+
     /** Returns all paragraphs */
     suspend fun getAllParagraphs(): List<ParagraphIO>? {
         return withContext(Dispatchers.IO) {
@@ -100,9 +137,22 @@ class UnitsRepository @Inject constructor(
         }
     }
 
+    enum class FirebaseCollections {
+        COLLECTIONS
+    }
+
     /** Inserts or updates a new collection [collection] into the database */
     suspend fun insertCollection(collection: CollectionIO) {
         return withContext(Dispatchers.IO) {
+            Firebase.auth.currentUser?.uid?.let { userUid ->
+                Firebase.firestore
+                    .collection(FirebaseCollections.COLLECTIONS.name)
+                    .document(collection.uid)
+                    .set(collection.apply {
+                        this.userUid = userUid
+                    })
+            }
+
             collectionDao.insertCollection(collection)
         }
     }

@@ -124,36 +124,6 @@ class UnitViewModel @Inject constructor(
                 }
             )
 
-            /*iterateFurtherAction(
-                paragraphs = paragraph.data.paragraphs,
-                layer = paragraph.layer.plus(1),
-                action = { iterationParagraph, layer, _, isLast ->
-                    newElements.add(
-                        UnitElement.Paragraph(
-                            data = iterationParagraph,
-                            notLastLayers = notLastLayers.toMutableList().apply {
-                                if(isLast.not()) add(layer)
-                            },
-                            layer = layer
-                        )
-                    )
-
-                    val isNotCollapsed = collapsedParagraphs.value.contains(iterationParagraph.uid).not()
-
-                    if(isNotCollapsed) {
-                        newElements.addAll(iterationParagraph.facts.map { fact ->
-                            UnitElement.Fact(
-                                data = fact,
-                                layer = layer,
-                                notLastLayers = notLastLayers,
-                                isLastParagraph = iterationParagraph.paragraphs.isEmpty(),
-                                parentUid = iterationParagraph.uid
-                            )
-                        })
-                    }
-                    isNotCollapsed to mutableListOf()
-                }
-            )*/
             dataManager.elements.update {
                 it.toMutableList().apply {
                     addAll(index.plus(1), newElements)
@@ -222,8 +192,10 @@ class UnitViewModel @Inject constructor(
         targetIndex: Int,
         requestRefresh: () -> Unit
     ) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.Default) {
             currentUnit?.let { unit ->
+                if(dataManager.elements.value.any { it.uid == element.uid }) return@launch
+
                 val isNewElement = localStateElement.value?.second == -1
                 val isSafeToAdd = if(isNewElement) true else requestElementRemoval(elementUid = element.uid)
                 if(isSafeToAdd) {
@@ -239,6 +211,7 @@ class UnitViewModel @Inject constructor(
                         add(targetIndex.coerceIn(0, this.size), element)
                     }
                 }
+                expandParagraph(targetIndex)
 
                 requestRefresh()
                 requestElements()
@@ -259,11 +232,25 @@ class UnitViewModel @Inject constructor(
                 if(unit.removeParagraph(elementUid)) {
                     repository.updateUnit(unit)
                     if(delete) repository.deleteParagraph(elementUid)
+
+                    if(delete) {
+                        repository.updateFirebaseUnit(
+                            unit = unit,
+                            collectionUid = unit.collectionUid
+                        )
+                    }
                     return@withContext true
                 }
                 if(unit.removeFact(elementUid)) {
                     repository.updateUnit(unit)
                     if(delete) repository.deleteFact(elementUid)
+
+                    if(delete) {
+                        repository.updateFirebaseUnit(
+                            unit = unit,
+                            collectionUid = unit.collectionUid
+                        )
+                    }
                     return@withContext true
                 }
 
@@ -280,6 +267,12 @@ class UnitViewModel @Inject constructor(
                             if(delete) repository.deleteParagraph(elementUid)
 
                             result = true
+                            if(delete) {
+                                repository.updateFirebaseUnit(
+                                    unit = unit,
+                                    collectionUid = unit.collectionUid
+                                )
+                            }
                             return@iterateFurtherAction false to mutableListOf()
                         }
                         if(paragraph.removeFact(elementUid)) {
@@ -292,6 +285,12 @@ class UnitViewModel @Inject constructor(
                             if(delete) repository.deleteFact(elementUid)
 
                             result = true
+                            if(delete) {
+                                repository.updateFirebaseUnit(
+                                    unit = unit,
+                                    collectionUid = unit.collectionUid
+                                )
+                            }
                             return@iterateFurtherAction false to mutableListOf()
                         }
                         result.not() to mutableListOf()
@@ -342,6 +341,10 @@ class UnitViewModel @Inject constructor(
                         repository.updateParagraph(data)
                     }
 
+                    repository.updateFirebaseUnit(
+                        unit = unit,
+                        collectionUid = unit.collectionUid
+                    )
                     return@withContext true
                 }
             }
@@ -355,6 +358,11 @@ class UnitViewModel @Inject constructor(
                     unit.addFact(targetIndex, element.data)
                 }
                 repository.updateUnit(unit)
+
+                repository.updateFirebaseUnit(
+                    unit = unit,
+                    collectionUid = unit.collectionUid
+                )
                 return@withContext true
             }
 
@@ -402,6 +410,10 @@ class UnitViewModel @Inject constructor(
                         (find { it.uid == paragraph.uid } as? UnitElement.Paragraph)?.data?.updateTO(paragraph)
                     }
                 }
+                repository.updateFirebaseUnit(
+                    unit = unit,
+                    collectionUid = unit.collectionUid
+                )
             }
         }
     }
@@ -431,6 +443,10 @@ class UnitViewModel @Inject constructor(
                         (find { it.uid == fact.uid } as? UnitElement.Fact)?.data?.updateTO(fact)
                     }
                 }
+                repository.updateFirebaseUnit(
+                    unit = unit,
+                    collectionUid = unit.collectionUid
+                )
             }
         }
     }
@@ -491,7 +507,7 @@ class UnitViewModel @Inject constructor(
                     )
                 }
 
-                dataManager.elements.value = newElements
+                dataManager.elements.value = newElements.distinctBy { it.uid }
             }
         }
     }

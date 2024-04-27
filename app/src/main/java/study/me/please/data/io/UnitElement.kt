@@ -24,6 +24,16 @@ sealed class UnitElement(
         /** returns uid of class instance */
         @PrimaryKey
         var elementUid: String = UUID.randomUUID().toString()
+
+        override fun toString(): String {
+            return "{" +
+                    "${super.toString()}, " +
+                    "$layer," +
+                    "$data," +
+                    "$notLastLayers, " +
+                    "$uid, " +
+                    "}"
+        }
     }
 
     /** fact with simple information within */
@@ -39,6 +49,18 @@ sealed class UnitElement(
         /** returns uid of class instance */
         @PrimaryKey
         var elementUid: String = UUID.randomUUID().toString()
+
+        override fun toString(): String {
+            return "{" +
+                    "${super.toString()}, " +
+                    "$layer," +
+                    "$data," +
+                    "$parentUid," +
+                    "$isLastParagraph" +
+                    "$notLastLayers, " +
+                    "$uid, " +
+                    "}"
+        }
     }
 
     /** returns uid of either [FactIO] or [ParagraphIO] */
@@ -47,4 +69,13 @@ sealed class UnitElement(
             is Paragraph -> data.uid
             is Fact -> data.uid
         }
+
+    override fun toString(): String {
+        return "{" +
+                "${super.toString()}, " +
+                "$layer," +
+                "$notLastLayers, " +
+                "$uid, " +
+                "}"
+    }
 }

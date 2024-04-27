@@ -1,5 +1,7 @@
 package com.squadris.squadris.compose.components.input
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
@@ -16,6 +18,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -62,6 +65,7 @@ fun EditFieldInput(
     value: String = "",
     hint: String? = null,
     isError: Boolean = false,
+    errorText: String? = null,
     clearable: Boolean = false,
     focusRequester: FocusRequester? = null,
     leadingIcon: ImageVector? = null,
@@ -87,23 +91,29 @@ fun EditFieldInput(
 ) {
     val isFocused = remember(value) { mutableStateOf(false) }
     val text = remember(value) { mutableStateOf(value) }
+    val controlColor by animateColorAsState(
+        when {
+            isError -> Colors.RED_ERROR
+            isFocused.value -> LocalTheme.colors.secondary
+            else -> LocalTheme.colors.brandMain
+        },
+        label = "controlColorChange"
+    )
 
     LaunchedEffect(value) {
         text.value = value
     }
     CustomTextField(
         modifier = modifier
-            .then(if(isUnfocusedTransparent.not()) {
-                Modifier.border(
-                    if (isFocused.value) 1.dp else 0.25.dp,
-                    if (isError) {
-                        Colors.RED_ERROR
-                    } else if (isFocused.value) {
-                        LocalTheme.colors.secondary
-                    } else LocalTheme.colors.brandMain,
-                    shape
-                )
-            }else Modifier)
+            .then(
+                if (isUnfocusedTransparent.not()) {
+                    Modifier.border(
+                        if (isFocused.value) 1.dp else 0.25.dp,
+                        controlColor,
+                        shape
+                    )
+                } else Modifier
+            )
             .onFocusChanged {
                 isFocused.value = it.isFocused
             }
@@ -128,6 +138,17 @@ fun EditFieldInput(
                 onValueChange(outputValue)
             }
         },
+        supportingText = if(isError && errorText?.isNotEmpty() == true) {
+            {
+                AnimatedVisibility(visible = errorText.isNotEmpty()) {
+                    Text(
+                        modifier = Modifier.fillMaxWidth(),
+                        text = errorText,
+                        color = controlColor
+                    )
+                }
+            }
+        }else null,
         textStyle = textStyle,
         leadingIcon = if(leadingIcon != null) {
             {

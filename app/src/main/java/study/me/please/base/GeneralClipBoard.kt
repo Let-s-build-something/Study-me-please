@@ -6,9 +6,10 @@ import study.me.please.data.io.CollectionIO
 import study.me.please.data.io.FactIO
 import study.me.please.data.io.QuestionAnswerIO
 import study.me.please.data.io.QuestionIO
+import study.me.please.data.io.UnitElement
 import study.me.please.data.io.subjects.ParagraphIO
 import study.me.please.ui.units.UnitViewModel.Companion.INITIAL_LAYER
-import study.me.please.data.io.UnitElement
+import java.util.UUID
 
 /** General clipboard for copying and pasting any necessary information throughout the app */
 data class GeneralClipBoard(
@@ -67,14 +68,20 @@ data class GeneralClipBoard(
                     item.copy(
                         layer = INITIAL_LAYER,
                         notLastLayers = listOf(INITIAL_LAYER),
-                        isLastParagraph = true
+                        isLastParagraph = true,
+                        data = item.data.copy(
+                            uid = UUID.randomUUID().toString()
+                        )
                     )
                 )
             }
             is UnitElement.Paragraph -> {
                 repository.insertUnitElementParagraph(item.copy(
                     layer = INITIAL_LAYER,
-                    notLastLayers = listOf(INITIAL_LAYER)
+                    notLastLayers = listOf(INITIAL_LAYER),
+                    data = item.data.copy(
+                        uid = UUID.randomUUID().toString()
+                    )
                 ))
             }
         }

@@ -12,9 +12,11 @@ fun StudyMeAppTheme(
     content: @Composable () -> Unit
 ) {
     val colors = if(isDarkTheme) DarkAppColors else LightAppColors
+    val icons = if(isDarkTheme) AppThemeIconsDark() else AppThemeIconsLight()
 
     CompositionLocalProvider(
         LocalAppColors provides colors,
+        LocalAppIcons provides icons,
         content = content
     )
 }
@@ -22,4 +24,9 @@ fun StudyMeAppTheme(
 /** current set of colors */
 internal val LocalAppColors = staticCompositionLocalOf<BaseColors> {
     LightAppColors
+}
+
+/** current set of colors */
+internal val LocalAppIcons = staticCompositionLocalOf<ThemeIcons> {
+    AppThemeIconsLight()
 }

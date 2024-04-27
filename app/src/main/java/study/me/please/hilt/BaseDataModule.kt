@@ -25,4 +25,3 @@ object BaseDataModule {
         clipBoardDao: ClipboardDao
     ) = GeneralClipBoardRepository(clipBoardDao)
 }
-

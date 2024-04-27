@@ -1,7 +1,6 @@
 package study.me.please.ui.units
 
 import android.app.Activity
-import android.util.Log
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -18,10 +17,10 @@ import study.me.please.base.GeneralClipBoard
 import study.me.please.data.io.BaseResponse
 import study.me.please.data.io.CollectionIO
 import study.me.please.data.io.QuestionIO
+import study.me.please.data.io.UnitsFilter
 import study.me.please.data.io.subjects.ParagraphIO
 import study.me.please.data.io.subjects.UnitIO
 import study.me.please.ui.collection.RefreshableViewModel
-import study.me.please.data.io.UnitsFilter
 import javax.inject.Inject
 
 /** Communication bridge between UI and DB */
@@ -96,6 +95,10 @@ class CollectionUnitsViewModel @Inject constructor(
                 }
             }
             repository.deleteUnits(unitUidList)
+            repository.deleteFirebaseUnits(
+                collectionUid = collectionUid,
+                unitUidList = unitUidList
+            )
         }
     }
 
@@ -111,12 +114,13 @@ class CollectionUnitsViewModel @Inject constructor(
     }
 
     /** Updates specific subject */
-    fun updateUnit(subject: UnitIO) {
+    fun updateUnit(unit: UnitIO) {
         viewModelScope.launch {
             _units.value?.apply {
-                find { it.uid == subject.uid }?.updateTO(subject)
+                find { it.uid == unit.uid }?.updateTO(unit)
             }
-            repository.updateUnit(subject)
+            repository.updateUnit(unit)
+            repository.updateFirebaseUnit(unit, collectionUid)
         }
     }
 
@@ -129,7 +133,6 @@ class CollectionUnitsViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.Default) {
             _collection.value = repository.getCollection(collectionUid)
             collection.value?.let { safeCollection ->
-                Log.d("kostka_test", "units: ${_units.value?.map { it.uid }}, checked: ${checkedUnitUidList.toList()}")
 
                 val response = questionGenerator.generateQuestions(
                     activity = activity,
@@ -143,7 +146,7 @@ class CollectionUnitsViewModel @Inject constructor(
                     repository.insertQuestions(response.data)
                     repository.updateCollectionQuestions(
                         collectionUid = safeCollection.uid,
-                        uidList = safeCollection.questionUidList.plus(response.data.map { it.uid })
+                        uidList = safeCollection.questionUidList.plus(response.data.map { it.uid }).toSet()
                     )
                 }
                 _questionsGeneratingResponse.emit(response.copy(

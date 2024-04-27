@@ -4,12 +4,14 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.material3.FabPosition
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.hilt.navigation.compose.hiltViewModel
 import study.me.please.base.navigation.DefaultAppBarActions
 import study.me.please.base.navigation.NavIconType
 import study.me.please.base.navigation.NavigationRoot
+import study.me.please.data.shared.SharedViewModel
 
 /**
  * Most simple screen for implementing bussiness level logic
@@ -28,10 +30,12 @@ fun BrandBaseScreen(
     contentColor: Color = Color.Transparent,
     floatingActionButtonPosition: FabPosition = FabPosition.End,
     floatingActionButton: @Composable () -> Unit = {},
-    content: @Composable (PaddingValues) -> Unit,
+    content: @Composable (PaddingValues) -> Unit
 ) {
     val navController = LocalNavController.current
-    val currentEntry = navController?.currentBackStackEntryAsState()
+    val sharedViewModel: SharedViewModel = hiltViewModel<SharedViewModel>()
+
+    val currentUser = sharedViewModel.currentUser.collectAsState()
 
     val navIconClick: (() -> Unit)? = when {
         navIconType == NavIconType.HOME -> {
@@ -50,10 +54,8 @@ fun BrandBaseScreen(
         onBackPressed = onBackPressed,
         actionIcons = actionIcons ?: {
             DefaultAppBarActions(
-                currentRoute = currentEntry?.value?.destination?.route,
-                actionNavigation = { route ->
-                    navController?.navigate(route)
-                }
+                isUserSignedIn = currentUser.value != null,
+                userPhotoUrl = currentUser.value?.photoUrl?.toString()
             )
         },
         appBarVisible = appBarVisible,

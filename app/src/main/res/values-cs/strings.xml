@@ -3,14 +3,19 @@
     <string name="app_name">Study me, please</string>
     <string name="home_screen_title">Domů</string>
     <string name="screen_sessions_title">Cvičení</string>
+    <string name="screen_sign_up">Registr princezen</string>
+    <string name="screen_sign_up_subtitle">Registrace</string>
     <string name="screen_collection_title">Kolekce</string>
-    <string name="screen_register_title">Jsem nový</string>
+    <string name="screen_register_title">Suprdupr</string>
     <string name="screen_settings_title">Šatna</string>
     <string name="screen_account_title">Můj byznys</string>
     <string name="screen_session_lobby_title">Moje cvičky</string>
     <string name="screen_collection_detail_new">Nová kolekce</string>
     <string name="screen_questions">Otázky</string>
     <string name="screen_collection_about">Informace</string>
+
+    <string name="sign_up_username_helper">Vyberte si uživatelské jméno</string>
+    <string name="sign_up_username_hint">Říkejte mi princezno</string>
 
     <string name="navigate_back">Zpět</string>
     <string name="navigate_close">Zavřít</string>
@@ -219,6 +224,7 @@
     <string name="button_select_all">Vybrat vše</string>
     <string name="button_deselect">Odvybrat vše</string>
     <string name="button_cancel">Zrušit</string>
+    <string name="account_dashboard_button_logout">Odhlásit se</string>
 
 
     <!--- ============================= ACCESSIBILITY ==================================== -->
@@ -231,4 +237,6 @@
     <string name="accessibility_add_paragraph">paragraf</string>
     <string name="accessibility_delete">Smazat</string>
     <string name="accessibility_clipboard">Schránka</string>
+    <string name="accessibility_sign_up_illustration">Mladá žena se usmívá a sedí s telefonem v ruce s kočkou na klíně.</string>
+    <string name="accessibility_sign_in_illustration">Mladý muž se usmívá a sedí s telefonem v ruce, z telefonu vychází galaxie.</string>
 </resources>

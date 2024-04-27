@@ -22,6 +22,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.squadris.squadris.compose.theme.Colors
 import com.squadris.squadris.compose.theme.LocalTheme
 import study.me.please.R
 
@@ -112,6 +113,36 @@ fun ComponentHeaderButton(
         endIconVector = startIconVector,
         contentColor = LocalTheme.colors.secondary,
         containerColor = LocalTheme.colors.onBackgroundComponent
+    )
+}
+
+/**
+ * Item displaying collection and shortened information about it
+ * @param text text content
+ */
+@Preview
+@Composable
+fun ErrorHeaderButton(
+    modifier: Modifier = Modifier,
+    text: String = "",
+    shape: Shape = LocalTheme.shapes.circularActionShape,
+    textStyle: TextStyle? = null,
+    startIconVector: ImageVector? = Icons.Outlined.Add,
+    elevation: ButtonElevation? = null,
+    extraContent: @Composable RowScope.() -> Unit = {},
+    onClick: () -> Unit = {}
+) {
+    HeaderButton(
+        modifier = modifier,
+        text = text,
+        shape = shape,
+        onClick = onClick,
+        elevation = elevation,
+        textStyle = textStyle,
+        extraContent = extraContent,
+        endIconVector = startIconVector,
+        contentColor = LocalTheme.colors.contrastAction,
+        containerColor = Colors.RED_ERROR
     )
 }
 
