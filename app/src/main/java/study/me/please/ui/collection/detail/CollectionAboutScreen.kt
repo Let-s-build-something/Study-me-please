@@ -32,6 +32,7 @@ import kotlinx.coroutines.launch
 import study.me.please.R
 import study.me.please.data.io.CollectionIO
 import study.me.please.ui.collection.RefreshableViewModel.Companion.requestData
+import study.me.please.ui.collection.detail.questions.detail.INPUT_DELAYED_RESPONSE_MILLIS
 import study.me.please.ui.components.pull_refresh.PullRefreshScreen
 
 const val REQUEST_DATA_SAVE_DELAY = 200L
@@ -131,6 +132,8 @@ private fun ContentLayout(
         .wrapContentHeight()
         .fillMaxWidth()
 
+    val inputScope = rememberCoroutineScope()
+
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -143,9 +146,13 @@ private fun ContentLayout(
             maxLines = 1,
             minLines = 1
         ) { output ->
-            collectionDetail.name = output
-            bridge.updateCollection(collectionDetail)
-            collectionTitleState.value = output
+            inputScope.coroutineContext.cancelChildren()
+            inputScope.launch {
+                delay(INPUT_DELAYED_RESPONSE_MILLIS)
+                collectionDetail.name = output
+                bridge.updateCollection(collectionDetail)
+                collectionTitleState.value = output
+            }
         }
         EditFieldInput(
             modifier = itemModifier,
@@ -154,8 +161,12 @@ private fun ContentLayout(
             minLines = 8,
             maxLines = 8
         ) { output ->
-            collectionDetail.description = output
-            bridge.updateCollection(collectionDetail)
+            inputScope.coroutineContext.cancelChildren()
+            inputScope.launch {
+                delay(INPUT_DELAYED_RESPONSE_MILLIS)
+                collectionDetail.description = output
+                bridge.updateCollection(collectionDetail)
+            }
         }
     }
 }

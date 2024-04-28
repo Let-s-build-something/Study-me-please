@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Study me, please DEBUG</string>
+    <string name="firebase_web_client_id" translatable="false">708985154187-5ubir4ak06i3dctfs5qfmrimb27qm9ob.apps.googleusercontent.com</string>
 </resources>

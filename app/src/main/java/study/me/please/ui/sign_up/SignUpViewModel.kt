@@ -47,16 +47,16 @@ class SignUpViewModel @Inject constructor(
         context: Context,
         webClientId: String
     ) {
+        Log.d("kostka_test", "requestGoogleSignIn")
         val googleIdOption: GetGoogleIdOption = GetGoogleIdOption
             .Builder()
-            .setFilterByAuthorizedAccounts(filterAuthorizedAccounts)
+            .setFilterByAuthorizedAccounts(false)
             .setServerClientId(webClientId)
             //.setAutoSelectEnabled(true)
             .build()
 
         val passwordCredential = GetPasswordOption()
 
-        GetPasswordOption()
         val request: GetCredentialRequest = GetCredentialRequest
             .Builder()
             .addCredentialOption(googleIdOption)
@@ -70,14 +70,18 @@ class SignUpViewModel @Inject constructor(
                     context = context,
                 )
                 handleSignIn(result)
-            } catch (_: NoCredentialException) {
-                requestGoogleSignIn(
-                    filterAuthorizedAccounts = false,
-                    credentialManager = credentialManager,
-                    context = context,
-                    webClientId = webClientId
-                )
-            } catch (_: GetCredentialCancellationException) {
+            } catch (e: NoCredentialException) {
+                Log.e("kostka_test", "$e")
+                if(filterAuthorizedAccounts) {
+                    requestGoogleSignIn(
+                        filterAuthorizedAccounts = false,
+                        credentialManager = credentialManager,
+                        context = context,
+                        webClientId = webClientId
+                    )
+                }
+            } catch (e: GetCredentialCancellationException) {
+                Log.e("kostka_test", "$e")
                 if(filterAuthorizedAccounts) {
                     requestGoogleSignIn(
                         filterAuthorizedAccounts = false,

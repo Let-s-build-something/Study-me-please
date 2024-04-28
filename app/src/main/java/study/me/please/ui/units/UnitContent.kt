@@ -254,6 +254,7 @@ fun UnitContent(
                                         }
                                     )
                                     targetIndex = superiorIndex + element.data.facts.size + 1
+                                    activatedParagraph.value = element.data.uid
                                 }
                                 (droppedElement.first as? UnitElement.Fact)?.let { fact ->
                                     data = UnitElement.Fact(

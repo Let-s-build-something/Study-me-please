@@ -27,8 +27,8 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="study.me.please" />
-                  <option name="mobileSdkAppId" value="1:708985154187:android:096d2ac6e9783a8aeac28e" />
+                  <option name="appId" value="study.me.please.test" />
+                  <option name="mobileSdkAppId" value="1:708985154187:android:c06292303432cb40eac28e" />
                   <option name="projectId" value="study-me-please" />
                   <option name="projectNumber" value="708985154187" />
                 </ConnectionSetting>
