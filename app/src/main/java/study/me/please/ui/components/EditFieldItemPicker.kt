@@ -86,15 +86,6 @@ fun EditFieldItemPicker(
     var isFocused by remember { mutableStateOf(false) }
     val filteredValues = remember { mutableStateOf(values.keys.toList()) }
 
-    val inputShape = if(isFocused) {
-        RoundedCornerShape(
-            topStart = LocalTheme.shapes.componentCornerRadius,
-            topEnd = LocalTheme.shapes.componentCornerRadius,
-            bottomStart = 0.dp,
-            bottomEnd = 0.dp
-        )
-    }else LocalTheme.shapes.componentShape
-
     val normalizer = remember { Normalizer2.getNFDInstance() }
 
     LaunchedEffect(inputValue) {
@@ -164,7 +155,6 @@ fun EditFieldItemPicker(
                         else -> false
                     }
                 },
-            shape = inputShape,
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
             value = inputValue,
             textStyle = textStyle,

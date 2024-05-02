@@ -273,7 +273,7 @@ private fun DataCard(
                                 fontStyle = if(selectedFactType.value == FactType.QUOTE) FontStyle.Italic else FontStyle.Normal
                             ),
                             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-                            minLines = 2,
+                            minLines = 1,
                             maxLines = 2
                         ) { output ->
                             data.shortKeyInformation = output
@@ -407,8 +407,8 @@ private fun DataCard(
                                                     }
                                                 }
                                             ),
-                                            minLines = 3,
-                                            maxLines = 3
+                                            minLines = 2,
+                                            maxLines = 5
                                         ) { output ->
                                             listItems[0] = output
                                             data.textList = listOf(output)
@@ -483,8 +483,8 @@ private fun DataCard(
                             modifier = Modifier.fillMaxWidth(),
                             value = data.longInformation,
                             hint = stringResource(selectedFactType.value.getLongHintStringRes() ?: R.string.facts_type_long_fact_header),
-                            minLines = 3,
-                            maxLines = 3
+                            minLines = 2,
+                            maxLines = 5
                         ) { output ->
                             data.longInformation = output
                             requestDataSave()

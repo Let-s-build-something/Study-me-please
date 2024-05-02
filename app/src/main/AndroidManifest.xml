@@ -22,6 +22,7 @@
             android:name=".base.MainActivity"
             android:theme="@style/Theme.StudyMePlease"
             android:configChanges="uiMode"
+            android:windowSoftInputMode="adjustResize|stateVisible"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

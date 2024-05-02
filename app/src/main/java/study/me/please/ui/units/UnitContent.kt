@@ -27,6 +27,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -222,7 +223,8 @@ fun UnitContent(
                 // adding new element to either activated paragraph or unit
                 scope.launch {
                     val paragraph = elements.value.find { it.uid == activatedParagraph.value }
-                    val index = if(paragraph != null) {
+                    // shouldn't be able to add items to collapsed paragraphs
+                    val index = if(paragraph != null && collapsedParagraphs.value.contains(activatedParagraph.value).not()) {
                         elements.value.indexOf(paragraph)
                     }else 0
                     onItemDropped(
@@ -758,7 +760,9 @@ fun UnitContent(
         floatingActionButtonPosition = FabPosition.Center
     ) {
         LazyVerticalGrid(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .imePadding()
+                .fillMaxSize(),
             state = lazyGridState,
             columns = GridCells.Fixed(if(isLandscape) 2 else 1),
             horizontalArrangement = if(isLandscape) Arrangement.spacedBy(4.dp) else Arrangement.Start

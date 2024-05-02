@@ -160,8 +160,9 @@ fun EditFieldInput(
             if(hint?.isNotEmpty() == true) {
                 Text(
                     text = hint,
-                    color = LocalTheme.colors.brandMain,
-                    fontSize = 16.sp
+                    style = textStyle.copy(
+                        color = LocalTheme.colors.brandMain
+                    )
                 )
             }
         },

@@ -22,6 +22,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -45,13 +46,13 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import study.me.please.R
 import study.me.please.data.io.FactType
+import study.me.please.data.io.UnitElement
 import study.me.please.ui.collection.detail.REQUEST_DATA_SAVE_DELAY
 import study.me.please.ui.components.EditFieldItemPicker
 import study.me.please.ui.components.ExpandableContent
 import study.me.please.ui.components.FactCard
 import study.me.please.ui.components.InteractiveCardMode
 import study.me.please.ui.components.ListItemEditField
-import study.me.please.data.io.UnitElement
 
 /**
  * Paragraph block with nested facts and paragraphs
@@ -137,11 +138,14 @@ fun LazyGridScope.paragraphBlock(
                                     if(isReadOnly.not() || onDragStarted != null) {
                                         Modifier.dragSource(
                                             onClick = {
-                                                activatedParagraph.value = paragraph.uid
                                                 scope.launch {
-                                                    if (collapsedParagraphs.value.contains(paragraph.uid)) {
+                                                    activatedParagraph.value = if (collapsedParagraphs.value.contains(paragraph.uid)) {
                                                         viewModel.expandParagraph(index)
-                                                    } else viewModel.collapseParagraph(index)
+                                                        paragraph.uid
+                                                    }else {
+                                                        viewModel.collapseParagraph(index)
+                                                        null
+                                                    }
                                                 }
                                             },
                                             elementType = ElementType.PARAGRAPH,
@@ -195,12 +199,13 @@ fun LazyGridScope.paragraphBlock(
                                             .padding(start = 8.dp)
                                             .zIndex(1f),
                                         values = collectionViewModel?.paragraphNames.orEmpty(),
+                                        enabled = isReadOnly.not() && collapsedParagraphs.value.contains(paragraph.uid).not(),
                                         defaultValue = paragraph.name,
                                         hint = stringResource(R.string.subject_categorize_paragraph),
                                         textStyle = LocalTheme.styles.subheading,
                                         onValueChanged = { output ->
-                                            activatedParagraph.value = paragraph.uid
                                             paragraph.name = output
+                                            activatedParagraph.value = paragraph.uid
 
                                             saveScope.coroutineContext.cancelChildren()
                                             saveScope.launch {
@@ -262,10 +267,12 @@ fun LazyGridScope.paragraphBlock(
                                         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
                                         keyboardActions = KeyboardActions(
                                             onNext = {
-                                                if(point.isNotBlank()) bulletPoints.add(index + 1, "")
-                                                scope.launch {
-                                                    delay(50)
-                                                    focusManager?.moveFocus(FocusDirection.Down)
+                                                if(point.isNotBlank()) {
+                                                    bulletPoints.add(index + 1, "")
+                                                    scope.launch {
+                                                        delay(50)
+                                                        focusManager?.moveFocus(FocusDirection.Down)
+                                                    }
                                                 }
                                             }
                                         ),

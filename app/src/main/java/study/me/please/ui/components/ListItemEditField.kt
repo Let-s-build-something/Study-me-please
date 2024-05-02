@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.text.KeyboardActionScope
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Text
@@ -29,6 +30,7 @@ import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import com.squadris.squadris.compose.components.input.EditFieldInput
 import com.squadris.squadris.compose.theme.LocalTheme
@@ -50,6 +52,7 @@ fun ListItemEditField(
 ) {
     val localDensity = LocalDensity.current
     val focusManager = LocalFocusManager.current
+
     val output = remember(value) { mutableStateOf(value) }
     var fieldLineCount by remember { mutableIntStateOf(1) }
 
@@ -86,6 +89,12 @@ fun ListItemEditField(
                     }
                     Key.Backspace -> {
                         onBackspaceKey(value)
+                        true
+                    }
+                    Key.Enter -> {
+                        keyboardActions.onNext?.invoke(object: KeyboardActionScope {
+                            override fun defaultKeyboardAction(imeAction: ImeAction) {}
+                        })
                         true
                     }
                     else -> false
