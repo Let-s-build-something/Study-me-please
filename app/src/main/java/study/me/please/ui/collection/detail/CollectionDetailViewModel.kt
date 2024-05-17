@@ -17,6 +17,7 @@ import study.me.please.data.io.CollectionIO
 import study.me.please.data.io.FactIO
 import study.me.please.data.io.FactType
 import study.me.please.data.io.QuestionIO
+import study.me.please.data.shared.SharedDataManager
 import study.me.please.ui.collection.RefreshableViewModel
 import study.me.please.ui.collection.detail.facts.FactsFilter
 import study.me.please.ui.collection.detail.questions.QuestionsFilter
@@ -28,6 +29,7 @@ import javax.inject.Inject
 class CollectionDetailViewModel @Inject constructor(
     private val repository: CollectionDetailRepository,
     private val dataManager: CollectionDetailDataManager,
+    private val sharedDataManager: SharedDataManager,
     val clipBoard: GeneralClipBoard
 ): BaseViewModel(), RefreshableViewModel {
 
@@ -95,10 +97,13 @@ class CollectionDetailViewModel @Inject constructor(
     fun requestCollectionSave(collection: CollectionIO) {
         viewModelScope.launch(Dispatchers.Default) {
             if(collection.isNotEmpty) {
-                repository.saveCollection(collection = collection.apply {
-                    dateModified = DateUtils.now.timeInMillis
-                    if(collection.dateCreated == null) dateCreated = DateUtils.now.timeInMillis
-                })
+                repository.saveCollection(
+                    collection = collection.apply {
+                        dateModified = DateUtils.now.timeInMillis
+                        if(collection.dateCreated == null) dateCreated = DateUtils.now.timeInMillis
+                    },
+                    userUid = sharedDataManager.currentUser.value?.uid
+                )
             }
         }
     }

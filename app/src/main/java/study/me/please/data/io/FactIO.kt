@@ -1,6 +1,5 @@
 package study.me.please.data.io
 
-import android.content.Context
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Ignore
@@ -9,7 +8,6 @@ import com.google.gson.annotations.SerializedName
 import com.squadris.squadris.utils.DateUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import study.me.please.R
 import study.me.please.data.room.AppRoomDatabase
 import java.io.Serializable
 import java.util.UUID
@@ -78,8 +76,8 @@ data class FactIO(
     /** Whether there is not visible data */
     @get:Ignore
     val isEmpty: Boolean
-        get() = shortKeyInformation.isEmpty()
-                && longInformation.isEmpty()
+        get() = shortKeyInformation.isBlank()
+                && longInformation.isBlank()
                 && promptImage?.isEmpty != false
                 && (textList.isEmpty() || type != FactType.LIST)
 
@@ -94,14 +92,6 @@ data class FactIO(
         (textList.any { it.isNotBlank() } || longInformation.isNotBlank())
                 && shortKeyInformation.isNotBlank()
     }
-
-    /** returns formulated generic prompt and long information */
-    @Deprecated("Need change of strategy")
-    fun getGenericLongPrompt(context: Context) = context.getString(
-        R.string.facts_information_generic_prompt,
-        context.getString(type.getLongHeaderStringRes() ?: 0).lowercase(),
-        longInformation
-    )
 
     /** Updates this object with new data */
     fun updateTO(fact: FactIO) {

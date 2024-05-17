@@ -300,7 +300,10 @@ fun PromptLayout(
 
                                 ParagraphLayoutContainer(
                                     modifier = Modifier
-                                        .heightIn(max = localConfiguration.screenHeightDp.times(0.5).dp),
+                                        .heightIn(
+                                            max = localConfiguration.screenHeightDp.times(0.6).dp,
+                                            min = localConfiguration.screenHeightDp.times(0.3).dp
+                                        ),
                                     importedSource = question.importedSource,
                                     onCloseRequest = {
                                         isParagraphVisible.value = false

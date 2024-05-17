@@ -1,6 +1,5 @@
 package study.me.please.ui.collection.detail
 
-import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.Dispatchers
@@ -43,9 +42,12 @@ class CollectionDetailRepository @Inject constructor(
     }
 
     /** saves a collection */
-    suspend fun saveCollection(collection: CollectionIO) {
+    suspend fun saveCollection(
+        collection: CollectionIO,
+        userUid: String? = null
+    ) {
         return withContext(Dispatchers.IO) {
-            Firebase.auth.currentUser?.uid?.let { userUid ->
+            userUid?.let { userUid ->
                 Firebase.firestore
                     .collection(FirebaseCollections.COLLECTIONS.name)
                     .document(collection.uid)

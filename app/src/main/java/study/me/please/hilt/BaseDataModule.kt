@@ -7,7 +7,8 @@ import dagger.hilt.android.components.ActivityRetainedComponent
 import dagger.hilt.android.scopes.ActivityRetainedScoped
 import study.me.please.base.GeneralClipBoard
 import study.me.please.base.GeneralClipBoardRepository
-import study.me.please.data.room.ClipboardDao
+import study.me.please.data.room.FactDao
+import study.me.please.data.room.UnitDao
 
 @Module
 @InstallIn(ActivityRetainedComponent::class)
@@ -22,6 +23,10 @@ object BaseDataModule {
     @ActivityRetainedScoped
     @Provides
     fun provideGeneralClipBoardRepository(
-        clipBoardDao: ClipboardDao
-    ) = GeneralClipBoardRepository(clipBoardDao)
+        unitDao: UnitDao,
+        factDao: FactDao
+    ) = GeneralClipBoardRepository(
+        unitDao = unitDao,
+        factDao = factDao
+    )
 }

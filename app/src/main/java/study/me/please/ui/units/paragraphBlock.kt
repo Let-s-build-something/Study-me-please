@@ -19,16 +19,19 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.focus.FocusManager
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.res.stringResource
@@ -91,7 +94,8 @@ fun LazyGridScope.paragraphBlock(
         key = { _, element -> element.uid },
         span = { _, element -> GridItemSpan(
             if(isLandscape && element is UnitElement.Paragraph) 2 else 1
-        ) }
+        ) },
+        contentType = { _, element -> element.uid } // to avoid Modifier reuse
     ) { index, element ->
         val paddingStart = remember(element.uid) {
             if(element.layer >= 0) {
@@ -102,7 +106,42 @@ fun LazyGridScope.paragraphBlock(
         when(element) {
             is UnitElement.Paragraph -> {
                 element.data.let { paragraph ->
+                    val saveScope = rememberCoroutineScope()
                     val identification = getLayerIdentification(element.layer)
+                    val focusRequester = remember { FocusRequester() }
+
+                    LaunchedEffect(Unit) {
+                        if(element.uid == activatedParagraph.value && element.data.name.isBlank()) {
+                            focusRequester.requestFocus()
+                        }
+                    }
+
+                    val editDragModifier = Modifier.dragSource(
+                        onClick = {
+                            scope.launch {
+                                if (collapsedParagraphs.value.contains(paragraph.uid)) {
+                                    viewModel.expandParagraph(index)
+                                    activatedParagraph.value = paragraph.uid
+                                } else {
+                                    viewModel.collapseParagraph(index, onSelectionRequest = {
+                                        activatedParagraph.value = it
+                                    })
+                                }
+                            }
+                        },
+                        elementType = ElementType.PARAGRAPH,
+                        uid = paragraph.uid,
+                        onStarted = {
+                            if (onDragStarted != null) {
+                                onDragStarted(element to index)
+                            } else {
+                                viewModel.localStateElement.value = element to index
+                                viewModel.removeElement(index, onSelectionRequest = {
+                                    activatedParagraph.value = it
+                                })
+                            }
+                        }
+                    )
 
                     DropTargetContainer(
                         modifier = Modifier.animateItemPlacement(),
@@ -135,31 +174,9 @@ fun LazyGridScope.paragraphBlock(
                                 .padding(start = paddingStart)
                                 .fillMaxWidth()
                                 .then(
-                                    if(isReadOnly.not() || onDragStarted != null) {
-                                        Modifier.dragSource(
-                                            onClick = {
-                                                scope.launch {
-                                                    activatedParagraph.value = if (collapsedParagraphs.value.contains(paragraph.uid)) {
-                                                        viewModel.expandParagraph(index)
-                                                        paragraph.uid
-                                                    }else {
-                                                        viewModel.collapseParagraph(index)
-                                                        null
-                                                    }
-                                                }
-                                            },
-                                            elementType = ElementType.PARAGRAPH,
-                                            uid = paragraph.uid,
-                                            onStarted = {
-                                                if(onDragStarted != null) {
-                                                    onDragStarted(element to index)
-                                                }else {
-                                                    viewModel.localStateElement.value = element to index
-                                                    viewModel.removeElement(index)
-                                                }
-                                            }
-                                        )
-                                    }else Modifier
+                                    if (isReadOnly.not() || onDragStarted != null) {
+                                        editDragModifier
+                                    } else Modifier
                                 )
                                 .then(
                                     if (element.layer >= 0) Modifier
@@ -191,14 +208,15 @@ fun LazyGridScope.paragraphBlock(
                                         )
                                     }
 
-                                    val saveScope = rememberCoroutineScope()
+                                    val paragraphNames = collectionViewModel?.paragraphNames?.collectAsState()
 
                                     EditFieldItemPicker(
                                         modifier = Modifier
                                             .wrapContentWidth()
+                                            .focusRequester(focusRequester)
                                             .padding(start = 8.dp)
                                             .zIndex(1f),
-                                        values = collectionViewModel?.paragraphNames.orEmpty(),
+                                        values = paragraphNames?.value.orEmpty(),
                                         enabled = isReadOnly.not() && collapsedParagraphs.value.contains(paragraph.uid).not(),
                                         defaultValue = paragraph.name,
                                         hint = stringResource(R.string.subject_categorize_paragraph),
@@ -246,6 +264,7 @@ fun LazyGridScope.paragraphBlock(
                                 bulletPoints.forEachIndexed { index, point ->
                                     ListItemEditField(
                                         modifier = Modifier.padding(bottom = 2.dp),
+                                        identifier = "${index}_${paragraph.uid}",
                                         prefix = FactType.BULLET_POINT_PREFIX,
                                         value = point,
                                         hint = stringResource(
@@ -254,33 +273,44 @@ fun LazyGridScope.paragraphBlock(
                                             }else R.string.list_item_bulletin_hint
                                         ),
                                         onBackspaceKey = {
-                                            activatedParagraph.value = paragraph.uid
-                                            if(it.isEmpty() && isIrremovable.not()) {
-                                                if(index > 0) {
+                                            if(isIrremovable.not()) {
+                                                if(index > 0 && it.isNotBlank()) {
+                                                    bulletPoints[index - 1] += it
+                                                }
+                                                if(bulletPoints.size > 1 && index != 0) {
                                                     focusManager?.moveFocus(FocusDirection.Up)
                                                 }
-                                                bulletPoints.removeAt(index)
-                                                element.data.bulletPoints = bulletPoints.toMutableList()
-                                                viewModel.updateParagraph(element.data)
+                                                if(it.isEmpty() || index > 0) {
+                                                    bulletPoints.removeAt(index)
+                                                    element.data.bulletPoints = bulletPoints.toMutableList()
+                                                    viewModel.updateParagraph(element.data)
+                                                }
                                             }
                                         },
                                         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
                                         keyboardActions = KeyboardActions(
                                             onNext = {
-                                                if(point.isNotBlank()) {
-                                                    bulletPoints.add(index + 1, "")
-                                                    scope.launch {
-                                                        delay(50)
-                                                        focusManager?.moveFocus(FocusDirection.Down)
-                                                    }
+                                                bulletPoints.add(index + 1, "")
+                                                scope.launch {
+                                                    delay(50)
+                                                    focusManager?.moveFocus(FocusDirection.Down)
                                                 }
                                             }
                                         ),
+                                        onEntered = { text ->
+                                            bulletPoints.add(index + 1, text.toString())
+                                            scope.launch {
+                                                delay(50)
+                                                focusManager?.moveFocus(FocusDirection.Down)
+                                            }
+                                        },
                                         onValueChange = { output ->
-                                            activatedParagraph.value = paragraph.uid
-                                            bulletPoints[index] = output
-                                            element.data.bulletPoints = bulletPoints.toMutableList()
-                                            viewModel.updateParagraph(element.data)
+                                            if(index < bulletPoints.size) {
+                                                activatedParagraph.value = paragraph.uid
+                                                bulletPoints[index] = output
+                                                element.data.bulletPoints = bulletPoints.toMutableList()
+                                                viewModel.updateParagraph(element.data)
+                                            }
                                         }
                                     )
                                 }
@@ -300,15 +330,15 @@ fun LazyGridScope.paragraphBlock(
                             .fillMaxWidth()
                             .padding(
                                 start = if (isLandscape) {
-                                    if (index % 2 == 0) paddingStart.div(2) else 0.dp
+                                    if (element.innerIndex % 2 == 0) paddingStart.div(2) else 0.dp
                                 } else paddingStart,
-                                end = if (isLandscape && index % 2 != 0) paddingStart.div(2) else 0.dp
+                                end = if (isLandscape && element.innerIndex % 2 != 0) paddingStart.div(2) else 0.dp
                             )
                             .offset(
                                 x = if (isLandscape) paddingStart.div(2) else 0.dp
                             )
                             .then(
-                                if (isLandscape.not() || index % 2 == 0) {
+                                if (isLandscape.not() || element.innerIndex % 2 == 0) {
                                     Modifier.drawSegmentedBorder(
                                         borderOrder = if (element.isLastParagraph) {
                                             BorderOrder.None
@@ -338,7 +368,7 @@ fun LazyGridScope.paragraphBlock(
                         FactCard(
                             modifier = Modifier
                                 .then(
-                                    if (isReadOnly.not() || onDragStarted != null) {
+                                    if ((isReadOnly.not() || onDragStarted != null) && selectedFact.value != fact.uid) {
                                         Modifier.dragSource(
                                             onClick = {
                                                 activatedParagraph.value = element.parentUid
@@ -349,11 +379,13 @@ fun LazyGridScope.paragraphBlock(
                                             elementType = ElementType.FACT,
                                             uid = fact.uid,
                                             onStarted = {
-                                                if(onDragStarted != null) {
+                                                if (onDragStarted != null) {
                                                     onDragStarted(element to index)
-                                                }else {
+                                                } else {
                                                     viewModel.localStateElement.value = element to index
-                                                    viewModel.removeElement(index)
+                                                    viewModel.removeElement(index, onSelectionRequest = {
+                                                        activatedParagraph.value = it
+                                                    })
                                                 }
                                             }
                                         )

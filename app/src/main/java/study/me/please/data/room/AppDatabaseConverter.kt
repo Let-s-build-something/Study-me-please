@@ -351,8 +351,8 @@ class AppDatabaseConverter @Inject constructor(private val gson: Gson) {
 
     /** Converts string to [LargePathAsset] */
     @TypeConverter
-    fun toLargePathAsset(value: String): LargePathAsset? {
-        return if(value.isEmpty()) null else {
+    fun toLargePathAsset(value: String?): LargePathAsset? {
+        return if(value.isNullOrBlank()) null else {
             gson.fromJson(
                 value,
                 TypeToken.getParameterized(LargePathAsset::class.java).type

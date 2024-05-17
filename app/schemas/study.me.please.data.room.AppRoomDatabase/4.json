@@ -2,11 +2,11 @@
   "formatVersion": 1,
   "database": {
     "version": 4,
-    "identityHash": "b55d76d3539d44d93acb4b34f6f10f72",
+    "identityHash": "66f6c5b6229a6ee5fe46e2a59fb78108",
     "entities": [
       {
         "tableName": "ROOM_COLLECTION_TABLE",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`defaultPreference` TEXT NOT NULL, `name` TEXT NOT NULL, `description` TEXT NOT NULL, `icon` TEXT, `date_created` INTEGER, `date_modified` INTEGER, `uid` TEXT NOT NULL, `questionUidList` TEXT NOT NULL, `factUidList` TEXT NOT NULL, `subjectUid` TEXT NOT NULL, PRIMARY KEY(`uid`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`defaultPreference` TEXT NOT NULL, `name` TEXT NOT NULL, `description` TEXT NOT NULL, `icon` TEXT, `date_created` INTEGER, `date_modified` INTEGER NOT NULL, `uid` TEXT NOT NULL, `questionUidList` TEXT NOT NULL, `factUidList` TEXT NOT NULL, `userUid` TEXT, PRIMARY KEY(`uid`))",
         "fields": [
           {
             "fieldPath": "defaultPreference",
@@ -42,7 +42,7 @@
             "fieldPath": "dateModified",
             "columnName": "date_modified",
             "affinity": "INTEGER",
-            "notNull": false
+            "notNull": true
           },
           {
             "fieldPath": "uid",
@@ -63,10 +63,10 @@
             "notNull": true
           },
           {
-            "fieldPath": "subjectUid",
-            "columnName": "subjectUid",
+            "fieldPath": "userUid",
+            "columnName": "userUid",
             "affinity": "TEXT",
-            "notNull": true
+            "notNull": false
           }
         ],
         "primaryKey": {
@@ -550,17 +550,11 @@
       },
       {
         "tableName": "ROOM_SUBJECT_TABLE",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`uid` TEXT NOT NULL, `categoryUids` TEXT NOT NULL, `bulletPoints` TEXT NOT NULL, `paragraphUidList` TEXT NOT NULL, `factUidList` TEXT NOT NULL, `name` TEXT NOT NULL, `collection_uid` TEXT NOT NULL, `date_created` INTEGER NOT NULL, `collapsedParagraphs` TEXT NOT NULL, PRIMARY KEY(`uid`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`uid` TEXT NOT NULL, `bulletPoints` TEXT NOT NULL, `paragraphUidList` TEXT NOT NULL, `factUidList` TEXT NOT NULL, `name` TEXT NOT NULL, `collection_uid` TEXT NOT NULL, `date_created` INTEGER NOT NULL, `collapsedParagraphs` TEXT NOT NULL, `firstVisibleItemIndex` INTEGER NOT NULL, `firstVisibleItemOffset` INTEGER NOT NULL, `activatedParagraph` TEXT, PRIMARY KEY(`uid`))",
         "fields": [
           {
             "fieldPath": "uid",
             "columnName": "uid",
-            "affinity": "TEXT",
-            "notNull": true
-          },
-          {
-            "fieldPath": "categoryUids",
-            "columnName": "categoryUids",
             "affinity": "TEXT",
             "notNull": true
           },
@@ -605,6 +599,24 @@
             "columnName": "collapsedParagraphs",
             "affinity": "TEXT",
             "notNull": true
+          },
+          {
+            "fieldPath": "firstVisibleItemIndex",
+            "columnName": "firstVisibleItemIndex",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "firstVisibleItemOffset",
+            "columnName": "firstVisibleItemOffset",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "activatedParagraph",
+            "columnName": "activatedParagraph",
+            "affinity": "TEXT",
+            "notNull": false
           }
         ],
         "primaryKey": {
@@ -650,7 +662,7 @@
       },
       {
         "tableName": "ROOM_PARAGRAPH_TABLE",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`uid` TEXT NOT NULL, `categoryUid` TEXT, `bulletPoints` TEXT NOT NULL, `paragraphs` TEXT NOT NULL, `facts` TEXT NOT NULL, `localCategory` TEXT, PRIMARY KEY(`uid`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`uid` TEXT NOT NULL, `bulletPoints` TEXT NOT NULL, `paragraphUidList` TEXT NOT NULL, `factUidList` TEXT NOT NULL, `name` TEXT NOT NULL, `dateCreated` INTEGER NOT NULL, `imageAsset` TEXT, PRIMARY KEY(`uid`))",
         "fields": [
           {
             "fieldPath": "uid",
@@ -659,32 +671,38 @@
             "notNull": true
           },
           {
-            "fieldPath": "categoryUid",
-            "columnName": "categoryUid",
-            "affinity": "TEXT",
-            "notNull": false
-          },
-          {
             "fieldPath": "bulletPoints",
             "columnName": "bulletPoints",
             "affinity": "TEXT",
             "notNull": true
           },
           {
-            "fieldPath": "paragraphs",
-            "columnName": "paragraphs",
+            "fieldPath": "paragraphUidList",
+            "columnName": "paragraphUidList",
             "affinity": "TEXT",
             "notNull": true
           },
           {
-            "fieldPath": "facts",
-            "columnName": "facts",
+            "fieldPath": "factUidList",
+            "columnName": "factUidList",
             "affinity": "TEXT",
             "notNull": true
           },
           {
-            "fieldPath": "localCategory",
-            "columnName": "localCategory",
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "dateCreated",
+            "columnName": "dateCreated",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "imageAsset",
+            "columnName": "imageAsset",
             "affinity": "TEXT",
             "notNull": false
           }
@@ -702,7 +720,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'b55d76d3539d44d93acb4b34f6f10f72')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '66f6c5b6229a6ee5fe46e2a59fb78108')"
     ]
   }
 }

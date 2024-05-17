@@ -32,8 +32,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
 import com.squadris.squadris.compose.theme.LocalTheme
 import com.squadris.squadris.ext.brandShimmerEffect
+import com.squadris.squadris.utils.OnLifecycleEvent
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
@@ -125,7 +127,7 @@ fun SessionScreen(
     if(questions.value.isNullOrEmpty().not() && preferencePack.value != null) {
         preferencePack.value?.let { preference ->
             val sessionState = rememberSessionScreenState(
-                session.value?.questionModule ?: QuestionModule(),
+                module = session.value?.questionModule ?: QuestionModule(),
                 isTest = isTestingMode,
                 sessionPreferencePack = mutableStateOf(preference),
                 requestSave = { module ->
@@ -140,6 +142,14 @@ fun SessionScreen(
 
             val liveIndex = sessionState.liveIndex.collectAsState()
             val totalItemsCount = sessionState.module.totalItemsCount.collectAsState()
+
+            OnLifecycleEvent {
+                when(it) {
+                    Lifecycle.Event.ON_RESUME -> sessionState.module.stopwatch.start()
+                    Lifecycle.Event.ON_PAUSE -> sessionState.module.stopwatch.stop()
+                    else -> {}
+                }
+            }
 
             LaunchedEffect(showPreferenceModal) {
                 if(showPreferenceModal) {

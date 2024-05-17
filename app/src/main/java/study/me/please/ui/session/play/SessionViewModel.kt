@@ -103,7 +103,6 @@ class SessionViewModel @Inject constructor(
                 dataManager.preferencePacks.value?.firstOrNull() ?: SessionPreferencePack()
             }else SessionPreferencePack()
 
-            Log.d("kostka_test", "questions: $questions")
             dataManager.questions.value = questions
         }
     }

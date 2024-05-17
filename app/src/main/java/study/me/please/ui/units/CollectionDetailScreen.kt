@@ -82,6 +82,7 @@ import study.me.please.base.navigation.ActionBarIcon
 import study.me.please.base.navigation.NavIconType
 import study.me.please.base.navigation.NavigationNode.Companion.navigate
 import study.me.please.base.navigation.NavigationRoot
+import study.me.please.data.io.UnitsFilter
 import study.me.please.data.io.subjects.ParagraphIO
 import study.me.please.ui.collection.RefreshableViewModel.Companion.requestData
 import study.me.please.ui.components.BasicAlertDialog
@@ -92,7 +93,6 @@ import study.me.please.ui.components.ImageAction
 import study.me.please.ui.components.pull_refresh.PullRefreshScreen
 import study.me.please.ui.components.session.launcher.SessionLauncher
 import study.me.please.ui.units.CollectionUnitsViewModel.Companion.FAILED_INSERT
-import study.me.please.data.io.UnitsFilter
 
 /**
  * List of subjects specific to a collection
@@ -253,7 +253,7 @@ fun CollectionDetailScreen(
                                 })
                             },
                         state = pagerState,
-                        beyondBoundsPageCount = 2
+                        beyondBoundsPageCount = 1
                     ) { index ->
                         units.value?.getOrNull(index)?.let { unit ->
                             UnitContent(

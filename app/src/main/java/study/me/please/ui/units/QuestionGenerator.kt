@@ -254,7 +254,7 @@ class QuestionGenerator @Inject constructor() {
                                 generateQuestionFinal(
                                     activity = activity,
                                     promptFact = iteratedFact,
-                                    facts = relatedFacts.map { it.first },
+                                    relatedFacts = relatedFacts.map { it.first },
                                     generatingGoal = generatingGoal
                                 )
                             )
@@ -291,7 +291,7 @@ class QuestionGenerator @Inject constructor() {
                             generateQuestionFinal(
                                 activity = activity,
                                 promptFact = iteratedFact,
-                                facts = relatedFacts,
+                                relatedFacts = relatedFacts,
                                 generatingGoal = generatingGoal
                             )
                         )
@@ -307,7 +307,7 @@ class QuestionGenerator @Inject constructor() {
     private fun generateQuestionFinal(
         activity: Activity,
         promptFact: FactToGenerate,
-        facts: List<FactToGenerate>,
+        relatedFacts: List<FactToGenerate>,
         generatingGoal: FactGeneratingGoal
     ): QuestionIO {
         val importedSource = promptFact.makeImportedSourceRoute()
@@ -316,7 +316,7 @@ class QuestionGenerator @Inject constructor() {
         return if(promptFact.data.type == FactType.LIST) {
             if(generatingGoal == FactGeneratingGoal.SHORT_INFORMATION) {
                 // [Pair.first] - item, [Pair.second] - fact short key information
-                val relatedItems = facts
+                val relatedItems = relatedFacts
                     .take((MINIMUM_RELATED_ITEMS_TO_GENERATE_LIST..MAXIMUM_RELATED_ITEMS_TO_GENERATE_LIST).random())
 
                 QuestionIO(
@@ -347,7 +347,7 @@ class QuestionGenerator @Inject constructor() {
                 )
             }else {
                 QuestionIO(
-                    answers = facts.map { mappingFact ->
+                    answers = relatedFacts.map { mappingFact ->
                         val makeImportedSourceRoute = mappingFact.makeImportedSourceRoute()
 
                         QuestionAnswerIO(
@@ -374,7 +374,7 @@ class QuestionGenerator @Inject constructor() {
             }
         }else {
             QuestionIO(
-                answers = facts.map { mappingFact ->
+                answers = relatedFacts.map { mappingFact ->
                     val makeImportedSourceRoute = mappingFact.makeImportedSourceRoute()
                     val shortKeyInformation = "${mappingFact.data.shortKeyInformation} (${mappingFact.parentParagraph.name})"
 
@@ -622,11 +622,18 @@ class QuestionGenerator @Inject constructor() {
                 ParagraphGeneratingGoal.LIST_OF_CHILDREN_FACTS -> {
                     if(paragraph.data.name.isBlank()) return@withContext null
                     val correctFacts = paragraph.data.facts
+                        .filter {
+                            it.isEmpty.not()
+                        }
+                    val correctShortKeys = correctFacts.map { it.shortKeyInformation }
                     val relatedFacts = relatedParagraphs
                         .flatMap { data -> data.first.data.facts.map { it to data.first } }
                         .filter { related ->
                             correctFacts.none { it.uid == related.first.uid }
                                     && related.first.isSeriousDataPoint()
+                                    && correctShortKeys.none { key ->
+                                related.first.shortKeyInformation.equals(key, true)
+                            }
                         }
                         .take(correctFacts.size)
                     // if there are no related facts
@@ -662,7 +669,7 @@ class QuestionGenerator @Inject constructor() {
                             prompt = activity.getString(
                                 R.string.question_generating_children_items,
                                 paragraph.data.name,
-                                paragraph.data.uid,
+                                //paragraph.data.uid,
                                 paragraph.parentParagraph?.name ?: "",
                                 paragraph.parentParagraph?.uid ?: "-"
                             )

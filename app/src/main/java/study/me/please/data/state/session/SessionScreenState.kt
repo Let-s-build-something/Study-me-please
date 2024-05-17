@@ -79,7 +79,6 @@ data class SessionScreenState(
                 }
             }
             if(item.mode.value == SessionScreenMode.LOCKED) {
-                requestSave()
 
                 // if we are not in history
                 if(liveIndex.value >= module.history.size.minus(1)) {
@@ -88,12 +87,13 @@ data class SessionScreenState(
                             questionIO = item.question,
                             index = liveIndex.value.minus(module.history.size.minus(1)),
                             answers = item.validations.toSet().toList(),
-                            timeToAnswer = DateUtils.now.timeInMillis,
                             timeOfStart = timeOfStart?.timeInMillis,
                             isRepetition = item.isRepetition
                         )
                     )
                 }
+
+                requestSave()
             }
         }
     }

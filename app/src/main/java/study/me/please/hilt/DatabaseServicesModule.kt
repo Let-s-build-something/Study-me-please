@@ -53,10 +53,6 @@ object DatabaseServicesModule {
     @Provides
     fun provideCategoryDao(appDatabase: AppRoomDatabase) = appDatabase.categoryDbDao()
 
-    /** Interface for accessing preferences data in local Room database */
-    @Provides
-    fun provideClipBoardDao(appDatabase: AppRoomDatabase) = appDatabase.clipboardDao()
-
     /** Local main Room database */
     @ActivityRetainedScoped
     @Provides
@@ -68,6 +64,9 @@ object DatabaseServicesModule {
         AppRoomDatabase::class.java,
         AppRoomDatabase.ROOM_DATABASE_NAME
     ).addTypeConverter(AppDatabaseConverter(gson))
+        .addMigrations(AppRoomDatabase.MIGRATION_1_2)
+        .addMigrations(AppRoomDatabase.MIGRATION_2_3)
+        .addMigrations(AppRoomDatabase.MIGRATION_3_4)
         .build()
 
     /** Singleton instance of a Gson converter, since it's a costly initiated, it's faster this way */

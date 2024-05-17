@@ -54,7 +54,10 @@ data class UnitIO(
     var firstVisibleItemIndex: Int = 0,
 
     /** last Y direction scroll offset from [firstVisibleItemIndex] */
-    var firstVisibleItemOffset: Int = 0
+    var firstVisibleItemOffset: Int = 0,
+
+    /** last paragraph that was focused */
+    var activatedParagraph: String? = null,
 ): Serializable {
 
     /** Categorized content */

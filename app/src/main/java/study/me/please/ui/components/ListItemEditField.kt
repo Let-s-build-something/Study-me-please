@@ -1,6 +1,5 @@
 package study.me.please.ui.components
 
-import android.util.Log
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -10,7 +9,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentWidth
-import androidx.compose.foundation.text.KeyboardActionScope
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Text
@@ -23,14 +21,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusDirection
-import androidx.compose.ui.input.key.Key
-import androidx.compose.ui.input.key.key
-import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusEvent
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import com.squadris.squadris.compose.components.input.EditFieldInput
 import com.squadris.squadris.compose.theme.LocalTheme
@@ -44,6 +39,8 @@ fun ListItemEditField(
     enabled: Boolean = true,
     prefix: String,
     maxLines: Int = 20,
+    identifier: String? = null,
+    onEntered: ((value: CharSequence) -> Unit)? = null,
     hint: String = stringResource(R.string.list_item_generic_hint),
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
@@ -51,10 +48,11 @@ fun ListItemEditField(
     onValueChange: (String) -> Unit = {},
 ) {
     val localDensity = LocalDensity.current
-    val focusManager = LocalFocusManager.current
 
     val output = remember(value) { mutableStateOf(value) }
-    var fieldLineCount by remember { mutableIntStateOf(1) }
+    var fieldLineCount by remember(identifier) { mutableIntStateOf(1) }
+    val isFocused = remember(identifier) { mutableStateOf(false) }
+    val focusRequester = remember(identifier) { FocusRequester() }
 
     EditFieldInput(
         modifier = modifier
@@ -66,6 +64,10 @@ fun ListItemEditField(
                     .toDp()
                     .plus(10.dp)
             })
+            .focusRequester(focusRequester)
+            .onFocusEvent { state ->
+                isFocused.value = state.isFocused
+            }
             .height(
                 with(localDensity) {
                     LocalTheme.styles.category.fontSize
@@ -74,36 +76,14 @@ fun ListItemEditField(
                         .times(fieldLineCount)
                 }
             )
-            .widthIn(min = TextFieldDefaults.MinWidth)
-            .onKeyEvent { keyEvent ->
-                Log.d("kostka_test", "key: ${keyEvent.key}")
-                when(keyEvent.key) {
-                    Key.Tab -> {
-                        focusManager.moveFocus(FocusDirection.Next)
-                    }
-                    Key.DirectionUp -> {
-                        focusManager.moveFocus(FocusDirection.Up)
-                    }
-                    Key.DirectionDown -> {
-                        focusManager.moveFocus(FocusDirection.Down)
-                    }
-                    Key.Backspace -> {
-                        onBackspaceKey(value)
-                        true
-                    }
-                    Key.Enter -> {
-                        keyboardActions.onNext?.invoke(object: KeyboardActionScope {
-                            override fun defaultKeyboardAction(imeAction: ImeAction) {}
-                        })
-                        true
-                    }
-                    else -> false
-                }
-            },
+            .widthIn(min = TextFieldDefaults.MinWidth),
         value = value,
+        identifier = identifier,
         keyboardOptions = keyboardOptions,
         keyboardActions = keyboardActions,
         enabled = enabled,
+        onEntered = onEntered,
+        onBackspaceKey = onBackspaceKey,
         hint = hint,
         prefix = {
             Box(
@@ -124,6 +104,9 @@ fun ListItemEditField(
             fieldLineCount = result.lineCount
             if(result.didOverflowWidth) {
                 fieldLineCount++
+                if(isFocused.value) {
+                    focusRequester.captureFocus()
+                }
             }
         },
         paddingValues = PaddingValues(horizontal = 8.dp),

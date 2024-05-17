@@ -39,7 +39,6 @@ fun HtmlClickableText(
     onClick: () -> Unit = {},
 ) {
     val spanned = Html.fromHtml(text, Html.FROM_HTML_MODE_COMPACT)
-    Log.d("kostka_test", "text: $text, spanned: $spanned")
 
     val annotatedText = remember(text) {
         buildAnnotatedString {
@@ -48,7 +47,6 @@ fun HtmlClickableText(
             spanned.getSpans(0, spanned.length, Any::class.java).forEach { span ->
                 val startIndex = spanned.getSpanStart(span)
                 val endIndex = spanned.getSpanEnd(span)
-                Log.d("kostka_test", "new span: ${span.javaClass.simpleName}, indexes: $startIndex - $endIndex")
 
                 when(span) {
                     is URLSpan -> {

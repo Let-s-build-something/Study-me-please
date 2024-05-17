@@ -1,34 +1,43 @@
 package study.me.please.data.io
 
-import android.os.Handler
-import android.os.Looper
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelChildren
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
-class Stopwatch {
-    private var timeStarted : Long = 0
-    private var timeElapsed : Long = 0
-    private val handler = Handler(Looper.getMainLooper())
+/**
+ * Counter that counts time in milliseconds
+ * @param tickMillis time in milliseconds between each tick
+ */
+class StopwatchCounter(
+    private val tickMillis: Long = 100
+) {
+    private val scope = CoroutineScope(Job())
 
-    fun addToTimeStarted(millis: Long) {
-        timeStarted += millis
+    private var millis: Long = 0L
+
+    /** stops the counter */
+    fun stop() {
+        scope.coroutineContext.cancelChildren()
     }
 
-    private var runnable: Runnable = object : Runnable {
-        override fun run() {
-            timeElapsed = System.currentTimeMillis() - timeStarted
-            // Repeat every 0.1 second
-            handler.postDelayed(this, 100)
+    /** starts the counter */
+    fun start() {
+        stop()
+        scope.launch {
+            while (true) {
+                delay(tickMillis)
+                millis += tickMillis
+            }
         }
     }
 
-    private fun startCoroutineTimer() {
-        timeStarted = System.currentTimeMillis()
-        handler.post(runnable)
-    }
-
+    /** resets the counter and returns current value */
     fun reset(): Long {
-        handler.removeCallbacks(runnable)
-        val oldValue = timeElapsed.times(1)
-        startCoroutineTimer()
+        val oldValue = millis.div(1)
+        millis = 0
+        start()
         return oldValue
     }
 }

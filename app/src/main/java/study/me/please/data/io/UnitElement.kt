@@ -1,10 +1,7 @@
 package study.me.please.data.io
 
-import androidx.room.Entity
 import androidx.room.PrimaryKey
 import study.me.please.data.io.subjects.ParagraphIO
-import study.me.please.data.room.AppRoomDatabase
-import java.io.Serializable
 import java.util.UUID
 
 /** element within unit */
@@ -14,12 +11,11 @@ sealed class UnitElement(
 ) {
 
     /** paragraph container with its own paragraphs and facts */
-    @Entity(tableName = AppRoomDatabase.ROOM_UNIT_ELEMENT_PARAGRAPH)
     data class Paragraph(
         val data: ParagraphIO,
         override var layer: Int = 0,
         override val notLastLayers: List<Int> = listOf(),
-    ): UnitElement(layer, notLastLayers), Serializable {
+    ): UnitElement(layer, notLastLayers) {
 
         /** returns uid of class instance */
         @PrimaryKey
@@ -37,14 +33,14 @@ sealed class UnitElement(
     }
 
     /** fact with simple information within */
-    @Entity(tableName = AppRoomDatabase.ROOM_UNIT_ELEMENT_FACT)
     data class Fact(
         val data: FactIO,
         val parentUid: String = "",
+        val innerIndex: Int = 0,
         val isLastParagraph: Boolean = false,
         override var layer: Int = 0,
         override val notLastLayers: List<Int> = listOf(),
-    ): UnitElement(layer, notLastLayers), Serializable {
+    ): UnitElement(layer, notLastLayers) {
 
         /** returns uid of class instance */
         @PrimaryKey
@@ -53,12 +49,13 @@ sealed class UnitElement(
         override fun toString(): String {
             return "{" +
                     "${super.toString()}, " +
-                    "$layer," +
-                    "$data," +
-                    "$parentUid," +
-                    "$isLastParagraph" +
-                    "$notLastLayers, " +
-                    "$uid, " +
+                    "layer: $layer," +
+                    "data: $data," +
+                    "innerIndex: $innerIndex," +
+                    "parentUid: $parentUid," +
+                    "isLastParagraph: $isLastParagraph" +
+                    "notLastLayers: $notLastLayers, " +
+                    "uid: $uid, " +
                     "}"
         }
     }

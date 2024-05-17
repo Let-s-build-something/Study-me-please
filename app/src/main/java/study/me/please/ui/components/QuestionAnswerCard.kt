@@ -317,6 +317,7 @@ private fun DataCard(
                             ListItemEditField(
                                 prefix = FactType.BULLET_POINT_PREFIX,
                                 value = listItem,
+                                identifier = index.toString(),
                                 onBackspaceKey = {
                                     if(it.isEmpty()) {
                                         if(index > 0) {
@@ -355,7 +356,7 @@ private fun DataCard(
                                 modifier = Modifier.fillMaxWidth(),
                                 value = data.text,
                                 hint = stringResource(id = R.string.answer_edit_field_hint_content),
-                                minLines = 2,
+                                minLines = 1,
                                 maxLines = 2
                             ) { output ->
                                 data.text = output

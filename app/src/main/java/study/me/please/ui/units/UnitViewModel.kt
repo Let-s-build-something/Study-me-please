@@ -15,6 +15,7 @@ import study.me.please.data.io.FactIO
 import study.me.please.data.io.UnitElement
 import study.me.please.data.io.subjects.ParagraphIO
 import study.me.please.data.io.subjects.UnitIO
+import study.me.please.data.shared.SharedDataManager
 import study.me.please.ui.units.CollectionUnitsViewModel.ScrollToElement
 import javax.inject.Inject
 
@@ -23,7 +24,8 @@ import javax.inject.Inject
 class UnitViewModel @Inject constructor(
     private val repository: UnitsRepository,
     private val dataManager: UnitDataManager,
-    val clipBoard: GeneralClipBoard
+    val clipBoard: GeneralClipBoard,
+    private val sharedDataManager: SharedDataManager
 ): BaseViewModel() {
 
     init {
@@ -45,8 +47,11 @@ class UnitViewModel @Inject constructor(
     val localStateElement = MutableStateFlow<Pair<UnitElement, Int>?>(null)
 
     /** Collapses paragraph and its children */
-    suspend fun collapseParagraph(index: Int) {
+    suspend fun collapseParagraph(index: Int, onSelectionRequest: (String) -> Unit) {
         withContext(Dispatchers.Default) {
+            val element = dataManager.elements.value.getOrNull(index) ?: return@withContext
+            if(dataManager.collapsedParagraphs.value.contains(element.uid)) return@withContext
+
             dataManager.elements.update { list ->
                 val newList = list.toMutableList()
                 val layerToRemove = list.getOrNull(index)?.layer ?: return@withContext
@@ -59,10 +64,26 @@ class UnitViewModel @Inject constructor(
                 newList
             }
             dataManager.collapsedParagraphs.update {
-                it.plus(dataManager.elements.value.getOrNull(index)?.uid ?: return@withContext)
+                it.plus(element.uid)
             }
             currentUnit?.collapsedParagraphs = collapsedParagraphs.value
             repository.updateUnit(currentUnit ?: return@withContext)
+
+            // we want to iterate up to find higher layer -> such item is the parent
+            for(i in index.minus(1) downTo 0) {
+                val itemAbove = dataManager.elements.value.getOrNull(i) ?: continue
+
+                if (itemAbove.uid != element.uid
+                    && itemAbove.layer <= element.layer
+                    && collapsedParagraphs.value.contains(itemAbove.uid).not()
+                ) {
+                    if(itemAbove is UnitElement.Paragraph) {
+                        onSelectionRequest(itemAbove.data.uid)
+                        return@withContext
+                    }else continue
+                }
+            }
+            onSelectionRequest("NaN")
         }
     }
 
@@ -77,9 +98,10 @@ class UnitViewModel @Inject constructor(
 
 
             newElements.addAll(
-                paragraph.data.facts.map { fact ->
+                paragraph.data.facts.mapIndexed { index, fact ->
                     UnitElement.Fact(
                         data = fact,
+                        innerIndex = index,
                         layer = paragraph.layer,
                         notLastLayers = notLastLayers,
                         isLastParagraph = paragraph.data.paragraphs.isEmpty(),
@@ -109,10 +131,11 @@ class UnitViewModel @Inject constructor(
 
                     if(iterationParagraph.factUidList.isNotEmpty()) {
                         if(isNotCollapsed) {
-                            newElements.addAll(iterationParagraph.facts.map { fact ->
+                            newElements.addAll(iterationParagraph.facts.mapIndexed { index, fact ->
                                 UnitElement.Fact(
                                     data = fact,
                                     layer = layer,
+                                    innerIndex = index,
                                     notLastLayers = newList,
                                     isLastParagraph = iterationParagraph.paragraphs.isEmpty(),
                                     parentUid = iterationParagraph.uid
@@ -126,12 +149,12 @@ class UnitViewModel @Inject constructor(
 
             dataManager.elements.update {
                 it.toMutableList().apply {
-                    addAll(index.plus(1), newElements)
+                    addAll(index.plus(1), newElements.filter { element -> element !in this })
                 }
             }
             dataManager.collapsedParagraphs.update {
                 it.toMutableList().apply {
-                    remove(paragraph.data.uid)
+                    removeIf { item -> item == paragraph.data.uid }
                 }
             }
             currentUnit?.collapsedParagraphs = collapsedParagraphs.value
@@ -234,10 +257,7 @@ class UnitViewModel @Inject constructor(
                     if(delete) repository.deleteParagraph(elementUid)
 
                     if(delete) {
-                        repository.updateFirebaseUnit(
-                            unit = unit,
-                            collectionUid = unit.collectionUid
-                        )
+                        updateFirebaseUnit(unit)
                     }
                     return@withContext true
                 }
@@ -246,10 +266,7 @@ class UnitViewModel @Inject constructor(
                     if(delete) repository.deleteFact(elementUid)
 
                     if(delete) {
-                        repository.updateFirebaseUnit(
-                            unit = unit,
-                            collectionUid = unit.collectionUid
-                        )
+                        updateFirebaseUnit(unit)
                     }
                     return@withContext true
                 }
@@ -268,10 +285,7 @@ class UnitViewModel @Inject constructor(
 
                             result = true
                             if(delete) {
-                                repository.updateFirebaseUnit(
-                                    unit = unit,
-                                    collectionUid = unit.collectionUid
-                                )
+                                updateFirebaseUnit(unit)
                             }
                             return@iterateFurtherAction false to mutableListOf()
                         }
@@ -286,10 +300,7 @@ class UnitViewModel @Inject constructor(
 
                             result = true
                             if(delete) {
-                                repository.updateFirebaseUnit(
-                                    unit = unit,
-                                    collectionUid = unit.collectionUid
-                                )
+                                updateFirebaseUnit(unit)
                             }
                             return@iterateFurtherAction false to mutableListOf()
                         }
@@ -299,6 +310,16 @@ class UnitViewModel @Inject constructor(
             }
 
             result
+        }
+    }
+
+    private fun updateFirebaseUnit(unit: UnitIO) {
+        if(sharedDataManager.currentUser.value == null) return
+        viewModelScope.launch {
+            repository.updateFirebaseUnit(
+                unit = unit,
+                collectionUid = unit.collectionUid
+            )
         }
     }
 
@@ -341,10 +362,7 @@ class UnitViewModel @Inject constructor(
                         repository.updateParagraph(data)
                     }
 
-                    repository.updateFirebaseUnit(
-                        unit = unit,
-                        collectionUid = unit.collectionUid
-                    )
+                    updateFirebaseUnit(unit)
                     return@withContext true
                 }
             }
@@ -359,10 +377,7 @@ class UnitViewModel @Inject constructor(
                 }
                 repository.updateUnit(unit)
 
-                repository.updateFirebaseUnit(
-                    unit = unit,
-                    collectionUid = unit.collectionUid
-                )
+                updateFirebaseUnit(unit)
                 return@withContext true
             }
 
@@ -371,11 +386,11 @@ class UnitViewModel @Inject constructor(
     }
 
     /** removes an element from elements at certain [index] */
-    fun removeElement(index: Int) {
+    fun removeElement(index: Int, onSelectionRequest: (String) -> Unit) {
         viewModelScope.launch {
             dataManager.elements.value.getOrNull(index)?.let { element ->
                 if(element is UnitElement.Paragraph) {
-                    collapseParagraph(index)
+                    collapseParagraph(index, onSelectionRequest = onSelectionRequest)
                 }
                 dataManager.elements.update {
                     it.toMutableList().apply {
@@ -410,10 +425,7 @@ class UnitViewModel @Inject constructor(
                         (find { it.uid == paragraph.uid } as? UnitElement.Paragraph)?.data?.updateTO(paragraph)
                     }
                 }
-                repository.updateFirebaseUnit(
-                    unit = unit,
-                    collectionUid = unit.collectionUid
-                )
+                updateFirebaseUnit(unit)
             }
         }
     }
@@ -443,10 +455,7 @@ class UnitViewModel @Inject constructor(
                         (find { it.uid == fact.uid } as? UnitElement.Fact)?.data?.updateTO(fact)
                     }
                 }
-                repository.updateFirebaseUnit(
-                    unit = unit,
-                    collectionUid = unit.collectionUid
-                )
+                updateFirebaseUnit(unit)
             }
         }
     }
@@ -460,9 +469,10 @@ class UnitViewModel @Inject constructor(
                 val newElements = mutableListOf<UnitElement>()
 
                 if(unit.factUidList.isNotEmpty()) {
-                    newElements.addAll(unit.facts.map { fact ->
+                    newElements.addAll(unit.facts.mapIndexed { index, fact ->
                         UnitElement.Fact(
                             data = fact,
+                            innerIndex = index,
                             layer = INITIAL_LAYER,
                             notLastLayers = listOf(),
                             isLastParagraph = true,
@@ -491,10 +501,11 @@ class UnitViewModel @Inject constructor(
 
                             if(iterationParagraph.factUidList.isNotEmpty()) {
                                 if(isNotCollapsed) {
-                                    newElements.addAll(iterationParagraph.facts.map { fact ->
+                                    newElements.addAll(iterationParagraph.facts.mapIndexed { index, fact ->
                                         UnitElement.Fact(
                                             data = fact,
                                             layer = layer,
+                                            innerIndex = index,
                                             notLastLayers = newList,
                                             isLastParagraph = iterationParagraph.paragraphs.isEmpty(),
                                             parentUid = iterationParagraph.uid

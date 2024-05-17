@@ -65,16 +65,38 @@
     <string name="list_item_generic_hint">bod</string>
     <string name="list_item_bulletin_hint">odrážka</string>
     <string name="list_item_first_bulletin_hint">přidat popis</string>
-    <string name="facts_list_add_new">Přidat fakt</string>
+    <string name="facts_list_add_new">Přidat vysvětlení</string>
     <string name="facts_list_generate_questions">Vygenerovat otázky</string>
     <string name="facts_type_definition">Definice</string>
     <string name="facts_type_person">Osoba</string>
     <string name="facts_type_date">Datum</string>
     <string name="facts_type_list">Seřazený list</string>
     <string name="facts_type_quote">Citát</string>
+    <string name="fact_delete_dialog_title">Odstranění vysvětlení</string>
+
+    <string name="facts_type_short_definition_hint">Společenské zahálení</string>
+    <string name="facts_type_short_person_hint">Keanu Reeves</string>
+    <string name="facts_type_short_date_hint">Listopad 17, 1989 - Prosinec 29, 1989</string>
+    <string name="facts_type_short_list_hint">Seznam pochybností</string>
+    <string name="facts_type_short_quote_hint">
+        Nespoléhejte na svou schopnost předpovídat, důvěřujte své schopnosti kontrolovat škody
+    </string>
+
     <string name="facts_type_long_fact_header">Vysvětlení informace</string>
     <string name="facts_type_long_definition_header">Definice</string>
-    <string name="fact_delete_dialog_title">Odstranění faktu</string>
+    <string name="facts_type_long_definition_hint">Vysvětlete definici</string>
+    <string name="facts_type_long_person_header">Informace o dané osobě</string>
+    <string name="facts_type_long_person_hint">Co za informaci je relevantní o této osobě?</string>
+    <string name="facts_type_long_date_header">Vysvětlení</string>
+    <string name="facts_type_long_date_hint">Čeho se daný datum týká?</string>
+    <string name="facts_type_long_quote_header">Vysvětlení</string>
+    <string name="facts_type_long_quote_hint">Koho/čeho se citát týká?</string>
+    <!-- long information -->
+    <string name="facts_type_short_person_header">Kdo je daná osoba?</string>
+    <string name="facts_type_short_date_header">O jaké datum se jedná?</string>
+    <string name="facts_type_short_quote_header">O jaký citát se jedná?</string>
+    <string name="facts_type_short_bullet_point_header">Co popisujeme?</string>
+    <string name="facts_type_short_list_header">Jak nazveme daný list?</string>
 
 
     <string name="units_delete_dialog_content">
@@ -168,7 +190,7 @@
 
     <string name="question_generating_bulletin_name">Vysvětli <b>\"%1$s\"</b></string>
     <string name="question_generating_bulletin_points">Co nejlépe vystihuje:</string>
-    <string name="question_generating_fact_list">Vyber všechny z <b>\"%1$s\" (%2$s)</b>?</string>
+    <string name="question_generating_fact_list">Vyber všechny z <b>\"%1$s\" (<![CDATA[<a href="/paragraph/%2$s">%2$s</a>]]>)</b>?</string>
     <string name="question_generating_fact_list_short_key">Čeho se tohle týká?</string>
     <string name="question_generating_fact_image">Co nejlépe vystihuje:</string>
 
@@ -181,10 +203,10 @@
     </string>
     <string name="question_generating_fact_parent_addition">, under <b><![CDATA[<a href="/paragraph/%2$s">%1$s</a>]]></b></string>-->
 
-    <string name="question_generating_fact_short">Co je/jsou <b>\"%1$s\" (%2$s)?</b></string>
-    <string name="question_generating_fact_long">Co nejlépe vysvětluje: <b>\"%1$s\" (%2$s)</b>?</string>
+    <string name="question_generating_fact_short">Co je/jsou <b>\"%1$s\" (<![CDATA[<a href="/paragraph/%2$s">%2$s</a>]]>)?</b></string>
+    <string name="question_generating_fact_long">Co nejlépe vysvětluje: <b>\"%1$s\" (<![CDATA[<a href="/paragraph/%2$s">%2$s</a>]]>)</b>?</string>
     <string name="question_generating_children_items">
-        Vyběr relevantní informaci k <b><![CDATA[<a href="/paragraph/%2$s">%1$s</a>]]></b> (<b><![CDATA[<a href="/units/%4$s">%3$s</a>]]></b>).
+        Vyběr relevantní informaci k <b>%1$s</b> (<![CDATA[<a href="/units/%3$s">%2$s</a>]]>).
     </string>
 
 
@@ -206,7 +228,7 @@
     <string name="button_add">Přidat</string>
     <string name="button_add_to">Přidat do</string>
     <string name="button_add_image">Přidat obrázek</string>
-    <string name="button_add_prompt_image">Přidat podnětový obrázek</string>
+    <string name="button_add_prompt_image">Přidat obrázek</string>
     <string name="button_add_explanation_image">Přidat vysvětlující obrázek</string>
     <string name="button_start_session">Zacvičit</string>
     <string name="button_copy">Koprívovat</string>
@@ -233,7 +255,7 @@
     <string name="play_content_description">Spustit</string>
     <string name="edit_content_description">Upravit</string>
     <string name="accessibility_add_content">Přidat nový obsah</string>
-    <string name="accessibility_add_fact">Fakt</string>
+    <string name="accessibility_add_fact">Vysvětlení</string>
     <string name="accessibility_add_paragraph">paragraf</string>
     <string name="accessibility_delete">Smazat</string>
     <string name="accessibility_clipboard">Schránka</string>

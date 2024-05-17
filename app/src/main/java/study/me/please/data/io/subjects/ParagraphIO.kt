@@ -3,9 +3,12 @@ package study.me.please.data.io.subjects
 import androidx.room.Entity
 import androidx.room.Ignore
 import androidx.room.PrimaryKey
+import com.google.gson.annotations.SerializedName
+import com.squadris.squadris.utils.DateUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import study.me.please.data.io.FactIO
+import study.me.please.data.io.LargePathAsset
 import study.me.please.data.room.AppRoomDatabase
 import java.io.Serializable
 import java.util.UUID
@@ -28,7 +31,14 @@ data class ParagraphIO(
     var factUidList: MutableList<String> = mutableListOf(),
 
     /** Name of the paragraph */
-    var name: String = ""
+    var name: String = "",
+
+    /** date of creating of this object */
+    val dateCreated: Long = DateUtils.now.timeInMillis,
+
+    /** Image which can be questioned as well as answered with */
+    @SerializedName("prompt_mage")
+    var imageAsset: LargePathAsset? = null,
 ): Serializable {
 
     /** Further categorized content */

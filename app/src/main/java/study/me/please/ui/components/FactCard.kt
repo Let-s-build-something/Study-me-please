@@ -136,7 +136,8 @@ private fun DataCard(
     val inputScope = rememberCoroutineScope()
     val scope = rememberCoroutineScope()
     val focusManager = LocalFocusManager.current
-    val focusRequester = remember(data.uid) { FocusRequester() }
+    val shortFocusRequester = remember(data.uid) { FocusRequester() }
+    val longFocusRequester = remember(data.uid) { FocusRequester() }
     val singleInputFocusRequester = remember(data.uid) { FocusRequester() }
 
     val selectedFactType = remember(data.type) { mutableStateOf(data.type) }
@@ -161,8 +162,17 @@ private fun DataCard(
     }
 
     LaunchedEffect(mode) {
-        if(mode == InteractiveCardMode.EDIT && data.shortKeyInformation.isBlank()) {
-            focusRequester.requestFocus()
+        if(mode == InteractiveCardMode.EDIT) {
+            if(data.shortKeyInformation.isBlank()) {
+                shortFocusRequester.requestFocus()
+            }else {
+                delay(300)
+                if(listItems.size == 1 && selectedFactType.value == FactType.DEFINITION) {
+                    singleInputFocusRequester.requestFocus()
+                }else {
+                    longFocusRequester.requestFocus()
+                }
+            }
         }
     }
     LaunchedEffect(listItems.size) {
@@ -257,7 +267,7 @@ private fun DataCard(
                     if(inEditMode) {
                         EditFieldInput(
                             modifier = Modifier.fillMaxWidth(),
-                            focusRequester = focusRequester,
+                            focusRequester = shortFocusRequester,
                             prefix = if(selectedFactType.value == FactType.QUOTE) {
                                 { QuoteIcon() }
                             } else null,
@@ -274,7 +284,8 @@ private fun DataCard(
                             ),
                             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
                             minLines = 1,
-                            maxLines = 2
+                            maxLines = 2,
+                            identifier = data.uid
                         ) { output ->
                             data.shortKeyInformation = output
                             requestDataSave()
@@ -328,47 +339,11 @@ private fun DataCard(
             }
         }
 
-        EditableImageAsset(
-            modifier = Modifier
-                .wrapContentHeight()
-                .padding(top = 4.dp)
-                .animateContentSize(),
-            asset = promptImage.value,
-            isInEditMode = isInEdit,
-            onUrlChange = { output ->
-                inputScope.coroutineContext.cancelChildren()
-                inputScope.launch {
-                    delay(INPUT_DELAYED_RESPONSE_MILLIS)
-                    promptImage.value = LargePathAsset(
-                        urlPath = output
-                    )
-                }
-                if(output.isEmpty()) {
-                    requestDataSave()
-                }
-            },
-            onLoadState = { loadState ->
-                if(loadState is AsyncImagePainter.State.Success) {
-                    data.promptImage = promptImage.value
-                    requestDataSave()
-                }
-            }
-        )
-        AnimatedVisibility(
-            visible = isInEdit && promptImage.value == null
-        ) {
-            ImageAction(
-                modifier = Modifier.padding(bottom = 8.dp),
-                leadingImageVector = Icons.Outlined.Image,
-                text = stringResource(id = R.string.button_add_prompt_image)
-            ) {
-                promptImage.value = LargePathAsset()
-            }
-        }
-
         Crossfade(
+            modifier = Modifier
+                .padding(top = 2.dp)
+                .animateContentSize(),
             targetState = selectedFactType.value == FactType.LIST || selectedFactType.value == FactType.DEFINITION,
-            modifier = Modifier.animateContentSize(),
             label = "",
             animationSpec = tween(durationMillis = DEFAULT_ANIMATION_LENGTH_SHORT)
         ) { isListType ->
@@ -407,8 +382,16 @@ private fun DataCard(
                                                     }
                                                 }
                                             ),
-                                            minLines = 2,
-                                            maxLines = 5
+                                            onEntered = { text ->
+                                                listItems.add(index + 1, text.toString())
+                                                scope.launch {
+                                                    delay(50)
+                                                    focusManager.moveFocus(FocusDirection.Down)
+                                                }
+                                            },
+                                            minLines = 1,
+                                            maxLines = 5,
+                                            identifier = "${index}_${data.uid}"
                                         ) { output ->
                                             listItems[0] = output
                                             data.textList = listOf(output)
@@ -426,23 +409,28 @@ private fun DataCard(
                                 }
                             }else {
                                 ListItemEditField(
-                                    modifier = Modifier.padding(bottom = 2.dp),
+                                    modifier = Modifier
+                                        .padding(bottom = 2.dp)
+                                        .then(
+                                            if (index == listItems.lastIndex) {
+                                                Modifier.focusRequester(longFocusRequester)
+                                            } else Modifier
+                                        ),
                                     prefix = if(selectedFactType.value == FactType.DEFINITION) {
                                         FactType.BULLET_POINT_PREFIX
                                     }else "${index.plus(1)}.\t\t",
+                                    identifier = "${index}_${data.uid}",
                                     onBackspaceKey = {
-                                        if(it.isEmpty() && isIrremovable.not()) {
-                                            if(index > 0) {
-                                                if(listItems.size == 2) {
-                                                    scope.launch {
-                                                        delay(100)
-                                                        singleInputFocusRequester.requestFocus()
-                                                    }
-                                                }else {
-                                                    focusManager.moveFocus(FocusDirection.Up)
-                                                }
+                                        if(isIrremovable.not()) {
+                                            if(index > 0 && it.isNotBlank()) {
+                                                listItems[index - 1] += it
                                             }
-                                            listItems.removeAt(index)
+                                            if(listItems.size > 1 && index != 0) {
+                                                focusManager.moveFocus(FocusDirection.Up)
+                                            }
+                                            if(it.isEmpty() || index > 0) {
+                                                listItems.removeAt(index)
+                                            }
                                         }
                                     },
                                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
@@ -455,6 +443,13 @@ private fun DataCard(
                                             }
                                         }
                                     ),
+                                    onEntered = { text ->
+                                        listItems.add(index + 1, text.toString())
+                                        scope.launch {
+                                            delay(50)
+                                            focusManager.moveFocus(FocusDirection.Down)
+                                        }
+                                    },
                                     hint = stringResource(
                                         if(selectedFactType.value == FactType.LIST) {
                                             R.string.list_item_generic_hint
@@ -463,9 +458,11 @@ private fun DataCard(
                                     value = listItem,
                                     enabled = isInEdit,
                                     onValueChange = { output ->
-                                        listItems[index] = output
-                                        data.textList = listItems.toList()
-                                        requestDataSave()
+                                        if(listItems.size > index) {
+                                            listItems[index] = output
+                                            data.textList = listItems.toList()
+                                            requestDataSave()
+                                        }
                                     }
                                 )
                             }
@@ -483,8 +480,9 @@ private fun DataCard(
                             modifier = Modifier.fillMaxWidth(),
                             value = data.longInformation,
                             hint = stringResource(selectedFactType.value.getLongHintStringRes() ?: R.string.facts_type_long_fact_header),
-                            minLines = 2,
-                            maxLines = 5
+                            minLines = 1,
+                            maxLines = 5,
+                            identifier = data.uid
                         ) { output ->
                             data.longInformation = output
                             requestDataSave()
@@ -501,6 +499,47 @@ private fun DataCard(
                 }
             }
         }
+
+        AnimatedVisibility(
+            visible = isInEdit && promptImage.value == null
+        ) {
+            ImageAction(
+                modifier = Modifier.padding(bottom = 8.dp),
+                leadingImageVector = Icons.Outlined.Image,
+                text = stringResource(id = R.string.button_add_prompt_image)
+            ) {
+                promptImage.value = LargePathAsset()
+            }
+        }
+
+        //TODO refactor needed for image adding (rarely used and button takes a lot of space, ability to add image to a paragraph)
+        //prompt dialog with local file/url input
+        EditableImageAsset(
+            modifier = Modifier
+                .wrapContentHeight()
+                .padding(top = 4.dp)
+                .animateContentSize(),
+            asset = promptImage.value,
+            isInEditMode = isInEdit,
+            onUrlChange = { output ->
+                inputScope.coroutineContext.cancelChildren()
+                inputScope.launch {
+                    delay(INPUT_DELAYED_RESPONSE_MILLIS)
+                    promptImage.value = LargePathAsset(
+                        urlPath = output
+                    )
+                    if(output.isBlank()) {
+                        requestDataSave()
+                    }
+                }
+            },
+            onLoadState = { loadState ->
+                if(loadState is AsyncImagePainter.State.Success) {
+                    data.promptImage = promptImage.value
+                    requestDataSave()
+                }
+            }
+        )
     }
 }
 

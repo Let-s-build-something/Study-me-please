@@ -9,6 +9,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.withContext
 import study.me.please.data.io.QuestionIO
+import study.me.please.data.io.StopwatchCounter
 import study.me.please.data.io.session.QuestionItem
 import study.me.please.data.io.session.SessionHistoryItem
 import study.me.please.data.io.session.SessionIO
@@ -52,6 +53,11 @@ data class QuestionModule(
     @get:Ignore
     val isHistory
         get() = currentIndex < history.size.minus(1) && history.isNotEmpty()
+
+
+    /** stopwatch for counting time elapsed */
+    @Ignore
+    val stopwatch = StopwatchCounter()
 
     /** sets all te necessary data for running questions */
     suspend fun setData(questions: List<QuestionIO>) {
@@ -125,19 +131,23 @@ data class QuestionModule(
      * Called whenever a new answered has been answered.
      * It is then removed from backstack and added to history
      */
-    fun onQuestionAnswered(historyItem: SessionHistoryItem) {
-        if(isHistory.not()) {
-            history.lastOrNull()?.timeToContinue = DateUtils.now.timeInMillis
+    suspend fun onQuestionAnswered(historyItem: SessionHistoryItem) {
+        withContext(Dispatchers.Default) {
+            if(isHistory.not()) {
+                history.lastOrNull()?.timeToAnswer = stopwatch.reset()
+                history.lastOrNull()?.timeToContinue = DateUtils.now.timeInMillis
+            }
+
+            history.add(historyItem)
+            questionsStack.removeAt(0)
+
+            // if we reach end of the backstack, we reset all questions again
+            if(questionsStack.isEmpty()) {
+                questionsStack.addAll(questions.shuffled().map { QuestionItem(it.uid) })
+            }
+
+            updateTotalBackStack()
         }
-
-        history.add(historyItem)
-        questionsStack.removeAt(0)
-
-        if(questionsStack.isEmpty()) {
-            questionsStack.addAll(questions.shuffled().map { QuestionItem(it.uid) })
-        }
-
-        updateTotalBackStack()
     }
 
     /** Injects question into future steps in order to repeat it */

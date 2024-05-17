@@ -3,12 +3,13 @@ package study.me.please.data.room
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import study.me.please.data.io.CollectionIO
 import study.me.please.data.io.FactIO
 import study.me.please.data.io.LargePathAsset
 import study.me.please.data.io.QuestionAnswerIO
 import study.me.please.data.io.QuestionIO
-import study.me.please.data.io.UnitElement
 import study.me.please.data.io.preferences.SessionPreferencePack
 import study.me.please.data.io.session.SessionIO
 import study.me.please.data.io.subjects.CategoryIO
@@ -28,11 +29,9 @@ import study.me.please.data.state.session.QuestionModule
         FactIO::class,
         UnitIO::class,
         CategoryIO::class,
-        ParagraphIO::class,
-        UnitElement.Fact::class,
-        UnitElement.Paragraph::class
+        ParagraphIO::class
     ],
-    version = 1,
+    version = 4,
     exportSchema = true
 )
 @TypeConverters(AppDatabaseConverter::class)
@@ -48,7 +47,6 @@ abstract class AppRoomDatabase: RoomDatabase() {
     abstract fun factDbDao(): FactDao
     abstract fun unitDao(): UnitDao
     abstract fun categoryDbDao(): CategoryDao
-    abstract fun clipboardDao(): ClipboardDao
 
     companion object {
 
@@ -192,6 +190,27 @@ abstract class AppRoomDatabase: RoomDatabase() {
             }
         }*/
 
+        val MIGRATION_1_2 = object : Migration(1, 2) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE ROOM_PARAGRAPH_TABLE ADD COLUMN dateCreated INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE ROOM_PARAGRAPH_TABLE ADD COLUMN imageAsset TEXT")
+            }
+        }
+
+        val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // Delete the tables
+                db.execSQL("DROP TABLE IF EXISTS ROOM_UNIT_ELEMENT_FACT")
+                db.execSQL("DROP TABLE IF EXISTS ROOM_UNIT_ELEMENT_PARAGRAPH")
+            }
+        }
+
+        val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE ROOM_SUBJECT_TABLE ADD COLUMN activatedParagraph TEXT")
+            }
+        }
+
         /** Identification of the main database */
         const val ROOM_DATABASE_NAME = "ROOM_DATABASE_NAME"
 
@@ -212,12 +231,6 @@ abstract class AppRoomDatabase: RoomDatabase() {
 
         /** Identification of table for [UnitIO] */
         const val ROOM_UNIT_TABLE = "ROOM_SUBJECT_TABLE"
-
-        /** Identification of table for [UnitElement.Fact] */
-        const val ROOM_UNIT_ELEMENT_FACT = "ROOM_UNIT_ELEMENT_FACT"
-
-        /** Identification of table for [UnitElement.Paragraph] */
-        const val ROOM_UNIT_ELEMENT_PARAGRAPH = "ROOM_UNIT_ELEMENT_PARAGRAPH"
 
         /** Identification of table for [CategoryIO] */
         const val ROOM_CATEGORY_TABLE = "ROOM_SUBJECTS_TABLE"

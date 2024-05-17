@@ -10,9 +10,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -46,20 +46,14 @@ fun StatisticsTable(
     questionModule: QuestionModule,
     backgroundColor: Color = LocalTheme.colors.onBackgroundComponent
 ) {
-    val coroutineScope = rememberCoroutineScope()
-
     val items = questionModule.history//.filter { it.timeOfStart != null && it.isRepetition.not() }
-    val responseTimeAverages = mutableListOf<Long>()
-    val successRates = mutableListOf<Float>()
-    val responseTime = remember {
-        mutableLongStateOf(0L)
-    }
-    val successRate = remember {
-        mutableFloatStateOf(0f)
-    }
-    val percentageDone = remember {
-        mutableFloatStateOf(0f)
-    }
+    val responseTimeAverages = remember { mutableListOf<Long>() }
+    val successRates = remember { mutableListOf<Float>() }
+    val answeredQuestions = remember { mutableIntStateOf(0) }
+    val allQuestions = remember { mutableIntStateOf(0) }
+    val responseTime = remember { mutableLongStateOf(0L) }
+    val successRate = remember { mutableFloatStateOf(0f) }
+    val percentageDone = remember { mutableFloatStateOf(0f) }
 
     LaunchedEffect(Unit) {
         withContext(Dispatchers.Default) {
@@ -73,7 +67,7 @@ fun StatisticsTable(
                     }
 
                     // response time
-                    iteratedValueResponseTime += item.timeToAnswer.minus(item.timeOfStart)
+                    iteratedValueResponseTime += item.timeToAnswer
 
                     responseTimeAverages.add(
                         iteratedValueResponseTime.div((index + 1))
@@ -84,15 +78,16 @@ fun StatisticsTable(
                 }
             }
 
-            val allQuestions = questionModule.questionsStack.filter { it.isRepetition.not() }
-            val lastAnswered = allQuestions.indexOfFirst { it.uid == items.lastOrNull { item -> item.isRepetition.not() }?.uid }
+            answeredQuestions.intValue = questionModule.history.filter { it.isRepetition.not() }.size
+            allQuestions.intValue = questionModule.questionsStack.filter {
+                it.isRepetition.not()
+            }.size + answeredQuestions.intValue
+            val lastAnswered = answeredQuestions.intValue % allQuestions.intValue
 
             responseTime.longValue = iteratedValueResponseTime
             successRate.floatValue = iteratedValueSuccessRate
-            percentageDone.floatValue = lastAnswered.plus(1).toFloat()
-                .div(
-                    allQuestions.size.coerceAtLeast(1)
-                )
+            percentageDone.floatValue = lastAnswered.toFloat()
+                .div(allQuestions.intValue.coerceAtLeast(1).toFloat())
         }
     }
     val averageResponseTime = remember {
@@ -155,8 +150,8 @@ fun StatisticsTable(
             text = stringResource(
                 id = R.string.statistics_time_spent_total,
                 millisToTimeLapsed(millis = responseTime.longValue),
-                items.size,
-                questionModule.questions.size
+                answeredQuestions.intValue,
+                allQuestions.intValue
             ),
             style = TextStyle(
                 fontSize = 14.sp,
@@ -235,7 +230,9 @@ private fun Preview() {
     StatisticsTable(
         questionModule = QuestionModule(
             history = mutableListOf(
-                SessionHistoryItem(null, 0, listOf(), timeToAnswer = 0L),
+                SessionHistoryItem(null, 0, listOf(),
+                    timeToAnswer = 0L
+                ),
                 SessionHistoryItem(null, 0, listOf(), timeToAnswer = 0L),
                 SessionHistoryItem(null, 0, listOf(), timeToAnswer = 0L),
             ),

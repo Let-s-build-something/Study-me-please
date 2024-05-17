@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
@@ -324,6 +325,7 @@ fun QuestionDetailScreen(
                                 ListItemEditField(
                                     prefix = FactType.BULLET_POINT_PREFIX,
                                     value = listItem,
+                                    identifier = index.toString(),
                                     onBackspaceKey = {
                                         if(it.isEmpty()) {
                                             if(index > 0) {
@@ -453,6 +455,7 @@ fun QuestionDetailScreen(
                 } to CollapsingBehavior.ON_TOP,
                 @Composable {
                     LazyColumn(
+                        modifier = Modifier.imePadding(),
                         state = scrollState
                     ) {
                         stickyHeader {

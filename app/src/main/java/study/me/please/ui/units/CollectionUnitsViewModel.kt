@@ -74,7 +74,7 @@ class CollectionUnitsViewModel @Inject constructor(
     val questionsGeneratingResponse = _questionsGeneratingResponse.asSharedFlow()
 
     /** list of all paragraph names */
-    val paragraphNames = hashMapOf<String, Int>()
+    val paragraphNames = MutableStateFlow(hashMapOf<String, Int>())
 
     /** List of all subjects related to a collection */
     val subjects = _units.combine(filter) { subjects, filter ->
@@ -159,11 +159,13 @@ class CollectionUnitsViewModel @Inject constructor(
     /** invalidates paragraph names */
     fun invalidateParagraphNames() {
         viewModelScope.launch {
-            paragraphNames.clear()
+            paragraphNames.value.clear()
+            val newMap = hashMapOf<String, Int>()
             repository.getAllParagraphs()?.forEach { paragraph ->
-                val score = paragraphNames[paragraph.name]
-                paragraphNames[paragraph.name] = (score?.plus(1) ?: 1)
+                val score = newMap[paragraph.name]
+                newMap[paragraph.name] = (score?.plus(1) ?: 1)
             }
+            paragraphNames.value = newMap
         }
     }
 
@@ -174,12 +176,6 @@ class CollectionUnitsViewModel @Inject constructor(
     /** Makes a request to return subjects */
     private suspend fun requestUnits() {
         if(collectionUid.isBlank() || defaultUnitPrefix.isBlank()) return
-
-        val allParagraphs = repository.getAllParagraphs()
-        allParagraphs?.forEach { paragraph ->
-            val score = paragraphNames[paragraph.name]
-            paragraphNames[paragraph.name] = (score?.plus(1) ?: 1)
-        }
 
         _collection.value = repository.getCollection(collectionUid) ?: CollectionIO(uid = collectionUid).also {
             repository.insertCollection(it)

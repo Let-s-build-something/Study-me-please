@@ -16,7 +16,7 @@ interface UnitDao {
     suspend fun getSubjectsByCollectionUid(collectionUid: String): List<UnitIO>?
 
     /** returns all paragraphs */
-    @Query("SELECT * FROM ${AppRoomDatabase.ROOM_PARAGRAPH_TABLE}")
+    @Query("SELECT * FROM ${AppRoomDatabase.ROOM_PARAGRAPH_TABLE} ORDER BY dateCreated DESC")
     suspend fun getParagraphs(): List<ParagraphIO>?
 
     /** returns all paragraph that are contained in given list */

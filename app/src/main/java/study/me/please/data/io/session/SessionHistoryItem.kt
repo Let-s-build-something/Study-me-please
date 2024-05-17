@@ -20,7 +20,7 @@ data class SessionHistoryItem(
     val answers: List<SessionAnswerValidation> = listOf(),
 
     /** What time it took for the user to answer this question */
-    val timeToAnswer: Long = 0L,
+    var timeToAnswer: Long = 0L,
 
     /** start of this question */
     val timeOfStart: Long? = null,

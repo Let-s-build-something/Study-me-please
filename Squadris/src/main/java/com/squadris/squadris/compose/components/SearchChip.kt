@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.ripple.rememberRipple
@@ -24,6 +25,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -31,7 +33,6 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusEvent
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
@@ -61,7 +62,7 @@ fun SearchChip(
     val focusRequester = FocusRequester()
 
     val isFocused = remember { mutableStateOf(false) }
-    val fieldOutput = remember(text) { mutableStateOf(text) }
+    val fieldOutput = rememberSaveable(text) { mutableStateOf(text) }
 
     LaunchedEffect(isChecked.value) {
         if(isChecked.value) {
@@ -73,7 +74,6 @@ fun SearchChip(
             isChecked.value = false
         }
     }
-    val componentWidth = remember { mutableStateOf(0.dp) }
 
     Row(
         modifier = modifier
@@ -84,11 +84,6 @@ fun SearchChip(
                 color = LocalTheme.colors.brandMain,
                 shape = LocalTheme.shapes.chipShape
             )
-            .onGloballyPositioned { coordinates ->
-                componentWidth.value = with(localDensity) {
-                    coordinates.size.width.toDp()
-                }
-            }
             .focusRequester(focusRequester)
             .onFocusEvent { state ->
                 if (fieldOutput.value.isEmpty() && isChecked.value && state.hasFocus.not() && isFocused.value) {
@@ -118,10 +113,12 @@ fun SearchChip(
             EditFieldInput(
                 modifier = Modifier
                     .padding(start = 4.dp)
-                    .widthIn(
-                        min = if(isChecked.value) {
-                            componentWidth.value
-                        }else configuration.screenWidthDp.times(PERCENTAGE_OF_SCREEN_WIDTH).dp
+                    .then(
+                        if (isChecked.value) {
+                            Modifier.widthIn(min = configuration.screenWidthDp.times(PERCENTAGE_OF_SCREEN_WIDTH).dp)
+                        } else {
+                            Modifier.wrapContentWidth()
+                        }
                     )
                     .animateContentSize(),
                 value = text,

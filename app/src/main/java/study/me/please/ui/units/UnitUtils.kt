@@ -218,8 +218,12 @@ fun Modifier.drawSegmentedBorder(
         val density = LocalDensity.current
         val strokeWidthPx = density.run { 1.dp.toPx() }
         val xOffset = density.run {
-            (screenWidthDp.dp * (if(borderOrder == BorderOrder.Center) 0 else 2)
-                .coerceAtMost(maxParagraphLayer) / 30).toPx()
+            screenWidthDp.dp.toPx()
+                .times(
+                    (if(borderOrder == BorderOrder.Center) 0 else 2)
+                        .coerceAtMost(maxParagraphLayer)
+                )
+                .div(30)
         }
 
         Modifier.drawBehind {
@@ -247,7 +251,7 @@ fun Modifier.drawSegmentedBorder(
                         start = Offset(x = offset, y = 0f),
                         end = Offset(
                             x = offset,
-                            y = xOffset.div(2).plus(1f)
+                            y = 2.5f
                         ),
                         strokeWidth = strokeWidthPx
                     )
@@ -257,7 +261,7 @@ fun Modifier.drawSegmentedBorder(
                         startAngle = 90f,
                         sweepAngle = 90f,
                         useCenter = false,
-                        topLeft = Offset(x = offset, y = 0f),
+                        topLeft = Offset(x = offset, y = offset),
                         size = Size(xOffset, xOffset),
                         style = Stroke(width = strokeWidthPx)
                     )

@@ -74,7 +74,7 @@
     <string name="list_item_bulletin_hint">bullet point</string>
     <string name="list_item_first_bulletin_hint">add a description</string>
 
-    <string name="facts_list_add_new">Add a fact</string>
+    <string name="facts_list_add_new">Add an explanation</string>
     <string name="facts_list_generate_questions">Generate questions</string>
 
     <string name="facts_type_definition">Definition</string>
@@ -84,36 +84,31 @@
     <string name="facts_type_quote">Quote</string>
 
     <!-- short information -->
-    <string name="facts_type_short_definition_hint" translatable="false">Social loafing</string>
-    <string name="facts_type_short_person_hint" translatable="false">Keanu Reeves</string>
-    <string name="facts_type_short_date_hint" translatable="false">Nov 17, 1989 - Dec 29, 1989</string>
-    <string name="facts_type_short_list_hint" translatable="false">List of doubts</string>
-    <string name="facts_type_short_quote_hint" translatable="false">Don\'t rely on your ability to predict, trust in your ability to damage control</string>
+    <string name="facts_type_short_definition_hint">Social loafing</string>
+    <string name="facts_type_short_person_hint">Keanu Reeves</string>
+    <string name="facts_type_short_date_hint">Nov 17, 1989 - Dec 29, 1989</string>
+    <string name="facts_type_short_list_hint">List of doubts</string>
+    <string name="facts_type_short_quote_hint">Don\'t rely on your ability to predict, trust in your ability to damage control</string>
 
     <string name="facts_type_long_fact_header">Information explanation</string>
     <string name="facts_type_long_definition_header">Definition</string>
-    <string name="facts_type_long_definition_hint" translatable="false">Explain the definition</string>
-    <string name="facts_type_long_person_header" translatable="false">Information about the person</string>
-    <string name="facts_type_long_person_hint" translatable="false">What information is relevant about the person?</string>
-    <string name="facts_type_long_date_header" translatable="false">Date explanation</string>
-    <string name="facts_type_long_date_hint" translatable="false">What happened on that date or what is it related to?</string>
-    <string name="facts_type_long_quote_header" translatable="false">Quote explanation</string>
-    <string name="facts_type_long_quote_hint" translatable="false">Who/what is the quote related to?</string>
+    <string name="facts_type_long_definition_hint">Explain the definition</string>
+    <string name="facts_type_long_person_header">Information about the person</string>
+    <string name="facts_type_long_person_hint">What information is relevant about the person?</string>
+    <string name="facts_type_long_date_header">Date explanation</string>
+    <string name="facts_type_long_date_hint">What happened on that date or what is it related to?</string>
+    <string name="facts_type_long_quote_header">Quote explanation</string>
+    <string name="facts_type_long_quote_hint">Who/what is the quote related to?</string>
     <!-- long information -->
-    <string name="facts_type_short_person_header" translatable="false">Who is the person?</string>
-    <string name="facts_type_short_date_header" translatable="false">What is the date?</string>
-    <string name="facts_type_short_quote_header" translatable="false">What is the quote?</string>
-    <string name="facts_type_short_bullet_point_header" translatable="false">What are we describing?</string>
-    <string name="facts_type_short_list_header" translatable="false">How do we call following list?</string>
-    <!-- prompts -->
-    <string name="facts_information_generic_prompt" translatable="false">To who/what is the following %1$s related to?\n%2$s</string>
-    <!-- short prompts -->
-    <!-- long prompts -->
-    <!-- image prompts -->
+    <string name="facts_type_short_person_header">Who is the person?</string>
+    <string name="facts_type_short_date_header">What is the date?</string>
+    <string name="facts_type_short_quote_header">What is the quote?</string>
+    <string name="facts_type_short_bullet_point_header">What are we describing?</string>
+    <string name="facts_type_short_list_header">How do we call following list?</string>
 
-    <string name="fact_delete_dialog_title">Fact deletion</string>
+    <string name="fact_delete_dialog_title">Explanation deletion</string>
     <string name="fact_delete_dialog_description">
-        You\'ve spent time on this, are you sure you want permanently delete the selected (%1$d) facts?
+        You\'ve spent time on this, are you sure you want permanently delete the selected (%1$d) explanations?
     </string>
 
     <string name="generic_delete_dialog_title">Deletion</string>
@@ -188,7 +183,7 @@
 
     <string name="question_generating_bulletin_name">Describe <b>\"%1$s\"</b></string>
     <string name="question_generating_bulletin_points">What best describes:</string>
-    <string name="question_generating_fact_list">Choose all items of <b>\"%1$s\" (%2$s)</b>?</string>
+    <string name="question_generating_fact_list">Choose all items of <b>\"%1$s\" (<b><![CDATA[<a href="/paragraph/%2$s">%2$s</a>]]></b>)</b>?</string>
     <string name="question_generating_fact_list_short_key">What are following items related to?</string>
     <string name="question_generating_fact_image">What best describes:</string>
 
@@ -215,10 +210,10 @@
     </string>
     <string name="question_generating_fact_parent_addition">, under <b><![CDATA[<a href="/paragraph/%2$s">%1$s</a>]]></b></string>-->
 
-    <string name="question_generating_fact_short">What is/are <b>\"%1$s\" (%2$s)?</b></string>
-    <string name="question_generating_fact_long">What best describes: <b>\"%1$s\" (%2$s)</b>?</string>
+    <string name="question_generating_fact_short">What is/are <b>\"%1$s\"</b> (<![CDATA[<a href="/paragraph/%2$s">%2$s</a>]]>)?</string>
+    <string name="question_generating_fact_long">What best describes: <b>\"%1$s\"</b> (<![CDATA[<a href="/paragraph/%2$s">%2$s</a>]]>)?</string>
     <string name="question_generating_children_items">
-        Pick related information to the <b><![CDATA[<a href="/paragraph/%2$s">%1$s</a>]]></b> (<b><![CDATA[<a href="/paragraph/%4$s">%3$s</a>]]></b>).
+        Pick related information to the <b>%1$s</b> (<![CDATA[<a href="/paragraph/%3$s">%2$s</a>]]>).
     </string>
 
 
@@ -247,7 +242,7 @@
     <string name="button_add">Add</string>
     <string name="button_add_to">Add to</string>
     <string name="button_add_image">Add an image</string>
-    <string name="button_add_prompt_image">Add a prompt image</string>
+    <string name="button_add_prompt_image">Add an image</string>
     <string name="button_add_explanation_image">Add an explanation image</string>
     <string name="button_start_session">Start examination</string>
     <string name="button_copy">Copy</string>
@@ -274,7 +269,7 @@
     <string name="play_content_description">Play</string>
     <string name="edit_content_description">Edit</string>
     <string name="accessibility_add_content">Add new content</string>
-    <string name="accessibility_add_fact">fact</string>
+    <string name="accessibility_add_fact">explanation</string>
     <string name="accessibility_add_paragraph">paragraph</string>
     <string name="accessibility_delete">Delete</string>
     <string name="accessibility_clipboard">Clipboard</string>
