@@ -322,7 +322,17 @@ class QuestionGenerator @Inject constructor() {
                 QuestionIO(
                     answers = relatedItems.map { mappingItem ->
                         QuestionAnswerIO(
-                            text = mappingItem.data.textList.random().ifBlank { mappingItem.data.longInformation },
+                            text = mappingItem.data.textList
+                                // no duplicate items
+                                .filter { filteredItem ->
+                                    promptFact.data.textList.none {
+                                        it.equals(filteredItem, true)
+                                    }
+                                }
+                                .random()
+                                .ifBlank {
+                                    mappingItem.data.longInformation
+                                },
                             explanationMessage = mappingItem.data.shortKeyInformation,
                             isCorrect = false,
                             importedSource = mappingItem.makeImportedSourceRoute()
