@@ -138,16 +138,16 @@ fun BaseSnackbarHost(
                 shape = LocalTheme.shapes.componentShape,
                 containerColor = if((data.visuals as? CustomSnackbarVisuals)?.isError == true) {
                     Colors.RED_ERROR
-                }else LocalTheme.colors.tetrial,
+                }else LocalTheme.colors.brandMainDark,
                 contentColor = if((data.visuals as? CustomSnackbarVisuals)?.isError == true) {
                     Color.White
-                }else LocalTheme.colors.brandMain,
+                }else LocalTheme.colors.tetrial,
                 actionColor = if((data.visuals as? CustomSnackbarVisuals)?.isError == true) {
                     Color.White
-                }else LocalTheme.colors.brandMain,
+                }else LocalTheme.colors.tetrial,
                 dismissActionContentColor = if((data.visuals as? CustomSnackbarVisuals)?.isError == true) {
                     Color.White
-                }else LocalTheme.colors.brandMain,
+                }else LocalTheme.colors.tetrial,
             )
         }
     )

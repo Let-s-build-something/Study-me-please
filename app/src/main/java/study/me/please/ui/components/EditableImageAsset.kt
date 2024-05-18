@@ -67,9 +67,7 @@ fun EditableImageAsset(
     }
 
     Column(
-        modifier = modifier
-            .wrapContentHeight()
-            .fillMaxWidth(),
+        modifier = modifier.wrapContentHeight(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Top
     ) {
@@ -91,8 +89,7 @@ fun EditableImageAsset(
                     modifier = Modifier
                         .animateContentSize()
                         .wrapContentHeight()
-                        .padding(bottom = 6.dp)
-                        .fillMaxWidth(),
+                        .padding(bottom = 6.dp),
                     model = if(asset.isLocal) {
                         asset.localUri
                     }else {
@@ -111,7 +108,7 @@ fun EditableImageAsset(
                             .build()
                     },
                     contentDescription = null,
-                    contentScale = ContentScale.FillWidth,
+                    contentScale = ContentScale.Inside,
                     onState = { loadState ->
                         isFieldError.value = loadState is AsyncImagePainter.State.Error
                         isLoading.value = loadState is AsyncImagePainter.State.Loading

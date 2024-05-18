@@ -112,6 +112,7 @@ fun PromptLayout(
     val context = LocalContext.current
     val snackbarHost = LocalSnackbarHost.current
     val navController = LocalNavController.current
+    val configuration = LocalConfiguration.current
 
     Scaffold(
         contentColor = Color.Transparent,
@@ -258,7 +259,7 @@ fun PromptLayout(
                 ) {
                     EditableImageAsset(
                         modifier = Modifier
-                            .fillMaxWidth()
+                            .heightIn(max = configuration.screenHeightDp.times(0.4).dp)
                             .padding(8.dp),
                         asset = question?.imagePromptUrl
                     )
@@ -275,7 +276,7 @@ fun PromptLayout(
                     if(question?.imageExplanationUrl?.isEmpty == false) {
                         EditableImageAsset(
                             modifier = Modifier
-                                .fillMaxWidth()
+                                .heightIn(max = configuration.screenHeightDp.times(0.4).dp)
                                 .padding(8.dp),
                             asset = question.imageExplanationUrl
                         )
@@ -296,13 +297,12 @@ fun PromptLayout(
                             label = ""
                         ) { paragraphVisible ->
                             if(paragraphVisible) {
-                                val localConfiguration = LocalConfiguration.current
 
                                 ParagraphLayoutContainer(
                                     modifier = Modifier
                                         .heightIn(
-                                            max = localConfiguration.screenHeightDp.times(0.6).dp,
-                                            min = localConfiguration.screenHeightDp.times(0.3).dp
+                                            max = configuration.screenHeightDp.times(0.6).dp,
+                                            min = configuration.screenHeightDp.times(0.3).dp
                                         ),
                                     importedSource = question.importedSource,
                                     onCloseRequest = {
@@ -433,7 +433,7 @@ fun PromptLayout(
                         if(answer.imageExplanation?.isEmpty == false) {
                             EditableImageAsset(
                                 modifier = Modifier
-                                    .fillMaxWidth()
+                                    .heightIn(max = configuration.screenHeightDp.times(0.4).dp)
                                     .padding(
                                         top = 8.dp,
                                         bottom = 20.dp,

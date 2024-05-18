@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
@@ -38,6 +39,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
@@ -512,11 +514,13 @@ private fun DataCard(
             }
         }
 
+        val configuration = LocalConfiguration.current
+
         //TODO refactor needed for image adding (rarely used and button takes a lot of space, ability to add image to a paragraph)
         //prompt dialog with local file/url input
         EditableImageAsset(
             modifier = Modifier
-                .wrapContentHeight()
+                .heightIn(max = configuration.screenHeightDp.times(0.4).dp)
                 .padding(top = 4.dp)
                 .animateContentSize(),
             asset = promptImage.value,
