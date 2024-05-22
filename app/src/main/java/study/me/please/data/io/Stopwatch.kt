@@ -22,6 +22,14 @@ class StopwatchCounter(
         scope.coroutineContext.cancelChildren()
     }
 
+    /** stops and clears the counter */
+    fun flush(): Long {
+        stop()
+        val oldValue = millis.div(1)
+        millis = 0
+        return oldValue
+    }
+
     /** starts the counter */
     fun start() {
         stop()

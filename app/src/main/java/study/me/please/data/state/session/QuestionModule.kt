@@ -134,7 +134,7 @@ data class QuestionModule(
     suspend fun onQuestionAnswered(historyItem: SessionHistoryItem) {
         withContext(Dispatchers.Default) {
             if(isHistory.not()) {
-                history.lastOrNull()?.timeToAnswer = stopwatch.reset()
+                history.lastOrNull()?.timeToAnswer = stopwatch.flush()
                 history.lastOrNull()?.timeToContinue = DateUtils.now.timeInMillis
             }
 

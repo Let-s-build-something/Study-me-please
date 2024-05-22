@@ -60,23 +60,42 @@ fun StatisticsTable(
             var iteratedValueSuccessRate = 0.0f
             var iteratedValueResponseTime = 0L
 
-            items.forEachIndexed { index, item ->
+            //success rate with no repetitions
+            items.filter { !it.isRepetition }.forEachIndexed { index, item ->
                 if(item.timeOfStart != null) {
-                    if(item.answers.none { it.isCorrect.not() }) {
+                    if(item.answers.all { answer -> answer.isCorrect }) {
                         iteratedValueSuccessRate++
                     }
+                    successRates.add((iteratedValueSuccessRate / (index + 1)) * 100)
+                }
+            }
 
+
+            // general response time
+            items.forEachIndexed { index, item ->
+                if(item.timeOfStart != null) {
                     // response time
                     iteratedValueResponseTime += item.timeToAnswer
 
                     responseTimeAverages.add(
                         iteratedValueResponseTime.div((index + 1))
                     )
-                    successRates.add(
-                        (iteratedValueSuccessRate.div((index.toFloat() + 1.0f))) * 100.0f
-                    )
                 }
             }
+
+            /*
+            * val questionStack = questionModule.questionsStack.filter {
+                it.isRepetition.not()
+            }.size
+            val pastQuestions = questionModule.history.filter { it.isRepetition.not() }.size
+
+            // multiple rounds should start from 0
+            answeredQuestions.intValue = if(pastQuestions >= questionStack) {
+                questionStack % pastQuestions
+            }else pastQuestions
+
+            allQuestions.intValue = questionStack + answeredQuestions.intValue
+            */
 
             answeredQuestions.intValue = questionModule.history.filter { it.isRepetition.not() }.size
             allQuestions.intValue = questionModule.questionsStack.filter {

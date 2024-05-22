@@ -182,6 +182,15 @@ fun SessionScreen(
                     }
                 }
 
+                LaunchedEffect(liveIndex.value) {
+                    val canBeSkipped = sessionState.module.getStepAt(liveIndex.value)?.mode?.value == SessionScreenMode.LOCKED
+                            || sessionState.module.getStepAt(liveIndex.value)?.isHistory == true
+
+                    if(canBeSkipped.not() && pagerState.currentPage >= sessionState.module.history.size) {
+                        sessionState.module.stopwatch.start()
+                    }
+                }
+
                 // blocking of scrolling to future questions
                 LaunchedEffect(pagerState) {
                     snapshotFlow { pagerState.currentPageOffsetFraction }.collect { offset ->

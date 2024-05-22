@@ -203,7 +203,7 @@
     </string>
     <string name="question_generating_fact_parent_addition">, under <b><![CDATA[<a href="/paragraph/%2$s">%1$s</a>]]></b></string>-->
 
-    <string name="question_generating_fact_short">Co je/jsou <b>\"%1$s\" (<![CDATA[<a href="/paragraph/%2$s">%2$s</a>]]>)?</b></string>
+    <string name="question_generating_fact_short">Popiš <b>\"%1$s\" (<![CDATA[<a href="/paragraph/%2$s">%2$s</a>]]>)</b></string>
     <string name="question_generating_fact_long">Co nejlépe vysvětluje: <b>\"%1$s\" (<![CDATA[<a href="/paragraph/%2$s">%2$s</a>]]>)</b>?</string>
     <string name="question_generating_children_items">
         Vyběr relevantní informaci k <b>%1$s</b> (<![CDATA[<a href="/units/%3$s">%2$s</a>]]>).
