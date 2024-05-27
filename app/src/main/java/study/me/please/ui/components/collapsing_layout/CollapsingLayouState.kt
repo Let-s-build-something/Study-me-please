@@ -1,8 +1,12 @@
 package study.me.please.ui.components.collapsing_layout
 
+import androidx.compose.runtime.mutableStateOf
+
 
 /** All temporary data related to [CollapsingLayout] including all the scrolling elements */
 class CollapsingLayoutState {
+
+    val isEnabled = mutableStateOf(true)
 
     internal var overallScroll = 0f
     internal var elements: List<CollapsingElement> = listOf()

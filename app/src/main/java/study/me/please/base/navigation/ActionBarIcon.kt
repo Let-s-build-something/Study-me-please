@@ -4,7 +4,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -43,11 +42,9 @@ fun ActionBarIcon(
 ) {
     Column(
         modifier = Modifier
-            .padding(horizontal = 4.dp)
             .heightIn(max = 64.0.dp)
             .then(modifier)
-            .widthIn(32.dp, 100.dp)
-            .fillMaxHeight()
+            .widthIn(min = 24.dp, max = 100.dp)
             .clip(LocalTheme.shapes.rectangularActionShape)
             .clickable(
                 indication = rememberRipple(
@@ -83,12 +80,12 @@ fun ActionBarIcon(
         AutoResizeText(
             modifier = Modifier
                 .wrapContentHeight()
-                .padding(top = 4.dp),
+                .padding(top = 2.dp),
             text = text,
             color = LocalTheme.colors.tetrial,
             fontWeight = FontWeight.Medium,
             textAlign = TextAlign.Center,
-            maxLines = 2,
+            maxLines = 1,
             // some users tune up font size so high we can draw it otherwise
             fontSizeRange = FontSizeRange(
                 min = 9.5.sp,

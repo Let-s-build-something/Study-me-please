@@ -1,29 +1,31 @@
 package study.me.please.ui.components.pull_refresh
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.PaddingValues
+import android.util.Log
 import androidx.compose.foundation.layout.RowScope
-import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.FabPosition
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
 import com.squadris.squadris.compose.components.getDefaultPullRefreshSize
 import study.me.please.base.BrandBaseScreen
 import study.me.please.base.DraggableRefreshIndicator
 import study.me.please.base.LocalIsTablet
+import study.me.please.base.navigation.AppBarHeightDp
 import study.me.please.base.navigation.NavIconType
 import study.me.please.ui.collection.RefreshableViewModel
+import study.me.please.ui.components.collapsing_layout.rememberCollapsingLayout
 
 /**
  * Implementation of the [BrandBaseScreen] with pull to refresh logic
@@ -40,11 +42,10 @@ fun PullRefreshScreen(
     actionIcons: (@Composable RowScope.() -> Unit)? = null,
     appBarVisible: Boolean = true,
     onNavigationIconClick: (() -> Unit)? = null,
-    containerColor: Color = Color.Transparent,
     contentColor: Color = Color.Transparent,
     floatingActionButtonPosition: FabPosition = FabPosition.End,
     floatingActionButton: @Composable () -> Unit = {},
-    content: @Composable (PaddingValues) -> Unit,
+    content: @Composable () -> Unit,
 ) {
     val refreshScope = rememberCoroutineScope()
     val isTablet = LocalIsTablet.current
@@ -58,43 +59,48 @@ fun PullRefreshScreen(
         onRefresh = {
             viewModel.requestData(scope = refreshScope, isSpecial = true, isPullRefresh = true)
         },
-        refreshingOffset = pullRefreshSize,
+        refreshingOffset = pullRefreshSize.plus(AppBarHeightDp.dp),
         refreshThreshold = pullRefreshSize
     )
+    val collapsingLayoutState = rememberCollapsingLayout()
+
+    LaunchedEffect(indicatorOffset.value) {
+        collapsingLayoutState.isEnabled.value = indicatorOffset.value == 0.dp
+    }
+
+    DraggableRefreshIndicator(
+        modifier = Modifier
+            .systemBarsPadding()
+            .statusBarsPadding(),
+        pullRefreshSize = pullRefreshSize,
+        state = pullRefreshState,
+        isRefreshing = isRefreshing.value
+    ) { indicatorOffsetDp ->
+        indicatorOffset.value = indicatorOffsetDp
+    }
+
+    Log.d("kostka_test", "indicatorOffset: ${indicatorOffset.value}")
 
     BrandBaseScreen(
         modifier = modifier,
         navIconType = navIconType,
         title = title,
+        collapsingLayoutState = collapsingLayoutState,
         subtitle = subtitle,
         onBackPressed = onBackPressed,
         actionIcons = actionIcons,
+        contentModifier = Modifier
+            .graphicsLayer {
+                translationY = indicatorOffset.value
+                    .roundToPx()
+                    .toFloat()
+            }
+            .pullRefresh(pullRefreshState),
+        content = content,
         onNavigationIconClick = onNavigationIconClick,
         appBarVisible = appBarVisible,
-        containerColor = containerColor,
         contentColor = contentColor,
         floatingActionButtonPosition = floatingActionButtonPosition,
         floatingActionButton = floatingActionButton
-    ) { paddingValues ->
-        DraggableRefreshIndicator(
-            modifier = Modifier.padding(paddingValues),
-            pullRefreshSize = pullRefreshSize,
-            state = pullRefreshState,
-            isRefreshing = isRefreshing.value
-        ) { indicatorOffsetDp ->
-            indicatorOffset.value = indicatorOffsetDp
-        }
-        Box(
-            modifier = Modifier
-                .offset {
-                    IntOffset(
-                        x = 0,
-                        y = indicatorOffset.value.roundToPx()
-                    )
-                }
-                .pullRefresh(pullRefreshState)
-        ) {
-            content(paddingValues)
-        }
-    }
+    )
 }

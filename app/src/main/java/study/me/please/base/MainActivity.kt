@@ -6,13 +6,11 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
-import androidx.compose.foundation.background
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Modifier
 import androidx.core.view.WindowCompat
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
@@ -69,7 +67,9 @@ class MainActivity: ComponentActivity(), BackboneChannel {
             Scaffold(
                 snackbarHost = {
                     BaseSnackbarHost(hostState = snackbarHostState)
-                }
+                },
+                containerColor = LocalTheme.colors.brandMainDark,
+                contentColor = LocalTheme.colors.brandMainDark
             ) { _ ->
                 StudyMeAppTheme(isDarkTheme = isDarkTheme.value) {
                     val navController = rememberNavController()
@@ -83,7 +83,6 @@ class MainActivity: ComponentActivity(), BackboneChannel {
                         //LocalOverscrollConfiguration provides null,
                     ) {
                         NavHost(
-                            modifier = Modifier.background(color = LocalTheme.colors.backgroundLight),
                             navController = navController,
                             startDestination = NavigationRoot.Home.route
                         ) {

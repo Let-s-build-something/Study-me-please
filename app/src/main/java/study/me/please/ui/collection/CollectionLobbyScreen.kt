@@ -176,12 +176,11 @@ fun CollectionLobbyScreen(
             selectedCollectionUids.size == 0
         },
         title = stringResource(id = R.string.screen_collection_title)
-    ) { paddingValues ->
+    ) {
         if(collectionsFlow.value == null) {
-            EditableListShimmerLayout(modifier = Modifier.padding(paddingValues))
+            EditableListShimmerLayout()
         }else {
             ListOptionsBottomSheet(
-                modifier = Modifier.padding(paddingValues),
                 onDismissRequest = {
                     stopChecking()
                 },

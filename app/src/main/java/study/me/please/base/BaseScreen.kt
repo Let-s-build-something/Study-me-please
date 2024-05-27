@@ -4,12 +4,14 @@ import android.app.Activity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Snackbar
@@ -19,17 +21,25 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarVisuals
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.squadris.squadris.compose.theme.Colors
 import com.squadris.squadris.compose.theme.LocalTheme
 import study.me.please.base.navigation.CustomizableAppBar
+import study.me.please.ui.components.collapsing_layout.CollapsingBehavior
+import study.me.please.ui.components.collapsing_layout.CollapsingLayout
+import study.me.please.ui.components.collapsing_layout.CollapsingLayoutState
+import study.me.please.ui.components.collapsing_layout.rememberCollapsingLayout
 
 /** current navigation tree and controller */
 val LocalNavController = staticCompositionLocalOf<NavController?> { null }
@@ -54,6 +64,8 @@ val LocalActivity = staticCompositionLocalOf<Activity?> { null }
 @Composable
 fun BaseScreen(
     modifier: Modifier = Modifier,
+    contentModifier: Modifier = Modifier,
+    collapsingLayoutState: CollapsingLayoutState = rememberCollapsingLayout(),
     navigationIcon: Pair<ImageVector, String>? = null,
     title: String? = null,
     subtitle: String? = null,
@@ -61,11 +73,11 @@ fun BaseScreen(
     actionIcons: @Composable RowScope.() -> Unit = {},
     appBarVisible: Boolean = true,
     onNavigationIconClick: (() -> Unit)? = null,
-    containerColor: Color = Color.Transparent,
+    containerColor: Color? = null,
     contentColor: Color = Color.Transparent,
     floatingActionButtonPosition: FabPosition = FabPosition.End,
     floatingActionButton: @Composable () -> Unit = {},
-    content: @Composable (PaddingValues) -> Unit,
+    content: @Composable () -> Unit,
 ) {
     val navController = LocalNavController.current
     val focusManager = LocalFocusManager.current
@@ -93,29 +105,76 @@ fun BaseScreen(
                     BaseSnackbarHost(hostState = snackbarHostState)
                 }
             },
-            containerColor = containerColor,
+            containerColor = Color.Transparent,
             contentColor = contentColor,
             floatingActionButton = floatingActionButton,
             floatingActionButtonPosition = floatingActionButtonPosition,
-            topBar = {
-                AnimatedVisibility(visible = appBarVisible) {
-                    CustomizableAppBar(
-                        modifier = Modifier.background(color = LocalTheme.colors.brandMain),
-                        title = title,
-                        navigationIcon = navigationIcon,
-                        subtitle = subtitle,
-                        actions = actionIcons,
-                        onNavigationIconClick = {
-                            onNavigationIconClick?.invoke() ?: onBackPressedDispatcher?.onBackPressedDispatcher
-                                ?.onBackPressed()
-                        }
-                    )
-                }
-            },
             content = { paddingValues ->
-                Box(modifier = Modifier.padding(paddingValues)) {
-                    content(PaddingValues())
-                }
+                CollapsingLayout(
+                    modifier = Modifier.padding(paddingValues),
+                    state = collapsingLayoutState,
+                    content = listOf(
+                        @Composable {
+                            AnimatedVisibility(visible = appBarVisible) {
+                                CustomizableAppBar(
+                                    title = title,
+                                    navigationIcon = navigationIcon,
+                                    subtitle = subtitle,
+                                    actions = actionIcons,
+                                    onNavigationIconClick = {
+                                        onNavigationIconClick?.invoke()
+                                            ?: onBackPressedDispatcher?.onBackPressedDispatcher
+                                                ?.onBackPressed()
+                                    }
+                                )
+                            }
+                        } to CollapsingBehavior.ALWAYS,
+                        @Composable {
+                            val appbar = collapsingLayoutState.elements.firstOrNull()
+                            val isCollapsed = remember {
+                                derivedStateOf {
+                                    appbar?.offset?.doubleValue == appbar?.height?.doubleValue?.times(-1)
+                                }
+                            }
+
+                            val cornerRadius = animateDpAsState(
+                                targetValue = if(isCollapsed.value) {
+                                    0.dp
+                                }else 24.dp,
+                                label = "cornerRadiusContent"
+                            )
+
+                            Box(
+                                modifier = contentModifier
+                                    .fillMaxSize()
+                                    .then(
+                                        if(containerColor != null) {
+                                            Modifier
+                                                .background(
+                                                    color = containerColor,
+                                                    shape = if(!isCollapsed.value) {
+                                                        RoundedCornerShape(
+                                                            topEnd = cornerRadius.value,
+                                                            topStart = cornerRadius.value
+                                                        )
+                                                    }else RectangleShape
+                                                )
+                                                .clip(
+                                                    if(!isCollapsed.value) {
+                                                        RoundedCornerShape(
+                                                            topEnd = cornerRadius.value,
+                                                            topStart = cornerRadius.value
+                                                        )
+                                                    }else RectangleShape
+                                                )
+                                        }else Modifier
+                                    )
+                            ) {
+                                content()
+                            }
+                        } to CollapsingBehavior.NONE
+                    )
+                )
             }
         )
     }

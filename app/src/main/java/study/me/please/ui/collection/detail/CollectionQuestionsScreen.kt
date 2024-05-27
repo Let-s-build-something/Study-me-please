@@ -54,14 +54,13 @@ fun CollectionQuestionsScreen(
         viewModel = viewModel,
         title = stringResource(id = R.string.screen_questions),
         subtitle = collectionTitle.value
-    ) { paddingValues ->
+    ) {
         if(collectionUid.isNullOrEmpty().not() && collectionDetail.value == null) {
-            ShimmerLayout(modifier = Modifier.padding(paddingValues))
+            ShimmerLayout()
         }else {
             QuestionsList(
                 modifier = Modifier
-                    .padding(top = 8.dp)
-                    .padding(paddingValues),
+                    .padding(top = 8.dp),
                 viewModel = viewModel
             )
         }

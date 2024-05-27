@@ -128,12 +128,11 @@ fun SessionDetailScreen(
                 }
             )
         }
-    ) { paddingValues ->
+    ) {
         if(sessionDetail.value == null) {
-            ShimmerLayout(modifier = Modifier.padding(paddingValues))
+            ShimmerLayout()
         }else {
             ContentLayout(
-                modifier = Modifier.padding(paddingValues),
                 session = sessionDetail.value,
                 viewModel = viewModel,
                 requestDataSave = {

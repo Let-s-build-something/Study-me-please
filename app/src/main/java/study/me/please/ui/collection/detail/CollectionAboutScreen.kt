@@ -77,9 +77,9 @@ fun CollectionAboutScreen(
         viewModel = viewModel,
         title = stringResource(id = R.string.screen_collection_about),
         subtitle = collectionTitle.value
-    ) { paddingValues ->
+    ) {
         if(collectionUid.isNullOrEmpty().not() && collectionDetail.value == null) {
-            ShimmerLayout(modifier = Modifier.padding(paddingValues))
+            ShimmerLayout()
         }else {
             LaunchedEffect(Unit) {
                 collectionTitle.value = collectionDetail.value?.name?.ifBlank { title }
@@ -88,8 +88,7 @@ fun CollectionAboutScreen(
             collectionDetail.value?.let {
                 ContentLayout(
                     modifier = Modifier
-                        .padding(top = 16.dp)
-                        .padding(paddingValues),
+                        .padding(top = 16.dp),
                     viewModel = viewModel,
                     collectionTitleState = collectionTitle,
                     collectionDetail = it

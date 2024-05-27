@@ -117,7 +117,7 @@ fun HomeScreen(
         viewModel = viewModel,
         navIconType = NavIconType.HOME,
         title = stringResource(id = R.string.home_screen_title)
-    ) { paddingValues ->
+    ) {
         showSessionLauncher.value?.let {
             SessionLauncher(
                 collectionUidList = listOf(it),
@@ -131,7 +131,6 @@ fun HomeScreen(
         // hotfix to Google bug - crash on "replace()..."
         ConstraintLayout(
             modifier = Modifier
-                .padding(paddingValues)
                 .fillMaxSize()
         ) {
             val contentRef = createRef()
@@ -228,7 +227,7 @@ private fun CollectionsRow(
 ) {
     OutlinedButton(
         modifier = Modifier
-            .padding(top = 16.dp, start = 4.dp),
+            .padding(top = 10.dp, start = 8.dp),
         text = stringResource(id = R.string.screen_collection_title),
         activeColor = LocalTheme.colors.secondary,
         onClick = {
@@ -295,7 +294,7 @@ private fun SessionsRow(
 ) {
     OutlinedButton(
         modifier = Modifier
-            .padding(top = 16.dp, start = 4.dp),
+            .padding(top = 16.dp, start = 8.dp),
         text = stringResource(id = R.string.screen_session_lobby_title),
         activeColor = LocalTheme.colors.secondary,
         onClick = {

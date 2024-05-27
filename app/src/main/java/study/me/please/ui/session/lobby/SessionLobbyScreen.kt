@@ -229,7 +229,7 @@ fun SessionLobbyScreen(
             )
         },
         title = stringResource(id = R.string.screen_session_lobby_title)
-    ) { paddingValues ->
+    ) {
         if(sessionsFlow.value != null) {
             ListOptionsBottomSheet(
                 modifier = Modifier
@@ -238,7 +238,6 @@ fun SessionLobbyScreen(
                             stopChecking()
                         })
                     }
-                    .padding(paddingValues)
                     .fillMaxSize(),
                 onDismissRequest = {
                     stopChecking()
@@ -335,9 +334,7 @@ fun SessionLobbyScreen(
                 }
             }
         }else {
-            EditableListShimmerLayout(
-                modifier = Modifier.padding(paddingValues)
-            )
+            EditableListShimmerLayout()
         }
     }
 }

@@ -5,6 +5,7 @@ import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
@@ -19,6 +20,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -48,6 +50,7 @@ fun EditableImageAsset(
     onUrlChange: (output: String) -> Unit = {},
     onLoadState: (state: AsyncImagePainter.State) -> Unit = {}
 ) {
+    val configuration = LocalConfiguration.current
     val isFieldError = remember { mutableStateOf(false) }
     val isLoading = remember { mutableStateOf(false) }
     val loadingScope = rememberCoroutineScope()
@@ -73,7 +76,6 @@ fun EditableImageAsset(
     ) {
         if(asset != null) {
             if(isLoading.value) {
-
                 CircularProgressIndicator(
                     modifier = Modifier
                         .padding(bottom = 16.dp)
@@ -88,7 +90,8 @@ fun EditableImageAsset(
                 AsyncImage(
                     modifier = Modifier
                         .animateContentSize()
-                        .wrapContentHeight()
+                        .heightIn(max = configuration.screenHeightDp.dp * 0.3f)
+                        .fillMaxWidth()
                         .padding(bottom = 6.dp),
                     model = if(asset.isLocal) {
                         asset.localUri
@@ -108,7 +111,7 @@ fun EditableImageAsset(
                             .build()
                     },
                     contentDescription = null,
-                    contentScale = ContentScale.Inside,
+                    contentScale = ContentScale.FillWidth,
                     onState = { loadState ->
                         isFieldError.value = loadState is AsyncImagePainter.State.Error
                         isLoading.value = loadState is AsyncImagePainter.State.Loading

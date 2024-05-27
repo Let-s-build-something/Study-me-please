@@ -250,11 +250,8 @@ fun SessionScreen(
                         if(sessionState.isTest.not()) showExitDialog = true
                         sessionState.isTest
                     }
-                ) { paddingValues ->
-                    Column(
-                        modifier = Modifier.padding(paddingValues),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         AnimatedVisibility(visible = showStatistics) {
                             StatisticsTable(
                                 modifier = Modifier

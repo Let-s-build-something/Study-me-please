@@ -3,7 +3,6 @@ package study.me.please.ui.collection.detail.questions.detail
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -246,7 +245,6 @@ fun QuestionDetailScreen(
     }
 
     PullRefreshScreen(
-        modifier = Modifier.background(color = LocalTheme.colors.backgroundLight),
         viewModel = viewModel,
         title = livePrompt.value ?: toolbarTitle,
         subtitle = stringResource(R.string.question),
@@ -268,7 +266,7 @@ fun QuestionDetailScreen(
                 }
             )
         }
-    ) { paddingValues ->
+    ) {
         val itemModifier = Modifier
             .padding(horizontal = 8.dp, vertical = 8.dp)
             .wrapContentHeight()
@@ -278,8 +276,7 @@ fun QuestionDetailScreen(
             modifier = Modifier
                 .wrapContentHeight()
                 .padding(horizontal = 8.dp)
-                .fillMaxWidth()
-                .padding(paddingValues),
+                .fillMaxWidth(),
             state = viewModel.collapsingLayoutState,
             content = listOf(
                 @Composable {

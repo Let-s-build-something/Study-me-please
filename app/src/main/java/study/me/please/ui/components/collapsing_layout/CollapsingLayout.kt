@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.mutableDoubleStateOf
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -33,18 +32,28 @@ fun CollapsingLayout(
             )
         }
     }
-    val scrollableElements = state.elements.filter { it.behavior != CollapsingBehavior.NONE }
-    val alwaysScrollableElements = state.elements.filter { it.behavior == CollapsingBehavior.ALWAYS }
+    val scrollableElements = remember {
+        derivedStateOf {
+            state.elements.filter { it.behavior != CollapsingBehavior.NONE }
+        }
+    }
+    val alwaysScrollableElements = remember {
+        derivedStateOf {
+            state.elements.filter { it.behavior == CollapsingBehavior.ALWAYS }
+        }
+    }
 
     var unConsumed = remember { 0 }
 
     fun calculateOffset(availableY: Float): Offset {
+        if(state.isEnabled.value.not()) return Offset.Zero
+
         var offsetY = 0.0
         // scrolling up - thus we are looking for the first [CollapsingBehavior.ALWAYS]
         if(availableY > 0) {
             // looking for the first zero, which we will increase, or value that is yet expanding
             (if(state.elements.any { it.behavior == CollapsingBehavior.ALWAYS && it.isCollapsed }) {
-                alwaysScrollableElements
+                alwaysScrollableElements.value
             }else state.elements.filter {
                 // ALWAYS any time, ON_TOP only if we're on top
                 it.behavior == CollapsingBehavior.ALWAYS
@@ -61,7 +70,7 @@ fun CollapsingLayout(
         // scrolling down - setting offset on everything collapsable
         }else {
             // looking for a zero, or value in scroll which isn't the offset of its height
-            (scrollableElements.find { it.isScrolling } ?: scrollableElements.firstOrNull { it.isExpanded })?.run {
+            (scrollableElements.value.find { it.isScrolling } ?: scrollableElements.value.firstOrNull { it.isExpanded })?.run {
                 val oldOffset = offset.doubleValue
                 val newOffset = (oldOffset + availableY).coerceIn(-height.doubleValue, 0.0)
                 offset.doubleValue = newOffset
@@ -121,7 +130,6 @@ fun CollapsingLayout(
             // current item's offset
             val offSet = state.elements.getOrNull(index)?.offset
 
-            val calcOffset = remember { mutableFloatStateOf(0f) }
             Box(
                 modifier = Modifier
                     // measurement of height of this element
@@ -147,4 +155,9 @@ fun CollapsingLayout(
             }
         }
     }
+}
+
+@Composable
+fun rememberCollapsingLayout(): CollapsingLayoutState {
+    return remember { CollapsingLayoutState() }
 }

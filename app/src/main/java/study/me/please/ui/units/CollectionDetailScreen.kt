@@ -196,7 +196,7 @@ fun CollectionDetailScreen(
                 }
             )
         }
-    ) { paddingValues ->
+    ) {
         BackHandler(drawerState.isExpanded.value.not()) {
             drawerState.isExpanded.value = true
         }
@@ -204,8 +204,7 @@ fun CollectionDetailScreen(
         Box {
             CollectionDrawer(
                 modifier = Modifier
-                    .align(Alignment.CenterStart)
-                    .padding(paddingValues),
+                    .align(Alignment.CenterStart),
                 state = drawerState,
                 viewModel = viewModel,
                 collectionUid = collectionUid,
@@ -217,7 +216,6 @@ fun CollectionDetailScreen(
             )
             Column(
                 modifier = Modifier
-                    .padding(paddingValues)
                     .fillMaxSize()
                     .offset(
                         x = drawerState.xOffsetDp.dp.plus(drawerState.drawerWidth),

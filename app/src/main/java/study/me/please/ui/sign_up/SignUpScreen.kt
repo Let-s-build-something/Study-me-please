@@ -40,8 +40,7 @@ fun SignUpScreen(
     BrandBaseScreen(
         title = stringResource(R.string.screen_sign_up),
         subtitle = stringResource(R.string.screen_sign_up_subtitle),
-        navIconType = NavIconType.BACK,
-        containerColor = LocalTheme.colors.backgroundLight
+        navIconType = NavIconType.BACK
     ) {
         SignUpContent(
             viewModel = viewModel
