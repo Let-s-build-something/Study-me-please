@@ -91,6 +91,8 @@ import study.me.please.ui.components.ListItemEditField
 import study.me.please.ui.units.UnitActionType.DEFAULT
 import study.me.please.ui.units.UnitActionType.ELEMENT_OPTIONS
 import study.me.please.ui.units.UnitViewModel.Companion.INITIAL_LAYER
+import study.me.please.ui.units.utils.DropTargetContainer
+import study.me.please.ui.units.utils.ElementType
 
 private const val MAX_LENGTH_SHORT_TEXT = 84
 

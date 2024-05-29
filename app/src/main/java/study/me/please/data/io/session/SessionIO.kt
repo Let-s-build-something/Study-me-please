@@ -1,7 +1,6 @@
 package study.me.please.data.io.session
 
 import androidx.room.ColumnInfo
-import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.Ignore
 import androidx.room.PrimaryKey
@@ -9,7 +8,6 @@ import com.google.gson.annotations.SerializedName
 import com.squadris.squadris.utils.DateUtils
 import study.me.please.data.io.QuestionMode
 import study.me.please.data.room.AppRoomDatabase
-import study.me.please.data.state.session.QuestionModule
 import java.io.Serializable
 import java.util.UUID
 
@@ -33,10 +31,13 @@ data class SessionIO(
     var estimatedMode: QuestionMode? = null,
 
     /** saved question module for control and history of questioning */
-    @SerializedName("question_module")
-    @Embedded(prefix = "q_module_")
-    @Deprecated("Should be replaced by questionModuleUid and request the data externally")
-    var questionModule: QuestionModule? = null,
+    var questionModuleUid: String? = null,
+
+    /**
+     * hash of the last snapshot of objects selected
+     * selection information is saved in the preferencePack ([preferencePackUid])
+     */
+    var lastSnapshotHash: Int? = null,
 
     /** What was the last time this session was played */
     @SerializedName("last_played")
@@ -62,6 +63,8 @@ data class SessionIO(
                 "name: $name, " +
                 "uid: $uid, " +
                 "isPlayable: $isPlayable, " +
+                "lastSnapshotHash: $lastSnapshotHash, " +
+                "questionModuleUid: $questionModuleUid, " +
                 "preferencePackUid: $preferencePackUid, " +
                 "estimatedMode: $estimatedMode, " +
                 "lastPlayed: $lastPlayed, " +

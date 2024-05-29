@@ -41,12 +41,6 @@
     <string name="questions_list_chip_has_image">má obrázek</string>
     <string name="questions_list_chip_is_invalid">je špatně</string>
 
-    <string name="units_button_generate_questions">Generovat otázky</string>
-    <string name="units_button_generate">Generovat</string>
-    <string name="units_generate_explanation">
-        Můžeš automaticky generovat otázky ze svých poznámek a následně začít cvičení,
-        které bude používat vygenerované otázky.
-    </string>
     <string name="units_delete_dialog_title">Smazání kapitoly</string>
     <string name="unit_heading_prefix">Kapitola</string>
     <string name="unit_heading_default">Kapitola %1$d</string>
@@ -60,13 +54,13 @@
     <string name="subject_generating_error_generic">Neznámá chyba, #sorry jako</string>
     <string name="subject_generating_error_update_failed">Nešlo aktualizovat kolekci s novými otázky, zkus odejít a znovu přijít do téhle kolekce, případně restartovat aplikaci.</string>
     <string name="subject_generating_success">Úspěšně jste vygenerovaly %1$d otázek.</string>
+    <string name="unit_session_loading">Transformuji poznámky do otázek…</string>
     <string name="unit_generating_success_action">Ukáááž</string>
 
     <string name="list_item_generic_hint">bod</string>
     <string name="list_item_bulletin_hint">odrážka</string>
     <string name="list_item_first_bulletin_hint">přidat popis</string>
     <string name="facts_list_add_new">Přidat vysvětlení</string>
-    <string name="facts_list_generate_questions">Vygenerovat otázky</string>
     <string name="facts_type_definition">Definice</string>
     <string name="facts_type_person">Osoba</string>
     <string name="facts_type_date">Datum</string>

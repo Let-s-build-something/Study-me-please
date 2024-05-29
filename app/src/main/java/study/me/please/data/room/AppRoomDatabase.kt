@@ -31,7 +31,7 @@ import study.me.please.data.state.session.QuestionModule
         CategoryIO::class,
         ParagraphIO::class
     ],
-    version = 4,
+    version = 5,
     exportSchema = true
 )
 @TypeConverters(AppDatabaseConverter::class)
@@ -210,6 +210,21 @@ abstract class AppRoomDatabase: RoomDatabase() {
                 db.execSQL("ALTER TABLE ROOM_SUBJECT_TABLE ADD COLUMN activatedParagraph TEXT")
             }
         }
+
+        val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE $ROOM_SESSION_TABLE ADD COLUMN questionModuleUid TEXT")
+                db.execSQL("ALTER TABLE $ROOM_SESSION_TABLE ADD COLUMN lastSnapshotHash INTEGER")
+                db.execSQL("ALTER TABLE $ROOM_SESSION_PREFERENCE_PACK_TABLE ADD COLUMN selectedUidList TEXT NOT NULL DEFAULT ''")
+
+                db.execSQL("ALTER TABLE $ROOM_SESSION_TABLE DROP COLUMN q_module_sessionUid")
+                db.execSQL("ALTER TABLE $ROOM_SESSION_TABLE DROP COLUMN q_module_questionsStack")
+                db.execSQL("ALTER TABLE $ROOM_SESSION_TABLE DROP COLUMN q_module_uid")
+                db.execSQL("ALTER TABLE $ROOM_SESSION_TABLE DROP COLUMN q_module_history")
+                db.execSQL("ALTER TABLE $ROOM_SESSION_TABLE DROP COLUMN q_module_currentIndex")
+            }
+        }
+
 
         /** Identification of the main database */
         const val ROOM_DATABASE_NAME = "ROOM_DATABASE_NAME"

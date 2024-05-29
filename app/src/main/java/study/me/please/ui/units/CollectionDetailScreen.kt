@@ -31,7 +31,6 @@ import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.DeleteSweep
 import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.Inventory2
-import androidx.compose.material.icons.outlined.LibraryAdd
 import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.ButtonDefaults
@@ -39,7 +38,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -69,15 +67,11 @@ import com.squadris.squadris.compose.components.SearchChip
 import com.squadris.squadris.compose.components.input.EditFieldInput
 import com.squadris.squadris.compose.theme.Colors
 import com.squadris.squadris.compose.theme.LocalTheme
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import study.me.please.R
-import study.me.please.base.CustomSnackbarVisuals
-import study.me.please.base.LocalActivity
 import study.me.please.base.LocalIsTablet
 import study.me.please.base.LocalNavController
-import study.me.please.base.LocalSnackbarHost
 import study.me.please.base.navigation.ActionBarIcon
 import study.me.please.base.navigation.NavIconType
 import study.me.please.base.navigation.NavigationNode.Companion.navigate
@@ -92,7 +86,6 @@ import study.me.please.ui.components.ExpandableContent
 import study.me.please.ui.components.ImageAction
 import study.me.please.ui.components.pull_refresh.PullRefreshScreen
 import study.me.please.ui.components.session.launcher.SessionLauncher
-import study.me.please.ui.units.CollectionUnitsViewModel.Companion.FAILED_INSERT
 
 /**
  * List of subjects specific to a collection
@@ -114,7 +107,7 @@ fun CollectionDetailScreen(
     val coroutineScope = rememberCoroutineScope()
     val drawerState = rememberEmbeddedDrawerState(defaultValue = false)
 
-    val units = viewModel.subjects.collectAsState(initial = listOf())
+    val units = viewModel.units.collectAsState(initial = listOf())
 
     val currentPagerIndex = rememberSaveable(collectionUid) { mutableIntStateOf(0) }
     val lastIndex = remember {
@@ -329,17 +322,13 @@ private fun CollectionDrawer(
     state: EmbeddedDrawerState = rememberEmbeddedDrawerState()
 ) {
     val context = LocalContext.current
-    val snackbarHostState = LocalSnackbarHost.current
     val localFocusManager = LocalFocusManager.current
-    val activity = LocalActivity.current
-    val navController = LocalNavController.current
 
-    val units = viewModel.subjects.collectAsState(initial = listOf())
+    val units = viewModel.units.collectAsState(initial = listOf())
     val filter = viewModel.filter.collectAsState()
     val columnState = rememberLazyListState()
 
     val showDeleteDialog = remember(viewModel) { mutableStateOf(false) }
-    val showGenerateDialog = remember(viewModel) { mutableStateOf(false) }
     val isSearchChipChecked = remember(viewModel) { mutableStateOf(false) }
     val checkedUnits = remember(collectionUid) { mutableStateListOf<String>() }
     val expandedUnits = remember { mutableStateListOf<String>() }
@@ -379,72 +368,6 @@ private fun CollectionDrawer(
             }
         )
     }
-
-    if(showGenerateDialog.value) {
-        BasicAlertDialog(
-            title = stringResource(id = R.string.units_button_generate_questions),
-            content = stringResource(R.string.units_generate_explanation),
-            icon = Icons.Outlined.LibraryAdd,
-            confirmButtonState = ButtonState(
-                text = stringResource(id = R.string.units_button_generate)
-            ) {
-                if(activity != null) {
-                    viewModel.generateQuestions(
-                        checkedUnitUidList = checkedUnits,
-                        activity = activity,
-                        collectionUid = collectionUid
-                    )
-                }
-            },
-            dismissButtonState = ButtonState(
-                text = stringResource(id = R.string.button_dismiss)
-            ),
-            onDismissRequest = {
-                showGenerateDialog.value = false
-            }
-        )
-    }
-
-    LaunchedEffect(Unit) {
-        viewModel.questionsGeneratingResponse.collectLatest { response ->
-            checkedUnits.clear()
-            val snackbarMessage = when {
-                response.errorCode == QuestionGenerator.GeneratingQuestionErrorCode.NOT_ENOUGH_DATA.name
-                        || response.data.isNullOrEmpty() -> {
-                    context.getString(R.string.subject_generating_error_no_data)
-                }
-                response.errorCode == FAILED_INSERT -> {
-                    context.getString(R.string.subject_generating_error_update_failed)
-                }
-                response.data.isNotEmpty() -> context.getString(
-                    R.string.subject_generating_success,
-                    response.data.size
-                )
-                else -> context.getString(R.string.subject_generating_error_generic)
-            }
-
-            if(snackbarHostState?.showSnackbar(
-                CustomSnackbarVisuals(
-                    message = snackbarMessage,
-                    actionLabel = if(response.errorCode == null) {
-                        context.getString(R.string.unit_generating_success_action)
-                    }else null,
-                    isError = response.errorCode != null
-                )
-            ) == SnackbarResult.ActionPerformed) {
-                viewModel.collection.value?.let { collection ->
-                    navController?.navigate(
-                        NavigationRoot.CollectionQuestions,
-                        data = NavigationRoot.CollectionQuestions.CollectionQuestionsArgument(
-                            collectionUid = collection.uid,
-                            toolbarTitle = collection.name
-                        )
-                    )
-                }
-            }
-        }
-    }
-
 
     BackHandler(checkedUnits.size > 0) {
         checkedUnits.clear()
@@ -526,13 +449,6 @@ private fun CollectionDrawer(
                                 containerColor = Colors.RED_ERROR
                             ) {
                                 showDeleteDialog.value = true
-                            }
-                            ImageAction(
-                                modifier = Modifier.weight(1f, fill = true),
-                                leadingImageVector = Icons.Outlined.LibraryAdd,
-                                text = stringResource(id = R.string.units_button_generate_questions)
-                            ) {
-                                showGenerateDialog.value = true
                             }
                         }
                     }else {

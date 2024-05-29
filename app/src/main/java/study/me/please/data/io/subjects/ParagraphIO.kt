@@ -3,6 +3,7 @@ package study.me.please.data.io.subjects
 import androidx.room.Entity
 import androidx.room.Ignore
 import androidx.room.PrimaryKey
+import com.google.firebase.firestore.Exclude
 import com.google.gson.annotations.SerializedName
 import com.squadris.squadris.utils.DateUtils
 import kotlinx.coroutines.Dispatchers
@@ -108,6 +109,8 @@ data class ParagraphIO(
         facts = newTO.facts
     }
 
+    @Ignore
+    @Exclude
     override fun toString(): String {
         return super.toString() +
                 "{" +
@@ -119,5 +122,41 @@ data class ParagraphIO(
                 "facts: $facts" +
                 "name: $name" +
                 "}"
+    }
+
+    @Ignore
+    @Exclude
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as ParagraphIO
+
+        if (uid != other.uid) return false
+        if (bulletPoints != other.bulletPoints) return false
+        if (paragraphUidList != other.paragraphUidList) return false
+        if (factUidList != other.factUidList) return false
+        if (name != other.name) return false
+        if (dateCreated != other.dateCreated) return false
+        if (imageAsset != other.imageAsset) return false
+        if (paragraphs != other.paragraphs) return false
+        if (facts != other.facts) return false
+
+        return true
+    }
+
+    @Ignore
+    @Exclude
+    override fun hashCode(): Int {
+        var result = uid.hashCode()
+        result = 31 * result + bulletPoints.hashCode()
+        result = 31 * result + paragraphUidList.hashCode()
+        result = 31 * result + factUidList.hashCode()
+        result = 31 * result + name.hashCode()
+        result = 31 * result + dateCreated.hashCode()
+        result = 31 * result + (imageAsset?.hashCode() ?: 0)
+        result = 31 * result + paragraphs.hashCode()
+        result = 31 * result + facts.hashCode()
+        return result
     }
 }

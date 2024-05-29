@@ -42,12 +42,6 @@
     <string name="questions_list_chip_has_image">has image</string>
     <string name="questions_list_chip_is_invalid">is invalid</string>
 
-    <string name="units_button_generate_questions">Generate questions</string>
-    <string name="units_button_generate">Generate</string>
-    <string name="units_generate_explanation">
-        You can automagically generate questions from your notes and then start an examination,
-        which will use the generated questions.
-    </string>
     <string name="units_delete_dialog_title">Unit deletion</string>
     <string name="units_delete_dialog_content">
         You\'ve spent time on this, are you sure you want permanently delete %1$d units?
@@ -63,6 +57,7 @@
     <string name="edit_field_item_picked_create">Create new item</string>
     <string name="subject_generating_error_no_data">There is not enough data to generate anything, you gotta write something down first.</string>
     <string name="subject_generating_error_generic">Unknown error</string>
+    <string name="unit_session_loading">Transforming notes into questions…</string>
     <string name="subject_generating_error_update_failed">
         We were not able to update selected collection with the new questions.
         \nTry leaving the collection and trying again, or restarting the application.
@@ -75,7 +70,6 @@
     <string name="list_item_first_bulletin_hint">add a description</string>
 
     <string name="facts_list_add_new">Add an explanation</string>
-    <string name="facts_list_generate_questions">Generate questions</string>
 
     <string name="facts_type_definition">Definition</string>
     <string name="facts_type_person">Person</string>

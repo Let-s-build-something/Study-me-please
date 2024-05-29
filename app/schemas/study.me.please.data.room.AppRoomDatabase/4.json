@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 4,
-    "identityHash": "66f6c5b6229a6ee5fe46e2a59fb78108",
+    "identityHash": "6c7e7863ea76cc67f37b54506f22c355",
     "entities": [
       {
         "tableName": "ROOM_COLLECTION_TABLE",
@@ -290,7 +290,7 @@
       },
       {
         "tableName": "ROOM_SESSION_PREFERENCE_PACK_TABLE",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`uid` TEXT NOT NULL, `name` TEXT NOT NULL, `waitForCorrectAnswer` TEXT NOT NULL, `manualValidation` TEXT NOT NULL, `repeatOnMistake` TEXT NOT NULL, `date_modified` INTEGER, PRIMARY KEY(`uid`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`uid` TEXT NOT NULL, `name` TEXT NOT NULL, `selectedUidList` TEXT NOT NULL, `waitForCorrectAnswer` TEXT NOT NULL, `manualValidation` TEXT NOT NULL, `repeatOnMistake` TEXT NOT NULL, `date_modified` INTEGER, PRIMARY KEY(`uid`))",
         "fields": [
           {
             "fieldPath": "uid",
@@ -301,6 +301,12 @@
           {
             "fieldPath": "name",
             "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "selectedUidList",
+            "columnName": "selectedUidList",
             "affinity": "TEXT",
             "notNull": true
           },
@@ -340,7 +346,7 @@
       },
       {
         "tableName": "ROOM_SESSION_TABLE",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`name` TEXT NOT NULL, `uid` TEXT NOT NULL, `preferencePackUid` TEXT NOT NULL, `estimatedMode` TEXT, `last_played` INTEGER NOT NULL, `collectionUidList` TEXT NOT NULL, `questionUidList` TEXT NOT NULL, `questionCount` INTEGER NOT NULL, `q_module_sessionUid` TEXT, `q_module_questionsStack` TEXT, `q_module_uid` TEXT, `q_module_history` TEXT, `q_module_currentIndex` INTEGER, PRIMARY KEY(`uid`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`name` TEXT NOT NULL, `uid` TEXT NOT NULL, `preferencePackUid` TEXT NOT NULL, `estimatedMode` TEXT, `questionModuleUid` TEXT, `lastSnapshotHash` INTEGER, `last_played` INTEGER NOT NULL, `collectionUidList` TEXT NOT NULL, `questionUidList` TEXT NOT NULL, `questionCount` INTEGER NOT NULL, PRIMARY KEY(`uid`))",
         "fields": [
           {
             "fieldPath": "name",
@@ -367,6 +373,18 @@
             "notNull": false
           },
           {
+            "fieldPath": "questionModuleUid",
+            "columnName": "questionModuleUid",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "lastSnapshotHash",
+            "columnName": "lastSnapshotHash",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
             "fieldPath": "lastPlayed",
             "columnName": "last_played",
             "affinity": "INTEGER",
@@ -389,36 +407,6 @@
             "columnName": "questionCount",
             "affinity": "INTEGER",
             "notNull": true
-          },
-          {
-            "fieldPath": "questionModule.sessionUid",
-            "columnName": "q_module_sessionUid",
-            "affinity": "TEXT",
-            "notNull": false
-          },
-          {
-            "fieldPath": "questionModule.questionsStack",
-            "columnName": "q_module_questionsStack",
-            "affinity": "TEXT",
-            "notNull": false
-          },
-          {
-            "fieldPath": "questionModule.uid",
-            "columnName": "q_module_uid",
-            "affinity": "TEXT",
-            "notNull": false
-          },
-          {
-            "fieldPath": "questionModule.history",
-            "columnName": "q_module_history",
-            "affinity": "TEXT",
-            "notNull": false
-          },
-          {
-            "fieldPath": "questionModule.currentIndex",
-            "columnName": "q_module_currentIndex",
-            "affinity": "INTEGER",
-            "notNull": false
           }
         ],
         "primaryKey": {
@@ -720,7 +708,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '66f6c5b6229a6ee5fe46e2a59fb78108')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '6c7e7863ea76cc67f37b54506f22c355')"
     ]
   }
 }

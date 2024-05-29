@@ -101,7 +101,7 @@ fun StatisticsTable(
             allQuestions.intValue = questionModule.questionsStack.filter {
                 it.isRepetition.not()
             }.size + answeredQuestions.intValue
-            val lastAnswered = answeredQuestions.intValue % allQuestions.intValue
+            val lastAnswered = answeredQuestions.intValue % allQuestions.intValue.coerceAtLeast(1)
 
             responseTime.longValue = iteratedValueResponseTime
             successRate.floatValue = iteratedValueSuccessRate

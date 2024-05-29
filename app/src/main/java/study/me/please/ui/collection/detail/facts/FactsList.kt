@@ -1,16 +1,13 @@
 package study.me.please.ui.collection.detail.facts
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -204,22 +201,6 @@ fun FactsList(
                 selectedFactUids.clear()
             }
         }
-
-        override fun onGenerateQuestionsRequest() {
-            if(selectedFactUids.size > 0) {
-                coroutineScope.launch {
-                    /*viewModel.requestQuestionGeneration(
-                        context = context,
-                        selectedFactUids = selectedFactUids,
-                        facts = facts.value
-                    )*/
-                    delay(300)
-                    stopChecking()
-                }
-            }else {
-                interactiveStates.firstOrNull()?.isChecked?.value = true
-            }
-        }
         override fun copyItems() {
             coroutineScope.launch(Dispatchers.Default) {
                 viewModel.clipBoard.facts.copyItems(
@@ -334,22 +315,6 @@ fun FactsList(
                         horizontalArrangement = Arrangement.SpaceEvenly,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Spacer(modifier = Modifier.weight(0.05f))
-                        BrandHeaderButton(
-                            modifier = (if (facts.value.isNotEmpty()) {
-                                Modifier.weight(0.45f)
-                            } else Modifier.requiredSize(0.dp))
-                                .animateContentSize(),
-                            text = stringResource(id = R.string.facts_list_generate_questions)
-                        ) {
-                            controller.onGenerateQuestionsRequest()
-                        }
-                        Spacer(
-                            modifier = (if(facts.value.isNotEmpty()) {
-                                Modifier.weight(0.05f)
-                            }else Modifier.requiredSize(0.dp))
-                                .animateContentSize()
-                        )
                         BrandHeaderButton(
                             modifier = Modifier
                                 .zIndex(100f)
@@ -358,7 +323,6 @@ fun FactsList(
                         ) {
                             controller.onFactAdded()
                         }
-                        Spacer(modifier = Modifier.weight(0.05f))
                     }
                     OptionsLayout(
                         onCopyRequest = { controller.copyItems() },

@@ -117,6 +117,8 @@ data class UnitIO(
         this.name = subject.name
     }
 
+    @Ignore
+    @Exclude
     override fun toString(): String {
         return super.toString() +
                 "{" +
@@ -129,5 +131,49 @@ data class UnitIO(
                 "collectionUid: $collectionUid," +
                 "dateCreated: $dateCreated" +
                 "}"
+    }
+
+    @Ignore
+    @Exclude
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as UnitIO
+
+        if (uid != other.uid) return false
+        if (bulletPoints != other.bulletPoints) return false
+        if (paragraphUidList != other.paragraphUidList) return false
+        if (factUidList != other.factUidList) return false
+        if (name != other.name) return false
+        if (collectionUid != other.collectionUid) return false
+        if (dateCreated != other.dateCreated) return false
+        if (collapsedParagraphs != other.collapsedParagraphs) return false
+        if (firstVisibleItemIndex != other.firstVisibleItemIndex) return false
+        if (firstVisibleItemOffset != other.firstVisibleItemOffset) return false
+        if (activatedParagraph != other.activatedParagraph) return false
+        if (paragraphs != other.paragraphs) return false
+        if (facts != other.facts) return false
+
+        return true
+    }
+
+    @Ignore
+    @Exclude
+    override fun hashCode(): Int {
+        var result = uid.hashCode()
+        result = 31 * result + bulletPoints.hashCode()
+        result = 31 * result + paragraphUidList.hashCode()
+        result = 31 * result + factUidList.hashCode()
+        result = 31 * result + name.hashCode()
+        result = 31 * result + collectionUid.hashCode()
+        result = 31 * result + dateCreated.hashCode()
+        result = 31 * result + collapsedParagraphs.hashCode()
+        result = 31 * result + firstVisibleItemIndex
+        result = 31 * result + firstVisibleItemOffset
+        result = 31 * result + (activatedParagraph?.hashCode() ?: 0)
+        result = 31 * result + paragraphs.hashCode()
+        result = 31 * result + facts.hashCode()
+        return result
     }
 }

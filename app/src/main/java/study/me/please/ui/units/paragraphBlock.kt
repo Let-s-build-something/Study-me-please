@@ -56,6 +56,12 @@ import study.me.please.ui.components.ExpandableContent
 import study.me.please.ui.components.FactCard
 import study.me.please.ui.components.InteractiveCardMode
 import study.me.please.ui.components.ListItemEditField
+import study.me.please.ui.units.utils.BorderOrder
+import study.me.please.ui.units.utils.DropTargetContainer
+import study.me.please.ui.units.utils.ElementType
+import study.me.please.ui.units.utils.dragSource
+import study.me.please.ui.units.utils.drawSegmentedBorder
+import study.me.please.ui.units.utils.maxParagraphLayer
 
 /**
  * Paragraph block with nested facts and paragraphs
