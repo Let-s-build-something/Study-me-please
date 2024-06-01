@@ -143,180 +143,185 @@ fun SessionScreen(
             isTestingMode
         }
     ) {
-        if(questions.value.isNullOrEmpty().not() && preferencePack.value != null) {
-            preferencePack.value?.let { preference ->
-                questionModule.value?.let { module ->
-                    val sessionState = rememberSessionScreenState(
-                        module = module,
-                        isTest = isTestingMode,
-                        sessionPreferencePack = mutableStateOf(preference),
-                        requestSave = { moduleToSave ->
-                            savingScope.coroutineContext.cancelChildren()
-                            savingScope.launch {
-                                delay(REQUEST_DATA_SAVE_DELAY)
-                                viewModel.requestSessionSave(moduleToSave.copy())
+        Crossfade(
+            targetState = questions.value.isNullOrEmpty().not() && preferencePack.value != null,
+            label = "crossFadeContent"
+        ) { isReady ->
+            if(isReady) {
+                preferencePack.value?.let { preference ->
+                    questionModule.value?.let { module ->
+                        val sessionState = rememberSessionScreenState(
+                            module = module,
+                            isTest = isTestingMode,
+                            sessionPreferencePack = mutableStateOf(preference),
+                            requestSave = { moduleToSave ->
+                                savingScope.coroutineContext.cancelChildren()
+                                savingScope.launch {
+                                    delay(REQUEST_DATA_SAVE_DELAY)
+                                    viewModel.requestSessionSave(moduleToSave.copy())
+                                }
+                            }
+                        )
+                        val preferenceSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+                        val liveIndex = sessionState.liveIndex.collectAsState()
+                        val totalItemsCount = sessionState.module.totalItemsCount.collectAsState()
+
+                        OnLifecycleEvent {
+                            when(it) {
+                                Lifecycle.Event.ON_RESUME -> sessionState.module.stopwatch.start()
+                                Lifecycle.Event.ON_PAUSE -> sessionState.module.stopwatch.stop()
+                                else -> {}
                             }
                         }
-                    )
-                    val preferenceSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
-                    val liveIndex = sessionState.liveIndex.collectAsState()
-                    val totalItemsCount = sessionState.module.totalItemsCount.collectAsState()
-
-                    OnLifecycleEvent {
-                        when(it) {
-                            Lifecycle.Event.ON_RESUME -> sessionState.module.stopwatch.start()
-                            Lifecycle.Event.ON_PAUSE -> sessionState.module.stopwatch.stop()
-                            else -> {}
+                        LaunchedEffect(showPreferenceModal) {
+                            if(showPreferenceModal) {
+                                preferenceSheetState.expand()
+                            }else preferenceSheetState.hide()
                         }
-                    }
+                        LaunchedEffect(questions.value) {
+                            sessionState.initialize(questions = questions.value.orEmpty())
+                        }
 
-                    LaunchedEffect(showPreferenceModal) {
-                        if(showPreferenceModal) {
-                            preferenceSheetState.expand()
-                        }else preferenceSheetState.hide()
-                    }
-                    LaunchedEffect(questions.value) {
-                        sessionState.initialize(questions = questions.value.orEmpty())
-                    }
+                        Crossfade(
+                            targetState = liveIndex.value != -1 && sessionState.module.questionsStack.isNotEmpty(),
+                            label = "crossFadeContent"
+                        ) { isDone ->
+                            if(isDone) {
+                                val pagerState = rememberPagerState(
+                                    pageCount = {
+                                        totalItemsCount.value
+                                    },
+                                    initialPage = sessionState.module.currentIndex
+                                )
 
-                    Crossfade(
-                        targetState = liveIndex.value != -1 && sessionState.module.questionsStack.isNotEmpty(),
-                        label = "crossFadeContent"
-                    ) { isDone ->
-                        if(isDone) {
-                            val pagerState = rememberPagerState(
-                                pageCount = {
-                                    totalItemsCount.value
-                                },
-                                initialPage = sessionState.module.currentIndex
-                            )
+                                LaunchedEffect(pagerState) {
+                                    snapshotFlow { pagerState.currentPage }.collectLatest { newIndex ->
+                                        showStatistics = false
+                                        sessionState.module.currentIndex = newIndex
+                                        sessionState.liveIndex.value = newIndex
 
-                            LaunchedEffect(pagerState) {
-                                snapshotFlow { pagerState.currentPage }.collectLatest { newIndex ->
-                                    showStatistics = false
-                                    sessionState.module.currentIndex = newIndex
-                                    sessionState.liveIndex.value = newIndex
-
-                                    savingScope.coroutineContext.cancelChildren()
-                                    savingScope.launch {
-                                        delay(REQUEST_DATA_SAVE_DELAY)
-                                        viewModel.requestSessionSave(sessionState.module.copy())
+                                        savingScope.coroutineContext.cancelChildren()
+                                        savingScope.launch {
+                                            delay(REQUEST_DATA_SAVE_DELAY)
+                                            viewModel.requestSessionSave(sessionState.module.copy())
+                                        }
                                     }
                                 }
-                            }
 
-                            LaunchedEffect(liveIndex.value) {
-                                val canBeSkipped = sessionState.module.getStepAt(liveIndex.value)?.mode?.value == SessionScreenMode.LOCKED
-                                        || sessionState.module.getStepAt(liveIndex.value)?.isHistory == true
-
-                                if(canBeSkipped.not() && pagerState.currentPage >= sessionState.module.history.size) {
-                                    sessionState.module.stopwatch.start()
-                                }
-                            }
-
-                            // blocking of scrolling to future questions
-                            LaunchedEffect(pagerState) {
-                                snapshotFlow { pagerState.currentPageOffsetFraction }.collect { offset ->
+                                LaunchedEffect(liveIndex.value) {
                                     val canBeSkipped = sessionState.module.getStepAt(liveIndex.value)?.mode?.value == SessionScreenMode.LOCKED
                                             || sessionState.module.getStepAt(liveIndex.value)?.isHistory == true
 
-                                    if(canBeSkipped.not() && offset > 0f && pagerState.currentPage >= sessionState.module.history.size) {
-                                        pagerState.stopScroll(MutatePriority.PreventUserInput)
-                                        // return to previous state
-                                        pagerState.scrollToPage(sessionState.module.history.size)
+                                    if(canBeSkipped.not() && pagerState.currentPage >= sessionState.module.history.size) {
+                                        sessionState.module.stopwatch.start()
                                     }
                                 }
-                            }
 
-                            if(showPreferenceModal) {
-                                SimpleModalBottomSheet(
-                                    onDismissRequest = { showPreferenceModal = false },
-                                    sheetState = preferenceSheetState,
-                                ) {
-                                    PreferenceChooser(
-                                        modifier = Modifier
-                                            .padding(8.dp)
-                                            .padding(bottom = 32.dp),
-                                        controller = object: PreferenceChooserController {
-                                            override fun addPreferencePack(name: String): SessionPreferencePack {
-                                                return viewModel.addNewPreferencePack(name = name)
-                                            }
-                                            override fun savePreference(preference: SessionPreferencePack) {
-                                                viewModel.requestPreferencePackSave(preference)
-                                            }
-                                            override fun deletePreference(preferenceUid: String) {
-                                                viewModel.requestPreferencePackDelete(preferenceUid)
-                                            }
-                                            override fun choosePreference(preference: SessionPreferencePack) {
-                                                sessionState.sessionPreferencePack.value = preference
-                                                viewModel.requestSessionSave(preferencePack = preference)
-                                            }
-                                        },
-                                        defaultPreferencePack = sessionState.sessionPreferencePack.value,
-                                        preferencePacks = preferencePacks.value
-                                    )
-                                }
-                            }
+                                // blocking of scrolling to future questions
+                                LaunchedEffect(pagerState) {
+                                    snapshotFlow { pagerState.currentPageOffsetFraction }.collect { offset ->
+                                        val canBeSkipped = sessionState.module.getStepAt(liveIndex.value)?.mode?.value == SessionScreenMode.LOCKED
+                                                || sessionState.module.getStepAt(liveIndex.value)?.isHistory == true
 
-
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                AnimatedVisibility(visible = showStatistics) {
-                                    StatisticsTable(
-                                        modifier = Modifier
-                                            .padding(16.dp)
-                                            .fillMaxWidth(),
-                                        questionModule = sessionState.module
-                                    )
-                                    Spacer(modifier = Modifier.height(LocalTheme.shapes.betweenItemsSpace))
-                                }
-                                AnimatedVisibility(
-                                    modifier = Modifier.padding(vertical = 4.dp),
-                                    visible = liveIndex.value < sessionState.module.history.size.minus(
-                                        INDEXES_FOR_SKIP_TO_FRONT
-                                    )
-                                ) {
-                                    ComponentHeaderButton(
-                                        startIconVector = Icons.Outlined.SkipNext,
-                                        text = stringResource(id = R.string.button_skip_to_front),
-                                        onClick = {
-                                            coroutineScope.launch {
-                                                pagerState.animateScrollToPage(sessionState.module.history.size)
-                                            }
+                                        if(canBeSkipped.not() && offset > 0f && pagerState.currentPage >= sessionState.module.history.size) {
+                                            pagerState.stopScroll(MutatePriority.PreventUserInput)
+                                            // return to previous state
+                                            pagerState.scrollToPage(sessionState.module.history.size)
                                         }
-                                    )
+                                    }
                                 }
-                                HorizontalPager(
-                                    state = pagerState,
-                                    beyondBoundsPageCount = 1
-                                ) { index ->
-                                    sessionState.module.getStepAt(index)?.let { item ->
-                                        PromptLayout(
-                                            sessionItem = item,
-                                            sessionPreferencePack = sessionState.sessionPreferencePack.value,
-                                            state = sessionState,
-                                            stepForward = {
-                                                coroutineScope.launch {
-                                                    pagerState.animateScrollToPage(pagerState.currentPage.plus(1))
+
+                                if(showPreferenceModal) {
+                                    SimpleModalBottomSheet(
+                                        onDismissRequest = { showPreferenceModal = false },
+                                        sheetState = preferenceSheetState,
+                                    ) {
+                                        PreferenceChooser(
+                                            modifier = Modifier
+                                                .padding(8.dp)
+                                                .padding(bottom = 32.dp),
+                                            controller = object: PreferenceChooserController {
+                                                override fun addPreferencePack(name: String): SessionPreferencePack {
+                                                    return viewModel.addNewPreferencePack(name = name)
+                                                }
+                                                override fun savePreference(preference: SessionPreferencePack) {
+                                                    viewModel.requestPreferencePackSave(preference)
+                                                }
+                                                override fun deletePreference(preferenceUid: String) {
+                                                    viewModel.requestPreferencePackDelete(preferenceUid)
+                                                }
+                                                override fun choosePreference(preference: SessionPreferencePack) {
+                                                    sessionState.sessionPreferencePack.value = preference
+                                                    viewModel.requestSessionSave(preferencePack = preference)
                                                 }
                                             },
-                                            index = index
+                                            defaultPreferencePack = sessionState.sessionPreferencePack.value,
+                                            preferencePacks = preferencePacks.value
                                         )
                                     }
                                 }
+
+
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    AnimatedVisibility(visible = showStatistics) {
+                                        StatisticsTable(
+                                            modifier = Modifier
+                                                .padding(16.dp)
+                                                .fillMaxWidth(),
+                                            questionModule = sessionState.module
+                                        )
+                                        Spacer(modifier = Modifier.height(LocalTheme.shapes.betweenItemsSpace))
+                                    }
+                                    AnimatedVisibility(
+                                        modifier = Modifier.padding(vertical = 4.dp),
+                                        visible = liveIndex.value < sessionState.module.history.size.minus(
+                                            INDEXES_FOR_SKIP_TO_FRONT
+                                        )
+                                    ) {
+                                        ComponentHeaderButton(
+                                            startIconVector = Icons.Outlined.SkipNext,
+                                            text = stringResource(id = R.string.button_skip_to_front),
+                                            onClick = {
+                                                coroutineScope.launch {
+                                                    pagerState.animateScrollToPage(sessionState.module.history.size)
+                                                }
+                                            }
+                                        )
+                                    }
+                                    HorizontalPager(
+                                        state = pagerState,
+                                        beyondBoundsPageCount = 1
+                                    ) { index ->
+                                        sessionState.module.getStepAt(index)?.let { item ->
+                                            PromptLayout(
+                                                sessionItem = item,
+                                                sessionPreferencePack = sessionState.sessionPreferencePack.value,
+                                                state = sessionState,
+                                                stepForward = {
+                                                    coroutineScope.launch {
+                                                        pagerState.animateScrollToPage(pagerState.currentPage.plus(1))
+                                                    }
+                                                },
+                                                index = index
+                                            )
+                                        }
+                                    }
+                                }
+                            }else {
+                                ExceptionLayout(
+                                    response = generatingResponse.value
+                                )
                             }
-                        }else {
-                            ExceptionLayout(
-                                response = generatingResponse.value
-                            )
                         }
                     }
                 }
+            }else {
+                ExceptionLayout(
+                    response = generatingResponse.value
+                )
             }
-        }else {
-            ExceptionLayout(
-                response = generatingResponse.value
-            )
         }
     }
 }

@@ -37,7 +37,7 @@ data class SessionIO(
      * hash of the last snapshot of objects selected
      * selection information is saved in the preferencePack ([preferencePackUid])
      */
-    var lastSnapshotHash: Int? = null,
+    var lastSnapshotHash: String? = null,
 
     /** What was the last time this session was played */
     @SerializedName("last_played")

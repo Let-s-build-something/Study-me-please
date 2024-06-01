@@ -57,7 +57,7 @@
     <string name="edit_field_item_picked_create">Create new item</string>
     <string name="subject_generating_error_no_data">There is not enough data to generate anything, you gotta write something down first.</string>
     <string name="subject_generating_error_generic">Unknown error</string>
-    <string name="unit_session_loading">Transforming notes into questions…</string>
+    <string name="unit_session_loading">Discovering your questions…</string>
     <string name="subject_generating_error_update_failed">
         We were not able to update selected collection with the new questions.
         \nTry leaving the collection and trying again, or restarting the application.
@@ -269,6 +269,8 @@
     <string name="accessibility_clipboard">Clipboard</string>
     <string name="accessibility_sign_up_illustration">Young woman smiling and sitting with a phone in her hands with a cat on her lap.</string>
     <string name="accessibility_sign_in_illustration">A man smiling and sitting with a phone in his hands, there is a galaxy coming out of the phone.</string>
+    <string name="accessibility_search_down">Move down</string>
+    <string name="accessibility_search_up">Move up</string>
 
     <!--- ============================= FIREBASE ==================================== -->
     <string name="firebase_web_client_id" translatable="false">708985154187-j3l3c3u8vnenssq2mhgb39j2n1ui2fmi.apps.googleusercontent.com</string>

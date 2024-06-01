@@ -41,6 +41,7 @@ import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
@@ -321,7 +322,7 @@ fun QuestionDetailScreen(
                             listItems.forEachIndexed { index, listItem ->
                                 ListItemEditField(
                                     prefix = FactType.BULLET_POINT_PREFIX,
-                                    value = listItem,
+                                    value = AnnotatedString(listItem),
                                     identifier = index.toString(),
                                     onBackspaceKey = {
                                         if(it.isEmpty()) {

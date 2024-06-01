@@ -1,8 +1,6 @@
 package study.me.please.base.navigation
 
 import androidx.compose.animation.animateContentSize
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -11,13 +9,10 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.PlayArrow
-import androidx.compose.material.ripple.rememberRipple
-import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -25,7 +20,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
@@ -42,6 +36,7 @@ import study.me.please.R
 import study.me.please.ui.components.AutoResizeText
 import study.me.please.ui.components.FontSizeRange
 
+/** Default, and minimum height of appbar */
 const val AppBarHeightDp = 48
 
 /**
@@ -65,28 +60,15 @@ fun CustomizableAppBar(
         verticalAlignment = Alignment.CenterVertically
     ) {
         navigationIcon?.let { navigationIcon ->
-            Icon(
-                modifier = Modifier
-                    .padding(4.dp)
-                    .size(48.dp)
-                    .clip(LocalTheme.shapes.rectangularActionShape)
-                    .clickable(
-                        indication = rememberRipple(
-                            bounded = true,
-                            color = LocalTheme.colors.contrastActionLight
-                        ),
-                        interactionSource = remember { MutableInteractionSource() }
-                    ) {
-                        onNavigationIconClick()
-                    }
-                    .padding(8.dp),
+            NavigationIcon(
+                onClick = onNavigationIconClick,
                 imageVector = navigationIcon.first,
-                contentDescription = navigationIcon.second,
-                tint = LocalTheme.colors.tetrial
+                contentDescription = navigationIcon.second
             )
         }
         Column(
             modifier = Modifier
+                .padding(start = 4.dp)
                 .weight(1f)
                 .heightIn(min = AppBarHeightDp.dp),
             verticalArrangement = Arrangement.Center
@@ -127,8 +109,6 @@ fun CustomizableAppBar(
         Spacer(modifier = Modifier.width(4.dp))
     }
 }
-
-
 
 @Preview
 @Composable

@@ -54,7 +54,7 @@
     <string name="subject_generating_error_generic">Neznámá chyba, #sorry jako</string>
     <string name="subject_generating_error_update_failed">Nešlo aktualizovat kolekci s novými otázky, zkus odejít a znovu přijít do téhle kolekce, případně restartovat aplikaci.</string>
     <string name="subject_generating_success">Úspěšně jste vygenerovaly %1$d otázek.</string>
-    <string name="unit_session_loading">Transformuji poznámky do otázek…</string>
+    <string name="unit_session_loading">Objevujeme tvoje otázky…</string>
     <string name="unit_generating_success_action">Ukáááž</string>
 
     <string name="list_item_generic_hint">bod</string>
@@ -255,4 +255,6 @@
     <string name="accessibility_clipboard">Schránka</string>
     <string name="accessibility_sign_up_illustration">Mladá žena se usmívá a sedí s telefonem v ruce s kočkou na klíně.</string>
     <string name="accessibility_sign_in_illustration">Mladý muž se usmívá a sedí s telefonem v ruce, z telefonu vychází galaxie.</string>
+    <string name="accessibility_search_down">Posunout nahoru</string>
+    <string name="accessibility_search_up">Posunout dolů</string>
 </resources>

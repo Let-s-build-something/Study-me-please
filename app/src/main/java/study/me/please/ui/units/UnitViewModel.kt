@@ -16,7 +16,6 @@ import study.me.please.data.io.UnitElement
 import study.me.please.data.io.subjects.ParagraphIO
 import study.me.please.data.io.subjects.UnitIO
 import study.me.please.data.shared.SharedDataManager
-import study.me.please.ui.units.CollectionUnitsViewModel.ScrollToElement
 import javax.inject.Inject
 
 /** Communication bridge between UI and DB */
@@ -163,9 +162,9 @@ class UnitViewModel @Inject constructor(
     }
 
     /** Expands all paragraphs within this unit until the specified */
-    suspend fun expandUntil(path: ScrollToElement) {
+    suspend fun expandUntil(path: FocusedUnitElement) {
         withContext(Dispatchers.Default) {
-            path.elementUidList.forEach { uid ->
+            path.elementPath.forEach { uid ->
                 dataManager.elements.value.indexOfFirst { it.uid == uid }.takeIf { it != -1 }?.let {
                     expandParagraph(it)
                 }

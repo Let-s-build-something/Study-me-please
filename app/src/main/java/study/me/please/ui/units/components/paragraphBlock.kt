@@ -1,5 +1,6 @@
-package study.me.please.ui.units
+package study.me.please.ui.units.components
 
+import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Column
@@ -35,9 +36,13 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
@@ -56,9 +61,12 @@ import study.me.please.ui.components.ExpandableContent
 import study.me.please.ui.components.FactCard
 import study.me.please.ui.components.InteractiveCardMode
 import study.me.please.ui.components.ListItemEditField
+import study.me.please.ui.units.CollectionUnitsViewModel
+import study.me.please.ui.units.UnitViewModel
 import study.me.please.ui.units.utils.BorderOrder
 import study.me.please.ui.units.utils.DropTargetContainer
 import study.me.please.ui.units.utils.ElementType
+import study.me.please.ui.units.utils.ParagraphBlockBridge
 import study.me.please.ui.units.utils.dragSource
 import study.me.please.ui.units.utils.drawSegmentedBorder
 import study.me.please.ui.units.utils.maxParagraphLayer
@@ -85,13 +93,13 @@ fun LazyGridScope.paragraphBlock(
     screenWidthDp: Int,
     isReadOnly: Boolean = false,
     viewModel: UnitViewModel,
+    collectionViewModel: CollectionUnitsViewModel?,
     onDragStarted: ((Pair<UnitElement, Int>) -> Unit)? = null,
     activatedParagraph: MutableState<String?>,
     selectedFact: MutableState<String?>,
     dragAndDropTarget: MutableState<String>,
     collapsedParagraphs: State<List<String>>,
     scope: CoroutineScope,
-    collectionViewModel: CollectionUnitsViewModel?,
     focusManager: FocusManager?,
     isLandscape: Boolean
 ) {
@@ -103,11 +111,14 @@ fun LazyGridScope.paragraphBlock(
         ) },
         contentType = { _, element -> element.uid } // to avoid Modifier reuse
     ) { index, element ->
+        val filter = collectionViewModel?.filter?.collectAsState(initial = null)
         val paddingStart = remember(element.uid) {
             if(element.layer >= 0) {
                 screenWidthDp.dp * (element.layer.plus(1)).coerceAtMost(maxParagraphLayer) / 30
             }else 0.dp
         }
+
+        Log.d("kostka_test", "hightlight: ${filter?.value?.textFilter}")
 
         when(element) {
             is UnitElement.Paragraph -> {
@@ -195,7 +206,10 @@ fun LazyGridScope.paragraphBlock(
                                     else Modifier
                                 )
                                 .padding(top = 2.dp),
-                            text = paragraph.name,
+                            text = highlightedText(
+                                highlight = filter?.value?.textFilter ?: "",
+                                text = paragraph.name
+                            ),
                             isExpanded = collapsedParagraphs.value.contains(paragraph.uid).not(),
                             shape = if(element.layer >= 0) RoundedCornerShape(
                                 topStart = LocalTheme.shapes.componentCornerRadius
@@ -224,7 +238,10 @@ fun LazyGridScope.paragraphBlock(
                                             .zIndex(1f),
                                         values = paragraphNames?.value.orEmpty(),
                                         enabled = isReadOnly.not() && collapsedParagraphs.value.contains(paragraph.uid).not(),
-                                        defaultValue = paragraph.name,
+                                        defaultValue = highlightedText(
+                                            highlight = filter?.value?.textFilter ?: "",
+                                            text = paragraph.name
+                                        ),
                                         hint = stringResource(R.string.subject_categorize_paragraph),
                                         textStyle = LocalTheme.styles.subheading,
                                         onValueChanged = { output ->
@@ -272,7 +289,10 @@ fun LazyGridScope.paragraphBlock(
                                         modifier = Modifier.padding(bottom = 2.dp),
                                         identifier = "${index}_${paragraph.uid}",
                                         prefix = FactType.BULLET_POINT_PREFIX,
-                                        value = point,
+                                        value = highlightedText(
+                                            highlight = filter?.value?.textFilter ?: "",
+                                            text = point
+                                        ),
                                         hint = stringResource(
                                             if(isIrremovable) {
                                                 R.string.list_item_first_bulletin_hint
@@ -338,7 +358,9 @@ fun LazyGridScope.paragraphBlock(
                                 start = if (isLandscape) {
                                     if (element.innerIndex % 2 == 0) paddingStart.div(2) else 0.dp
                                 } else paddingStart,
-                                end = if (isLandscape && element.innerIndex % 2 != 0) paddingStart.div(2) else 0.dp
+                                end = if (isLandscape && element.innerIndex % 2 != 0) paddingStart.div(
+                                    2
+                                ) else 0.dp
                             )
                             .offset(
                                 x = if (isLandscape) paddingStart.div(2) else 0.dp
@@ -388,10 +410,13 @@ fun LazyGridScope.paragraphBlock(
                                                 if (onDragStarted != null) {
                                                     onDragStarted(element to index)
                                                 } else {
-                                                    viewModel.localStateElement.value = element to index
-                                                    viewModel.removeElement(index, onSelectionRequest = {
-                                                        activatedParagraph.value = it
-                                                    })
+                                                    viewModel.localStateElement.value =
+                                                        element to index
+                                                    viewModel.removeElement(
+                                                        index,
+                                                        onSelectionRequest = {
+                                                            activatedParagraph.value = it
+                                                        })
                                                 }
                                             }
                                         )
@@ -409,6 +434,7 @@ fun LazyGridScope.paragraphBlock(
                                     bridge?.updateFact(newFact)
                                 }
                             },
+                            hightlight = filter?.value?.textFilter,
                             onClick = {
                                 activatedParagraph.value = element.parentUid
                                 selectedFact.value = if(selectedFact.value == fact.uid) null else fact.uid
@@ -444,4 +470,37 @@ private fun getLayerIdentification(layerDepth: Int): Pair<String, Color> {
     return (if(decimalRes > 0) {
         alphabet.getOrNull(decimalRes).toString() + res.toString()
     } else alphabet.getOrNull(res)?.toString() ?: "") to (color ?: Colors.GREEN_CORRECT)
+}
+
+/** Build an [AnnotatedString] with given highlight */
+@Composable
+fun highlightedText(
+    highlight: String,
+    text: String
+): AnnotatedString {
+    return buildAnnotatedString {
+        if(highlight.isNotBlank() && text.lowercase().contains(highlight.lowercase())) {
+            var textLeft = text
+
+            while(textLeft.isNotEmpty()) {
+                val index = textLeft.lowercase().indexOf(highlight.lowercase())
+
+                if(index != -1) {
+                    append(textLeft.substring(0, index))
+                    withStyle(style = SpanStyle(
+                        fontWeight = FontWeight.ExtraBold,
+                        color = Colors.GREEN_CORRECT
+                    )) {
+                        append(textLeft.substring(index, index + highlight.length))
+                    }
+                    textLeft = textLeft.substring(index + highlight.length, textLeft.length)
+                }else {
+                    append(textLeft)
+                    textLeft = ""
+                }
+            }
+        }else {
+            append(text)
+        }
+    }
 }

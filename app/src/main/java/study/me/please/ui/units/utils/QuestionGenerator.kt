@@ -1,4 +1,4 @@
-package study.me.please.ui.units
+package study.me.please.ui.units.utils
 
 import android.content.Context
 import android.util.Log
@@ -14,6 +14,8 @@ import study.me.please.data.io.QuestionAnswerIO
 import study.me.please.data.io.QuestionIO
 import study.me.please.data.io.subjects.ParagraphIO
 import study.me.please.data.io.subjects.UnitIO
+import java.security.MessageDigest
+import java.util.Base64
 import javax.inject.Inject
 
 /**
@@ -893,4 +895,12 @@ class QuestionGenerator @Inject constructor() {
             return currentImportedSource
         }
     }
+}
+
+/** converts a string to SHA256 */
+fun convertToSha256(input: String): String {
+    val md = MessageDigest.getInstance("SHA-256")
+    return Base64
+        .getEncoder()
+        .encodeToString(md.digest(input.toByteArray()))
 }

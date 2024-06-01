@@ -26,6 +26,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusEvent
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import com.squadris.squadris.compose.components.input.EditFieldInput
 import com.squadris.squadris.compose.theme.LocalTheme
@@ -35,7 +36,7 @@ import study.me.please.R
 @Composable
 fun ListItemEditField(
     modifier: Modifier = Modifier,
-    value: String,
+    value: AnnotatedString,
     enabled: Boolean = true,
     prefix: String,
     maxLines: Int = 20,
@@ -112,7 +113,7 @@ fun ListItemEditField(
         paddingValues = PaddingValues(horizontal = 8.dp),
         onValueChange = {
             output.value = it
-            onValueChange(it)
+            onValueChange(it.text)
         }
     )
 }

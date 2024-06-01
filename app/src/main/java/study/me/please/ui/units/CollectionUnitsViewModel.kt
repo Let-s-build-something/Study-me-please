@@ -2,15 +2,18 @@ package study.me.please.ui.units
 
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import study.me.please.base.BaseViewModel
 import study.me.please.base.GeneralClipBoard
 import study.me.please.data.io.CollectionIO
 import study.me.please.data.io.UnitsFilter
+import study.me.please.data.io.subjects.ParagraphIO
 import study.me.please.data.io.subjects.UnitIO
 import study.me.please.ui.collection.RefreshableViewModel
 import study.me.please.ui.units.utils.UnitsUseCase
@@ -39,34 +42,92 @@ class CollectionUnitsViewModel @Inject constructor(
     /** current collection */
     private val _collection = MutableStateFlow<CollectionIO?>(null)
 
-    /** current collection */
-    val collection = _collection.asStateFlow()
-
     /** Scroll to specific element with this uid */
-    val scrollToElement = MutableStateFlow<ScrollToElement?>(null)
-
-    data class ScrollToElement(
-        val unitUid: String,
-        val elementUidList: List<String>
-    )
-
-    /** Filter for current subjects */
-    val filter = MutableStateFlow(UnitsFilter())
-
-    /** currently selected unit */
-    var currentUnit: UnitIO? = null
+    val scrollToElement = MutableStateFlow<FocusedUnitElement?>(null)
 
     /** list of all paragraph names */
     val paragraphNames = MutableStateFlow(hashMapOf<String, Int>())
 
+    /** Filter for current subjects */
+    val filter = MutableStateFlow(UnitsFilter())
+
+    /** identifier of collection that should be requested */
+    var collectionUid: String = ""
+
+    /** default prefix of new unit */
+    var defaultUnitPrefix: String = ""
+
     /** List of all subjects related to a collection */
-    val units = _units.combine(filter) { units, filter ->
-        // TODO filtering the content
-        // TODO searching in the content will be similar to web searching - iterate through all of content
-        //  - purpose of search can be both read only and also to change information.
-        //  We have to search through collapsed content and give ability to scroll to the search result
-        //  - perhaps expand all of content for easier preparing of filter data?
-        units
+    val units = _units.asStateFlow()
+
+    /** current collection */
+    val collection = _collection.asStateFlow()
+
+    /** current collection */
+    val searchResults = _units.combine(filter) { units, filter ->
+        withContext(Dispatchers.Default) {
+            val results = mutableListOf<FocusedUnitElement>()
+            val prompt = filter.textFilter.lowercase()
+
+            if (prompt.isNotBlank()) {
+                units?.forEach { unit ->
+                    if (unit.name.contains(prompt)
+                        || unit.bulletPoints.any { it.lowercase().contains(prompt) }
+                    ) {
+                        results.add(FocusedUnitElement(unitUid = unit.uid, emptyList()))
+                    }
+
+                    unit.paragraphs.forEach { paragraph ->
+                        iterateFurtherAction(
+                            paragraph = paragraph,
+                            action = { elementPath, iteratedParagraph ->
+                                if (iteratedParagraph.name.lowercase().contains(prompt)
+                                    || iteratedParagraph.bulletPoints.any { it.lowercase().contains(prompt) }
+                                ) {
+                                    results.add(FocusedUnitElement(unitUid = unit.uid, elementPath))
+                                }
+                                iteratedParagraph.facts.forEach { fact ->
+                                    if (fact.shortKeyInformation.lowercase().contains(prompt)
+                                        || fact.longInformation.lowercase().contains(prompt)
+                                        || fact.textList.any { it.lowercase().contains(prompt) }
+                                    ) {
+                                        results.add(
+                                            FocusedUnitElement(
+                                                unitUid = unit.uid,
+                                                elementPath.plus(fact.uid)
+                                            )
+                                        )
+                                    }
+                                }
+                            },
+                            elementPath = listOf(paragraph.uid)
+                        )
+                    }
+                }
+                results
+            }else null
+        }
+    }
+
+    /** iterates into all possible depths */
+    private suspend fun iterateFurtherAction(
+        paragraph: ParagraphIO,
+        elementPath: List<String> = emptyList(),
+        action: suspend (List<String>, ParagraphIO) -> Unit
+    ) {
+        withContext(Dispatchers.Default) {
+            val paragraphsCopy = paragraph.paragraphs.toList()
+            paragraphsCopy.forEach { iterationParagraph ->
+                action(elementPath.plus(iterationParagraph.uid), iterationParagraph)
+
+                iterateFurtherAction(
+                    paragraph = iterationParagraph,
+                    action = action,
+                    elementPath = elementPath.plus(iterationParagraph.uid)
+                )
+            }
+            paragraph.paragraphs = paragraphsCopy.toMutableList()
+        }
     }
 
     /** Makes a request for a unit deletion from the DB */
@@ -120,10 +181,6 @@ class CollectionUnitsViewModel @Inject constructor(
         }
     }
 
-
-    var collectionUid: String = ""
-    var defaultUnitPrefix: String = ""
-
     /** Makes a request to return subjects */
     private suspend fun requestUnits() {
         if(collectionUid.isBlank() || defaultUnitPrefix.isBlank()) return
@@ -136,3 +193,15 @@ class CollectionUnitsViewModel @Inject constructor(
         }
     }
 }
+
+/** Helper class which focuses on a certain point within a unit */
+data class FocusedUnitElement(
+
+    /** identifier of an unit */
+    val unitUid: String,
+
+    /**
+     * path leading into the element, it is ascending - meaning top down until the desired element
+     */
+    val elementPath: List<String>
+)

@@ -50,18 +50,6 @@ data class ParagraphIO(
     @Ignore
     var facts: MutableList<FactIO> = mutableListOf()
 
-    /** Makes a full copy with a new UID */
-    fun deepCopy() = ParagraphIO(
-        uid = UUID.randomUUID().toString(),
-        bulletPoints = bulletPoints,
-        paragraphUidList = paragraphUidList,
-        factUidList = factUidList,
-        name = name
-    ).apply {
-        paragraphs = this@ParagraphIO.paragraphs
-        facts = this@ParagraphIO.facts
-    }
-
     /** Whether this data can be taken seriously */
     suspend fun isSeriousDataPoint() = withContext(Dispatchers.Default) {
         bulletPoints.any { it.isNotBlank() } && name.isBlank().not()
@@ -112,8 +100,7 @@ data class ParagraphIO(
     @Ignore
     @Exclude
     override fun toString(): String {
-        return super.toString() +
-                "{" +
+        return "{" +
                 "uid: $uid," +
                 "bulletPoints: $bulletPoints," +
                 "paragraphs: $paragraphs," +

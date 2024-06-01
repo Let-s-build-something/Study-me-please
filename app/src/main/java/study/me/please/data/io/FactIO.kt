@@ -93,8 +93,7 @@ data class FactIO(
     @Ignore
     @Exclude
     override fun toString(): String {
-        return super.toString() +
-                "{" +
+        return "{" +
                 "uid: $uid," +
                 "shortKeyInformation: $shortKeyInformation," +
                 "shortKeyImage: $shortKeyImage," +

@@ -1,11 +1,9 @@
 package study.me.please.ui.units
 
-import android.util.Log
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
-import com.squadris.squadris.utils.DateUtils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancelChildren
@@ -21,7 +19,7 @@ import study.me.please.data.room.FactDao
 import study.me.please.data.room.UnitDao
 import javax.inject.Inject
 
-const val NETWORK_UPDATE_DELAY = 5_000L
+private const val NETWORK_UPDATE_DELAY = 5_000L
 
 /** Proxy for calling network end points */
 class UnitsRepository @Inject constructor(

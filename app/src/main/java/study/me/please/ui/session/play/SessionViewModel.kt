@@ -1,6 +1,7 @@
 package study.me.please.ui.session.play
 
 import android.content.Context
+import android.util.Log
 import androidx.lifecycle.viewModelScope
 import com.squadris.squadris.utils.DateUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -22,7 +23,8 @@ import study.me.please.ui.collection.RefreshableViewModel.Companion.MINIMUM_REFR
 import study.me.please.ui.components.preference_chooser.PreferencePackDataManager
 import study.me.please.ui.components.preference_chooser.PreferencePackRepository
 import study.me.please.ui.components.preference_chooser.PreferencePackViewModel
-import study.me.please.ui.units.QuestionGenerator
+import study.me.please.ui.units.utils.QuestionGenerator
+import study.me.please.ui.units.utils.convertToSha256
 import study.me.please.ui.units.utils.UnitsUseCase
 import javax.inject.Inject
 
@@ -103,7 +105,11 @@ class SessionViewModel @Inject constructor(
                 )
             }
 
-            val snapshotHash = units.sortedBy { it.uid }.hashCode()
+            val snapshotHash = convertToSha256(
+                units.sortedBy { it.uid }.joinToString(",")
+            )
+            Log.d("Session_Play", "previousSnapshotHash: ${dataManager.session.value?.lastSnapshotHash}," +
+                    " newSnapshotHash: $snapshotHash, string: ${units.sortedBy { it.uid }.joinToString(",")}")
             val isSnapshotDifferent = snapshotHash != dataManager.session.value?.lastSnapshotHash
             val isSelectionDifferent = sessionPreference.selectedUidList.size != selectedUidList.size
                     || sessionPreference.selectedUidList.sorted() != selectedUidList.sorted()

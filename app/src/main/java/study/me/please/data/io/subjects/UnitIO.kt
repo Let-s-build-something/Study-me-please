@@ -120,13 +120,13 @@ data class UnitIO(
     @Ignore
     @Exclude
     override fun toString(): String {
-        return super.toString() +
-                "{" +
+        return "{" +
                 "uid: $uid" +
                 "bulletPoints: $bulletPoints," +
                 "paragraphUidList: $paragraphUidList," +
                 "factUidList: $factUidList," +
                 "facts: $facts," +
+                "paragraphs: $paragraphs," +
                 "name: $name," +
                 "collectionUid: $collectionUid," +
                 "dateCreated: $dateCreated" +
