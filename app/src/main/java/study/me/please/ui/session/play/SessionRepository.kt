@@ -4,8 +4,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import study.me.please.data.io.CollectionIO
 import study.me.please.data.io.QuestionIO
-import study.me.please.data.io.session.SessionIO
 import study.me.please.data.io.preferences.SessionPreferencePack
+import study.me.please.data.io.session.SessionIO
 import study.me.please.data.room.CollectionDao
 import study.me.please.data.room.PreferencesDao
 import study.me.please.data.room.QuestionDao
@@ -86,6 +86,20 @@ class SessionRepository @Inject constructor(
         }
     }
 
+    /** Saves questions */
+    suspend fun saveQuestions(questions: List<QuestionIO>) {
+        return withContext(Dispatchers.IO) {
+            questionDao.insertQuestions(questions)
+        }
+    }
+
+    /** Deletes all questions based on an uid list */
+    suspend fun deleteQuestions(uidList: List<String>) {
+        return withContext(Dispatchers.IO) {
+            questionDao.deleteQuestions(uidList)
+        }
+    }
+
     /** Saves a session */
     suspend fun saveSession(session: SessionIO) {
         return withContext(Dispatchers.IO) {
@@ -97,6 +111,13 @@ class SessionRepository @Inject constructor(
     suspend fun saveQuestionModule(questionModule: QuestionModule) {
         withContext(Dispatchers.IO) {
             questionModuleDao.insertQuestionModule(questionModule)
+        }
+    }
+
+    /** return a question module based on its unique identifier */
+    suspend fun getQuestionModuleByUid(uid: String?): QuestionModule? {
+        return withContext(Dispatchers.IO) {
+            if(uid == null) null else questionModuleDao.getQuestionModuleByUid(uid)
         }
     }
 }

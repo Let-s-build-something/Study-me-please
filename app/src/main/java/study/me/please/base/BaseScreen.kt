@@ -4,12 +4,16 @@ import android.app.Activity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Spring.StiffnessVeryLow
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.FabPosition
@@ -21,15 +25,19 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarVisuals
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -80,12 +88,26 @@ fun BaseScreen(
     content: @Composable () -> Unit,
 ) {
     val navController = LocalNavController.current
+    val density = LocalDensity.current
     val focusManager = LocalFocusManager.current
+    val configuration = LocalConfiguration.current
     val onBackPressedDispatcher = LocalOnBackPressedDispatcherOwner.current
 
     val previousSnackbarHostState = LocalSnackbarHost.current
     val snackbarHostState = remember {
         previousSnackbarHostState ?: SnackbarHostState()
+    }
+    val actionBarHeight = remember {
+        androidx.compose.animation.core.Animatable(56f)
+    }
+
+
+    collapsingLayoutState.elements.firstOrNull()?.let { appbar ->
+        LaunchedEffect(appbar.offset.doubleValue) {
+            actionBarHeight.animateTo(
+                appbar.offset.doubleValue.toFloat() + appbar.height.doubleValue.toFloat()
+            )
+        }
     }
 
     BackHandler(navController?.previousBackStackEntry != null) {
@@ -110,71 +132,89 @@ fun BaseScreen(
             floatingActionButton = floatingActionButton,
             floatingActionButtonPosition = floatingActionButtonPosition,
             content = { paddingValues ->
-                CollapsingLayout(
-                    modifier = Modifier.padding(paddingValues),
-                    state = collapsingLayoutState,
-                    content = listOf(
-                        @Composable {
-                            AnimatedVisibility(visible = appBarVisible) {
-                                CustomizableAppBar(
-                                    title = title,
-                                    navigationIcon = navigationIcon,
-                                    subtitle = subtitle,
-                                    actions = actionIcons,
-                                    onNavigationIconClick = {
-                                        onNavigationIconClick?.invoke()
-                                            ?: onBackPressedDispatcher?.onBackPressedDispatcher
-                                                ?.onBackPressed()
-                                    }
-                                )
-                            }
-                        } to CollapsingBehavior.ALWAYS,
-                        @Composable {
-                            val appbar = collapsingLayoutState.elements.firstOrNull()
-                            val isCollapsed = remember {
-                                derivedStateOf {
-                                    appbar?.offset?.doubleValue == appbar?.height?.doubleValue?.times(-1)
-                                }
-                            }
-
-                            val cornerRadius = animateDpAsState(
-                                targetValue = if(isCollapsed.value) {
-                                    0.dp
-                                }else 24.dp,
-                                label = "cornerRadiusContent"
+                Box {
+                    // black bottom background in case of paddings of content
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .then(
+                                if (containerColor != null) {
+                                    Modifier.background(containerColor)
+                                } else Modifier
                             )
-
-                            Box(
-                                modifier = contentModifier
-                                    .fillMaxSize()
-                                    .then(
-                                        if(containerColor != null) {
-                                            Modifier
-                                                .background(
-                                                    color = containerColor,
-                                                    shape = if(!isCollapsed.value) {
-                                                        RoundedCornerShape(
-                                                            topEnd = cornerRadius.value,
-                                                            topStart = cornerRadius.value
-                                                        )
-                                                    }else RectangleShape
-                                                )
-                                                .clip(
-                                                    if(!isCollapsed.value) {
-                                                        RoundedCornerShape(
-                                                            topEnd = cornerRadius.value,
-                                                            topStart = cornerRadius.value
-                                                        )
-                                                    }else RectangleShape
-                                                )
-                                        }else Modifier
-                                    )
-                            ) {
-                                content()
-                            }
-                        } to CollapsingBehavior.NONE
+                            .fillMaxWidth()
+                            .height(configuration.screenHeightDp.div(2).dp)
                     )
-                )
+                    CollapsingLayout(
+                        modifier = Modifier.padding(paddingValues),
+                        state = collapsingLayoutState,
+                        content = listOf(
+                            @Composable {
+                                AnimatedVisibility(visible = appBarVisible) {
+                                    CustomizableAppBar(
+                                        title = title,
+                                        navigationIcon = navigationIcon,
+                                        subtitle = subtitle,
+                                        actions = actionIcons,
+                                        onNavigationIconClick = {
+                                            onNavigationIconClick?.invoke()
+                                                ?: onBackPressedDispatcher?.onBackPressedDispatcher
+                                                    ?.onBackPressed()
+                                        }
+                                    )
+                                }
+                            } to CollapsingBehavior.ALWAYS,
+                            @Composable {
+                                val appbar = collapsingLayoutState.elements.firstOrNull()
+                                val isCollapsed = remember {
+                                    derivedStateOf {
+                                        appbar?.offset?.doubleValue == appbar?.height?.doubleValue?.times(-1)
+                                    }
+                                }
+
+                                val cornerRadius = animateDpAsState(
+                                    targetValue = if(isCollapsed.value) {
+                                        0.dp
+                                    }else 24.dp,
+                                    label = "cornerRadiusContent",
+                                    animationSpec = spring(
+                                        stiffness = StiffnessVeryLow
+                                    )
+                                )
+
+                                Box(
+                                    modifier = contentModifier
+                                        .padding(bottom = with(density) { actionBarHeight.value.toDp() })
+                                        .fillMaxSize()
+                                        .then(
+                                            if (containerColor != null) {
+                                                Modifier
+                                                    .background(
+                                                        color = containerColor,
+                                                        shape = if (!isCollapsed.value) {
+                                                            RoundedCornerShape(
+                                                                topEnd = cornerRadius.value,
+                                                                topStart = cornerRadius.value
+                                                            )
+                                                        } else RectangleShape
+                                                    )
+                                                    .clip(
+                                                        if (!isCollapsed.value) {
+                                                            RoundedCornerShape(
+                                                                topEnd = cornerRadius.value,
+                                                                topStart = cornerRadius.value
+                                                            )
+                                                        } else RectangleShape
+                                                    )
+                                            } else Modifier
+                                        )
+                                ) {
+                                    content()
+                                }
+                            } to CollapsingBehavior.NONE
+                        )
+                    )
+                }
             }
         )
     }

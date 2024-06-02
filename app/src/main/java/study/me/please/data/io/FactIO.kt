@@ -4,6 +4,7 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Ignore
 import androidx.room.PrimaryKey
+import com.google.firebase.firestore.Exclude
 import com.google.gson.annotations.SerializedName
 import com.squadris.squadris.utils.DateUtils
 import kotlinx.coroutines.Dispatchers
@@ -57,22 +58,6 @@ data class FactIO(
     var categoryUids: List<String> = listOf()
 ): Serializable {
 
-    override fun toString(): String {
-        return super.toString() +
-                "{" +
-                "uid: $uid," +
-                "shortKeyInformation: $shortKeyInformation," +
-                "shortKeyImage: $shortKeyImage," +
-                "longInformation: $longInformation," +
-                "textList: $textList," +
-                "longInformationImage: $longInformationImage," +
-                "promptImage: $promptImage," +
-                "type: $type," +
-                "dateCreated: $dateCreated," +
-                "categoryUids: $categoryUids" +
-                "}"
-    }
-
     /** Whether there is not visible data */
     @get:Ignore
     val isEmpty: Boolean
@@ -103,5 +88,60 @@ data class FactIO(
         this.textList = fact.textList
         this.promptImage = fact.promptImage
         this.categoryUids = fact.categoryUids
+    }
+
+    @Ignore
+    @Exclude
+    override fun toString(): String {
+        return "{" +
+                "uid: $uid," +
+                "shortKeyInformation: $shortKeyInformation," +
+                "shortKeyImage: $shortKeyImage," +
+                "longInformation: $longInformation," +
+                "textList: $textList," +
+                "longInformationImage: $longInformationImage," +
+                "promptImage: $promptImage," +
+                "type: $type," +
+                "dateCreated: $dateCreated," +
+                "categoryUids: $categoryUids" +
+                "}"
+    }
+
+    @Ignore
+    @Exclude
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as FactIO
+
+        if (uid != other.uid) return false
+        if (shortKeyInformation != other.shortKeyInformation) return false
+        if (shortKeyImage != other.shortKeyImage) return false
+        if (longInformation != other.longInformation) return false
+        if (textList != other.textList) return false
+        if (longInformationImage != other.longInformationImage) return false
+        if (promptImage != other.promptImage) return false
+        if (type != other.type) return false
+        if (dateCreated != other.dateCreated) return false
+        if (categoryUids != other.categoryUids) return false
+
+        return true
+    }
+
+    @Ignore
+    @Exclude
+    override fun hashCode(): Int {
+        var result = uid.hashCode()
+        result = 31 * result + shortKeyInformation.hashCode()
+        result = 31 * result + (shortKeyImage?.hashCode() ?: 0)
+        result = 31 * result + longInformation.hashCode()
+        result = 31 * result + textList.hashCode()
+        result = 31 * result + (longInformationImage?.hashCode() ?: 0)
+        result = 31 * result + (promptImage?.hashCode() ?: 0)
+        result = 31 * result + type.hashCode()
+        result = 31 * result + dateCreated.hashCode()
+        result = 31 * result + categoryUids.hashCode()
+        return result
     }
 }

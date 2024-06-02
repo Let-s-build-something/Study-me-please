@@ -5,6 +5,5 @@ interface FactListController {
     fun onFactAdded()
     fun stopChecking()
     fun onDeleteRequest()
-    fun onGenerateQuestionsRequest()
     fun copyItems()
 }

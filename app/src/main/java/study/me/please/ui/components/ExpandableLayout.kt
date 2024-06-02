@@ -28,6 +28,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -41,7 +42,7 @@ import com.squadris.squadris.compose.theme.LocalTheme
 @Composable
 fun ExpandableContent(
     modifier: Modifier = Modifier,
-    text: String = "",
+    text: AnnotatedString = AnnotatedString(""),
     containerColor: Color = LocalTheme.colors.onBackgroundComponent,
     contentColor: Color = LocalTheme.colors.secondary,
     textStyle: TextStyle = LocalTheme.styles.menuItem,
@@ -87,7 +88,7 @@ fun ExpandableContent(
 @Composable
 fun LineButton(
     modifier: Modifier = Modifier,
-    text: String,
+    text: AnnotatedString,
     arrowModifier: Modifier = Modifier,
     arrowRotation: Float = 180f,
     textStyle: TextStyle = LocalTheme.styles.linkText,
@@ -139,13 +140,15 @@ fun LineButton(
 private fun Preview() {
     Column {
         ExpandableContent(
-            text = "Click me to expand XYZasdasdasdasdasdasdasdasdasdasdasdasdasdasdasdasdafgwsegdrthfth",
+            text = AnnotatedString(
+                "Click me to expand XYZasdasdasdasdasdasdasdasdasdasdasdasdasdasdasdasdafgwsegdrthfth"
+            ),
             containerColor = LocalTheme.colors.brandMainDark,
             contentColor = LocalTheme.colors.tetrial
         ) {
             Text(
                 modifier = Modifier.height(400.dp),
-                text = "BLABLABLABLA",
+                text = AnnotatedString("BLABLABLABLA"),
                 fontSize = 28.sp,
                 textAlign = TextAlign.Center
             )

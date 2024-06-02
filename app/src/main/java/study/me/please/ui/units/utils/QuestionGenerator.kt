@@ -1,6 +1,6 @@
-package study.me.please.ui.units
+package study.me.please.ui.units.utils
 
-import android.app.Activity
+import android.content.Context
 import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -14,6 +14,8 @@ import study.me.please.data.io.QuestionAnswerIO
 import study.me.please.data.io.QuestionIO
 import study.me.please.data.io.subjects.ParagraphIO
 import study.me.please.data.io.subjects.UnitIO
+import java.security.MessageDigest
+import java.util.Base64
 import javax.inject.Inject
 
 /**
@@ -45,10 +47,10 @@ class QuestionGenerator @Inject constructor() {
      * @param excludedList list of UIDs excluded from generating
      */
     suspend fun generateQuestions(
-        activity: Activity,
+        context: Context,
         units: List<UnitIO>,
         allUnits: List<UnitIO>,
-        excludedList: List<String>
+        excludedList: List<String> = listOf()
     ): BaseResponse<List<QuestionIO>> {
         return withContext(Dispatchers.Default) {
 
@@ -89,7 +91,7 @@ class QuestionGenerator @Inject constructor() {
                             subject = unit,
                             subjects = allUnits,
                             generatingGoal = goal,
-                            activity = activity
+                            context = context
                         )?.let { nameQuestion ->
                             questions.add(nameQuestion)
                         }
@@ -168,7 +170,7 @@ class QuestionGenerator @Inject constructor() {
                 FactGeneratingGoal.values().forEach { goal ->
                     questions.addAll(
                         generateFactQuestion(
-                            activity = activity,
+                            context = context,
                             facts = facts,
                             generatingGoal = goal,
                         )
@@ -183,7 +185,7 @@ class QuestionGenerator @Inject constructor() {
                                 paragraph = iteratedParagraph,
                                 allParagraphs = paragraphs,
                                 generatingGoal = goal,
-                                activity = activity
+                                context = context
                             ).orEmpty()
                         )
                     }
@@ -192,7 +194,7 @@ class QuestionGenerator @Inject constructor() {
 
             BaseResponse(
                 data = questions,
-                errorCode = if(questions.size == 0) GeneratingQuestionErrorCode.NOT_ENOUGH_DATA.name else null
+                responseCode = if(questions.size == 0) 204 else 200
             )
         }
     }
@@ -205,7 +207,7 @@ class QuestionGenerator @Inject constructor() {
      * Facts are never really indexed, just layered, cannot be connected on index
      */
     private suspend fun generateFactQuestion(
-        activity: Activity,
+        context: Context,
         facts: List<FactToGenerate>,
         generatingGoal: FactGeneratingGoal
     ): List<QuestionIO> {
@@ -252,7 +254,7 @@ class QuestionGenerator @Inject constructor() {
                         ) {
                             questions.add(
                                 generateQuestionFinal(
-                                    activity = activity,
+                                    context = context,
                                     promptFact = iteratedFact,
                                     relatedFacts = relatedFacts.map { it.first },
                                     generatingGoal = generatingGoal
@@ -289,7 +291,7 @@ class QuestionGenerator @Inject constructor() {
                     ) {
                         questions.add(
                             generateQuestionFinal(
-                                activity = activity,
+                                context = context,
                                 promptFact = iteratedFact,
                                 relatedFacts = relatedFacts,
                                 generatingGoal = generatingGoal
@@ -305,7 +307,7 @@ class QuestionGenerator @Inject constructor() {
 
     /** Final step in generating question */
     private fun generateQuestionFinal(
-        activity: Activity,
+        context: Context,
         promptFact: FactToGenerate,
         relatedFacts: List<FactToGenerate>,
         generatingGoal: FactGeneratingGoal
@@ -349,7 +351,7 @@ class QuestionGenerator @Inject constructor() {
                         )
                     },
                     importedSource = importedSource,
-                    prompt = activity.getString(
+                    prompt = context.getString(
                         R.string.question_generating_fact_list,
                         promptFact.data.shortKeyInformation,
                         promptFact.parentParagraph.name
@@ -379,7 +381,7 @@ class QuestionGenerator @Inject constructor() {
                     },
                     importedSource = importedSource,
                     promptList = promptFact.data.textList,
-                    prompt = activity.getString(R.string.question_generating_fact_list_short_key)
+                    prompt = context.getString(R.string.question_generating_fact_list_short_key)
                 )
             }
         }else {
@@ -434,9 +436,9 @@ class QuestionGenerator @Inject constructor() {
                 }else null,
                 importedSource = importedSource,
                 prompt = when(generatingGoal) {
-                    FactGeneratingGoal.IMAGE_PROMPT -> activity.getString(R.string.question_generating_fact_image)
+                    FactGeneratingGoal.IMAGE_PROMPT -> context.getString(R.string.question_generating_fact_image)
                     FactGeneratingGoal.SHORT_INFORMATION -> {
-                        activity.getString(
+                        context.getString(
                             R.string.question_generating_fact_short,
                             promptFact.data.shortKeyInformation,
                             promptFact.parentParagraph.name
@@ -444,8 +446,8 @@ class QuestionGenerator @Inject constructor() {
                     }
                     FactGeneratingGoal.LONG_INFORMATION -> {
                         if(promptFact.data.type.isListType) {
-                            activity.getString(R.string.question_generating_bulletin_points)
-                        }else activity.getString(
+                            context.getString(R.string.question_generating_bulletin_points)
+                        }else context.getString(
                             R.string.question_generating_fact_long,
                             promptFact.data.longInformation,
                             promptFact.parentParagraph.name
@@ -467,7 +469,7 @@ class QuestionGenerator @Inject constructor() {
      */
     private suspend fun generateParagraphQuestion(
         paragraph: ParagraphToGenerate,
-        activity: Activity,
+        context: Context,
         allParagraphs: List<ParagraphToGenerate>,
         generatingGoal: ParagraphGeneratingGoal
     ): List<QuestionIO>? {
@@ -530,7 +532,7 @@ class QuestionGenerator @Inject constructor() {
                                         )
                                     )
                                 },
-                            prompt = activity.getString(
+                            prompt = context.getString(
                                 R.string.question_generating_bulletin_name,
                                 paragraph.data.name
                             ) + if(parentParagraph != null) " ($parentParagraph)" else ""
@@ -570,7 +572,7 @@ class QuestionGenerator @Inject constructor() {
                                         )
                                     )
                                 },
-                            prompt = activity.getString(R.string.question_generating_bulletin_points)
+                            prompt = context.getString(R.string.question_generating_bulletin_points)
                                     + if(paragraph.parentParagraph != null) " (${paragraph.parentParagraph.name})" else "",
                             promptList = paragraph.data.bulletPoints
                         )
@@ -619,7 +621,7 @@ class QuestionGenerator @Inject constructor() {
                                         }
                                     }
                                 },
-                            prompt = activity.getString(
+                            prompt = context.getString(
                                 R.string.question_generating_children_items,
                                 paragraph.data.localCategory?.name ?: "",
                                 paragraph.data.uid,
@@ -676,7 +678,7 @@ class QuestionGenerator @Inject constructor() {
                                         )
                                     }
                                 },
-                            prompt = activity.getString(
+                            prompt = context.getString(
                                 R.string.question_generating_children_items,
                                 paragraph.data.name,
                                 //paragraph.data.uid,
@@ -699,7 +701,7 @@ class QuestionGenerator @Inject constructor() {
         subject: UnitIO,
         subjects: List<UnitIO>,
         generatingGoal: SubjectGeneratingGoal,
-        activity: Activity
+        context: Context
     ): QuestionIO? {
         return withContext(Dispatchers.Default) {
             if(subject.isSeriousDataPoint()) {
@@ -759,8 +761,8 @@ class QuestionGenerator @Inject constructor() {
                             sourceUid = subject.uid
                         ),
                         prompt = if(generatingGoal == SubjectGeneratingGoal.NAME) {
-                            activity.getString(R.string.question_generating_bulletin_name, subject.name)
-                        }else activity.getString(R.string.question_generating_bulletin_points),
+                            context.getString(R.string.question_generating_bulletin_name, subject.name)
+                        }else context.getString(R.string.question_generating_bulletin_points),
                         promptList = if(generatingGoal == SubjectGeneratingGoal.BULLET_POINTS) {
                             subject.bulletPoints
                         }else listOf()
@@ -832,11 +834,6 @@ class QuestionGenerator @Inject constructor() {
         LONG_INFORMATION;
     }
 
-    enum class GeneratingQuestionErrorCode {
-        /** In case there is not enough data to generate any question */
-        NOT_ENOUGH_DATA
-    }
-
     private data class FactToGenerate(
         val data: FactIO,
         val parentParagraph: ParagraphIO,
@@ -898,4 +895,12 @@ class QuestionGenerator @Inject constructor() {
             return currentImportedSource
         }
     }
+}
+
+/** converts a string to SHA256 */
+fun convertToSha256(input: String): String {
+    val md = MessageDigest.getInstance("SHA-256")
+    return Base64
+        .getEncoder()
+        .encodeToString(md.digest(input.toByteArray()))
 }

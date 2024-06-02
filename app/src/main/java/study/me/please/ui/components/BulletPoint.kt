@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -18,7 +19,7 @@ import com.squadris.squadris.compose.theme.LocalTheme
 fun BulletPoint(
     modifier: Modifier = Modifier,
     prefix: String? = "\u2022",
-    text: String,
+    text: AnnotatedString,
     overflow: TextOverflow = TextOverflow.Clip,
     softWrap: Boolean = true,
     maxLines: Int = Int.MAX_VALUE,
@@ -44,6 +45,27 @@ fun BulletPoint(
             maxLines = maxLines
         )
     }
+}
+
+@Composable
+fun BulletPoint(
+    modifier: Modifier = Modifier,
+    prefix: String? = "\u2022",
+    text: String,
+    overflow: TextOverflow = TextOverflow.Clip,
+    softWrap: Boolean = true,
+    maxLines: Int = Int.MAX_VALUE,
+    textStyle: TextStyle = LocalTheme.styles.category,
+) {
+    BulletPoint(
+        modifier = modifier,
+        prefix = prefix,
+        text = AnnotatedString(text),
+        overflow = overflow,
+        softWrap = softWrap,
+        maxLines = maxLines,
+        textStyle = textStyle
+    )
 }
 
 @Preview(showBackground = true)

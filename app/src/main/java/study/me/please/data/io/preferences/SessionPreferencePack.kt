@@ -24,6 +24,9 @@ data class SessionPreferencePack (
     /** Preference name for user identification */
     var name: String = "",
 
+    /** unique identifiers of objects to be included in the session */
+    val selectedUidList: List<String> = emptyList(),
+
     /**
      * Whether we change mode of session to LOCKED just after a correct answer or right away
      */

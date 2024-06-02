@@ -318,11 +318,12 @@ fun CollectionLobbyScreen(
 @Composable
 fun EmptyLayout(
     modifier: Modifier = Modifier,
+    rawAnimation: Int = R.raw.animation_empty,
     emptyText: String
 ) {
     val localConfiguration = LocalConfiguration.current
     val composition by rememberLottieComposition(
-        LottieCompositionSpec.RawRes(R.raw.animation_empty)
+        LottieCompositionSpec.RawRes(rawAnimation)
     )
 
     Column(

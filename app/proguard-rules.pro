@@ -37,6 +37,7 @@
 
 -keep class study.me.please.data.** { *; }
 -keep class study.me.please.ui.units.** { *; }
+-keep class study.me.please.ui.session.** { *; }
 -keep class study.me.please.ui.components.** { *; }
 -keep class study.me.please.data.io.** { *; }
 -keep class study.me.please.data.io.*

@@ -176,15 +176,17 @@ private fun ContentLayout(
     onPreferencePackChosen: (SessionPreferencePack) -> Unit = {},
     onAddCollection: () -> Unit
 ) {
+    val localFocusManager = LocalFocusManager.current
+
     val questions = viewModel.questions.collectAsState()
+    val questionModule = viewModel.questionModule.collectAsState()
     val collections = viewModel.collections.collectAsState()
     val preferencePacks = viewModel.preferencePacks.collectAsState()
-    val selectedCollectionUids = remember { mutableStateListOf<String>() }
 
-    val localFocusManager = LocalFocusManager.current
 
     val showDialog = remember { mutableStateOf<DialogToShow?>(null) }
     val selectedQuestionUids = remember { mutableStateListOf<String>() }
+    val selectedCollectionUids = remember { mutableStateListOf<String>() }
     val interactiveCollectionStates = collections.value?.map {
         rememberInteractiveCardState()
     }
@@ -289,8 +291,8 @@ private fun ContentLayout(
             requestDataSave()
         }
 
-        AnimatedVisibility(visible = session?.questionModule != null) {
-            session?.questionModule?.let { module ->
+        AnimatedVisibility(visible = questionModule.value != null) {
+            questionModule.value?.let { module ->
                 StatisticsTable(
                     modifier = rowModifier.fillMaxWidth(),
                     questionModule = module,

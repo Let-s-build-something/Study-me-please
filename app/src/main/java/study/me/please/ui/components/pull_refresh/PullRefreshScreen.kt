@@ -1,6 +1,5 @@
 package study.me.please.ui.components.pull_refresh
 
-import android.util.Log
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.systemBarsPadding
@@ -78,8 +77,6 @@ fun PullRefreshScreen(
     ) { indicatorOffsetDp ->
         indicatorOffset.value = indicatorOffsetDp
     }
-
-    Log.d("kostka_test", "indicatorOffset: ${indicatorOffset.value}")
 
     BrandBaseScreen(
         modifier = modifier,

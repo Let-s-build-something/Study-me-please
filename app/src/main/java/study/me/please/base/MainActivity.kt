@@ -21,7 +21,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import study.me.please.base.navigation.NavigationNode.Companion.composableNode
 import study.me.please.base.navigation.NavigationRoot
 import study.me.please.data.shared.SharedViewModel
-import study.me.please.data.state.session.SessionScreen
+import study.me.please.ui.session.play.SessionScreen
 import study.me.please.hilt.SharedPreferencesModule
 import study.me.please.ui.account.AccountDashboardScreen
 import study.me.please.ui.collection.CollectionLobbyScreen

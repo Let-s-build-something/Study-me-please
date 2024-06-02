@@ -34,6 +34,7 @@ import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
@@ -73,7 +74,7 @@ data class EditFieldInputState(
 @Composable
 fun EditFieldInput(
     modifier: Modifier = Modifier,
-    value: String = "",
+    value: AnnotatedString = AnnotatedString(""),
     identifier: String? = null,
     hint: String? = null,
     isError: Boolean = false,
@@ -101,7 +102,7 @@ fun EditFieldInput(
     onEntered: ((value: CharSequence) -> Unit)? = null,
     onBackspaceKey: (output: String) -> Unit = {},
     onValueClear: () -> Unit = {},
-    onValueChange: (String) -> Unit = {}
+    onValueChange: (AnnotatedString) -> Unit = {}
 ) {
     val scope = rememberCoroutineScope()
     val focusManager = LocalFocusManager.current
@@ -143,8 +144,9 @@ fun EditFieldInput(
                         focusManager.moveFocus(FocusDirection.Next)
                         true
                     }
+
                     Key.DirectionUp -> {
-                        if(delayedSelectedIndex.intValue == 0) {
+                        if (delayedSelectedIndex.intValue == 0) {
                             if (keyboardActions.onPrevious == null) {
                                 focusManager.moveFocus(FocusDirection.Up)
                             } else {
@@ -152,23 +154,25 @@ fun EditFieldInput(
                                     override fun defaultKeyboardAction(imeAction: ImeAction) {}
                                 }) != null
                             }
-                        }else {
-                            if(isFirstLineSelected.value) {
+                        } else {
+                            if (isFirstLineSelected.value) {
                                 selectedIndex.intValue = 0
                                 delayedSelectedIndex.intValue = 0
                                 text.value = text.value.copy(selection = TextRange(0))
                                 true
-                            }else false
+                            } else false
                         }
                     }
+
                     Key.Backspace -> {
-                        if(delayedSelectedIndex.intValue == 0) {
-                            onBackspaceKey(delayedOutput.value)
+                        if (delayedSelectedIndex.intValue == 0) {
+                            onBackspaceKey(delayedOutput.value.text)
                             true
-                        }else false
+                        } else false
                     }
+
                     Key.DirectionDown -> {
-                        if(delayedSelectedIndex.intValue == text.value.text.length) {
+                        if (delayedSelectedIndex.intValue == text.value.text.length) {
                             if (keyboardActions.onGo == null) {
                                 focusManager.moveFocus(FocusDirection.Down)
                             } else {
@@ -176,45 +180,52 @@ fun EditFieldInput(
                                     override fun defaultKeyboardAction(imeAction: ImeAction) {}
                                 }) != null
                             }
-                        }else {
-                            if(isFirstLineSelected.value) {
+                        } else {
+                            if (isFirstLineSelected.value) {
                                 selectedIndex.intValue = text.value.text.length
                                 delayedSelectedIndex.intValue = text.value.text.length
-                                text.value = text.value.copy(selection = TextRange(text.value.text.length))
+                                text.value =
+                                    text.value.copy(selection = TextRange(text.value.text.length))
                                 true
-                            }else false
+                            } else false
                         }
                     }
+
                     Key.DirectionLeft -> {
-                        if(delayedSelectedIndex.intValue == 0) {
+                        if (delayedSelectedIndex.intValue == 0) {
                             focusManager.moveFocus(FocusDirection.Previous)
                             true
-                        }else false
+                        } else false
                     }
+
                     Key.DirectionRight -> {
-                        if(delayedSelectedIndex.intValue == text.value.text.length) {
+                        if (delayedSelectedIndex.intValue == text.value.text.length) {
                             focusManager.moveFocus(FocusDirection.Next)
                             true
-                        }else false
+                        } else false
                     }
 
                     Key.Enter -> {
                         if (minLines == 1) {
                             if (onEntered == null) {
                                 focusManager.moveFocus(FocusDirection.Next)
-                            }else {
-                                onEntered.invoke(text.value.text.subSequence(
-                                    text.value.selection.start.coerceAtMost(text.value.text.length),
-                                    text.value.text.length
-                                ))
-                                val newText = text.value.text.subSequence(
-                                    0,
-                                    text.value.selection.start.coerceAtMost(text.value.text.length)
-                                ).toString()
+                            } else {
+                                onEntered.invoke(
+                                    text.value.text.subSequence(
+                                        text.value.selection.start.coerceAtMost(text.value.text.length),
+                                        text.value.text.length
+                                    )
+                                )
+                                val newText = text.value.text
+                                    .subSequence(
+                                        0,
+                                        text.value.selection.start.coerceAtMost(text.value.text.length)
+                                    )
+                                    .toString()
                                 text.value = text.value.copy(
                                     text = newText
                                 )
-                                onValueChange(newText)
+                                onValueChange(AnnotatedString(newText))
                             }
                             true
                         } else false
@@ -232,7 +243,7 @@ fun EditFieldInput(
         suffix = suffix,
         isError = isError,
         onTextLayout = { result ->
-            isFirstLineSelected.value = result.getLineForOffset(selectedIndex.value) == 0
+            isFirstLineSelected.value = result.getLineForOffset(selectedIndex.intValue) == 0
             onTextLayout(result)
         },
         keyboardActions = keyboardActions,
@@ -258,13 +269,13 @@ fun EditFieldInput(
                 )
             }
             selectedIndex.intValue = outputValue.selection.end.coerceAtMost(outputValue.text.length)
-            onValueChange(text.value.text)
+            onValueChange(AnnotatedString(text.value.text))
             scope.launch {
                 delay(200)
                 delayedSelectedIndex.intValue = outputValue.selection.end.coerceAtMost(
                     outputValue.text.length
                 )
-                delayedOutput.value = outputValue.text
+                delayedOutput.value = AnnotatedString(outputValue.text)
             }
         },
         supportingText = if(isError && errorText?.isNotEmpty() == true) {
@@ -302,13 +313,81 @@ fun EditFieldInput(
                     imageVector = Icons.Outlined.Clear
                 ) {
                     text.value = TextFieldValue("")
-                    onValueChange("")
+                    onValueChange(AnnotatedString(""))
                     onValueClear()
                 }
             }
         }else null,
         enabled = enabled,
         shape = shape
+    )
+}
+
+/**
+ * Styled [TextField] with ability to remove written text
+ */
+@Composable
+fun EditFieldInput(
+    modifier: Modifier = Modifier,
+    value: String = "",
+    identifier: String? = null,
+    hint: String? = null,
+    isError: Boolean = false,
+    errorText: String? = null,
+    clearable: Boolean = false,
+    focusRequester: FocusRequester? = null,
+    leadingIcon: ImageVector? = null,
+    prefix: @Composable (() -> Unit)? = null,
+    suffix: @Composable (() -> Unit)? = null,
+    minLines: Int = 1,
+    maxLines: Int = 1,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+    keyboardActions: KeyboardActions = KeyboardActions.Default,
+    enabled: Boolean = true,
+    onTextLayout: (TextLayoutResult) -> Unit = {},
+    paddingValues: PaddingValues = TextFieldDefaults.contentPaddingWithoutLabel(),
+    textStyle: TextStyle = TextStyle(
+        color = LocalTheme.colors.primary,
+        fontSize = 16.sp,
+        textAlign = TextAlign.Start
+    ),
+    isUnfocusedTransparent: Boolean = false,
+    shape: Shape = LocalTheme.shapes.componentShape,
+    maxLength: Int? = null,
+    onEntered: ((value: CharSequence) -> Unit)? = null,
+    onBackspaceKey: (output: String) -> Unit = {},
+    onValueClear: () -> Unit = {},
+    onValueChange: (String) -> Unit = {}
+) {
+    EditFieldInput(
+        modifier = modifier,
+        value = AnnotatedString(value),
+        identifier = identifier,
+        hint = hint,
+        isError = isError,
+        errorText = errorText,
+        clearable = clearable,
+        focusRequester = focusRequester,
+        leadingIcon = leadingIcon,
+        prefix = prefix,
+        suffix = suffix,
+        minLines = minLines,
+        maxLines = maxLines,
+        keyboardOptions = keyboardOptions,
+        keyboardActions = keyboardActions,
+        enabled = enabled,
+        onTextLayout = onTextLayout,
+        paddingValues = paddingValues,
+        textStyle = textStyle,
+        isUnfocusedTransparent = isUnfocusedTransparent,
+        shape = shape,
+        maxLength = maxLength,
+        onEntered = onEntered,
+        onBackspaceKey = onBackspaceKey,
+        onValueClear = onValueClear,
+        onValueChange = { output ->
+            onValueChange(output.text)
+        }
     )
 }
 
