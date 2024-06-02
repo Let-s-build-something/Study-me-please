@@ -1,10 +1,9 @@
-package study.me.please.ui.units
+package study.me.please.ui.units.components
 
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.draganddrop.dragAndDropTarget
 import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.layout.Arrangement
@@ -17,7 +16,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.material.icons.Icons
@@ -28,9 +26,6 @@ import androidx.compose.material.icons.outlined.Category
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.FloatingActionButtonDefaults
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
@@ -43,7 +38,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draganddrop.DragAndDropEvent
 import androidx.compose.ui.draganddrop.DragAndDropTarget
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
@@ -60,14 +54,16 @@ import study.me.please.R
 import study.me.please.data.io.UnitElement
 import study.me.please.ui.components.BasicAlertDialog
 import study.me.please.ui.components.ButtonState
-import study.me.please.ui.units.UnitActionType.ADD_CONTENT
-import study.me.please.ui.units.UnitActionType.DEFAULT
-import study.me.please.ui.units.UnitActionType.ELEMENT_ARCHIVE
-import study.me.please.ui.units.UnitActionType.ELEMENT_OPTIONS
+import study.me.please.ui.units.utils.ParagraphBlockBridge
+import study.me.please.ui.units.UnitViewModel
+import study.me.please.ui.units.utils.ElementType
+import study.me.please.ui.units.utils.UnitActionType
+import study.me.please.ui.units.utils.UnitActionType.ADD_CONTENT
+import study.me.please.ui.units.utils.UnitActionType.DEFAULT
+import study.me.please.ui.units.utils.UnitActionType.ELEMENT_ARCHIVE
+import study.me.please.ui.units.utils.UnitActionType.ELEMENT_OPTIONS
 
-const val SCROLL_HEIGHT_PERCENT = .015f
-const val SCROLL_TICK_MILLIS = 10L
-
+/** bar with actions for unit */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun UnitFloatingMenuActions(
@@ -75,9 +71,7 @@ fun UnitFloatingMenuActions(
     viewModel: UnitViewModel,
     unitActionType: MutableState<UnitActionType>,
     lazyGridState: LazyGridState,
-    bridge: ParagraphBlockBridge,
-    isLandscape: Boolean,
-    collectionViewModel: CollectionUnitsViewModel
+    bridge: ParagraphBlockBridge
 ) {
     val scope = rememberCoroutineScope()
     val localDensity = LocalDensity.current
@@ -242,19 +236,13 @@ fun UnitFloatingMenuActions(
                             .fillMaxWidth(),
                         contentAlignment = Alignment.BottomEnd
                     ) {
-                        FloatingActionButton(
-                            containerColor = LocalTheme.colors.tetrial,
-                            contentColor = LocalTheme.colors.brandMain,
+                        ClickableSourceButton(
                             onClick = {
                                 unitActionType.value = ADD_CONTENT
-                            }
-                        ) {
-                            Icon(
-                                modifier = Modifier.size(32.dp),
-                                imageVector = Icons.Outlined.Add,
-                                contentDescription = stringResource(R.string.accessibility_add_content)
-                            )
-                        }
+                            },
+                            imageVector = Icons.Outlined.Add,
+                            contentDescription = stringResource(R.string.accessibility_add_content)
+                        )
                     }
                 }
                 ADD_CONTENT -> {
@@ -267,35 +255,13 @@ fun UnitFloatingMenuActions(
                         if(!viewModel.clipBoard.facts.isEmpty.value
                             || !viewModel.clipBoard.paragraphs.isEmpty.value
                         ) {
-                            Box(
-                                modifier = Modifier
-                                    .clickable {
-                                        unitActionType.value = ELEMENT_ARCHIVE
-                                    }
-                                    .shadow(
-                                        elevation = LocalTheme.styles.actionElevation,
-                                        shape = FloatingActionButtonDefaults.shape
-                                    )
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .background(
-                                            color = LocalTheme.colors.tetrial,
-                                            shape = FloatingActionButtonDefaults.shape
-                                        )
-                                    ,
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        modifier = Modifier
-                                            .size(56.dp)
-                                            .padding(12.dp),
-                                        imageVector = Icons.Outlined.Archive,
-                                        tint = LocalTheme.colors.brandMainDark,
-                                        contentDescription = stringResource(R.string.accessibility_clipboard)
-                                    )
-                                }
-                            }
+                            ClickableSourceButton(
+                                onClick = {
+                                    unitActionType.value = ELEMENT_ARCHIVE
+                                },
+                                imageVector = Icons.Outlined.Archive,
+                                contentDescription = stringResource(R.string.accessibility_clipboard)
+                            )
                         }
                         DragAndDropSourceButton(
                             modifier = Modifier.weight(1f),
@@ -314,6 +280,13 @@ fun UnitFloatingMenuActions(
                             text = stringResource(R.string.accessibility_add_fact),
                             viewModel = viewModel,
                             bridge = bridge
+                        )
+                        ClickableSourceButton(
+                            onClick = {
+                                unitActionType.value = DEFAULT
+                            },
+                            imageVector = Icons.Outlined.Close,
+                            contentDescription = stringResource(R.string.accessibility_clipboard)
                         )
                     }
                 }
@@ -451,3 +424,9 @@ fun UnitFloatingMenuActions(
         }
     }
 }
+
+/** by what fraction of screen height should automatic scroll move by */
+private const val SCROLL_HEIGHT_PERCENT = .015f
+
+/** tick in millisecond for automatic scroll */
+private const val SCROLL_TICK_MILLIS = 10L

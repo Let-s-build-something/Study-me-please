@@ -42,6 +42,7 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
@@ -201,7 +202,9 @@ fun SessionLauncher(
                                     modifier = Modifier
                                         .weight(1f)
                                         .padding(8.dp),
-                                    text = stringResource(R.string.session_launcher_new),
+                                    text = AnnotatedString(
+                                        stringResource(R.string.session_launcher_new)
+                                    ),
                                     textStyle = LocalTheme.styles.menuItem.copy(color = LocalTheme.colors.secondary)
                                 )
                             }

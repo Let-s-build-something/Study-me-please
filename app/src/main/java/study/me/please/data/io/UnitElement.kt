@@ -48,7 +48,6 @@ sealed class UnitElement(
 
         override fun toString(): String {
             return "{" +
-                    "${super.toString()}, " +
                     "layer: $layer," +
                     "data: $data," +
                     "innerIndex: $innerIndex," +
@@ -69,7 +68,6 @@ sealed class UnitElement(
 
     override fun toString(): String {
         return "{" +
-                "${super.toString()}, " +
                 "$layer," +
                 "$notLastLayers, " +
                 "$uid, " +

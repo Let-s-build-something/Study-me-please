@@ -1,6 +1,8 @@
 package study.me.please.data.state.session
 
 import androidx.compose.runtime.MutableState
+import androidx.room.Ignore
+import com.google.firebase.firestore.Exclude
 import com.squadris.squadris.utils.DateUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -32,7 +34,9 @@ data class SessionScreenState(
      * Current question item.
      * No matter it's histry item or new question, it comes from here.
      */
-    val liveIndex: MutableStateFlow<Int> = MutableStateFlow(module.currentIndex)
+    @Ignore
+    @Exclude
+    val liveIndex: MutableStateFlow<Int> = MutableStateFlow(-1)
 
     /** Sync current data with state model */
     suspend fun initialize(questions: List<QuestionIO>) {

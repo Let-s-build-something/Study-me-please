@@ -45,6 +45,7 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -316,7 +317,7 @@ private fun DataCard(
                         listItems.forEachIndexed { index, listItem ->
                             ListItemEditField(
                                 prefix = FactType.BULLET_POINT_PREFIX,
-                                value = listItem,
+                                value = AnnotatedString(listItem),
                                 identifier = index.toString(),
                                 onBackspaceKey = {
                                     if(it.isEmpty()) {

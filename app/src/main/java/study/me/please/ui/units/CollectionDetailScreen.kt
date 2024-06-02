@@ -1,53 +1,48 @@
+@file:OptIn(ExperimentalFoundationApi::class)
+
 package study.me.please.ui.units
 
 import androidx.activity.compose.BackHandler
-import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.Crossfade
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.DeleteSweep
 import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.Inventory2
-import androidx.compose.material.icons.outlined.LibraryAdd
+import androidx.compose.material.icons.outlined.KeyboardArrowDown
+import androidx.compose.material.icons.outlined.KeyboardArrowUp
 import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material.ripple.rememberRipple
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.SnackbarResult
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -55,44 +50,41 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.squadris.squadris.compose.components.MinimalisticIcon
 import com.squadris.squadris.compose.components.SearchChip
-import com.squadris.squadris.compose.components.input.EditFieldInput
-import com.squadris.squadris.compose.theme.Colors
 import com.squadris.squadris.compose.theme.LocalTheme
-import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.cancelChildren
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import study.me.please.R
-import study.me.please.base.CustomSnackbarVisuals
-import study.me.please.base.LocalActivity
-import study.me.please.base.LocalIsTablet
 import study.me.please.base.LocalNavController
-import study.me.please.base.LocalSnackbarHost
 import study.me.please.base.navigation.ActionBarIcon
 import study.me.please.base.navigation.NavIconType
 import study.me.please.base.navigation.NavigationNode.Companion.navigate
 import study.me.please.base.navigation.NavigationRoot
 import study.me.please.data.io.UnitsFilter
-import study.me.please.data.io.subjects.ParagraphIO
+import study.me.please.data.io.subjects.UnitIO
 import study.me.please.ui.collection.RefreshableViewModel.Companion.requestData
-import study.me.please.ui.components.BasicAlertDialog
-import study.me.please.ui.components.ButtonState
-import study.me.please.ui.components.ComponentHeaderButton
-import study.me.please.ui.components.ExpandableContent
-import study.me.please.ui.components.ImageAction
+import study.me.please.ui.collection.detail.questions.detail.INPUT_DELAYED_RESPONSE_MILLIS
 import study.me.please.ui.components.pull_refresh.PullRefreshScreen
 import study.me.please.ui.components.session.launcher.SessionLauncher
-import study.me.please.ui.units.CollectionUnitsViewModel.Companion.FAILED_INSERT
+import study.me.please.ui.units.components.CollectionDrawer
+import study.me.please.ui.units.components.EmbeddedDrawerState
+import study.me.please.ui.units.components.rememberEmbeddedDrawerState
+import study.me.please.ui.units.utils.UnitActionType
 
 /**
  * List of subjects specific to a collection
@@ -108,13 +100,11 @@ fun CollectionDetailScreen(
 ) {
     val context = LocalContext.current
     val navController = LocalNavController.current
-    val localFocusManager = LocalFocusManager.current
-    val onBackPressedDispatcher = LocalOnBackPressedDispatcherOwner.current
 
     val coroutineScope = rememberCoroutineScope()
     val drawerState = rememberEmbeddedDrawerState(defaultValue = false)
 
-    val units = viewModel.subjects.collectAsState(initial = listOf())
+    val units = viewModel.units.collectAsState(initial = listOf())
 
     val currentPagerIndex = rememberSaveable(collectionUid) { mutableIntStateOf(0) }
     val lastIndex = remember {
@@ -151,12 +141,7 @@ fun CollectionDetailScreen(
             stringResource(R.string.unit_heading_default, currentPagerIndex.intValue + 1)
         },
         subtitle = toolbarTitle,
-        navIconType = if(drawerState.isExpanded.value.not()) NavIconType.HAMBURGER else NavIconType.CLOSE,
-        onNavigationIconClick = {
-            if(drawerState.isExpanded.value.not()) {
-                drawerState.isExpanded.value = true
-            }else onBackPressedDispatcher?.onBackPressedDispatcher?.onBackPressed()
-        },
+        navIconType = NavIconType.BACK,
         actionIcons = {
             ActionBarIcon(
                 text = stringResource(id = R.string.collection_detail_start_session),
@@ -197,8 +182,8 @@ fun CollectionDetailScreen(
             )
         }
     ) {
-        BackHandler(drawerState.isExpanded.value.not()) {
-            drawerState.isExpanded.value = true
+        BackHandler(drawerState.isExpanded.value) {
+            drawerState.isExpanded.value = false
         }
 
         Box {
@@ -223,47 +208,14 @@ fun CollectionDetailScreen(
                     )
             ) {
                 if(units.value != null) {
-                    LaunchedEffect(pagerState) {
-                        snapshotFlow { pagerState.currentPage }.collect { index ->
-                            currentPagerIndex.intValue = index
-                            viewModel.currentUnit = units.value?.getOrNull(index)
-                        }
-                    }
-                    LaunchedEffect(units.value?.size) {
-                        coroutineScope.launch {
-                            lastIndex.intValue = (units.value?.lastIndex ?: 0).coerceAtLeast(0)
-                            pagerState.animateScrollToPage(lastIndex.intValue)
-                        }
-                    }
-
-                    val unitActionType = rememberSaveable {
-                        mutableStateOf(UnitActionType.DEFAULT)
-                    }
-
-                    HorizontalPager(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .pointerInput(Unit) {
-                                detectTapGestures(onTap = {
-                                    drawerState.isExpanded.value = false
-                                    unitActionType.value = UnitActionType.DEFAULT
-                                    localFocusManager.clearFocus()
-                                })
-                            },
-                        state = pagerState,
-                        beyondBoundsPageCount = 1
-                    ) { index ->
-                        units.value?.getOrNull(index)?.let { unit ->
-                            UnitContent(
-                                unit = unit,
-                                collectionViewModel = viewModel,
-                                unitActionType = unitActionType,
-                                requestRefresh = {
-                                    viewModel.requestData(isSpecial = true)
-                                }
-                            )
-                        }
-                    }
+                    ContentLayout(
+                        viewModel = viewModel,
+                        pagerState = pagerState,
+                        drawerState = drawerState,
+                        units = units,
+                        currentPagerIndex = currentPagerIndex,
+                        lastIndex = lastIndex
+                    )
                 }else {
                     //TODO shimmerlayout
                 }
@@ -272,424 +224,299 @@ fun CollectionDetailScreen(
     }
 }
 
-private const val SCREEN_WIDTH_PART_OVERVIEW_MOBILE = 0.6
-private const val SCREEN_WIDTH_PART_OVERVIEW_TABLET = 0.4
-
-/** Drawer embedded within content with slight elevation */
-data class EmbeddedDrawerState(
-
-    /** X coordinate offset based on [isExpanded] */
-    val xOffsetDp: Float,
-
-    /** whether the drawer is expanded or not */
-    val isExpanded: MutableState<Boolean>,
-
-    /** width of the drawer composable */
-    val drawerWidth: Dp
-)
-
-/**
- * Drawer embedded within content with slight elevation
- */
-@Composable
-fun rememberEmbeddedDrawerState(
-    defaultValue: Boolean = true
-): EmbeddedDrawerState {
-    val configuration = LocalConfiguration.current
-    val isTablet = LocalIsTablet.current
-
-    val isDrawerExpanded = rememberSaveable(defaultValue) {
-        mutableStateOf(defaultValue)
-    }
-    val drawerWidthDp = configuration.screenWidthDp.times(
-        if(isTablet) SCREEN_WIDTH_PART_OVERVIEW_TABLET else SCREEN_WIDTH_PART_OVERVIEW_MOBILE
-    )
-
-    val xOffsetDp: Float by animateFloatAsState(
-        if(isDrawerExpanded.value) {
-            0f
-        }else -drawerWidthDp.toFloat(),
-        label = ""
-    )
-
-    return EmbeddedDrawerState(
-        xOffsetDp = xOffsetDp,
-        isExpanded = isDrawerExpanded,
-        drawerWidth = drawerWidthDp.dp
-    )
-}
-
+/** content that requires data */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun CollectionDrawer(
-    modifier: Modifier = Modifier,
+private fun ContentLayout(
     viewModel: CollectionUnitsViewModel,
-    onIndexChange: (index: Int) -> Unit,
-    collectionUid: String,
-    state: EmbeddedDrawerState = rememberEmbeddedDrawerState()
+    pagerState: PagerState,
+    drawerState: EmbeddedDrawerState,
+    units: State<List<UnitIO>?>,
+    currentPagerIndex: MutableState<Int>,
+    lastIndex: MutableState<Int>
 ) {
-    val context = LocalContext.current
-    val snackbarHostState = LocalSnackbarHost.current
-    val localFocusManager = LocalFocusManager.current
-    val activity = LocalActivity.current
-    val navController = LocalNavController.current
+    val focusManager = LocalFocusManager.current
+    val density = LocalDensity.current
 
-    val units = viewModel.subjects.collectAsState(initial = listOf())
+    val hasScrolled = rememberSaveable {
+        mutableStateOf(false)
+    }
+    val coroutineScope = rememberCoroutineScope()
+    val inputScope = rememberCoroutineScope()
+    val isSearchChipChecked = rememberSaveable(viewModel) { mutableStateOf(false) }
+    val currentSearchIndex = rememberSaveable(viewModel) {
+        mutableIntStateOf(0)
+    }
+
     val filter = viewModel.filter.collectAsState()
-    val columnState = rememberLazyListState()
+    val searchResults = viewModel.searchResults.collectAsState(initial = null)
 
-    val showDeleteDialog = remember(viewModel) { mutableStateOf(false) }
-    val showGenerateDialog = remember(viewModel) { mutableStateOf(false) }
-    val isSearchChipChecked = remember(viewModel) { mutableStateOf(false) }
-    val checkedUnits = remember(collectionUid) { mutableStateListOf<String>() }
-    val expandedUnits = remember { mutableStateListOf<String>() }
-
-    if(showDeleteDialog.value) {
-        val input = remember { mutableStateOf("") }
-
-        BasicAlertDialog(
-            title = stringResource(id = R.string.units_delete_dialog_title),
-            content = stringResource(
-                id = R.string.units_delete_dialog_content,
-                checkedUnits.size
-            ),
-            icon = Icons.Outlined.Delete,
-            confirmButtonState = ButtonState(
-                text = stringResource(id = R.string.button_confirm),
-                enabled = input.value == stringResource(id = R.string.units_delete_dialog_confirm_hint)
-            ) {
-                viewModel.deleteUnits(checkedUnits)
-            },
-            dismissButtonState = ButtonState(
-                text = stringResource(id = R.string.button_dismiss)
-            ),
-            extraContent = {
-                EditFieldInput(
-                    modifier = Modifier.padding(16.dp),
-                    value = "",
-                    hint = stringResource(R.string.units_delete_dialog_confirm_hint),
-                    maxLines = 1
-                ) { output ->
-                    input.value = output
-                }
-            },
-            onDismissRequest = {
-                checkedUnits.clear()
-                showDeleteDialog.value = false
-            }
-        )
+    LaunchedEffect(pagerState) {
+        snapshotFlow { pagerState.currentPage }.collect { index ->
+            currentPagerIndex.value = index
+        }
     }
-
-    if(showGenerateDialog.value) {
-        BasicAlertDialog(
-            title = stringResource(id = R.string.units_button_generate_questions),
-            content = stringResource(R.string.units_generate_explanation),
-            icon = Icons.Outlined.LibraryAdd,
-            confirmButtonState = ButtonState(
-                text = stringResource(id = R.string.units_button_generate)
-            ) {
-                if(activity != null) {
-                    viewModel.generateQuestions(
-                        checkedUnitUidList = checkedUnits,
-                        activity = activity,
-                        collectionUid = collectionUid
-                    )
-                }
-            },
-            dismissButtonState = ButtonState(
-                text = stringResource(id = R.string.button_dismiss)
-            ),
-            onDismissRequest = {
-                showGenerateDialog.value = false
-            }
-        )
-    }
-
-    LaunchedEffect(Unit) {
-        viewModel.questionsGeneratingResponse.collectLatest { response ->
-            checkedUnits.clear()
-            val snackbarMessage = when {
-                response.errorCode == QuestionGenerator.GeneratingQuestionErrorCode.NOT_ENOUGH_DATA.name
-                        || response.data.isNullOrEmpty() -> {
-                    context.getString(R.string.subject_generating_error_no_data)
-                }
-                response.errorCode == FAILED_INSERT -> {
-                    context.getString(R.string.subject_generating_error_update_failed)
-                }
-                response.data.isNotEmpty() -> context.getString(
-                    R.string.subject_generating_success,
-                    response.data.size
-                )
-                else -> context.getString(R.string.subject_generating_error_generic)
-            }
-
-            if(snackbarHostState?.showSnackbar(
-                CustomSnackbarVisuals(
-                    message = snackbarMessage,
-                    actionLabel = if(response.errorCode == null) {
-                        context.getString(R.string.unit_generating_success_action)
-                    }else null,
-                    isError = response.errorCode != null
-                )
-            ) == SnackbarResult.ActionPerformed) {
-                viewModel.collection.value?.let { collection ->
-                    navController?.navigate(
-                        NavigationRoot.CollectionQuestions,
-                        data = NavigationRoot.CollectionQuestions.CollectionQuestionsArgument(
-                            collectionUid = collection.uid,
-                            toolbarTitle = collection.name
-                        )
-                    )
-                }
+    LaunchedEffect(units.value?.size) {
+        coroutineScope.launch {
+            if(pagerState.pageCount > 0 && !hasScrolled.value) {
+                lastIndex.value = (units.value?.lastIndex ?: 0).coerceAtLeast(0)
+                pagerState.scrollToPage(lastIndex.value)
+                hasScrolled.value = true
             }
         }
     }
 
-
-    BackHandler(checkedUnits.size > 0) {
-        checkedUnits.clear()
+    val unitActionType = rememberSaveable {
+        mutableStateOf(UnitActionType.DEFAULT)
     }
 
-    Card(
-        modifier = modifier
-            .width(state.drawerWidth)
-            .fillMaxHeight()
-            .offset(
-                x = state.xOffsetDp.dp,
-                y = 0.dp
-            )
-            .pointerInput(Unit) {
-                detectTapGestures(onTap = {
-                    localFocusManager.clearFocus()
-                })
-            },
-        elevation = LocalTheme.styles.cardClickableElevation,
-        shape = RectangleShape,//LocalTheme.shapes.componentShape,
-        colors = CardDefaults.cardColors(
-            containerColor = LocalTheme.colors.onBackgroundComponent,
-            contentColor = LocalTheme.colors.onBackgroundComponent
-        )
-    ) {
-        LazyColumn(
-            state = columnState
-        ) {
-            stickyHeader {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(8.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+    Box {
+        AnimatedVisibility(
+            modifier = Modifier
+                .fillMaxWidth()
+                .zIndex(10f)
+                // takes focus away, so there are no accidental clicks
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null
                 ) {
-                    Text(
-                        text = stringResource(R.string.units_overview),
-                        style = LocalTheme.styles.subheading
-                    )
-                    MinimalisticIcon(
-                        imageVector = Icons.Outlined.Close,
-                        onClick = {
-                            state.isExpanded.value = false
-                        }
+                    focusManager.clearFocus()
+                },
+            visible = drawerState.isExpanded.value.not()
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                NavIconType.HAMBURGER.imageVector?.let { asset ->
+                    Icon(
+                        modifier = Modifier
+                            .padding(start = 4.dp)
+                            .background(
+                                color = LocalTheme.colors.brandMain,
+                                shape = LocalTheme.shapes.chipShape
+                            )
+                            .size(42.dp)
+                            .clip(LocalTheme.shapes.chipShape)
+                            .clickable(
+                                indication = rememberRipple(
+                                    bounded = true,
+                                    color = LocalTheme.colors.contrastActionLight
+                                ),
+                                interactionSource = remember { MutableInteractionSource() }
+                            ) {
+                                drawerState.isExpanded.value = true
+                            }
+                            .padding(6.dp),
+                        imageVector = asset.first,
+                        contentDescription = asset.second,
+                        tint = LocalTheme.colors.tetrial
                     )
                 }
-            }
-            item {
+                AnimatedVisibility(pagerState.pageCount > 1) {
+                    PagerIndicatorRow(
+                        modifier = Modifier
+                            .align(Alignment.CenterVertically)
+                            .padding(bottom = 8.dp),
+                        pagerState = pagerState
+                    )
+                }
                 SearchChip(
-                    modifier = Modifier
-                        .padding(top = 8.dp)
-                        .fillMaxWidth(),
+                    modifier = Modifier.padding(end = 8.dp),
+                    maxHeight = 38.sp,
                     isChecked = isSearchChipChecked,
                     text = filter.value.textFilter,
                     onSearchOutput = { output ->
-                        viewModel.filter.update {
-                            UnitsFilter(output)
+                        inputScope.coroutineContext.cancelChildren()
+                        inputScope.launch {
+                            delay(INPUT_DELAYED_RESPONSE_MILLIS)
+                            viewModel.filter.update {
+                                UnitsFilter(output)
+                            }
                         }
                     },
                     onClick = {
-                        isSearchChipChecked.value = true
+                        isSearchChipChecked.value = isSearchChipChecked.value.not()
+                    },
+                    extraContent = {
+                        AnimatedVisibility(visible = filter.value.textFilter.isNotBlank()) {
+                            Row(
+                                modifier = Modifier
+                                    .padding(start = 4.dp)
+                                    .clip(LocalTheme.shapes.chipShape)
+                                    .background(
+                                        color = LocalTheme.colors.brandMainDark,
+                                        shape = LocalTheme.shapes.chipShape
+                                    ),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                val current = (currentSearchIndex.intValue + 1).coerceAtMost(searchResults.value?.size ?: 0)
+                                val isEnabled = remember {
+                                    derivedStateOf {
+                                        (searchResults.value?.size ?: 0) > 0
+                                    }
+                                }
+
+                                Text(
+                                    modifier = Modifier.padding(start = 8.dp),
+                                    text = "${current}/${searchResults.value?.size}",
+                                    style = TextStyle(
+                                        color = Color.White,
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                )
+
+                                // move up
+                                Icon(
+                                    modifier = Modifier
+                                        .size(with(density) { 38.sp.toDp() })
+                                        .clickable(
+                                            indication = rememberRipple(
+                                                bounded = true,
+                                                color = Color.White
+                                            ),
+                                            enabled = isEnabled.value,
+                                            interactionSource = remember { MutableInteractionSource() }
+                                        ) {
+                                            currentSearchIndex.intValue =
+                                                (currentSearchIndex.intValue - 1)
+                                                    .coerceAtLeast(0)
+
+                                            val newResult =
+                                                searchResults.value?.getOrNull(currentSearchIndex.intValue)
+                                            coroutineScope.launch {
+                                                units.value
+                                                    ?.indexOfFirst {
+                                                        it.uid == newResult?.unitUid
+                                                    }
+                                                    .takeIf { it != -1 }
+                                                    ?.let { index ->
+                                                        pagerState.animateScrollToPage(index)
+                                                    }
+                                            }
+                                            focusManager.clearFocus()
+                                            viewModel.scrollToElement.value = newResult
+                                        }
+                                        .padding(2.dp),
+                                    imageVector = Icons.Outlined.KeyboardArrowUp,
+                                    contentDescription = stringResource(R.string.accessibility_search_up),
+                                    tint = if(isEnabled.value) Color.White else LocalTheme.colors.brandMain
+                                )
+
+                                // move down
+                                Icon(
+                                    modifier = Modifier
+                                        .size(with(density) { 38.sp.toDp() })
+                                        .clickable(
+                                            indication = rememberRipple(
+                                                bounded = true,
+                                                color = Color.White
+                                            ),
+                                            enabled = isEnabled.value,
+                                            interactionSource = remember { MutableInteractionSource() }
+                                        ) {
+                                            currentSearchIndex.intValue =
+                                                (currentSearchIndex.intValue + 1)
+                                                    .coerceAtMost(
+                                                        searchResults.value?.size?.minus(1) ?: 0
+                                                    )
+
+                                            val newResult =
+                                                searchResults.value?.getOrNull(currentSearchIndex.intValue)
+                                            coroutineScope.launch {
+                                                units.value
+                                                    ?.indexOfFirst {
+                                                        it.uid == newResult?.unitUid
+                                                    }
+                                                    .takeIf { it != -1 }
+                                                    ?.let { index ->
+                                                        pagerState.animateScrollToPage(index)
+                                                    }
+                                            }
+                                            focusManager.clearFocus()
+                                            viewModel.scrollToElement.value = newResult
+                                        }
+                                        .padding(2.dp),
+                                    imageVector = Icons.Outlined.KeyboardArrowDown,
+                                    contentDescription = stringResource(R.string.accessibility_search_down),
+                                    tint = if(isEnabled.value) Color.White else LocalTheme.colors.brandMain
+                                )
+                                Spacer(Modifier)
+                            }
+                        }
                     }
                 )
             }
-            item {
-                Crossfade(
-                    modifier = Modifier
-                        .padding(top = 32.dp, start = 8.dp)
-                        .fillMaxWidth(),
-                    targetState = checkedUnits.size > 0,
-                    label = ""
-                ) { isAnyChecked ->
-                    if(isAnyChecked) {
-                        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                            ImageAction(
-                                leadingImageVector = Icons.Outlined.DeleteSweep,
-                                text = stringResource(id = R.string.button_delete),
-                                containerColor = Colors.RED_ERROR
-                            ) {
-                                showDeleteDialog.value = true
-                            }
-                            ImageAction(
-                                modifier = Modifier.weight(1f, fill = true),
-                                leadingImageVector = Icons.Outlined.LibraryAdd,
-                                text = stringResource(id = R.string.units_button_generate_questions)
-                            ) {
-                                showGenerateDialog.value = true
-                            }
-                        }
-                    }else {
-                        ComponentHeaderButton(
-                            modifier = Modifier.fillMaxWidth(),
-                            elevation = ButtonDefaults.elevatedButtonElevation(
-                                0.dp, 0.dp, 0.dp, 0.dp, 0.dp
-                            ),
-                            onClick = {
-                                viewModel.addNewUnit(
-                                    collectionUid = collectionUid,
-                                    prefix = context.getString(R.string.unit_heading_prefix)
-                                )
-                                onIndexChange(units.value?.size ?: 0)
-                                state.isExpanded.value = false
-                            },
-                            text = stringResource(R.string.units_create_new),
-                            textStyle = LocalTheme.styles.menuItem.copy(color = LocalTheme.colors.secondary)
-                        )
+        }
+        HorizontalPager(
+            modifier = Modifier
+                .fillMaxSize()
+                .pointerInput(Unit) {
+                    detectTapGestures(onTap = {
+                        drawerState.isExpanded.value = false
+                        unitActionType.value = UnitActionType.DEFAULT
+                        focusManager.clearFocus()
+                    })
+                },
+            state = pagerState,
+            beyondBoundsPageCount = 1
+        ) { index ->
+            units.value?.getOrNull(index)?.let { unit ->
+                UnitContent(
+                    unit = unit,
+                    collectionViewModel = viewModel,
+                    unitActionType = unitActionType,
+                    requestRefresh = {
+                        viewModel.requestData(isSpecial = true)
                     }
-                }
-            }
-            itemsIndexed(
-                units.value.orEmpty()
-            ) { index, unit ->
-                Row(modifier = Modifier.padding(start = 8.dp)) {
-                    AnimatedVisibility(visible = checkedUnits.size > 0) {
-                        Checkbox(
-                            modifier = Modifier.offset(x = -(12).dp),
-                            checked = checkedUnits.contains(unit.uid),
-                            onCheckedChange = { isChecked ->
-                                checkedUnits.run {
-                                    if(isChecked) {
-                                        add(unit.uid)
-                                    } else {
-                                        remove(unit.uid)
-                                    }
-                                }
-                            },
-                            colors = LocalTheme.styles.checkBoxColorsDefault
-                        )
-                    }
-                    ExpandableContent(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .combinedClickable(
-                                interactionSource = remember { MutableInteractionSource() },
-                                indication = rememberRipple(),
-                                onClick = {
-                                    // checking mode vs regular click
-                                    if (checkedUnits.size > 0) {
-                                        checkedUnits.run {
-                                            if (checkedUnits.contains(unit.uid)) {
-                                                remove(unit.uid)
-                                            } else {
-                                                add(unit.uid)
-                                            }
-                                        }
-                                    } else {
-                                        onIndexChange(units.value?.indexOf(unit) ?: 0)
-                                    }
-                                },
-                                onLongClick = {
-                                    checkedUnits.add(unit.uid)
-                                }
-                            ),
-                        arrowModifier = Modifier.clickable(
-                            onClick = {
-                                if (expandedUnits.contains(unit.uid)) {
-                                    expandedUnits.remove(unit.uid)
-                                } else expandedUnits.add(unit.uid)
-                            },
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = rememberRipple()
-                        ),
-                        text = unit.name.ifEmpty {
-                            stringResource(R.string.unit_heading_default, index + 1)
-                        },
-                        collapsedPadding = 8.dp,
-                        isExpanded = expandedUnits.contains(unit.uid)
-                    ) {
-                        unit.paragraphs.forEach { paragraph ->
-                            DashboardChildParagraph(
-                                paragraph = paragraph,
-                                openParagraph = { uidPath ->
-                                    onIndexChange(units.value?.indexOf(unit) ?: 0)
-                                    viewModel.scrollToElement.value = CollectionUnitsViewModel.ScrollToElement(
-                                        elementUidList = uidPath,
-                                        unitUid = unit.uid
-                                    )
-                                }
-                            )
-                        }
-                    }
-                }
+                )
             }
         }
     }
 }
 
+// To get scroll offset
+val PagerState.pageOffset: Float
+    get() = this.currentPage + this.currentPageOffsetFraction
+
 @Composable
-private fun DashboardChildParagraph(
-    paragraph: ParagraphIO,
-    openParagraph: (uidPath: MutableList<String>) -> Unit,
-    uidPath: MutableList<String> = mutableListOf(paragraph.uid)
+private fun PagerIndicatorRow(
+    modifier: Modifier = Modifier,
+    pagerState: PagerState,
+    color: Color = LocalTheme.colors.tetrial
 ) {
-    paragraph.paragraphs.forEach { nestedParagraph ->
-        if(nestedParagraph.paragraphs.isEmpty()) {
-            Text(
-                modifier = Modifier
-                    .padding(start = 8.dp)
-                    .fillMaxWidth()
-                    .clickable(
-                        onClick = {
-                            openParagraph(uidPath.apply { add(nestedParagraph.uid) })
-                        },
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = rememberRipple()
-                    )
-                    .padding(8.dp),
-                text = nestedParagraph.name,
-                style = LocalTheme.styles.category
-            )
-        }else {
-            val isExpanded = remember(paragraph.uid) {
-                mutableStateOf(false)
+    val density = LocalDensity.current
+
+    val dotSize = with(density) { 12.dp.toPx() }
+    val activeDotWidth = with(density) { 46.dp.toPx() }
+
+    LazyRow(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        items(pagerState.pageCount) { index ->
+            val posOffset = pagerState.pageOffset
+            val dotOffset = posOffset % 1
+            val current = posOffset.toInt()
+
+            val factor = (dotOffset * (activeDotWidth - dotSize))
+            val calculatedWidth = when {
+                index == current -> activeDotWidth - factor
+                index - 1 == current || (index == 0 && posOffset > pagerState.pageCount - 1) -> dotSize + factor
+                else -> dotSize
             }
 
-            ExpandableContent(
+            Box(
                 modifier = Modifier
-                    .padding(start = 8.dp)
-                    .fillMaxWidth()
-                    .clickable(
-                        onClick = {
-                            openParagraph(uidPath.apply { add(nestedParagraph.uid) })
-                        },
-                        interactionSource = remember(paragraph.uid) { MutableInteractionSource() },
-                        indication = rememberRipple()
-                    ),
-                arrowModifier = Modifier.clickable(
-                    onClick = {
-                        isExpanded.value = !isExpanded.value
-                    },
-                    interactionSource = remember(paragraph.uid) { MutableInteractionSource() },
-                    indication = rememberRipple()
-                ),
-                text = nestedParagraph.name.ifEmpty { stringResource(R.string.subject_add_paragraph) },
-                collapsedPadding = 8.dp,
-                textStyle = LocalTheme.styles.category,
-                isExpanded = isExpanded.value
-            ) {
-                DashboardChildParagraph(
-                    paragraph = nestedParagraph,
-                    uidPath = uidPath.apply { add(nestedParagraph.uid) },
-                    openParagraph = openParagraph
-                )
-            }
+                    .background(
+                        color = color,
+                        shape = RoundedCornerShape(8.dp)
+                    )
+                    .height(with(density) { dotSize.toDp() })
+                    .width(with(density) { calculatedWidth.toDp() })
+            )
         }
     }
 }

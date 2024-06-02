@@ -1,11 +1,9 @@
 package study.me.please.ui.units
 
-import android.util.Log
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
-import com.squadris.squadris.utils.DateUtils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancelChildren
@@ -14,23 +12,20 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import study.me.please.data.io.CollectionIO
 import study.me.please.data.io.FactIO
-import study.me.please.data.io.QuestionIO
 import study.me.please.data.io.subjects.ParagraphIO
 import study.me.please.data.io.subjects.UnitIO
 import study.me.please.data.room.CollectionDao
 import study.me.please.data.room.FactDao
-import study.me.please.data.room.QuestionDao
 import study.me.please.data.room.UnitDao
 import javax.inject.Inject
 
-const val NETWORK_UPDATE_DELAY = 5_000L
+private const val NETWORK_UPDATE_DELAY = 5_000L
 
 /** Proxy for calling network end points */
 class UnitsRepository @Inject constructor(
     private val unitDao: UnitDao,
     private val factsDao: FactDao,
-    private val collectionDao: CollectionDao,
-    private val questionDao: QuestionDao
+    private val collectionDao: CollectionDao
 ) {
 
     /** Returns list of units based off of a collection uid [collectionUid] */
@@ -103,11 +98,9 @@ class UnitsRepository @Inject constructor(
         unit: UnitIO,
         collectionUid: String
     ) {
-        Log.d("kostka_test", "updateFirebaseUnit, time: ${DateUtils.now.time}")
         cancellableScope.coroutineContext.cancelChildren()
         cancellableScope.launch {
             delay(NETWORK_UPDATE_DELAY)
-            Log.d("kostka_test", "updateFirebaseUnit, saving data to Firebase, time: ${DateUtils.now.time}")
             Firebase.firestore
                 .collection(FirebaseCollections.COLLECTIONS.name)
                 .document(collectionUid)
@@ -163,32 +156,6 @@ class UnitsRepository @Inject constructor(
             }
 
             collectionDao.insertCollection(collection)
-        }
-    }
-
-    /** Updates a collection with new questions */
-    suspend fun updateCollectionQuestions(uidList: Set<String>, collectionUid: String) {
-        return withContext(Dispatchers.IO) {
-            collectionDao.updateCollectionQuestions(
-                collectionUid = collectionUid,
-                questionUidList = uidList
-            )
-        }
-    }
-
-    /** Returns all questions within this collection */
-    suspend fun getAllQuestions(collectionUid: String): List<QuestionIO>? {
-        return withContext(Dispatchers.IO) {
-            questionDao.getQuestionsByUid(
-                collectionDao.getCollectionByUid(collectionUid)?.questionUidList?.toList().orEmpty()
-            )
-        }
-    }
-
-    /** Creates new records of questions */
-    suspend fun insertQuestions(questions: List<QuestionIO>) {
-        return withContext(Dispatchers.IO) {
-            questionDao.insertQuestions(questions)
         }
     }
 }

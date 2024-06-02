@@ -31,7 +31,7 @@ import study.me.please.data.state.session.QuestionModule
         CategoryIO::class,
         ParagraphIO::class
     ],
-    version = 4,
+    version = 6,
     exportSchema = true
 )
 @TypeConverters(AppDatabaseConverter::class)
@@ -210,6 +210,63 @@ abstract class AppRoomDatabase: RoomDatabase() {
                 db.execSQL("ALTER TABLE ROOM_SUBJECT_TABLE ADD COLUMN activatedParagraph TEXT")
             }
         }
+
+        val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE $ROOM_SESSION_TABLE ADD COLUMN questionModuleUid TEXT")
+                db.execSQL("ALTER TABLE $ROOM_SESSION_TABLE ADD COLUMN lastSnapshotHash INTEGER")
+                db.execSQL("ALTER TABLE $ROOM_SESSION_PREFERENCE_PACK_TABLE ADD COLUMN selectedUidList TEXT NOT NULL DEFAULT ''")
+
+                db.execSQL("ALTER TABLE $ROOM_SESSION_TABLE DROP COLUMN q_module_sessionUid")
+                db.execSQL("ALTER TABLE $ROOM_SESSION_TABLE DROP COLUMN q_module_questionsStack")
+                db.execSQL("ALTER TABLE $ROOM_SESSION_TABLE DROP COLUMN q_module_uid")
+                db.execSQL("ALTER TABLE $ROOM_SESSION_TABLE DROP COLUMN q_module_history")
+                db.execSQL("ALTER TABLE $ROOM_SESSION_TABLE DROP COLUMN q_module_currentIndex")
+            }
+        }
+
+        val MIGRATION_5_6 = object : Migration(5, 6) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // Create new table with updated schema
+                db.execSQL("""
+            CREATE TABLE new_ROOM_SESSION_TABLE (
+                name TEXT NOT NULL,
+                uid TEXT NOT NULL PRIMARY KEY,
+                preferencePackUid TEXT NOT NULL,
+                estimatedMode TEXT,
+                questionModuleUid TEXT,
+                lastSnapshotHash TEXT,
+                last_played INTEGER NOT NULL,
+                collectionUidList TEXT NOT NULL,
+                questionUidList TEXT NOT NULL,
+                questionCount INTEGER NOT NULL
+            )
+        """.trimIndent())
+
+                // Copy data from old table to new table
+                db.execSQL("""
+            INSERT INTO new_ROOM_SESSION_TABLE SELECT
+                name,
+                uid,
+                preferencePackUid,
+                estimatedMode,
+                questionModuleUid,
+                CAST(lastSnapshotHash AS TEXT),
+                last_played,
+                collectionUidList,
+                questionUidList,
+                questionCount
+            FROM ROOM_SESSION_TABLE
+        """.trimIndent())
+
+                // Drop old table
+                db.execSQL("DROP TABLE ROOM_SESSION_TABLE")
+
+                // Rename new table to old table's name
+                db.execSQL("ALTER TABLE new_ROOM_SESSION_TABLE RENAME TO ROOM_SESSION_TABLE")
+            }
+        }
+
 
         /** Identification of the main database */
         const val ROOM_DATABASE_NAME = "ROOM_DATABASE_NAME"

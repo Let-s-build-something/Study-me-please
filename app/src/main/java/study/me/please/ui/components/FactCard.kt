@@ -64,6 +64,7 @@ import study.me.please.data.io.LargePathAsset
 import study.me.please.ui.collection.detail.questions.detail.INPUT_DELAYED_RESPONSE_MILLIS
 import study.me.please.ui.components.tab_switch.MultiChoiceSwitch
 import study.me.please.ui.components.tab_switch.TabSwitchState
+import study.me.please.ui.units.components.highlightedText
 
 
 /** Card with the option of editing data inside */
@@ -73,6 +74,7 @@ fun FactCard(
     thenModifier: Modifier = Modifier,
     mode: InteractiveCardMode = InteractiveCardMode.DATA_DISPLAY,
     data: FactIO?,
+    hightlight: String? = null,
     onClick: () -> Unit,
     isReadOnly: Boolean = false,
     requestDataSave: (FactIO) -> Unit
@@ -85,6 +87,7 @@ fun FactCard(
                 modifier = modifier,
                 thenModifier = thenModifier,
                 data = data,
+                hightlight = hightlight,
                 isReadOnly = isReadOnly,
                 mode = mode,
                 requestDataSave = requestDataSave,
@@ -101,6 +104,7 @@ private fun ContentLayout(
     modifier: Modifier,
     thenModifier: Modifier = Modifier,
     data: FactIO,
+    hightlight: String? = null,
     mode: InteractiveCardMode,
     isReadOnly: Boolean = false,
     requestDataSave: (FactIO) -> Unit,
@@ -113,6 +117,7 @@ private fun ContentLayout(
             .clip(LocalTheme.shapes.componentShape),
         thenModifier = thenModifier,
         mode = mode,
+        hightlight = hightlight,
         onClick = onClick,
         data = data,
         isReadOnly = isReadOnly,
@@ -127,6 +132,7 @@ private fun DataCard(
     modifier: Modifier = Modifier,
     thenModifier: Modifier = Modifier,
     mode: InteractiveCardMode,
+    hightlight: String? = null,
     isReadOnly: Boolean = false,
     requestDataSave: () -> Unit,
     onClick: () -> Unit,
@@ -302,7 +308,10 @@ private fun DataCard(
                                     QuoteIcon()
                                     Text(
                                         modifier = Modifier.weight(1f),
-                                        text = data.shortKeyInformation,
+                                        text = highlightedText(
+                                            highlight = hightlight ?: "",
+                                            text = data.shortKeyInformation
+                                        ),
                                         style = TextStyle(
                                             fontSize = 18.sp,
                                             color = LocalTheme.colors.primary,
@@ -315,7 +324,10 @@ private fun DataCard(
                                 }
                             }else {
                                 Text(
-                                    text = data.shortKeyInformation,
+                                    text = highlightedText(
+                                        highlight = hightlight ?: "",
+                                        text = data.shortKeyInformation
+                                    ),
                                     style = TextStyle(
                                         fontSize = 18.sp,
                                         color = LocalTheme.colors.primary
@@ -399,11 +411,14 @@ private fun DataCard(
                                         }
                                     }else {
                                         BulletPoint(
-                                            text = listItem,
+                                            text = highlightedText(
+                                                highlight = hightlight ?: "",
+                                                text = listItem
+                                            ),
                                             textStyle = LocalTheme.styles.category,
                                             maxLines = if(isReadOnly) Int.MAX_VALUE else 5,
                                             overflow = TextOverflow.Ellipsis,
-                                            prefix = if(data.longInformation.isNotEmpty()) "-" else null
+                                            prefix = if(listItem.isNotEmpty()) "-" else null
                                         )
                                     }
                                 }
@@ -455,7 +470,10 @@ private fun DataCard(
                                             R.string.list_item_generic_hint
                                         }else R.string.list_item_bulletin_hint
                                     ),
-                                    value = listItem,
+                                    value = highlightedText(
+                                        highlight = hightlight ?: "",
+                                        text = listItem
+                                    ),
                                     enabled = isInEdit,
                                     onValueChange = { output ->
                                         if(listItems.size > index) {

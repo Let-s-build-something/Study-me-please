@@ -17,7 +17,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import study.me.please.base.LocalIsTablet
 import study.me.please.ui.units.UnitViewModel
-import study.me.please.ui.units.paragraphBlock
+import study.me.please.ui.units.components.paragraphBlock
 
 /** screen for subject detail with user's main notes for certain collection */
 @Composable

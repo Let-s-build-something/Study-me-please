@@ -39,6 +39,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
@@ -60,7 +61,7 @@ import study.me.please.R
 fun EditFieldItemPicker(
     modifier: Modifier = Modifier,
     values: Map<String, Int>,
-    defaultValue: String,
+    defaultValue: AnnotatedString,
     onFocusLost: () -> Unit = {},
     onValueChanged: (String) -> Unit,
     hint: String,
@@ -99,7 +100,7 @@ fun EditFieldItemPicker(
 
                 filteredValues.value = values.asSequence()
                     .filter {
-                        it.key != inputValue && normalizer
+                        it.key != inputValue.text && normalizer
                             .normalize(it.key.filterNot(Char::isWhitespace)).lowercase().contains(
                                 normalizer.normalize(inputValue.filterNot(Char::isWhitespace)).lowercase()
                             )
@@ -155,7 +156,7 @@ fun EditFieldItemPicker(
             paddingValues = PaddingValues(horizontal = 8.dp),
             onValueChange = { output ->
                 inputValue = output
-                onValueChanged(output)
+                onValueChanged(output.text)
             }
         )
         //TODO richtooltip?
@@ -185,7 +186,7 @@ fun EditFieldItemPicker(
                                     indication = rememberRipple(bounded = true),
                                     interactionSource = remember { MutableInteractionSource() }
                                 ) {
-                                    inputValue = name
+                                    inputValue = AnnotatedString(name)
                                     focusManager.clearFocus()
                                     onValueChanged(name)
                                 }
