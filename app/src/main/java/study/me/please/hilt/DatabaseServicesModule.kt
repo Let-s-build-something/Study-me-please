@@ -49,10 +49,6 @@ object DatabaseServicesModule {
     @Provides
     fun provideSubjectsDao(appDatabase: AppRoomDatabase) = appDatabase.unitDao()
 
-    /** Interface for accessing preferences data in local Room database */
-    @Provides
-    fun provideCategoryDao(appDatabase: AppRoomDatabase) = appDatabase.categoryDbDao()
-
     /** Local main Room database */
     @ActivityRetainedScoped
     @Provides
@@ -69,6 +65,7 @@ object DatabaseServicesModule {
         .addMigrations(AppRoomDatabase.MIGRATION_3_4)
         .addMigrations(AppRoomDatabase.MIGRATION_4_5)
         .addMigrations(AppRoomDatabase.MIGRATION_5_6)
+        .addMigrations(AppRoomDatabase.MIGRATION_6_7)
         .build()
 
     /** Singleton instance of a Gson converter, since it's a costly initiated, it's faster this way */

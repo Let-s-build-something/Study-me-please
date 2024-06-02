@@ -31,22 +31,35 @@ import study.me.please.data.state.session.QuestionModule
         CategoryIO::class,
         ParagraphIO::class
     ],
-    version = 6,
+    version = 7,
     exportSchema = true
 )
 @TypeConverters(AppDatabaseConverter::class)
 abstract class AppRoomDatabase: RoomDatabase() {
 
+    /** An interface for interacting with local database for collections */
     abstract fun collectionDbDao(): CollectionDao
+
+    /** An interface for interacting with local database for questions */
     abstract fun questionDbDao(): QuestionDao
+
+    /** An interface for interacting with local database for sessions */
     abstract fun sessionDbDao(): SessionDao
+
+    /** An interface for interacting with local database for question modules */
     abstract fun questionModuleDbDao(): QuestionModuleDao
+
+    /** An interface for interacting with local database for homepage */
     abstract fun homeDbDao(): HomeDao
+
+    /** An interface for interacting with local database for preferences */
     abstract fun preferencesDbDao(): PreferencesDao
 
+    /** An interface for interacting with local database for facts */
     abstract fun factDbDao(): FactDao
+
+    /** An interface for interacting with local database for units */
     abstract fun unitDao(): UnitDao
-    abstract fun categoryDbDao(): CategoryDao
 
     companion object {
 
@@ -264,6 +277,15 @@ abstract class AppRoomDatabase: RoomDatabase() {
 
                 // Rename new table to old table's name
                 db.execSQL("ALTER TABLE new_ROOM_SESSION_TABLE RENAME TO ROOM_SESSION_TABLE")
+            }
+        }
+
+        val MIGRATION_6_7 = object : Migration(6, 7) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE ROOM_FACT_TABLE DROP COLUMN shortKeyImage")
+                db.execSQL("ALTER TABLE ROOM_FACT_TABLE DROP COLUMN longInformationImage")
+                db.execSQL("ALTER TABLE ROOM_FACT_TABLE DROP COLUMN categoryUids")
+                db.execSQL("ALTER TABLE $ROOM_FACT_TABLE ADD COLUMN nestedFacts TEXT NOT NULL DEFAULT ''")
             }
         }
 

@@ -2,11 +2,11 @@
   "formatVersion": 1,
   "database": {
     "version": 7,
-    "identityHash": "fb8a8b3acd8af7c059c9b9ba7d727367",
+    "identityHash": "98ad1b484e912e69ac191f8aa38b6ebf",
     "entities": [
       {
         "tableName": "ROOM_COLLECTION_TABLE",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`defaultPreference` TEXT NOT NULL, `name` TEXT NOT NULL, `description` TEXT NOT NULL, `icon` TEXT, `date_created` INTEGER, `date_modified` INTEGER, `uid` TEXT NOT NULL, `questionUidList` TEXT NOT NULL, `factUidList` TEXT NOT NULL, `subjectUid` TEXT NOT NULL, PRIMARY KEY(`uid`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`defaultPreference` TEXT NOT NULL, `name` TEXT NOT NULL, `description` TEXT NOT NULL, `icon` TEXT, `date_created` INTEGER, `date_modified` INTEGER NOT NULL, `uid` TEXT NOT NULL, `questionUidList` TEXT NOT NULL, `factUidList` TEXT NOT NULL, `userUid` TEXT, PRIMARY KEY(`uid`))",
         "fields": [
           {
             "fieldPath": "defaultPreference",
@@ -42,7 +42,7 @@
             "fieldPath": "dateModified",
             "columnName": "date_modified",
             "affinity": "INTEGER",
-            "notNull": false
+            "notNull": true
           },
           {
             "fieldPath": "uid",
@@ -63,10 +63,10 @@
             "notNull": true
           },
           {
-            "fieldPath": "subjectUid",
-            "columnName": "subjectUid",
+            "fieldPath": "userUid",
+            "columnName": "userUid",
             "affinity": "TEXT",
-            "notNull": true
+            "notNull": false
           }
         ],
         "primaryKey": {
@@ -290,7 +290,7 @@
       },
       {
         "tableName": "ROOM_SESSION_PREFERENCE_PACK_TABLE",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`uid` TEXT NOT NULL, `name` TEXT NOT NULL, `waitForCorrectAnswer` TEXT NOT NULL, `manualValidation` TEXT NOT NULL, `repeatOnMistake` TEXT NOT NULL, `date_modified` INTEGER, PRIMARY KEY(`uid`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`uid` TEXT NOT NULL, `name` TEXT NOT NULL, `selectedUidList` TEXT NOT NULL, `waitForCorrectAnswer` TEXT NOT NULL, `manualValidation` TEXT NOT NULL, `repeatOnMistake` TEXT NOT NULL, `date_modified` INTEGER, PRIMARY KEY(`uid`))",
         "fields": [
           {
             "fieldPath": "uid",
@@ -301,6 +301,12 @@
           {
             "fieldPath": "name",
             "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "selectedUidList",
+            "columnName": "selectedUidList",
             "affinity": "TEXT",
             "notNull": true
           },
@@ -340,7 +346,7 @@
       },
       {
         "tableName": "ROOM_SESSION_TABLE",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`name` TEXT NOT NULL, `uid` TEXT NOT NULL, `preferencePackUid` TEXT NOT NULL, `estimatedMode` TEXT, `last_played` INTEGER NOT NULL, `collectionUidList` TEXT NOT NULL, `questionUidList` TEXT NOT NULL, `questionCount` INTEGER NOT NULL, `q_module_sessionUid` TEXT, `q_module_questionsStack` TEXT, `q_module_uid` TEXT, `q_module_history` TEXT, `q_module_currentIndex` INTEGER, PRIMARY KEY(`uid`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`name` TEXT NOT NULL, `uid` TEXT NOT NULL, `preferencePackUid` TEXT NOT NULL, `estimatedMode` TEXT, `questionModuleUid` TEXT, `lastSnapshotHash` TEXT, `last_played` INTEGER NOT NULL, `collectionUidList` TEXT NOT NULL, `questionUidList` TEXT NOT NULL, `questionCount` INTEGER NOT NULL, PRIMARY KEY(`uid`))",
         "fields": [
           {
             "fieldPath": "name",
@@ -367,6 +373,18 @@
             "notNull": false
           },
           {
+            "fieldPath": "questionModuleUid",
+            "columnName": "questionModuleUid",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "lastSnapshotHash",
+            "columnName": "lastSnapshotHash",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
             "fieldPath": "lastPlayed",
             "columnName": "last_played",
             "affinity": "INTEGER",
@@ -389,36 +407,6 @@
             "columnName": "questionCount",
             "affinity": "INTEGER",
             "notNull": true
-          },
-          {
-            "fieldPath": "questionModule.sessionUid",
-            "columnName": "q_module_sessionUid",
-            "affinity": "TEXT",
-            "notNull": false
-          },
-          {
-            "fieldPath": "questionModule.questionsStack",
-            "columnName": "q_module_questionsStack",
-            "affinity": "TEXT",
-            "notNull": false
-          },
-          {
-            "fieldPath": "questionModule.uid",
-            "columnName": "q_module_uid",
-            "affinity": "TEXT",
-            "notNull": false
-          },
-          {
-            "fieldPath": "questionModule.history",
-            "columnName": "q_module_history",
-            "affinity": "TEXT",
-            "notNull": false
-          },
-          {
-            "fieldPath": "questionModule.currentIndex",
-            "columnName": "q_module_currentIndex",
-            "affinity": "INTEGER",
-            "notNull": false
           }
         ],
         "primaryKey": {
@@ -476,7 +464,7 @@
       },
       {
         "tableName": "ROOM_FACT_TABLE",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`uid` TEXT NOT NULL, `shortKeyInformation` TEXT NOT NULL, `shortKeyImage` TEXT, `longInformation` TEXT NOT NULL, `textList` TEXT NOT NULL, `longInformationImage` TEXT, `promptImage` TEXT, `type` TEXT NOT NULL, `date_created` INTEGER NOT NULL, `categoryUids` TEXT NOT NULL, PRIMARY KEY(`uid`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`uid` TEXT NOT NULL, `shortKeyInformation` TEXT NOT NULL, `longInformation` TEXT NOT NULL, `textList` TEXT NOT NULL, `promptImage` TEXT, `type` TEXT NOT NULL, `date_created` INTEGER NOT NULL, `nestedFacts` TEXT NOT NULL, PRIMARY KEY(`uid`))",
         "fields": [
           {
             "fieldPath": "uid",
@@ -491,12 +479,6 @@
             "notNull": true
           },
           {
-            "fieldPath": "shortKeyImage",
-            "columnName": "shortKeyImage",
-            "affinity": "TEXT",
-            "notNull": false
-          },
-          {
             "fieldPath": "longInformation",
             "columnName": "longInformation",
             "affinity": "TEXT",
@@ -507,12 +489,6 @@
             "columnName": "textList",
             "affinity": "TEXT",
             "notNull": true
-          },
-          {
-            "fieldPath": "longInformationImage",
-            "columnName": "longInformationImage",
-            "affinity": "TEXT",
-            "notNull": false
           },
           {
             "fieldPath": "promptImage",
@@ -533,8 +509,8 @@
             "notNull": true
           },
           {
-            "fieldPath": "categoryUids",
-            "columnName": "categoryUids",
+            "fieldPath": "nestedFacts",
+            "columnName": "nestedFacts",
             "affinity": "TEXT",
             "notNull": true
           }
@@ -550,7 +526,7 @@
       },
       {
         "tableName": "ROOM_SUBJECT_TABLE",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`uid` TEXT NOT NULL, `bulletPoints` TEXT NOT NULL, `paragraphUidList` TEXT NOT NULL, `factUidList` TEXT NOT NULL, `name` TEXT NOT NULL, `collection_uid` TEXT NOT NULL, `date_created` INTEGER NOT NULL, `collapsedParagraphs` TEXT NOT NULL, `firstVisibleItemIndex` INTEGER NOT NULL, `firstVisibleItemOffset` INTEGER NOT NULL, PRIMARY KEY(`uid`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`uid` TEXT NOT NULL, `bulletPoints` TEXT NOT NULL, `paragraphUidList` TEXT NOT NULL, `factUidList` TEXT NOT NULL, `name` TEXT NOT NULL, `collection_uid` TEXT NOT NULL, `date_created` INTEGER NOT NULL, `collapsedParagraphs` TEXT NOT NULL, `firstVisibleItemIndex` INTEGER NOT NULL, `firstVisibleItemOffset` INTEGER NOT NULL, `activatedParagraph` TEXT, PRIMARY KEY(`uid`))",
         "fields": [
           {
             "fieldPath": "uid",
@@ -611,6 +587,12 @@
             "columnName": "firstVisibleItemOffset",
             "affinity": "INTEGER",
             "notNull": true
+          },
+          {
+            "fieldPath": "activatedParagraph",
+            "columnName": "activatedParagraph",
+            "affinity": "TEXT",
+            "notNull": false
           }
         ],
         "primaryKey": {
@@ -656,7 +638,7 @@
       },
       {
         "tableName": "ROOM_PARAGRAPH_TABLE",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`uid` TEXT NOT NULL, `bulletPoints` TEXT NOT NULL, `paragraphUidList` TEXT NOT NULL, `factUidList` TEXT NOT NULL, `name` TEXT NOT NULL, PRIMARY KEY(`uid`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`uid` TEXT NOT NULL, `bulletPoints` TEXT NOT NULL, `paragraphUidList` TEXT NOT NULL, `factUidList` TEXT NOT NULL, `name` TEXT NOT NULL, `dateCreated` INTEGER NOT NULL, `imageAsset` TEXT, PRIMARY KEY(`uid`))",
         "fields": [
           {
             "fieldPath": "uid",
@@ -687,6 +669,18 @@
             "columnName": "name",
             "affinity": "TEXT",
             "notNull": true
+          },
+          {
+            "fieldPath": "dateCreated",
+            "columnName": "dateCreated",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "imageAsset",
+            "columnName": "imageAsset",
+            "affinity": "TEXT",
+            "notNull": false
           }
         ],
         "primaryKey": {
@@ -702,7 +696,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'fb8a8b3acd8af7c059c9b9ba7d727367')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '98ad1b484e912e69ac191f8aa38b6ebf')"
     ]
   }
 }
