@@ -58,8 +58,8 @@
     <string name="unit_heading_default">Unit %1$d</string>
     <string name="units_create_new">New chapter in life</string>
     <string name="units_overview">Overview</string>
-    <string name="subject_add_paragraph">Paragraph</string>
-    <string name="subject_categorize_paragraph">paragraph name</string>
+    <string name="subject_add_paragraph">Category</string>
+    <string name="subject_categorize_paragraph">category name</string>
     <string name="edit_field_item_picked_create">Create new item</string>
     <string name="subject_generating_error_no_data">There is not enough data to generate anything, you gotta write something down first.</string>
     <string name="subject_generating_error_generic">Unknown error</string>
@@ -152,7 +152,7 @@
 
     <string name="screen_settings_text_theme">Dark and darker</string>
 
-    <string name="session_show_paragraph">Show paragraph</string>
+    <string name="session_show_paragraph">Show notes</string>
     <string name="session_leave_dialog_title">Leave this examination</string>
     <string name="session_leave_dialog_content">Are you sure you want to leave this running exam?</string>
 
@@ -183,7 +183,7 @@
 
     <string name="question_generating_bulletin_name">Describe <b>\"%1$s\"</b></string>
     <string name="question_generating_bulletin_points">What best describes:</string>
-    <string name="question_generating_fact_list">Choose all items of <b>\"%1$s\" (<b><![CDATA[<a href="/paragraph/%2$s">%2$s</a>]]></b>)</b>?</string>
+    <string name="question_generating_fact_list">Choose all items of <b>\"%1$s\" (<b><![CDATA[<a href="/category/%2$s">%2$s</a>]]></b>)</b>?</string>
     <string name="question_generating_fact_list_short_key">What are following items related to?</string>
     <string name="question_generating_fact_image">What best describes:</string>
 
@@ -210,10 +210,10 @@
     </string>
     <string name="question_generating_fact_parent_addition">, under <b><![CDATA[<a href="/paragraph/%2$s">%1$s</a>]]></b></string>-->
 
-    <string name="question_generating_fact_short">Describe <b>\"%1$s\"</b> (<![CDATA[<a href="/paragraph/%2$s">%2$s</a>]]>).</string>
-    <string name="question_generating_fact_long">What best describes: <b>\"%1$s\"</b> (<![CDATA[<a href="/paragraph/%2$s">%2$s</a>]]>)?</string>
+    <string name="question_generating_fact_short">Describe <b>\"%1$s\"</b> (<![CDATA[<a href="/category/%2$s">%2$s</a>]]>).</string>
+    <string name="question_generating_fact_long">What best describes: <b>\"%1$s\"</b> (<![CDATA[<a href="/category/%2$s">%2$s</a>]]>)?</string>
     <string name="question_generating_children_items">
-        Pick related information to the <b>%1$s</b> (<![CDATA[<a href="/paragraph/%3$s">%2$s</a>]]>).
+        Pick related information to the <b>%1$s</b> (<![CDATA[<a href="/category/%3$s">%2$s</a>]]>).
     </string>
 
 
@@ -270,7 +270,7 @@
     <string name="edit_content_description">Edit</string>
     <string name="accessibility_add_content">Add new content</string>
     <string name="accessibility_add_fact">explanation</string>
-    <string name="accessibility_add_paragraph">paragraph</string>
+    <string name="accessibility_add_paragraph">category</string>
     <string name="accessibility_delete">Delete</string>
     <string name="accessibility_clipboard">Clipboard</string>
     <string name="accessibility_sign_up_illustration">Young woman smiling and sitting with a phone in her hands with a cat on her lap.</string>

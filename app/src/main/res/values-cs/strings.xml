@@ -52,8 +52,8 @@
     <string name="unit_heading_default">Kapitola %1$d</string>
     <string name="units_create_new">Nová kapitola v životě</string>
     <string name="units_overview">Přehled</string>
-    <string name="subject_add_paragraph">Paragraf</string>
-    <string name="subject_categorize_paragraph">název paragrafu</string>
+    <string name="subject_add_paragraph">Kategorie</string>
+    <string name="subject_categorize_paragraph">název kategorie</string>
     <string name="edit_field_item_picked_create">Vytvořit nový</string>
 
     <string name="subject_generating_error_no_data">Není tu dost dat na vygenerování, musíš si prvně napsat poznámky</string>
@@ -155,7 +155,7 @@
 
     <string name="screen_settings_text_theme">Tmavý a tmavší</string>
 
-    <string name="session_show_paragraph">Ukázat paragraf</string>
+    <string name="session_show_paragraph">Ukázat poznámky</string>
     <string name="session_leave_dialog_title">Opuštění cvičení</string>
     <string name="session_leave_dialog_content">
         Opravdu chceš odejít z tohoto probíhajícího cvičení?
@@ -190,7 +190,7 @@
 
     <string name="question_generating_bulletin_name">Vysvětli <b>\"%1$s\"</b></string>
     <string name="question_generating_bulletin_points">Co nejlépe vystihuje:</string>
-    <string name="question_generating_fact_list">Vyber všechny z <b>\"%1$s\" (<![CDATA[<a href="/paragraph/%2$s">%2$s</a>]]>)</b>?</string>
+    <string name="question_generating_fact_list">Vyber všechny z <b>\"%1$s\" (<![CDATA[<a href="/category/%2$s">%2$s</a>]]>)</b>?</string>
     <string name="question_generating_fact_list_short_key">Čeho se tohle týká?</string>
     <string name="question_generating_fact_image">Co nejlépe vystihuje:</string>
 
@@ -203,8 +203,8 @@
     </string>
     <string name="question_generating_fact_parent_addition">, under <b><![CDATA[<a href="/paragraph/%2$s">%1$s</a>]]></b></string>-->
 
-    <string name="question_generating_fact_short">Popiš <b>\"%1$s\" (<![CDATA[<a href="/paragraph/%2$s">%2$s</a>]]>)</b></string>
-    <string name="question_generating_fact_long">Co nejlépe vysvětluje: <b>\"%1$s\" (<![CDATA[<a href="/paragraph/%2$s">%2$s</a>]]>)</b>?</string>
+    <string name="question_generating_fact_short">Popiš <b>\"%1$s\" (<![CDATA[<a href="/category/%2$s">%2$s</a>]]>)</b></string>
+    <string name="question_generating_fact_long">Co nejlépe vysvětluje: <b>\"%1$s\" (<![CDATA[<a href="/category/%2$s">%2$s</a>]]>)</b>?</string>
     <string name="question_generating_children_items">
         Vyběr relevantní informaci k <b>%1$s</b> (<![CDATA[<a href="/units/%3$s">%2$s</a>]]>).
     </string>
@@ -256,7 +256,7 @@
     <string name="edit_content_description">Upravit</string>
     <string name="accessibility_add_content">Přidat nový obsah</string>
     <string name="accessibility_add_fact">Vysvětlení</string>
-    <string name="accessibility_add_paragraph">paragraf</string>
+    <string name="accessibility_add_paragraph">kategorie</string>
     <string name="accessibility_delete">Smazat</string>
     <string name="accessibility_clipboard">Schránka</string>
     <string name="accessibility_sign_up_illustration">Mladá žena se usmívá a sedí s telefonem v ruce s kočkou na klíně.</string>
