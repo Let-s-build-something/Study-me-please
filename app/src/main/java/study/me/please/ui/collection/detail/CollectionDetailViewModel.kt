@@ -4,7 +4,6 @@ import androidx.lifecycle.viewModelScope
 import com.squadris.squadris.utils.DateUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
@@ -15,11 +14,9 @@ import study.me.please.base.BaseViewModel
 import study.me.please.base.GeneralClipBoard
 import study.me.please.data.io.CollectionIO
 import study.me.please.data.io.FactIO
-import study.me.please.data.io.FactType
 import study.me.please.data.io.QuestionIO
 import study.me.please.data.shared.SharedDataManager
 import study.me.please.ui.collection.RefreshableViewModel
-import study.me.please.ui.collection.detail.facts.FactsFilter
 import study.me.please.ui.collection.detail.questions.QuestionsFilter
 import study.me.please.ui.collection.detail.questions.SortByType
 import java.util.UUID
@@ -35,9 +32,6 @@ class CollectionDetailViewModel @Inject constructor(
 
     override val isRefreshing: MutableStateFlow<Boolean> = MutableStateFlow(false)
     override var lastRefreshTimeMillis: Long = 0L
-
-    /** response from question generation */
-    var questionGenerationResponse = MutableSharedFlow<QuestionGenerationResponse>()
 
     /** Detail of received collection from database */
     var collectionDetail = dataManager.collectionDetail.asStateFlow()
@@ -56,25 +50,6 @@ class CollectionDetailViewModel @Inject constructor(
                         && (filter.hasImage.not() || (question.imagePromptUrl?.isEmpty == false
                             || question.imageExplanationUrl?.isEmpty == false
                             || question.answers.any { answer -> answer.imageExplanation?.isEmpty == false }))
-            }.sortedWith(
-                if(filter.sortBy == SortByType.DATE_CREATED_ASC) {
-                    compareBy { it.dateCreated }
-                }else compareByDescending { it.dateCreated }
-            )
-        }
-    }
-
-    /** filter for facts */
-    val factsFilter: MutableStateFlow<FactsFilter> = MutableStateFlow(FactsFilter())
-
-    /** local temporary save of downloaded facts */
-    var collectionFacts = dataManager.collectionFacts.combine(factsFilter) { collections, filter ->
-        withContext(Dispatchers.Default) {
-            collections.filter { fact ->
-                (filter.types.isEmpty() || filter.types.contains(fact.type))
-                        && (filter.textFilter.isEmpty()
-                                || (fact.shortKeyInformation.lowercase().contains(filter.textFilter.lowercase())
-                                || fact.longInformation.lowercase().contains(filter.textFilter.lowercase())))
             }.sortedWith(
                 if(filter.sortBy == SortByType.DATE_CREATED_ASC) {
                     compareBy { it.dateCreated }
@@ -148,21 +123,6 @@ class CollectionDetailViewModel @Inject constructor(
         }
     }
 
-    /** Adds a new fact */
-    fun addNewFact(isEmpty: Boolean = false) {
-        viewModelScope.launch {
-            val newFact = if(isEmpty && factsFilter.value.isEmpty().not()) {
-                FactIO(
-                    shortKeyInformation = factsFilter.value.textFilter,
-                    type = factsFilter.value.types.firstOrNull() ?: FactType.DEFINITION
-                )
-            }else FactIO()
-            dataManager.collectionFacts.update {
-                it.toMutableList().apply { add(0, newFact) }
-            }
-        }
-    }
-
     /** Adds a new question */
     fun addNewQuestion(): QuestionIO {
         val newQuestion = QuestionIO(uid = "TESTING QUESTION CREATION".plus(UUID.randomUUID().toString()))
@@ -208,20 +168,6 @@ class CollectionDetailViewModel @Inject constructor(
             dataManager.collectionQuestions.update {
                 it.toMutableList().apply { addAll(0, clipBoard) }
             }
-        }
-    }
-
-    /** Requests for a removal of facts */
-    fun requestFactsDeletion(uidList: Set<String>) {
-        viewModelScope.launch {
-            withContext(Dispatchers.Default) {
-                dataManager.collectionFacts.update { facts ->
-                    facts.toMutableList().apply {
-                        removeAll { uidList.contains(it.uid) }
-                    }
-                }
-            }
-            repository.deleteFacts(uidList.toList())
         }
     }
 

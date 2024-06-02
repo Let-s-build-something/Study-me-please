@@ -29,7 +29,7 @@
     <string name="collection_detail_questions_heading">Questions</string>
     <string name="question_edit_field_prompt_header">Prompt</string>
     <string name="question_edit_field_prompt_image">Prompt image</string>
-    <string name="question_edit_field_explanation_image">Explanation image</string>
+    <string name="question_edit_field_explanation_image">Image</string>
     <string name="question_field_explanation_header">Explanation</string>
     <string name="question_edit_field_hint_explanation">Further explanation for the correct answer(s)</string>
     <string name="answer_edit_field_hint_content">Answer is - …idk</string>
@@ -69,8 +69,6 @@
     <string name="list_item_bulletin_hint">bullet point</string>
     <string name="list_item_first_bulletin_hint">add a description</string>
 
-    <string name="facts_list_add_new">Add an explanation</string>
-
     <string name="facts_type_definition">Definition</string>
     <string name="facts_type_person">Person</string>
     <string name="facts_type_date">Date</string>
@@ -99,11 +97,6 @@
     <string name="facts_type_short_quote_header">What is the quote?</string>
     <string name="facts_type_short_bullet_point_header">What are we describing?</string>
     <string name="facts_type_short_list_header">How do we call following list?</string>
-
-    <string name="fact_delete_dialog_title">Explanation deletion</string>
-    <string name="fact_delete_dialog_description">
-        You\'ve spent time on this, are you sure you want permanently delete the selected (%1$d) explanations?
-    </string>
 
     <string name="generic_delete_dialog_title">Deletion</string>
     <string name="generic_delete_dialog_description">
@@ -237,7 +230,7 @@
     <string name="button_add_to">Add to</string>
     <string name="button_add_image">Add an image</string>
     <string name="button_add_prompt_image">Add an image</string>
-    <string name="button_add_explanation_image">Add an explanation image</string>
+    <string name="button_add_explanation_image">Add an image</string>
     <string name="button_start_session">Start examination</string>
     <string name="button_copy">Copy</string>
     <string name="button_paste">Paste</string>
@@ -263,7 +256,7 @@
     <string name="play_content_description">Play</string>
     <string name="edit_content_description">Edit</string>
     <string name="accessibility_add_content">Add new content</string>
-    <string name="accessibility_add_fact">explanation</string>
+    <string name="accessibility_add_fact">information</string>
     <string name="accessibility_add_paragraph">category</string>
     <string name="accessibility_delete">Delete</string>
     <string name="accessibility_clipboard">Clipboard</string>

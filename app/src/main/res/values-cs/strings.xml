@@ -60,13 +60,11 @@
     <string name="list_item_generic_hint">bod</string>
     <string name="list_item_bulletin_hint">odrážka</string>
     <string name="list_item_first_bulletin_hint">přidat popis</string>
-    <string name="facts_list_add_new">Přidat vysvětlení</string>
     <string name="facts_type_definition">Definice</string>
     <string name="facts_type_person">Osoba</string>
     <string name="facts_type_date">Datum</string>
     <string name="facts_type_list">Seřazený list</string>
     <string name="facts_type_quote">Citát</string>
-    <string name="fact_delete_dialog_title">Odstranění vysvětlení</string>
 
     <string name="facts_type_short_definition_hint">Společenské zahálení</string>
     <string name="facts_type_short_person_hint">Keanu Reeves</string>
@@ -98,9 +96,6 @@
         \nNapište "permanentně smazat" pro potvrzení.
     </string>
     <string name="units_delete_dialog_confirm_hint">permanentně smazat</string>
-    <string name="fact_delete_dialog_description">
-        Tohle vám asi chvilku trvalo udělat, jste si jistí, že chcete permanentně smazat vybraných %1$d faktů?
-    </string>
 
     <string name="generic_delete_dialog_title">Smazání</string>
     <string name="generic_delete_dialog_description">
@@ -249,7 +244,7 @@
     <string name="play_content_description">Spustit</string>
     <string name="edit_content_description">Upravit</string>
     <string name="accessibility_add_content">Přidat nový obsah</string>
-    <string name="accessibility_add_fact">Vysvětlení</string>
+    <string name="accessibility_add_fact">Informace</string>
     <string name="accessibility_add_paragraph">kategorie</string>
     <string name="accessibility_delete">Smazat</string>
     <string name="accessibility_clipboard">Schránka</string>
