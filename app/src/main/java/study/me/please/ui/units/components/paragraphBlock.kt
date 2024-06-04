@@ -1,8 +1,10 @@
 package study.me.please.ui.units.components
 
-import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -19,34 +21,32 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.focus.FocusManager
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
-import com.squadris.squadris.compose.theme.Colors
 import com.squadris.squadris.compose.theme.LocalTheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancelChildren
@@ -68,7 +68,10 @@ import study.me.please.ui.units.utils.DropTargetContainer
 import study.me.please.ui.units.utils.ElementType
 import study.me.please.ui.units.utils.ParagraphBlockBridge
 import study.me.please.ui.units.utils.dragSource
+import study.me.please.ui.units.utils.dragTarget
 import study.me.please.ui.units.utils.drawSegmentedBorder
+import study.me.please.ui.units.utils.getLayerIdentification
+import study.me.please.ui.units.utils.highlightedText
 import study.me.please.ui.units.utils.maxParagraphLayer
 
 /**
@@ -94,7 +97,6 @@ fun LazyGridScope.paragraphBlock(
     isReadOnly: Boolean = false,
     viewModel: UnitViewModel,
     collectionViewModel: CollectionUnitsViewModel?,
-    onDragStarted: ((Pair<UnitElement, Int>) -> Unit)? = null,
     activatedParagraph: MutableState<String?>,
     selectedFact: MutableState<String?>,
     dragAndDropTarget: MutableState<String>,
@@ -114,11 +116,12 @@ fun LazyGridScope.paragraphBlock(
         val filter = collectionViewModel?.filter?.collectAsState(initial = null)
         val paddingStart = remember(element.uid) {
             if(element.layer >= 0) {
-                screenWidthDp.dp * (element.layer.plus(1)).coerceAtMost(maxParagraphLayer) / 30
+                screenWidthDp.dp * (element.layer.plus(1)).coerceIn(
+                    minimumValue = 1,
+                    maximumValue = maxParagraphLayer
+                ) / 30
             }else 0.dp
         }
-
-        Log.d("kostka_test", "hightlight: ${filter?.value?.textFilter}")
 
         when(element) {
             is UnitElement.Paragraph -> {
@@ -149,14 +152,10 @@ fun LazyGridScope.paragraphBlock(
                         elementType = ElementType.PARAGRAPH,
                         uid = paragraph.uid,
                         onStarted = {
-                            if (onDragStarted != null) {
-                                onDragStarted(element to index)
-                            } else {
-                                viewModel.localStateElement.value = element to index
-                                viewModel.removeElement(index, onSelectionRequest = {
-                                    activatedParagraph.value = it
-                                })
-                            }
+                            viewModel.localStateElement.value = element to index
+                            viewModel.removeElement(element, onSelectionRequest = {
+                                activatedParagraph.value = it
+                            })
                         }
                     )
 
@@ -191,7 +190,7 @@ fun LazyGridScope.paragraphBlock(
                                 .padding(start = paddingStart)
                                 .fillMaxWidth()
                                 .then(
-                                    if (isReadOnly.not() || onDragStarted != null) {
+                                    if (isReadOnly.not()) {
                                         editDragModifier
                                     } else Modifier
                                 )
@@ -348,12 +347,11 @@ fun LazyGridScope.paragraphBlock(
             }
             is UnitElement.Fact -> {
                 val saveScope = rememberCoroutineScope()
+                val density = LocalDensity.current
 
                 element.data.let { fact ->
-                    DropTargetContainer(
+                    Column(
                         modifier = Modifier
-                            .animateItemPlacement()
-                            .fillMaxWidth()
                             .padding(
                                 start = if (isLandscape) {
                                     if (element.innerIndex % 2 == 0) paddingStart.div(2) else 0.dp
@@ -376,131 +374,167 @@ fun LazyGridScope.paragraphBlock(
                                         parentLayer = element.layer
                                     )
                                 } else Modifier
-                            ),
-                        isEnabled = isReadOnly.not(),
-                        type = ElementType.FACT,
-                        identifier = fact.uid,
-                        onDropped = {
-                            activatedParagraph.value = element.parentUid
-                            bridge?.onItemDropped(
-                                element = element,
-                                index = index
                             )
-                        },
-                        dragAndDropTarget = dragAndDropTarget,
-                        collapsedParagraphs = collapsedParagraphs.value,
-                        onCanceled = {
-                            bridge?.invalidate()
-                        }
                     ) {
-                        FactCard(
-                            modifier = Modifier
-                                .then(
-                                    if ((isReadOnly.not() || onDragStarted != null) && selectedFact.value != fact.uid) {
-                                        Modifier.dragSource(
-                                            onClick = {
+                        var cardHeight by remember { mutableStateOf(0.dp) }
+
+                        Box(
+                            modifier = Modifier.padding(
+                                start = 8.dp,
+                                bottom = if(element.isLast) 8.dp else 0.dp
+                            )
+                        ) {
+                            if(selectedFact.value != fact.uid) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(cardHeight * 0.7f)
+                                        .dragTarget(
+                                            isEnabled = isReadOnly.not() && element.isNested.not(),
+                                            type = ElementType.FACT,
+                                            identifier = fact.uid,
+                                            onDropped = {
                                                 activatedParagraph.value = element.parentUid
-                                                if (selectedFact.value != fact.uid) {
-                                                    selectedFact.value = fact.uid
-                                                }
+                                                bridge?.onItemDropped(
+                                                    element = element,
+                                                    index = index,
+                                                    nestUnder = true
+                                                )
                                             },
-                                            elementType = ElementType.FACT,
-                                            uid = fact.uid,
-                                            onStarted = {
-                                                if (onDragStarted != null) {
-                                                    onDragStarted(element to index)
-                                                } else {
-                                                    viewModel.localStateElement.value =
-                                                        element to index
-                                                    viewModel.removeElement(
-                                                        index,
-                                                        onSelectionRequest = {
-                                                            activatedParagraph.value = it
-                                                        })
-                                                }
+                                            dragAndDropTarget = dragAndDropTarget,
+                                            onCanceled = {
+                                                bridge?.invalidate()
                                             }
                                         )
-                                    } else Modifier
                                 )
-                                .fillMaxWidth()
-                                .padding(bottom = 8.dp),
-                            data = fact,
-                            isReadOnly = isReadOnly,
-                            requestDataSave = { newFact ->
-                                activatedParagraph.value = element.parentUid
-                                saveScope.coroutineContext.cancelChildren()
-                                saveScope.launch {
-                                    delay(REQUEST_DATA_SAVE_DELAY * 2)
-                                    bridge?.updateFact(newFact)
-                                }
-                            },
-                            hightlight = filter?.value?.textFilter,
-                            onClick = {
-                                activatedParagraph.value = element.parentUid
-                                selectedFact.value = if(selectedFact.value == fact.uid) null else fact.uid
-                            },
-                            mode = when {
-                                selectedFact.value == fact.uid -> InteractiveCardMode.EDIT
-                                else -> InteractiveCardMode.DATA_DISPLAY
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .align(Alignment.BottomCenter)
+                                        .height(cardHeight * 0.3f)
+                                        .dragTarget(
+                                            isEnabled = isReadOnly.not(),
+                                            type = ElementType.FACT,
+                                            identifier = "${fact.uid}_bottom",
+                                            onDropped = {
+                                                activatedParagraph.value = element.parentUid
+                                                bridge?.onItemDropped(
+                                                    element = element,
+                                                    index = index,
+                                                    nestUnder = (element.isNested && element.isLast.not())
+                                                            || fact.facts.isNotEmpty()
+                                                )
+                                            },
+                                            dragAndDropTarget = dragAndDropTarget,
+                                            onCanceled = {
+                                                bridge?.invalidate()
+                                            }
+                                        )
+                                )
                             }
-                        )
+                            FactCard(
+                                modifier = Modifier
+                                    .animateItemPlacement()
+                                    .fillMaxWidth()
+                                    .onGloballyPositioned { coordinates ->
+                                        cardHeight = with(density) { coordinates.size.height.toDp() }
+                                    }
+                                    .then(
+                                        if (isReadOnly.not() && selectedFact.value != fact.uid) {
+                                            Modifier.dragSource(
+                                                onClick = {
+                                                    activatedParagraph.value = element.parentUid
+                                                    if (selectedFact.value != fact.uid) {
+                                                        selectedFact.value = fact.uid
+                                                    }
+                                                },
+                                                elementType = if (element.data.facts.isEmpty()) {
+                                                    ElementType.FACT
+                                                }else ElementType.FACT_MOTHER,
+                                                uid = fact.uid,
+                                                onStarted = {
+                                                    viewModel.localStateElement.value = element to index
+                                                    viewModel.removeElement(
+                                                        element,
+                                                        onSelectionRequest = {
+                                                            activatedParagraph.value = it
+                                                        }
+                                                    )
+                                                }
+                                            )
+                                        } else Modifier
+                                    )
+                                    .fillMaxWidth()
+                                    .then(
+                                        when {
+                                            element.data.facts.size > 0 -> {
+                                                Modifier.background(
+                                                    color = LocalTheme.colors.onBackgroundComponent,
+                                                    shape = RoundedCornerShape(
+                                                        topStart = LocalTheme.shapes.componentCornerRadius,
+                                                        topEnd = LocalTheme.shapes.componentCornerRadius
+                                                    )
+                                                )
+                                            }
+                                            element.isNested -> {
+                                                Modifier.background(
+                                                    color = LocalTheme.colors.onBackgroundComponent,
+                                                    shape = if(element.isLast) {
+                                                        RoundedCornerShape(
+                                                            bottomStart = LocalTheme.shapes.componentCornerRadius,
+                                                            bottomEnd = LocalTheme.shapes.componentCornerRadius
+                                                        )
+                                                    }else RectangleShape
+                                                )
+                                            }
+                                            else -> Modifier.padding(bottom = 8.dp)
+                                        }
+                                    )
+                                    .padding(start = if(element.isNested) screenWidthDp.dp * 2 / 30 else 0.dp)
+                                    .then(
+                                        if (dragAndDropTarget.value == fact.uid) {
+                                            Modifier.border(
+                                                width = 1.5.dp,
+                                                color = LocalTheme.colors.brandMain,
+                                                shape = LocalTheme.shapes.componentShape
+                                            )
+                                        } else Modifier
+                                    ),
+                                data = fact,
+                                showBackground = fact.isEmpty || fact.facts.isNotEmpty(),
+                                isReadOnly = isReadOnly,
+                                requestDataSave = { newFact ->
+                                    activatedParagraph.value = element.parentUid
+                                    saveScope.coroutineContext.cancelChildren()
+                                    saveScope.launch {
+                                        delay(REQUEST_DATA_SAVE_DELAY * 2)
+                                        bridge?.updateFact(newFact)
+                                    }
+                                },
+                                highlight = filter?.value?.textFilter,
+                                onClick = {
+                                    activatedParagraph.value = element.parentUid
+                                    selectedFact.value = if(selectedFact.value == fact.uid) null else fact.uid
+                                },
+                                mode = when {
+                                    selectedFact.value == fact.uid -> InteractiveCardMode.EDIT
+                                    else -> InteractiveCardMode.DATA_DISPLAY
+                                }
+                            )
+                        }
+                        AnimatedVisibility(visible = dragAndDropTarget.value == "${fact.uid}_bottom") {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(64.dp)
+                                    .background(
+                                        color = LocalTheme.colors.brandMain,
+                                    )
+                            )
+                        }
                     }
                 }
             }
-        }
-    }
-}
-
-/** Returns text with its color based on the layer depth */
-@Composable
-private fun getLayerIdentification(layerDepth: Int): Pair<String, Color> {
-    val alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray()
-    val colors = listOf(
-        Colors.PALETTE_YELLOW,
-        Colors.PALETTE_BLUE_LIGHT,
-        Colors.PALETTE_ORANGE,
-        Colors.PALETTE_GREEN
-    )
-
-    val decimalRes = layerDepth.div(alphabet.size.coerceAtLeast(1))
-    val res = layerDepth % alphabet.size
-
-    val color = colors.getOrNull((if(decimalRes > 0) decimalRes else res) % colors.size)
-
-    return (if(decimalRes > 0) {
-        alphabet.getOrNull(decimalRes).toString() + res.toString()
-    } else alphabet.getOrNull(res)?.toString() ?: "") to (color ?: Colors.GREEN_CORRECT)
-}
-
-/** Build an [AnnotatedString] with given highlight */
-@Composable
-fun highlightedText(
-    highlight: String,
-    text: String
-): AnnotatedString {
-    return buildAnnotatedString {
-        if(highlight.isNotBlank() && text.lowercase().contains(highlight.lowercase())) {
-            var textLeft = text
-
-            while(textLeft.isNotEmpty()) {
-                val index = textLeft.lowercase().indexOf(highlight.lowercase())
-
-                if(index != -1) {
-                    append(textLeft.substring(0, index))
-                    withStyle(style = SpanStyle(
-                        fontWeight = FontWeight.ExtraBold,
-                        color = Colors.GREEN_CORRECT
-                    )) {
-                        append(textLeft.substring(index, index + highlight.length))
-                    }
-                    textLeft = textLeft.substring(index + highlight.length, textLeft.length)
-                }else {
-                    append(textLeft)
-                    textLeft = ""
-                }
-            }
-        }else {
-            append(text)
         }
     }
 }

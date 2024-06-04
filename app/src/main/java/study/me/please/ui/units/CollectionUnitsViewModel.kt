@@ -133,8 +133,8 @@ class CollectionUnitsViewModel @Inject constructor(
     /** Makes a request for a unit deletion from the DB */
     fun deleteUnits(unitUidList: List<String>) {
         viewModelScope.launch {
-            _units.update { previousSubjects ->
-                previousSubjects?.toMutableList()?.apply {
+            _units.update { previousUnits ->
+                previousUnits?.toMutableList()?.apply {
                     removeIf { unitUidList.contains(it.uid) }
                 }
             }

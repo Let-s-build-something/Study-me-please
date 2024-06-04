@@ -66,7 +66,7 @@ data class UnitIO(
 
     /** Non-categorized, standalone content */
     @Ignore
-    val facts: MutableList<FactIO> = mutableListOf()
+    var facts: MutableList<FactIO> = mutableListOf()
 
     /** attempts to remove a paragraph */
     @Exclude
@@ -84,17 +84,46 @@ data class UnitIO(
     }
 
     /** adds a fact */
-    fun addFact(index: Int, fact: FactIO) {
+    fun addFact(
+        index: Int,
+        fact: FactIO,
+        isNested: Boolean = false
+    ) {
         val safeIndex = index.coerceIn(0, facts.size)
-        factUidList.add(safeIndex, fact.uid)
-        facts.add(safeIndex, fact)
+        if(isNested) {
+            // TODO index?
+            facts = facts.onEachIndexed { i, nested ->
+                if(i == safeIndex.coerceAtMost(facts.size - 1)) {
+                    nested.addFact(0, fact)
+                }
+            }
+        }else {
+            factUidList.add(safeIndex, fact.uid)
+            facts.add(safeIndex, fact)
+        }
     }
 
     /** attempts to remove a fact */
     @Exclude
-    fun removeFact(uid: String): Boolean {
-        return factUidList.remove(uid).also {
-            if(it) facts.removeIf { data -> data.uid == uid }
+    suspend fun removeFact(
+        uid: String,
+        onNestedRemoved: suspend (parent: FactIO) -> Unit
+    ): Boolean {
+        return withContext(Dispatchers.Default) {
+            val result = factUidList.remove(uid).also {
+                if(it) {
+                    facts.removeIf { data -> data.uid == uid }
+                }
+            }
+            if(!result) {
+                var found = false
+                facts.forEach { fact ->
+                    found = fact.removeFact(uid).also {
+                        if(it) onNestedRemoved(fact)
+                    }
+                }
+                found
+            }else true
         }
     }
 

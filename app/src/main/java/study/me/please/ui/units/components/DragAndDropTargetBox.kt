@@ -56,36 +56,38 @@ fun RowScope.DragAndDropTargetBox(
                                     || it == ElementType.FACT.name
                         }
                 },
-                target = object : DragAndDropTarget {
-                    override fun onEntered(event: DragAndDropEvent) {
-                        super.onEntered(event)
-                        scope.launch {
-                            textColor.animateTo(Color.White)
-                            backgroundColor.animateTo(colorActive)
+                target = remember(imageVector) {
+                    object : DragAndDropTarget {
+                        override fun onEntered(event: DragAndDropEvent) {
+                            super.onEntered(event)
+                            scope.launch {
+                                textColor.animateTo(Color.White)
+                                backgroundColor.animateTo(colorActive)
+                            }
                         }
-                    }
 
-                    override fun onExited(event: DragAndDropEvent) {
-                        super.onExited(event)
-                        scope.launch {
-                            textColor.animateTo(colorActive)
-                            backgroundColor.animateTo(colorInactive)
+                        override fun onExited(event: DragAndDropEvent) {
+                            super.onExited(event)
+                            scope.launch {
+                                textColor.animateTo(colorActive)
+                                backgroundColor.animateTo(colorInactive)
+                            }
                         }
-                    }
 
-                    override fun onDrop(event: DragAndDropEvent): Boolean {
-                        val clipData = event.toAndroidDragEvent().clipData
-                        if (clipData != null) {
-                            onDrop()
+                        override fun onDrop(event: DragAndDropEvent): Boolean {
+                            val clipData = event.toAndroidDragEvent().clipData
+                            if (clipData != null) {
+                                onDrop()
+                            }
+                            return clipData != null
                         }
-                        return clipData != null
-                    }
 
-                    override fun onEnded(event: DragAndDropEvent) {
-                        super.onEnded(event)
-                        scope.launch {
-                            textColor.animateTo(colorActive)
-                            backgroundColor.animateTo(colorInactive)
+                        override fun onEnded(event: DragAndDropEvent) {
+                            super.onEnded(event)
+                            scope.launch {
+                                textColor.animateTo(colorActive)
+                                backgroundColor.animateTo(colorInactive)
+                            }
                         }
                     }
                 }

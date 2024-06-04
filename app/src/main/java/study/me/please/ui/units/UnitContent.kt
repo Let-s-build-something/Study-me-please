@@ -72,7 +72,6 @@ import study.me.please.ui.collection.detail.REQUEST_DATA_SAVE_DELAY
 import study.me.please.ui.components.ListItemEditField
 import study.me.please.ui.units.UnitViewModel.Companion.INITIAL_LAYER
 import study.me.please.ui.units.components.UnitFloatingMenuActions
-import study.me.please.ui.units.components.highlightedText
 import study.me.please.ui.units.components.paragraphBlock
 import study.me.please.ui.units.utils.DropTargetContainer
 import study.me.please.ui.units.utils.ElementType
@@ -80,6 +79,7 @@ import study.me.please.ui.units.utils.ParagraphBlockBridge
 import study.me.please.ui.units.utils.UnitActionType
 import study.me.please.ui.units.utils.UnitActionType.DEFAULT
 import study.me.please.ui.units.utils.UnitActionType.ELEMENT_OPTIONS
+import study.me.please.ui.units.utils.highlightedText
 
 /**
  * Detail of a subject specific to a collection
@@ -199,7 +199,11 @@ fun UnitContent(
                 }
                 unitActionType.value = DEFAULT
             }
-            override fun onItemDropped(element: UnitElement?, index: Int) {
+            override fun onItemDropped(
+                element: UnitElement?,
+                index: Int,
+                nestUnder: Boolean
+            ) {
                 val superiorIndex = elements.value.indexOfFirst { it.uid == element?.uid }
                 viewModel.localStateElement.value?.let { droppedElement ->
                     scope.launch {
@@ -241,6 +245,7 @@ fun UnitContent(
                                         data = fact,
                                         //TODO is it needed? innerIndex = ,
                                         layer = element.layer,
+                                        isNested = nestUnder,
                                         notLastLayers = element.notLastLayers,
                                         isLastParagraph = element.isLastParagraph,
                                         parentUid = element.parentUid
@@ -277,7 +282,7 @@ fun UnitContent(
                             if ((droppedElement.first as? UnitElement.Fact)?.data?.isEmpty == true) {
                                 selectedFact.value = droppedElement.first.uid
                             }
-                            if(targetIndex !in lazyGridState.firstVisibleItemIndex until lazyGridState.firstVisibleItemIndex
+                            if(targetIndex.plus(1) !in lazyGridState.firstVisibleItemIndex until lazyGridState.firstVisibleItemIndex
                                     .plus(lazyGridState.layoutInfo.visibleItemsInfo.size)
                             ) {
                                 lazyGridState.animateScrollToItem(targetIndex)
@@ -383,7 +388,7 @@ fun UnitContent(
                 DropTargetContainer(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 48.dp, bottom = 8.dp),
+                        .padding(top = 56.dp, bottom = 8.dp),
                     collapsedParagraphs = collapsedParagraphs.value,
                     identifier = unit.uid,
                     onDropped = {

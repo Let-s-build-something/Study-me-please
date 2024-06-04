@@ -1,18 +1,22 @@
 package study.me.please.ui.units.utils
 
 import study.me.please.data.io.FactIO
-import study.me.please.data.io.subjects.ParagraphIO
 import study.me.please.data.io.UnitElement
+import study.me.please.data.io.subjects.ParagraphIO
 
 interface ParagraphBlockBridge {
 
     /** Adds a new element from dragged source into recently activated paragraph */
     fun addNewElement()
 
-    /** Add element into the elements list layout after it being dropped from drag and drop */
+    /**
+     * Add element into the elements list layout after it being dropped from drag and drop
+     * @param nestUnder whether the element should be nested under the target element
+     */
     fun onItemDropped(
         element: UnitElement?,
-        index: Int
+        index: Int,
+        nestUnder: Boolean = false
     )
 
     /** Adds a new bullet point */

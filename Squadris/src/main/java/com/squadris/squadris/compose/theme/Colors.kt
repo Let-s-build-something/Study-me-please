@@ -18,7 +18,7 @@ object Colors {
     val TETRIAL_16: Color = Color(0x29F8E3CB)
     val EERIE_BLACK: Color = Color(0xFF221F1C)
     val TETRIAL_24: Color = Color(0x3DF8E3CB)
-    val NIGHT_EERIE_BLACK: Color = Color(0xFF161615)
+    val NIGHT_EERIE_BLACK: Color = Color(0xFF1A1917)
     val NIGHT: Color = Color(0xFF121212)
     val BLACK_24: Color = Color(0x3D000000)
     val GREEN_CORRECT: Color = Color(0xFF22B573)

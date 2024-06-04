@@ -38,6 +38,8 @@ sealed class UnitElement(
         val parentUid: String = "",
         val innerIndex: Int = 0,
         val isLastParagraph: Boolean = false,
+        val isNested: Boolean = false,
+        val isLast: Boolean = false,
         override var layer: Int = 0,
         override val notLastLayers: List<Int> = listOf(),
     ): UnitElement(layer, notLastLayers) {
@@ -51,6 +53,7 @@ sealed class UnitElement(
                     "layer: $layer," +
                     "data: $data," +
                     "innerIndex: $innerIndex," +
+                    "isNested: $isNested," +
                     "parentUid: $parentUid," +
                     "isLastParagraph: $isLastParagraph" +
                     "notLastLayers: $notLastLayers, " +

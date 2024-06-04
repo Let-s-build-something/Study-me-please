@@ -44,9 +44,31 @@ data class FactIO(
     @ColumnInfo("date_created")
     val dateCreated: Long = DateUtils.now.timeInMillis,
 
-    /** nested facts within this fact */
-    var nestedFacts: List<FactIO> = listOf()
+    /** list of fact unique identifiers */
+    var factUidList: MutableList<String> = mutableListOf()
 ): Serializable {
+
+    /** Non-categorized, standalone content */
+    @Ignore
+    var facts: MutableList<FactIO> = mutableListOf()
+
+    /** adds a fact */
+    fun addFact(index: Int, fact: FactIO) {
+        val safeIndex = index.coerceIn(0, facts.size)
+        factUidList.add(safeIndex, fact.uid)
+        facts.add(safeIndex, fact)
+    }
+
+    /** attempts to remove a fact */
+    suspend fun removeFact(uid: String): Boolean {
+        return withContext(Dispatchers.Default) {
+            factUidList.remove(uid).also {
+                if(it) {
+                    facts.removeIf { data -> data.uid == uid }
+                }
+            }
+        }
+    }
 
     /** Whether there is not visible data */
     @get:Ignore
@@ -74,7 +96,8 @@ data class FactIO(
         this.shortKeyInformation = fact.shortKeyInformation
         this.type = fact.type
         this.longInformation = fact.longInformation
-        this.nestedFacts = fact.nestedFacts
+        this.factUidList = fact.factUidList
+        this.facts = fact.facts
         this.textList = fact.textList
         this.promptImage = fact.promptImage
     }
@@ -85,8 +108,9 @@ data class FactIO(
         return "{" +
                 "uid: $uid," +
                 "shortKeyInformation: $shortKeyInformation," +
-                "longInformation: $longInformation," +
-                "nestedFacts: $nestedFacts," +
+                "facts: $longInformation," +
+                "factUidList: $factUidList," +
+                "facts: $facts," +
                 "textList: $textList," +
                 "promptImage: $promptImage," +
                 "type: $type," +
@@ -109,13 +133,12 @@ data class FactIO(
         if (promptImage != other.promptImage) return false
         if (type != other.type) return false
         if (dateCreated != other.dateCreated) return false
-        if (nestedFacts != other.nestedFacts) return false
+        if (factUidList != other.factUidList) return false
+        if (facts != other.facts) return false
 
         return true
     }
 
-    @Ignore
-    @Exclude
     override fun hashCode(): Int {
         var result = uid.hashCode()
         result = 31 * result + shortKeyInformation.hashCode()
@@ -124,7 +147,8 @@ data class FactIO(
         result = 31 * result + (promptImage?.hashCode() ?: 0)
         result = 31 * result + type.hashCode()
         result = 31 * result + dateCreated.hashCode()
-        result = 31 * result + nestedFacts.hashCode()
+        result = 31 * result + factUidList.hashCode()
+        result = 31 * result + facts.hashCode()
         return result
     }
 }

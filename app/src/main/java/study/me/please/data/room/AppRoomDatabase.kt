@@ -31,7 +31,7 @@ import study.me.please.data.state.session.QuestionModule
         CategoryIO::class,
         ParagraphIO::class
     ],
-    version = 7,
+    version = 8,
     exportSchema = true
 )
 @TypeConverters(AppDatabaseConverter::class)
@@ -286,6 +286,13 @@ abstract class AppRoomDatabase: RoomDatabase() {
                 db.execSQL("ALTER TABLE ROOM_FACT_TABLE DROP COLUMN longInformationImage")
                 db.execSQL("ALTER TABLE ROOM_FACT_TABLE DROP COLUMN categoryUids")
                 db.execSQL("ALTER TABLE $ROOM_FACT_TABLE ADD COLUMN nestedFacts TEXT NOT NULL DEFAULT ''")
+            }
+        }
+
+        val MIGRATION_7_8 = object : Migration(7, 8) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE $ROOM_FACT_TABLE DROP COLUMN nestedFacts")
+                db.execSQL("ALTER TABLE $ROOM_FACT_TABLE ADD COLUMN factUidList TEXT NOT NULL DEFAULT ''")
             }
         }
 

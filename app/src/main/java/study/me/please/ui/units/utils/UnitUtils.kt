@@ -56,6 +56,7 @@ fun DropTargetContainer(
     enterModifier: Modifier = Modifier,
     padding: Dp = 0.dp,
     isEnabled: Boolean = true,
+    isBelow: Boolean = true,
     dragAndDropTarget: MutableState<String>,
     type: ElementType,
     collapsedParagraphs: List<String>,
@@ -127,19 +128,7 @@ fun DropTargetContainer(
     }else modifier
 
     Column(modifier = dragDropModifier.fillMaxWidth()) {
-        content()
-        /*Text(
-            modifier = Modifier
-                .background(color = Colors.ORANGE)
-                .fillMaxWidth()
-                .padding(16.dp),
-            text = identifier,
-            style = TextStyle(
-                textAlign = TextAlign.Center,
-                fontSize = 20.sp,
-                color = Color.White
-            )
-        )*/
+        if(isBelow) content()
         AnimatedVisibility(visible = dragAndDropTarget.value == identifier) {
             Box(
                 modifier = Modifier
@@ -152,7 +141,69 @@ fun DropTargetContainer(
                     .then(enterModifier)
             )
         }
+        if(isBelow.not()) content()
     }
+}
+
+/**
+ * composable target for drag and drop
+ * @param isEnabled - whether the container is enabled for drag and drop
+ * @param dragAndDropTarget - state for the target
+ * @param type - type of the element
+ * @param onDropped - action to perform when item is dropped
+ */
+@OptIn(ExperimentalFoundationApi::class)
+fun Modifier.dragTarget(
+    isEnabled: Boolean = true,
+    dragAndDropTarget: MutableState<String>,
+    type: ElementType,
+    onDropped: () -> Unit,
+    onCanceled: () -> Unit,
+    identifier: String,
+    onStarted: (isStarted: Boolean) -> Unit = {}
+): Modifier {
+    return if(isEnabled) {
+        this.dragAndDropTarget(
+            shouldStartDragAndDrop = { startEvent ->
+                startEvent
+                    .mimeTypes()
+                    .contains(type.name)
+            },
+            target = object : DragAndDropTarget {
+                override fun onDrop(event: DragAndDropEvent): Boolean {
+                    val isValid = event.mimeTypes().contains(type.name)
+                    if(isValid) {
+                        onDropped()
+                        dragAndDropTarget.value = ""
+                    }
+                    return isValid
+                }
+
+                override fun onEnded(event: DragAndDropEvent) {
+                    super.onEnded(event)
+                    onStarted(false)
+
+                    if(event.toAndroidDragEvent().result.not()) {
+                        onCanceled()
+                    }
+                }
+                override fun onEntered(event: DragAndDropEvent) {
+                    super.onEntered(event)
+                    dragAndDropTarget.value = identifier
+                }
+                override fun onStarted(event: DragAndDropEvent) {
+                    super.onStarted(event)
+                    onStarted(true)
+                }
+                override fun onExited(event: DragAndDropEvent) {
+                    super.onExited(event)
+                    if(dragAndDropTarget.value == identifier) {
+                        dragAndDropTarget.value = ""
+                    }
+                }
+            }
+        )
+    }else this
 }
 
 /** Source for dragging element to some action/place */
@@ -170,32 +221,30 @@ fun Modifier.dragSource(
             LocalTheme.shapes.componentCornerRadius.toPx()
         }
 
-        this.then(
-            dragAndDropSource(
-                drawDragDecoration = {
-                    drawRoundRect(
-                        color = rectColor,
-                        cornerRadius = CornerRadius(cornerRadius, cornerRadius)
-                    )
-                }
-            ) {
-                detectTapGestures(
-                    onLongPress = {
-                        startTransfer(
-                            DragAndDropTransferData(
-                                ClipData(
-                                    "",
-                                    arrayOf(elementType.name, ElementType.PARAGRAPH.name),
-                                    ClipData.Item(uid)
-                                )
-                            )
-                        )
-                        onStarted()
-                    },
-                    onTap = { onClick() }
+        this.dragAndDropSource(
+            drawDragDecoration = {
+                drawRoundRect(
+                    color = rectColor,
+                    cornerRadius = CornerRadius(cornerRadius, cornerRadius)
                 )
             }
-        )
+        ) {
+            detectTapGestures(
+                onLongPress = {
+                    startTransfer(
+                        DragAndDropTransferData(
+                            ClipData(
+                                "",
+                                arrayOf(elementType.name, ElementType.PARAGRAPH.name),
+                                ClipData.Item(uid)
+                            )
+                        )
+                    )
+                    onStarted()
+                },
+                onTap = { onClick() }
+            )
+        }
     }
 )
 
@@ -282,6 +331,7 @@ fun Modifier.drawSegmentedBorder(
 /** type of the element in the paragraph */
 enum class ElementType {
     FACT,
+    FACT_MOTHER,
     EMPTY_SPACE,
     PARAGRAPH
 }

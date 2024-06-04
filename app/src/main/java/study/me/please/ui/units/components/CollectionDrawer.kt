@@ -130,7 +130,7 @@ fun CollectionDrawer(
                 text = stringResource(id = R.string.button_confirm),
                 enabled = input.value == stringResource(id = R.string.units_delete_dialog_confirm_hint)
             ) {
-                viewModel.deleteUnits(checkedUnits)
+                viewModel.deleteUnits(checkedUnits.toList())
             },
             dismissButtonState = ButtonState(
                 text = stringResource(id = R.string.button_dismiss)
@@ -202,7 +202,7 @@ fun CollectionDrawer(
             item {
                 Crossfade(
                     modifier = Modifier
-                        .padding(top = 32.dp, start = 8.dp)
+                        .padding(top = 32.dp, start = 8.dp, end = 8.dp)
                         .fillMaxWidth(),
                     targetState = checkedUnits.size > 0,
                     label = ""
@@ -210,6 +210,7 @@ fun CollectionDrawer(
                     if(isAnyChecked) {
                         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                             ImageAction(
+                                modifier = Modifier.fillMaxWidth(),
                                 leadingImageVector = Icons.Outlined.DeleteSweep,
                                 text = stringResource(id = R.string.button_delete),
                                 containerColor = Colors.RED_ERROR

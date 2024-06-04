@@ -31,7 +31,7 @@ class UnitsRepository @Inject constructor(
     /** Returns list of units based off of a collection uid [collectionUid] */
     suspend fun getUnitsByCollection(collectionUid: String): List<UnitIO>? {
         return withContext(Dispatchers.IO) {
-            unitDao.getSubjectsByCollectionUid(collectionUid)
+            unitDao.getUnitsByCollectionUid(collectionUid)
         }
     }
 

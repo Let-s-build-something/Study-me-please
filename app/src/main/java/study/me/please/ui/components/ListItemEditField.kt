@@ -73,7 +73,7 @@ fun ListItemEditField(
                 with(localDensity) {
                     LocalTheme.styles.category.fontSize
                         .toDp()
-                        .plus(2.dp)
+                        .plus(1.5.dp)
                         .times(fieldLineCount)
                 }
             )
