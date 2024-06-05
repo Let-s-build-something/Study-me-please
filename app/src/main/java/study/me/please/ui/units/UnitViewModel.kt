@@ -380,9 +380,6 @@ class UnitViewModel @Inject constructor(
                                                 fact = element.data,
                                                 isNested = true
                                             )
-                                            data.facts.getOrNull(indexWithin)?.let { fact ->
-                                                repository.updateFact(fact)
-                                            }
                                         }
                                     }
                                     // nested index still within + 1, otherwise not
@@ -407,6 +404,11 @@ class UnitViewModel @Inject constructor(
 
                                 if (isNewElement) {
                                     repository.updateFact(element.data)
+                                }
+                                if(element.isNested) {
+                                    data.facts.getOrNull(indexWithin)?.let { fact ->
+                                        repository.updateFact(fact)
+                                    }
                                 }
                             }
                         }
