@@ -79,7 +79,7 @@ import study.me.please.ui.units.utils.maxParagraphLayer
  * @param elements - list of elements
  * @param bridge - bridge to communicate with the view model
  * @param viewModel - view model
- * @param activatedParagraph - mutable state of activated paragraph
+ * @param activatedParent - mutable state of activated paragraph
  * @param selectedFact - mutable state of selected fact
  * @param screenWidthDp - screen width in dp
  * @param isLandscape - is landscape mode
@@ -97,7 +97,7 @@ fun LazyGridScope.paragraphBlock(
     isReadOnly: Boolean = false,
     viewModel: UnitViewModel,
     collectionViewModel: CollectionUnitsViewModel?,
-    activatedParagraph: MutableState<String?>,
+    activatedParent: MutableState<String?>,
     selectedFact: MutableState<String?>,
     dragAndDropTarget: MutableState<String>,
     collapsedParagraphs: State<List<String>>,
@@ -131,7 +131,7 @@ fun LazyGridScope.paragraphBlock(
                     val focusRequester = remember { FocusRequester() }
 
                     LaunchedEffect(Unit) {
-                        if(element.uid == activatedParagraph.value && element.data.name.isBlank()) {
+                        if(element.uid == activatedParent.value && element.data.name.isBlank()) {
                             focusRequester.requestFocus()
                         }
                     }
@@ -141,10 +141,10 @@ fun LazyGridScope.paragraphBlock(
                             scope.launch {
                                 if (collapsedParagraphs.value.contains(paragraph.uid)) {
                                     viewModel.expandParagraph(index)
-                                    activatedParagraph.value = paragraph.uid
+                                    activatedParent.value = paragraph.uid
                                 } else {
                                     viewModel.collapseParagraph(index, onSelectionRequest = {
-                                        activatedParagraph.value = it
+                                        activatedParent.value = it
                                     })
                                 }
                             }
@@ -154,7 +154,7 @@ fun LazyGridScope.paragraphBlock(
                         onStarted = {
                             viewModel.localStateElement.value = element to index
                             viewModel.removeElement(element, onSelectionRequest = {
-                                activatedParagraph.value = it
+                                activatedParent.value = it
                             })
                         }
                     )
@@ -173,9 +173,9 @@ fun LazyGridScope.paragraphBlock(
                         padding = paddingStart,
                         identifier = paragraph.uid,
                         onDropped = {
-                            activatedParagraph.value = paragraph.uid
+                            activatedParent.value = paragraph.uid
                             bridge?.onItemDropped(
-                                element = element,
+                                targetElement = element,
                                 index = index
                             )
                         },
@@ -245,7 +245,7 @@ fun LazyGridScope.paragraphBlock(
                                         textStyle = LocalTheme.styles.subheading,
                                         onValueChanged = { output ->
                                             paragraph.name = output
-                                            activatedParagraph.value = paragraph.uid
+                                            activatedParent.value = paragraph.uid
 
                                             saveScope.coroutineContext.cancelChildren()
                                             saveScope.launch {
@@ -276,7 +276,7 @@ fun LazyGridScope.paragraphBlock(
                                     )
                                     .fillMaxWidth()
                             ) {
-                                AnimatedVisibility(visible = activatedParagraph.value == paragraph.uid) {
+                                AnimatedVisibility(visible = activatedParent.value == paragraph.uid) {
                                     HorizontalDivider(color = LocalTheme.colors.brandMainDark)
                                 }
                                 Spacer(modifier = Modifier.height(8.dp))
@@ -331,7 +331,7 @@ fun LazyGridScope.paragraphBlock(
                                         },
                                         onValueChange = { output ->
                                             if(index < bulletPoints.size) {
-                                                activatedParagraph.value = paragraph.uid
+                                                activatedParent.value = paragraph.uid
                                                 bulletPoints[index] = output
                                                 element.data.bulletPoints = bulletPoints.toMutableList()
                                                 viewModel.updateParagraph(element.data)
@@ -348,6 +348,15 @@ fun LazyGridScope.paragraphBlock(
             is UnitElement.Fact -> {
                 val saveScope = rememberCoroutineScope()
                 val density = LocalDensity.current
+
+                val refocus = {
+                    // nested facts within facts don't change focus
+                    if(element.isNested.not()) {
+                        activatedParent.value = if(element.data.facts.isEmpty()) {
+                            element.parentUid
+                        }else element.data.uid
+                    }
+                }
 
                 element.data.let { fact ->
                     Column(
@@ -394,9 +403,8 @@ fun LazyGridScope.paragraphBlock(
                                             type = ElementType.FACT,
                                             identifier = fact.uid,
                                             onDropped = {
-                                                activatedParagraph.value = element.parentUid
                                                 bridge?.onItemDropped(
-                                                    element = element,
+                                                    targetElement = element,
                                                     index = index,
                                                     nestUnder = true
                                                 )
@@ -417,9 +425,8 @@ fun LazyGridScope.paragraphBlock(
                                             type = ElementType.FACT,
                                             identifier = "${fact.uid}_bottom",
                                             onDropped = {
-                                                activatedParagraph.value = element.parentUid
                                                 bridge?.onItemDropped(
-                                                    element = element,
+                                                    targetElement = element,
                                                     index = index,
                                                     nestUnder = (element.isNested && element.isLast.not())
                                                             || fact.facts.isNotEmpty()
@@ -443,7 +450,7 @@ fun LazyGridScope.paragraphBlock(
                                         if (isReadOnly.not() && selectedFact.value != fact.uid) {
                                             Modifier.dragSource(
                                                 onClick = {
-                                                    activatedParagraph.value = element.parentUid
+                                                    refocus()
                                                     if (selectedFact.value != fact.uid) {
                                                         selectedFact.value = fact.uid
                                                     }
@@ -457,7 +464,7 @@ fun LazyGridScope.paragraphBlock(
                                                     viewModel.removeElement(
                                                         element,
                                                         onSelectionRequest = {
-                                                            activatedParagraph.value = it
+                                                            activatedParent.value = it
                                                         }
                                                     )
                                                 }
@@ -465,6 +472,7 @@ fun LazyGridScope.paragraphBlock(
                                         } else Modifier
                                     )
                                     .fillMaxWidth()
+                                    // background for indication of nested Facts
                                     .then(
                                         when {
                                             element.data.facts.size > 0 -> {
@@ -490,7 +498,19 @@ fun LazyGridScope.paragraphBlock(
                                             else -> Modifier.padding(bottom = 8.dp)
                                         }
                                     )
+                                    // if this is a nested Fact, it should be offset from the parent one
                                     .padding(start = if(element.isNested) screenWidthDp.dp * 2 / 30 else 0.dp)
+                                    // indication of this Fact being focused as a last parent
+                                    .then(
+                                        if (activatedParent.value == fact.uid) {
+                                            Modifier.border(
+                                                width = 0.75.dp,
+                                                color = LocalTheme.colors.brandMain,
+                                                shape = LocalTheme.shapes.componentShape
+                                            )
+                                        } else Modifier
+                                    )
+                                    // drag and drop target for nesting a Fact
                                     .then(
                                         if (dragAndDropTarget.value == fact.uid) {
                                             Modifier.border(
@@ -504,7 +524,7 @@ fun LazyGridScope.paragraphBlock(
                                 showBackground = fact.isEmpty || fact.facts.isNotEmpty(),
                                 isReadOnly = isReadOnly,
                                 requestDataSave = { newFact ->
-                                    activatedParagraph.value = element.parentUid
+                                    refocus()
                                     saveScope.coroutineContext.cancelChildren()
                                     saveScope.launch {
                                         delay(REQUEST_DATA_SAVE_DELAY * 2)
@@ -513,7 +533,7 @@ fun LazyGridScope.paragraphBlock(
                                 },
                                 highlight = filter?.value?.textFilter,
                                 onClick = {
-                                    activatedParagraph.value = element.parentUid
+                                    refocus()
                                     selectedFact.value = if(selectedFact.value == fact.uid) null else fact.uid
                                 },
                                 mode = when {
@@ -522,6 +542,7 @@ fun LazyGridScope.paragraphBlock(
                                 }
                             )
                         }
+                        // indication of dropping an element behind this Fact
                         AnimatedVisibility(visible = dragAndDropTarget.value == "${fact.uid}_bottom") {
                             Box(
                                 modifier = Modifier

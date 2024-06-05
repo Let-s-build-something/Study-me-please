@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 8,
-    "identityHash": "22f0687d1bfbb3041e13931fa4ae9d90",
+    "identityHash": "694160da2a0d6a626af9f73774688241",
     "entities": [
       {
         "tableName": "ROOM_COLLECTION_TABLE",
@@ -526,7 +526,7 @@
       },
       {
         "tableName": "ROOM_SUBJECT_TABLE",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`uid` TEXT NOT NULL, `bulletPoints` TEXT NOT NULL, `paragraphUidList` TEXT NOT NULL, `factUidList` TEXT NOT NULL, `name` TEXT NOT NULL, `collection_uid` TEXT NOT NULL, `date_created` INTEGER NOT NULL, `collapsedParagraphs` TEXT NOT NULL, `firstVisibleItemIndex` INTEGER NOT NULL, `firstVisibleItemOffset` INTEGER NOT NULL, `activatedParagraph` TEXT, PRIMARY KEY(`uid`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`uid` TEXT NOT NULL, `bulletPoints` TEXT NOT NULL, `paragraphUidList` TEXT NOT NULL, `factUidList` TEXT NOT NULL, `name` TEXT NOT NULL, `collection_uid` TEXT NOT NULL, `date_created` INTEGER NOT NULL, `collapsedParagraphs` TEXT NOT NULL, `firstVisibleItemIndex` INTEGER NOT NULL, `firstVisibleItemOffset` INTEGER NOT NULL, `activatedParent` TEXT, PRIMARY KEY(`uid`))",
         "fields": [
           {
             "fieldPath": "uid",
@@ -589,8 +589,8 @@
             "notNull": true
           },
           {
-            "fieldPath": "activatedParagraph",
-            "columnName": "activatedParagraph",
+            "fieldPath": "activatedParent",
+            "columnName": "activatedParent",
             "affinity": "TEXT",
             "notNull": false
           }
@@ -696,7 +696,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '22f0687d1bfbb3041e13931fa4ae9d90')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '694160da2a0d6a626af9f73774688241')"
     ]
   }
 }

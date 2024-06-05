@@ -113,8 +113,8 @@ fun UnitContent(
     val selectedFact = rememberSaveable(unit.uid) {
         mutableStateOf<String?>(null)
     }
-    val activatedParagraph = rememberSaveable(unit.uid) {
-        mutableStateOf(unit.activatedParagraph)
+    val activatedParent = rememberSaveable(unit.uid) {
+        mutableStateOf(unit.activatedParent)
     }
     val bulletPoints = remember(unit.bulletPoints) {
         mutableStateListOf(*unit.bulletPoints.toTypedArray())
@@ -124,8 +124,8 @@ fun UnitContent(
     }
     val collapsedParagraphs = viewModel.collapsedParagraphs.collectAsState()
 
-    LaunchedEffect(activatedParagraph.value) {
-        unit.activatedParagraph = activatedParagraph.value
+    LaunchedEffect(activatedParent.value) {
+        unit.activatedParent = activatedParent.value
     }
 
     LaunchedEffect(Unit) {
@@ -187,68 +187,89 @@ fun UnitContent(
             override fun addNewElement() {
                 // adding new element to either activated paragraph or unit
                 scope.launch {
-                    val paragraph = elements.value.find { it.uid == activatedParagraph.value }
-                    // shouldn't be able to add items to collapsed paragraphs
-                    val index = if(paragraph != null && collapsedParagraphs.value.contains(activatedParagraph.value).not()) {
-                        elements.value.indexOf(paragraph)
-                    }else 0
-                    onItemDropped(
-                        element = paragraph,
-                        index = lazyGridState.firstVisibleItemIndex.coerceAtLeast(index)
-                    )
+                    val parentElement = elements.value.find { it.uid == activatedParent.value }
+                    val index = when(parentElement) {
+                        is UnitElement.Paragraph -> {
+                            // shouldn't be able to add items to collapsed paragraphs
+                            if(collapsedParagraphs.value.contains(activatedParent.value).not()) {
+                                elements.value.indexOf(parentElement)
+                            }else 0
+                        }
+                        is UnitElement.Fact -> elements.value.indexOf(parentElement).plus(1)
+                        else -> null
+                    }
+
+                    index?.let {
+                        onItemDropped(
+                            targetElement = parentElement,
+                            index = lazyGridState.firstVisibleItemIndex.coerceAtLeast(it),
+                            nestUnder = parentElement is UnitElement.Fact
+                        )
+                    }
                 }
                 unitActionType.value = DEFAULT
             }
             override fun onItemDropped(
-                element: UnitElement?,
+                targetElement: UnitElement?,
                 index: Int,
                 nestUnder: Boolean
             ) {
-                val superiorIndex = elements.value.indexOfFirst { it.uid == element?.uid }
                 viewModel.localStateElement.value?.let { droppedElement ->
                     scope.launch {
                         var targetIndex = 0
                         var data: UnitElement? = null
 
-                        when(element) {
+                        // parent Fact is focused, yet user want to add a category - we look for its parent
+                        var safeTargetElement = targetElement
+                        if(targetElement is UnitElement.Fact && droppedElement.first is UnitElement.Paragraph) {
+                            safeTargetElement = elements.value.find { it.uid == targetElement.parentUid }
+                        }
+
+                        val superiorIndex = elements.value.indexOfFirst { it.uid == safeTargetElement?.uid }
+
+                        when(safeTargetElement) {
                             is UnitElement.Paragraph -> {
-                                if(collapsedParagraphs.value.contains(element.data.uid)) {
-                                    viewModel.expandParagraph(elements.value.indexOf(element))
+                                if(collapsedParagraphs.value.contains(safeTargetElement.data.uid)) {
+                                    viewModel.expandParagraph(elements.value.indexOf(safeTargetElement))
                                 }
 
                                 (droppedElement.first as? UnitElement.Paragraph)?.let { paragraph ->
-                                    activatedParagraph.value = paragraph.uid
+                                    activatedParent.value = paragraph.uid
                                     data = UnitElement.Paragraph(
                                         data = paragraph.data,
-                                        layer = element.layer.plus(1),
-                                        notLastLayers = element.notLastLayers.toMutableList().apply {
-                                            if(element.data.paragraphs.isNotEmpty()) add(element.layer.plus(1))
+                                        layer = safeTargetElement.layer.plus(1),
+                                        notLastLayers = safeTargetElement.notLastLayers.toMutableList().apply {
+                                            if(safeTargetElement.data.paragraphs.isNotEmpty()) add(safeTargetElement.layer.plus(1))
                                         }
                                     )
-                                    targetIndex = superiorIndex + element.data.facts.size + 1
+                                    targetIndex = superiorIndex + safeTargetElement.data.facts.size + 1
                                 }
                                 (droppedElement.first as? UnitElement.Fact)?.let { fact ->
+                                    activatedParent.value = safeTargetElement.data.uid
                                     data = UnitElement.Fact(
                                         data = fact.data,
                                         //TODO is it needed? innerIndex = ,
-                                        layer = element.layer,
-                                        notLastLayers = element.notLastLayers,
-                                        isLastParagraph = element.data.paragraphs.isEmpty(),
-                                        parentUid = element.data.uid
+                                        layer = safeTargetElement.layer,
+                                        notLastLayers = safeTargetElement.notLastLayers,
+                                        isLastParagraph = safeTargetElement.data.paragraphs.isEmpty(),
+                                        parentUid = safeTargetElement.data.uid
                                     )
                                     targetIndex = superiorIndex + 1
                                 }
                             }
                             is UnitElement.Fact -> {
                                 (droppedElement.first as? UnitElement.Fact)?.data?.let { fact ->
+                                    if(nestUnder) {
+                                        activatedParent.value = safeTargetElement.data.uid
+                                    }
                                     data = UnitElement.Fact(
                                         data = fact,
                                         //TODO is it needed? innerIndex = ,
-                                        layer = element.layer,
+                                        layer = safeTargetElement.layer,
                                         isNested = nestUnder,
-                                        notLastLayers = element.notLastLayers,
-                                        isLastParagraph = element.isLastParagraph,
-                                        parentUid = element.parentUid
+                                        notLastLayers = safeTargetElement.notLastLayers,
+                                        isLastParagraph = safeTargetElement.isLastParagraph,
+                                        parentUid = safeTargetElement.parentUid
                                     )
                                     targetIndex = superiorIndex + 1
                                 }
@@ -256,7 +277,7 @@ fun UnitContent(
                             // UNIT
                             else -> {
                                 (droppedElement.first as? UnitElement.Paragraph)?.let { paragraph ->
-                                    activatedParagraph.value = paragraph.uid
+                                    activatedParent.value = paragraph.uid
                                     data = UnitElement.Paragraph(
                                         data = paragraph.data,
                                         layer = INITIAL_LAYER,
@@ -494,7 +515,7 @@ fun UnitContent(
                 bridge = bridge,
                 screenWidthDp = configuration.screenWidthDp,
                 viewModel = viewModel,
-                activatedParagraph = activatedParagraph,
+                activatedParent = activatedParent,
                 selectedFact = selectedFact,
                 dragAndDropTarget = dragAndDropTarget,
                 collapsedParagraphs = collapsedParagraphs,

@@ -14,7 +14,7 @@ interface ParagraphBlockBridge {
      * @param nestUnder whether the element should be nested under the target element
      */
     fun onItemDropped(
-        element: UnitElement?,
+        targetElement: UnitElement?,
         index: Int,
         nestUnder: Boolean = false
     )

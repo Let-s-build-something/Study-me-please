@@ -67,6 +67,7 @@ object DatabaseServicesModule {
         .addMigrations(AppRoomDatabase.MIGRATION_5_6)
         .addMigrations(AppRoomDatabase.MIGRATION_6_7)
         .addMigrations(AppRoomDatabase.MIGRATION_7_8)
+        .addMigrations(AppRoomDatabase.MIGRATION_8_9)
         .build()
 
     /** Singleton instance of a Gson converter, since it's a costly initiated, it's faster this way */

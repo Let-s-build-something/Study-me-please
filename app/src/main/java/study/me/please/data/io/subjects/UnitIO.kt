@@ -56,8 +56,8 @@ data class UnitIO(
     /** last Y direction scroll offset from [firstVisibleItemIndex] */
     var firstVisibleItemOffset: Int = 0,
 
-    /** last paragraph that was focused */
-    var activatedParagraph: String? = null,
+    /** last parent container that was focused */
+    var activatedParent: String? = null
 ): Serializable {
 
     /** Categorized content */
@@ -180,7 +180,7 @@ data class UnitIO(
         if (collapsedParagraphs != other.collapsedParagraphs) return false
         if (firstVisibleItemIndex != other.firstVisibleItemIndex) return false
         if (firstVisibleItemOffset != other.firstVisibleItemOffset) return false
-        if (activatedParagraph != other.activatedParagraph) return false
+        if (activatedParent != other.activatedParent) return false
         if (paragraphs != other.paragraphs) return false
         if (facts != other.facts) return false
 
@@ -200,7 +200,7 @@ data class UnitIO(
         result = 31 * result + collapsedParagraphs.hashCode()
         result = 31 * result + firstVisibleItemIndex
         result = 31 * result + firstVisibleItemOffset
-        result = 31 * result + (activatedParagraph?.hashCode() ?: 0)
+        result = 31 * result + (activatedParent?.hashCode() ?: 0)
         result = 31 * result + paragraphs.hashCode()
         result = 31 * result + facts.hashCode()
         return result
