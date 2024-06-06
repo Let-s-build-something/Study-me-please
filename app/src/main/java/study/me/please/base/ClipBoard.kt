@@ -112,38 +112,4 @@ sealed class ClipBoard<T: Any>(val list: SnapshotStateList<T> = mutableStateList
             }
         }
     }
-
-    class UnitElementClipBoard: ClipBoard<UnitElement>() {
-        override suspend fun copyItems(items: List<UnitElement>) {
-            withContext(Dispatchers.Default) {
-                list.addAll(
-                    items.map {
-                        when(it) {
-                            is UnitElement.Fact -> {
-                                UnitElement.Fact(
-                                    data = it.data.copy(
-                                        uid = UUID.randomUUID().toString()
-                                    )
-                                )
-                            }
-                            is UnitElement.Paragraph -> {
-                                UnitElement.Paragraph(
-                                    data = it.data.copy(
-                                        uid = UUID.randomUUID().toString()
-                                    )
-                                )
-                            }
-                        }
-                    }
-                )
-            }
-        }
-
-        /** copies a single item */
-        suspend fun pasteItem(uid: String): Boolean {
-            return withContext(Dispatchers.Default) {
-                list.removeIf { it.uid == uid }
-            }
-        }
-    }
 }

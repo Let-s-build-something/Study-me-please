@@ -11,9 +11,9 @@ import study.me.please.data.io.subjects.UnitIO
 @Dao
 interface UnitDao {
 
-    /** Returns a list of subjects based on their collection identification [collectionUid] */
+    /** Returns a list of units based on their collection identification [collectionUid] */
     @Query("SELECT * FROM ${AppRoomDatabase.ROOM_UNIT_TABLE} WHERE collection_uid == :collectionUid ORDER BY date_created ASC")
-    suspend fun getSubjectsByCollectionUid(collectionUid: String): List<UnitIO>?
+    suspend fun getUnitsByCollectionUid(collectionUid: String): List<UnitIO>?
 
     /** returns all paragraphs */
     @Query("SELECT * FROM ${AppRoomDatabase.ROOM_PARAGRAPH_TABLE} ORDER BY dateCreated DESC")

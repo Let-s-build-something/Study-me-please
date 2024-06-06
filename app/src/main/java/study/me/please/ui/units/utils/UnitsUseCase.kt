@@ -1,5 +1,6 @@
 package study.me.please.ui.units.utils
 
+import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import study.me.please.data.io.subjects.ParagraphIO
@@ -21,6 +22,15 @@ class UnitsUseCase @Inject constructor(
                     unit.facts.addAll(
                         repository.getFactsBy(unit.factUidList).orEmpty().sortedBy {
                             unit.factUidList.indexOf(it.uid)
+                        }.onEach {
+                            if(it.factUidList.isNotEmpty()) {
+                                it.facts.clear()
+                                it.facts.addAll(
+                                    repository.getFactsBy(it.factUidList).orEmpty().sortedBy { sort ->
+                                        it.factUidList.indexOf(sort.uid)
+                                    }
+                                )
+                            }
                         }
                     )
                 }
@@ -35,6 +45,15 @@ class UnitsUseCase @Inject constructor(
                                 paragraph.facts.addAll(
                                     repository.getFactsBy(paragraph.factUidList).orEmpty().sortedBy {
                                         paragraph.factUidList.indexOf(it.uid)
+                                    }.onEach {
+                                        if(it.factUidList.isNotEmpty()) {
+                                            it.facts.clear()
+                                            it.facts.addAll(
+                                                repository.getFactsBy(it.factUidList).orEmpty().sortedBy { sort ->
+                                                    it.factUidList.indexOf(sort.uid)
+                                                }
+                                            )
+                                        }
                                     }
                                 )
                             }
@@ -53,6 +72,15 @@ class UnitsUseCase @Inject constructor(
                                     iterationParagraph.facts.addAll(
                                         repository.getFactsBy(iterationParagraph.factUidList).orEmpty().sortedBy {
                                             iterationParagraph.factUidList.indexOf(it.uid)
+                                        }.onEach {
+                                            if(it.factUidList.isNotEmpty()) {
+                                                it.facts.clear()
+                                                it.facts.addAll(
+                                                    repository.getFactsBy(it.factUidList).orEmpty().sortedBy { sort ->
+                                                        it.factUidList.indexOf(sort.uid)
+                                                    }
+                                                )
+                                            }
                                         }
                                     )
                                 }

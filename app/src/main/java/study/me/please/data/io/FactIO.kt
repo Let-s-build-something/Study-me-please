@@ -25,22 +25,12 @@ data class FactIO(
     @SerializedName("short_key_information")
     var shortKeyInformation: String = "",
 
-    /** Image which is prompted instead of text */
-    @SerializedName("short_key_image")
-    @Deprecated("no use for now")
-    var shortKeyImage: LargePathAsset? = null,
-
     /** longer content, that could possibly explaing the [shortKeyInformation] */
     @SerializedName("long_information")
     var longInformation: String = "",
 
     /** List of information */
     var textList: List<String> = listOf(),
-
-    /** Image which is coupled with [longInformation] */
-    @SerializedName("long_information_image")
-    @Deprecated("no use for now")
-    var longInformationImage: LargePathAsset? = null,
 
     /** Image which can be questioned as well as answered with */
     @SerializedName("prompt_mage")
@@ -54,12 +44,35 @@ data class FactIO(
     @ColumnInfo("date_created")
     val dateCreated: Long = DateUtils.now.timeInMillis,
 
-    /** List of category unique identifiers to identify categories by which this fact is categorized */
-    var categoryUids: List<String> = listOf()
+    /** list of fact unique identifiers */
+    var factUidList: MutableList<String> = mutableListOf()
 ): Serializable {
+
+    /** Non-categorized, standalone content */
+    @Ignore
+    var facts: MutableList<FactIO> = mutableListOf()
+
+    /** adds a fact */
+    fun addFact(index: Int, fact: FactIO) {
+        val safeIndex = index.coerceIn(0, facts.size)
+        factUidList.add(safeIndex, fact.uid)
+        facts.add(safeIndex, fact)
+    }
+
+    /** attempts to remove a fact */
+    suspend fun removeFact(uid: String): Boolean {
+        return withContext(Dispatchers.Default) {
+            factUidList.remove(uid).also {
+                if(it) {
+                    facts.removeIf { data -> data.uid == uid }
+                }
+            }
+        }
+    }
 
     /** Whether there is not visible data */
     @get:Ignore
+    @get:Exclude
     val isEmpty: Boolean
         get() = shortKeyInformation.isBlank()
                 && longInformation.isBlank()
@@ -83,11 +96,10 @@ data class FactIO(
         this.shortKeyInformation = fact.shortKeyInformation
         this.type = fact.type
         this.longInformation = fact.longInformation
-        this.shortKeyImage = fact.shortKeyImage
-        this.longInformationImage = fact.longInformationImage
+        this.factUidList = fact.factUidList
+        this.facts = fact.facts
         this.textList = fact.textList
         this.promptImage = fact.promptImage
-        this.categoryUids = fact.categoryUids
     }
 
     @Ignore
@@ -96,14 +108,13 @@ data class FactIO(
         return "{" +
                 "uid: $uid," +
                 "shortKeyInformation: $shortKeyInformation," +
-                "shortKeyImage: $shortKeyImage," +
-                "longInformation: $longInformation," +
+                "facts: $longInformation," +
+                "factUidList: $factUidList," +
+                "facts: $facts," +
                 "textList: $textList," +
-                "longInformationImage: $longInformationImage," +
                 "promptImage: $promptImage," +
                 "type: $type," +
-                "dateCreated: $dateCreated," +
-                "categoryUids: $categoryUids" +
+                "dateCreated: $dateCreated" +
                 "}"
     }
 
@@ -117,31 +128,27 @@ data class FactIO(
 
         if (uid != other.uid) return false
         if (shortKeyInformation != other.shortKeyInformation) return false
-        if (shortKeyImage != other.shortKeyImage) return false
         if (longInformation != other.longInformation) return false
         if (textList != other.textList) return false
-        if (longInformationImage != other.longInformationImage) return false
         if (promptImage != other.promptImage) return false
         if (type != other.type) return false
         if (dateCreated != other.dateCreated) return false
-        if (categoryUids != other.categoryUids) return false
+        if (factUidList != other.factUidList) return false
+        if (facts != other.facts) return false
 
         return true
     }
 
-    @Ignore
-    @Exclude
     override fun hashCode(): Int {
         var result = uid.hashCode()
         result = 31 * result + shortKeyInformation.hashCode()
-        result = 31 * result + (shortKeyImage?.hashCode() ?: 0)
         result = 31 * result + longInformation.hashCode()
         result = 31 * result + textList.hashCode()
-        result = 31 * result + (longInformationImage?.hashCode() ?: 0)
         result = 31 * result + (promptImage?.hashCode() ?: 0)
         result = 31 * result + type.hashCode()
         result = 31 * result + dateCreated.hashCode()
-        result = 31 * result + categoryUids.hashCode()
+        result = 31 * result + factUidList.hashCode()
+        result = 31 * result + facts.hashCode()
         return result
     }
 }

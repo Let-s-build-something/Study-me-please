@@ -310,7 +310,8 @@ fun EditFieldInput(
             {
                 MinimalisticIcon(
                     contentDescription = "Clear",
-                    imageVector = Icons.Outlined.Clear
+                    imageVector = Icons.Outlined.Clear,
+                    tint = LocalTheme.colors.secondary
                 ) {
                     text.value = TextFieldValue("")
                     onValueChange(AnnotatedString(""))

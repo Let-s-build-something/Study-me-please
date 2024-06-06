@@ -1,7 +1,6 @@
 package study.me.please.ui.components
 
 import android.annotation.SuppressLint
-import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateContentSize
@@ -64,7 +63,7 @@ import study.me.please.data.io.LargePathAsset
 import study.me.please.ui.collection.detail.questions.detail.INPUT_DELAYED_RESPONSE_MILLIS
 import study.me.please.ui.components.tab_switch.MultiChoiceSwitch
 import study.me.please.ui.components.tab_switch.TabSwitchState
-import study.me.please.ui.units.components.highlightedText
+import study.me.please.ui.units.utils.highlightedText
 
 
 /** Card with the option of editing data inside */
@@ -74,8 +73,9 @@ fun FactCard(
     thenModifier: Modifier = Modifier,
     mode: InteractiveCardMode = InteractiveCardMode.DATA_DISPLAY,
     data: FactIO?,
-    hightlight: String? = null,
+    highlight: String? = null,
     onClick: () -> Unit,
+    showBackground: Boolean = data?.isEmpty == true,
     isReadOnly: Boolean = false,
     requestDataSave: (FactIO) -> Unit
 ) {
@@ -87,7 +87,8 @@ fun FactCard(
                 modifier = modifier,
                 thenModifier = thenModifier,
                 data = data,
-                hightlight = hightlight,
+                showBackground = showBackground,
+                highlight = highlight,
                 isReadOnly = isReadOnly,
                 mode = mode,
                 requestDataSave = requestDataSave,
@@ -104,9 +105,10 @@ private fun ContentLayout(
     modifier: Modifier,
     thenModifier: Modifier = Modifier,
     data: FactIO,
-    hightlight: String? = null,
+    highlight: String? = null,
     mode: InteractiveCardMode,
     isReadOnly: Boolean = false,
+    showBackground: Boolean = data.isEmpty,
     requestDataSave: (FactIO) -> Unit,
     onClick: () -> Unit,
 ) {
@@ -117,13 +119,14 @@ private fun ContentLayout(
             .clip(LocalTheme.shapes.componentShape),
         thenModifier = thenModifier,
         mode = mode,
-        hightlight = hightlight,
-        onClick = onClick,
-        data = data,
+        highlight = highlight,
         isReadOnly = isReadOnly,
+        data = data,
+        showBackground = showBackground,
         requestDataSave = {
             requestDataSave(data)
-        }
+        },
+        onClick = onClick
     )
 }
 
@@ -132,11 +135,12 @@ private fun DataCard(
     modifier: Modifier = Modifier,
     thenModifier: Modifier = Modifier,
     mode: InteractiveCardMode,
-    hightlight: String? = null,
+    highlight: String? = null,
     isReadOnly: Boolean = false,
+    data: FactIO,
     requestDataSave: () -> Unit,
     onClick: () -> Unit,
-    data: FactIO
+    showBackground: Boolean = data.isEmpty
 ) {
     val isInEdit = mode == InteractiveCardMode.EDIT && isReadOnly.not()
     val inputScope = rememberCoroutineScope()
@@ -184,7 +188,6 @@ private fun DataCard(
     LaunchedEffect(listItems.size) {
         if(data.textList.size != listItems.size) {
             data.textList = listItems.toList()
-            Log.d("kostka_test", "factCard listItems.size")
             requestDataSave()
         }
     }
@@ -192,15 +195,16 @@ private fun DataCard(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(top = 6.dp, bottom = 6.dp, start = 12.dp, end = 8.dp)
+            .padding(top = 6.dp, bottom = 6.dp, start = 8.dp, end = 8.dp)
             .then(
-                if (data.isEmpty && mode == InteractiveCardMode.DATA_DISPLAY) {
+                if (showBackground && mode == InteractiveCardMode.DATA_DISPLAY) {
                     Modifier.background(
                         color = LocalTheme.colors.onBackgroundComponentContrast,
                         shape = LocalTheme.shapes.componentShape
                     )
                 } else Modifier
             )
+            .padding(start = 6.dp)
             .then(thenModifier),
         horizontalAlignment = Alignment.Start,
         verticalArrangement = Arrangement.Top
@@ -309,7 +313,7 @@ private fun DataCard(
                                     Text(
                                         modifier = Modifier.weight(1f),
                                         text = highlightedText(
-                                            highlight = hightlight ?: "",
+                                            highlight = highlight ?: "",
                                             text = data.shortKeyInformation
                                         ),
                                         style = TextStyle(
@@ -325,7 +329,7 @@ private fun DataCard(
                             }else {
                                 Text(
                                     text = highlightedText(
-                                        highlight = hightlight ?: "",
+                                        highlight = highlight ?: "",
                                         text = data.shortKeyInformation
                                     ),
                                     style = TextStyle(
@@ -412,7 +416,7 @@ private fun DataCard(
                                     }else {
                                         BulletPoint(
                                             text = highlightedText(
-                                                highlight = hightlight ?: "",
+                                                highlight = highlight ?: "",
                                                 text = listItem
                                             ),
                                             textStyle = LocalTheme.styles.category,
@@ -425,7 +429,6 @@ private fun DataCard(
                             }else {
                                 ListItemEditField(
                                     modifier = Modifier
-                                        .padding(bottom = 2.dp)
                                         .then(
                                             if (index == listItems.lastIndex) {
                                                 Modifier.focusRequester(longFocusRequester)
@@ -471,7 +474,7 @@ private fun DataCard(
                                         }else R.string.list_item_bulletin_hint
                                     ),
                                     value = highlightedText(
-                                        highlight = hightlight ?: "",
+                                        highlight = highlight ?: "",
                                         text = listItem
                                     ),
                                     enabled = isInEdit,

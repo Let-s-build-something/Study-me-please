@@ -56,8 +56,8 @@ data class UnitIO(
     /** last Y direction scroll offset from [firstVisibleItemIndex] */
     var firstVisibleItemOffset: Int = 0,
 
-    /** last paragraph that was focused */
-    var activatedParagraph: String? = null,
+    /** last parent container that was focused */
+    var activatedParent: String? = null
 ): Serializable {
 
     /** Categorized content */
@@ -66,7 +66,7 @@ data class UnitIO(
 
     /** Non-categorized, standalone content */
     @Ignore
-    val facts: MutableList<FactIO> = mutableListOf()
+    var facts: MutableList<FactIO> = mutableListOf()
 
     /** attempts to remove a paragraph */
     @Exclude
@@ -84,17 +84,46 @@ data class UnitIO(
     }
 
     /** adds a fact */
-    fun addFact(index: Int, fact: FactIO) {
+    fun addFact(
+        index: Int,
+        fact: FactIO,
+        isNested: Boolean = false
+    ) {
         val safeIndex = index.coerceIn(0, facts.size)
-        factUidList.add(safeIndex, fact.uid)
-        facts.add(safeIndex, fact)
+        if(isNested) {
+            // TODO index?
+            facts = facts.onEachIndexed { i, nested ->
+                if(i == safeIndex.coerceAtMost(facts.size - 1)) {
+                    nested.addFact(0, fact)
+                }
+            }
+        }else {
+            factUidList.add(safeIndex, fact.uid)
+            facts.add(safeIndex, fact)
+        }
     }
 
     /** attempts to remove a fact */
     @Exclude
-    fun removeFact(uid: String): Boolean {
-        return factUidList.remove(uid).also {
-            if(it) facts.removeIf { data -> data.uid == uid }
+    suspend fun removeFact(
+        uid: String,
+        onNestedRemoved: suspend (parent: FactIO) -> Unit
+    ): Boolean {
+        return withContext(Dispatchers.Default) {
+            val result = factUidList.remove(uid).also {
+                if(it) {
+                    facts.removeIf { data -> data.uid == uid }
+                }
+            }
+            if(!result) {
+                var found = false
+                facts.forEach { fact ->
+                    found = fact.removeFact(uid).also {
+                        if(it) onNestedRemoved(fact)
+                    }
+                }
+                found
+            }else true
         }
     }
 
@@ -151,7 +180,7 @@ data class UnitIO(
         if (collapsedParagraphs != other.collapsedParagraphs) return false
         if (firstVisibleItemIndex != other.firstVisibleItemIndex) return false
         if (firstVisibleItemOffset != other.firstVisibleItemOffset) return false
-        if (activatedParagraph != other.activatedParagraph) return false
+        if (activatedParent != other.activatedParent) return false
         if (paragraphs != other.paragraphs) return false
         if (facts != other.facts) return false
 
@@ -171,7 +200,7 @@ data class UnitIO(
         result = 31 * result + collapsedParagraphs.hashCode()
         result = 31 * result + firstVisibleItemIndex
         result = 31 * result + firstVisibleItemOffset
-        result = 31 * result + (activatedParagraph?.hashCode() ?: 0)
+        result = 31 * result + (activatedParent?.hashCode() ?: 0)
         result = 31 * result + paragraphs.hashCode()
         result = 31 * result + facts.hashCode()
         return result

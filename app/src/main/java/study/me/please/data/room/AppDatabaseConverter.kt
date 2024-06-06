@@ -255,8 +255,8 @@ class AppDatabaseConverter @Inject constructor(private val gson: Gson) {
 
     /** Converts string to [FactIO] array */
     @TypeConverter
-    fun toFactIOList(value: String): List<FactIO> {
-        return gson.fromJson(
+    fun toFactIOList(value: String?): List<FactIO> {
+        return if(value.isNullOrEmpty()) listOf() else gson.fromJson(
             value,
             TypeToken.getParameterized(List::class.java, FactIO::class.java).type
         )

@@ -96,18 +96,23 @@ class UnitViewModel @Inject constructor(
             if(collapsedParagraphs.value.contains(paragraph.data.uid).not()) return@withContext
 
 
-            newElements.addAll(
-                paragraph.data.facts.mapIndexed { index, fact ->
-                    UnitElement.Fact(
-                        data = fact,
-                        innerIndex = index,
-                        layer = paragraph.layer,
-                        notLastLayers = notLastLayers,
-                        isLastParagraph = paragraph.data.paragraphs.isEmpty(),
-                        parentUid = paragraph.data.uid
-                    )
-                }
-            )
+            // unit facts with their nested facts
+            paragraph.data.facts.forEach { paragraphFact ->
+                newElements.addAll(
+                    listOf(paragraphFact).plus(paragraphFact.facts).mapIndexed { index, fact ->
+                        UnitElement.Fact(
+                            data = fact,
+                            innerIndex = index,
+                            isNested = fact.uid != paragraphFact.uid,
+                            isLast = paragraphFact.facts.lastOrNull()?.uid == fact.uid,
+                            layer = paragraph.layer,
+                            notLastLayers = notLastLayers,
+                            isLastParagraph = paragraph.data.paragraphs.isEmpty(),
+                            parentUid = paragraph.data.uid
+                        )
+                    }
+                )
+            }
 
             iterateFurtherAction(
                 paragraphs = paragraph.data.paragraphs,
@@ -128,18 +133,22 @@ class UnitViewModel @Inject constructor(
 
                     val isNotCollapsed = collapsedParagraphs.value.contains(iterationParagraph.uid).not()
 
-                    if(iterationParagraph.factUidList.isNotEmpty()) {
-                        if(isNotCollapsed) {
-                            newElements.addAll(iterationParagraph.facts.mapIndexed { index, fact ->
-                                UnitElement.Fact(
-                                    data = fact,
-                                    layer = layer,
-                                    innerIndex = index,
-                                    notLastLayers = newList,
-                                    isLastParagraph = iterationParagraph.paragraphs.isEmpty(),
-                                    parentUid = iterationParagraph.uid
-                                )
-                            })
+                    if(iterationParagraph.factUidList.isNotEmpty() && isNotCollapsed) {
+                        iterationParagraph.facts.forEachIndexed { index, paragraphFact ->
+                            newElements.addAll(
+                                listOf(paragraphFact).plus(paragraphFact.facts).map { fact ->
+                                    UnitElement.Fact(
+                                        data = fact,
+                                        layer = layer,
+                                        isNested = fact.uid != paragraphFact.uid,
+                                        isLast = paragraphFact.facts.lastOrNull()?.uid == fact.uid,
+                                        innerIndex = index,
+                                        notLastLayers = newList,
+                                        isLastParagraph = iterationParagraph.paragraphs.isEmpty(),
+                                        parentUid = iterationParagraph.uid
+                                    )
+                                }
+                            )
                         }
                     }
                     isNotCollapsed to newList
@@ -220,6 +229,7 @@ class UnitViewModel @Inject constructor(
 
                 val isNewElement = localStateElement.value?.second == -1
                 val isSafeToAdd = if(isNewElement) true else requestElementRemoval(elementUid = element.uid)
+                Log.d("kostka_test", "onDragEnded, isSafeToAdd: $isSafeToAdd")
                 if(isSafeToAdd) {
                     requestElementAdd(
                         unit = unit,
@@ -250,6 +260,11 @@ class UnitViewModel @Inject constructor(
         return withContext(Dispatchers.Default) {
             var result = false
 
+            val onNestedRemoved: suspend (FactIO) -> Unit = { parent: FactIO ->
+                repository.updateFact(parent)
+                result = true
+            }
+
             currentUnit?.let { unit ->
                 if(unit.removeParagraph(elementUid)) {
                     repository.updateUnit(unit)
@@ -260,7 +275,7 @@ class UnitViewModel @Inject constructor(
                     }
                     return@withContext true
                 }
-                if(unit.removeFact(elementUid)) {
+                if(unit.removeFact(elementUid, onNestedRemoved = onNestedRemoved)) {
                     repository.updateUnit(unit)
                     if(delete) repository.deleteFact(elementUid)
 
@@ -280,25 +295,25 @@ class UnitViewModel @Inject constructor(
                                     (find { it.uid == paragraph.uid } as? UnitElement.Paragraph)?.data?.updateTO(paragraph)
                                 }
                             }
-                            if(delete) repository.deleteParagraph(elementUid)
 
                             result = true
                             if(delete) {
+                                repository.deleteParagraph(elementUid)
                                 updateFirebaseUnit(unit)
                             }
                             return@iterateFurtherAction false to mutableListOf()
                         }
-                        if(paragraph.removeFact(elementUid)) {
+                        if(paragraph.removeFact(elementUid, onNestedRemoved = onNestedRemoved)) {
                             repository.updateParagraph(paragraph)
                             dataManager.elements.update { update ->
                                 update.toMutableList().apply {
                                     (find { it.uid == paragraph.uid } as? UnitElement.Paragraph)?.data?.updateTO(paragraph)
                                 }
                             }
-                            if(delete) repository.deleteFact(elementUid)
 
                             result = true
                             if(delete) {
+                                repository.deleteFact(elementUid)
                                 updateFirebaseUnit(unit)
                             }
                             return@iterateFurtherAction false to mutableListOf()
@@ -308,6 +323,7 @@ class UnitViewModel @Inject constructor(
                 )
             }
 
+            Log.d("kostka_test", "requestElementRemoval, result: $result")
             result
         }
     }
@@ -333,6 +349,7 @@ class UnitViewModel @Inject constructor(
 
         return withContext(Dispatchers.Default) {
 
+            Log.d("kostka_test", "requestElementAdd, targetIndex: $targetIndex")
             // we want to iterate up to find higher layer -> such item is the parent
             for(index in targetIndex.minus(1) downTo 0) {
                 val itemAbove = dataManager.elements.value.getOrNull(index) ?: continue
@@ -340,22 +357,59 @@ class UnitViewModel @Inject constructor(
                 Log.d("kostka_test", "requestElementAdd, itemAbove: ${(itemAbove as? UnitElement.Paragraph)?.data?.name}")
                 if(itemAbove.uid != element.uid && itemAbove.layer <= element.layer) {
                     (itemAbove as? UnitElement.Paragraph ?: continue).run {
-                        val indexWithin = targetIndex - index - 1
-
                         when(element) {
                             is UnitElement.Paragraph -> {
                                 data.addParagraph(
-                                    indexWithin.minus(itemAbove.data.facts.size),
+                                    0, //always on top, refactor if changed
                                     element.data
                                 )
                                 if(isNewElement) repository.updateParagraph(element.data)
                             }
                             is UnitElement.Fact -> {
-                                data.addFact(
-                                    indexWithin,
-                                    element.data
-                                )
-                                if(isNewElement) repository.updateFact(element.data)
+                                val indexWithin = data.facts.indexOfFirst {
+                                    it.uid == elements.value.getOrNull(targetIndex - 1)?.uid
+                                }
+                                var result = false
+                                itemAbove.data.facts.toList().forEachIndexed { factIndex, fact ->
+                                    fact.facts.toList().forEachIndexed { nestedFactIndex, _ ->
+                                        if(element.isNested && index + nestedFactIndex + factIndex + 2 == targetIndex) {
+                                            result = true
+                                            data.addFact(
+                                                index = factIndex,
+                                                nestedIndex = nestedFactIndex,
+                                                fact = element.data,
+                                                isNested = true
+                                            )
+                                        }
+                                    }
+                                    // nested index still within + 1, otherwise not
+                                    val additionalIndex = (if(element.isNested) 2 else 1)
+                                    if(result.not() && factIndex + index + additionalIndex == targetIndex) {
+                                        result = true
+                                        data.addFact(
+                                            index = factIndex,
+                                            fact = element.data,
+                                            isNested = element.isNested
+                                        )
+                                    }
+                                }
+                                // in case of adding something to the very end
+                                if(result.not()) {
+                                    data.addFact(
+                                        index = data.facts.size,
+                                        fact = element.data,
+                                        isNested = false // it cannot be nested, as the index does not match any fact
+                                    )
+                                }
+
+                                if (isNewElement) {
+                                    repository.updateFact(element.data)
+                                }
+                                if(element.isNested) {
+                                    data.facts.getOrNull(indexWithin)?.let { fact ->
+                                        repository.updateFact(fact)
+                                    }
+                                }
                             }
                         }
                         repository.updateParagraph(data)
@@ -372,7 +426,17 @@ class UnitViewModel @Inject constructor(
                     unit.addParagraph(targetIndex, element.data)
                 }
                 if(element is UnitElement.Fact) {
-                    unit.addFact(targetIndex, element.data)
+                    unit.addFact(
+                        targetIndex - 1,
+                        element.data,
+                        isNested = element.isNested
+                    )
+                    if(isNewElement) repository.updateFact(element.data)
+                    if (element.isNested) {
+                        unit.facts.getOrNull(targetIndex - 1)?.let { fact ->
+                            repository.updateFact(fact)
+                        }
+                    }
                 }
                 repository.updateUnit(unit)
 
@@ -384,16 +448,30 @@ class UnitViewModel @Inject constructor(
         }
     }
 
-    /** removes an element from elements at certain [index] */
-    fun removeElement(index: Int, onSelectionRequest: (String) -> Unit) {
+    /** removes an element from elements at certain [element] */
+    fun removeElement(element: UnitElement, onSelectionRequest: (String) -> Unit) {
         viewModelScope.launch {
-            dataManager.elements.value.getOrNull(index)?.let { element ->
-                if(element is UnitElement.Paragraph) {
-                    collapseParagraph(index, onSelectionRequest = onSelectionRequest)
-                }
-                dataManager.elements.update {
-                    it.toMutableList().apply {
-                        removeAt(index)
+            dataManager.elements.value
+                .indexOfFirst { it.uid == element.uid }
+                .takeIf { it != -1 }
+                ?.let { index ->
+                    dataManager.elements.update { toUpdate ->
+                    toUpdate.toMutableList().apply {
+                        when (element) {
+                            is UnitElement.Paragraph -> {
+                                collapseParagraph(index, onSelectionRequest = onSelectionRequest)
+                                removeAt(index)
+                            }
+                            is UnitElement.Fact -> {
+                                if(element.data.facts.isNotEmpty()) {
+                                    removeAll { toRemove ->
+                                        toRemove.uid == element.uid || element.data.facts.any {
+                                            it.uid == toRemove.uid
+                                        }
+                                    }
+                                }else removeAt(index)
+                            }
+                        }
                     }
                 }
             }
@@ -467,17 +545,25 @@ class UnitViewModel @Inject constructor(
             viewModelScope.launch(Dispatchers.Default) {
                 val newElements = mutableListOf<UnitElement>()
 
+                // unit facts with their nested facts
+                // each unit fact is separated by their nested facts, as those are nested in the verticalGrid
                 if(unit.factUidList.isNotEmpty()) {
-                    newElements.addAll(unit.facts.mapIndexed { index, fact ->
-                        UnitElement.Fact(
-                            data = fact,
-                            innerIndex = index,
-                            layer = INITIAL_LAYER,
-                            notLastLayers = listOf(),
-                            isLastParagraph = true,
-                            parentUid = unit.uid
+                    unit.facts.forEach { unitFact ->
+                        newElements.addAll(
+                            listOf(unitFact).plus(unitFact.facts).mapIndexed { index, fact ->
+                                UnitElement.Fact(
+                                    data = fact,
+                                    innerIndex = index,
+                                    isNested = fact.uid != unitFact.uid,
+                                    isLast = unitFact.facts.lastOrNull()?.uid == fact.uid,
+                                    layer = INITIAL_LAYER,
+                                    notLastLayers = listOf(),
+                                    isLastParagraph = true,
+                                    parentUid = unit.uid
+                                )
+                            }
                         )
-                    })
+                    }
                 }
                 if(unit.paragraphUidList.isNotEmpty()) {
                     iterateFurtherAction(
@@ -488,6 +574,7 @@ class UnitViewModel @Inject constructor(
                                 if(isLast.not()) add(layer)
                             }
 
+                            // add category paragraph
                             newElements.add(
                                 UnitElement.Paragraph(
                                     data = iterationParagraph,
@@ -498,18 +585,24 @@ class UnitViewModel @Inject constructor(
 
                             val isNotCollapsed = collapsedParagraphs.value.contains(iterationParagraph.uid).not()
 
-                            if(iterationParagraph.factUidList.isNotEmpty()) {
-                                if(isNotCollapsed) {
-                                    newElements.addAll(iterationParagraph.facts.mapIndexed { index, fact ->
-                                        UnitElement.Fact(
-                                            data = fact,
-                                            layer = layer,
-                                            innerIndex = index,
-                                            notLastLayers = newList,
-                                            isLastParagraph = iterationParagraph.paragraphs.isEmpty(),
-                                            parentUid = iterationParagraph.uid
-                                        )
-                                    })
+                            // elements are UI representation of the data - we want only visible ones
+                            if(iterationParagraph.factUidList.isNotEmpty() && isNotCollapsed) {
+                                iterationParagraph.facts.forEachIndexed { index, paragraphFact ->
+                                    newElements.addAll(
+                                        listOf(paragraphFact).plus(paragraphFact.facts).map { fact ->
+                                            UnitElement.Fact(
+                                                data = fact,
+                                                layer = layer,
+                                                isNested = fact.uid != paragraphFact.uid,
+                                                isLast = paragraphFact.facts.lastOrNull()?.uid == fact.uid,
+                                                // the index within this paragraph - facts are one column
+                                                innerIndex = index,
+                                                notLastLayers = newList,
+                                                isLastParagraph = iterationParagraph.paragraphs.isEmpty(),
+                                                parentUid = iterationParagraph.uid
+                                            )
+                                        }
+                                    )
                                 }
                             }
                             isNotCollapsed to newList
@@ -535,6 +628,15 @@ class UnitViewModel @Inject constructor(
                             paragraph.facts.addAll(
                                 repository.getFactsBy(paragraph.factUidList).orEmpty().sortedBy {
                                     paragraph.factUidList.indexOf(it.uid)
+                                }.onEach {
+                                    if(it.factUidList.isNotEmpty()) {
+                                        it.facts.clear()
+                                        it.facts.addAll(
+                                            repository.getFactsBy(it.factUidList).orEmpty().sortedBy { sort ->
+                                                it.factUidList.indexOf(sort.uid)
+                                            }
+                                        )
+                                    }
                                 }
                             )
                         }
@@ -553,6 +655,15 @@ class UnitViewModel @Inject constructor(
                                 iterationParagraph.facts.addAll(
                                     repository.getFactsBy(iterationParagraph.factUidList).orEmpty().sortedBy {
                                         iterationParagraph.factUidList.indexOf(it.uid)
+                                    }.onEach {
+                                        if(it.factUidList.isNotEmpty()) {
+                                            it.facts.clear()
+                                            it.facts.addAll(
+                                                repository.getFactsBy(it.factUidList).orEmpty().sortedBy { sort ->
+                                                    it.factUidList.indexOf(sort.uid)
+                                                }
+                                            )
+                                        }
                                     }
                                 )
                             }

@@ -70,7 +70,7 @@ fun ParagraphLayout(
             bridge = null,
             isReadOnly = true,
             viewModel = viewModel,
-            activatedParagraph = mutableStateOf(""),
+            activatedParent = mutableStateOf(""),
             collectionViewModel = null,
             dragAndDropTarget = mutableStateOf(""),
             focusManager = null,
