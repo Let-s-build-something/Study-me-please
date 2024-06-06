@@ -628,6 +628,15 @@ class UnitViewModel @Inject constructor(
                             paragraph.facts.addAll(
                                 repository.getFactsBy(paragraph.factUidList).orEmpty().sortedBy {
                                     paragraph.factUidList.indexOf(it.uid)
+                                }.onEach {
+                                    if(it.factUidList.isNotEmpty()) {
+                                        it.facts.clear()
+                                        it.facts.addAll(
+                                            repository.getFactsBy(it.factUidList).orEmpty().sortedBy { sort ->
+                                                it.factUidList.indexOf(sort.uid)
+                                            }
+                                        )
+                                    }
                                 }
                             )
                         }
@@ -646,6 +655,15 @@ class UnitViewModel @Inject constructor(
                                 iterationParagraph.facts.addAll(
                                     repository.getFactsBy(iterationParagraph.factUidList).orEmpty().sortedBy {
                                         iterationParagraph.factUidList.indexOf(it.uid)
+                                    }.onEach {
+                                        if(it.factUidList.isNotEmpty()) {
+                                            it.facts.clear()
+                                            it.facts.addAll(
+                                                repository.getFactsBy(it.factUidList).orEmpty().sortedBy { sort ->
+                                                    it.factUidList.indexOf(sort.uid)
+                                                }
+                                            )
+                                        }
                                     }
                                 )
                             }

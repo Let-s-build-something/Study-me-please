@@ -40,6 +40,9 @@ class QuestionGenerator @Inject constructor() {
 
         /** Maximum amount of related items from other lists for generating a question for a list */
         private const val MAXIMUM_RELATED_ITEMS_TO_GENERATE_LIST = 4
+
+        /** identification of a parent for its efficient sorting */
+        private const val I_AM_PARENT_IDENTIFIER = "I_AM_PARENT_IDENTIFIER"
     }
 
     /**
@@ -126,11 +129,24 @@ class QuestionGenerator @Inject constructor() {
                                 FactToGenerate(
                                     data = iteratedFact,
                                     parentUnitUid = unit.uid,
-                                    sortedNames = parentNames,
+                                    sortedNames = if(iteratedFact.facts.isNotEmpty()) {
+                                        // parent facts should be grouped together by this "category"
+                                        parentNames.plus(I_AM_PARENT_IDENTIFIER)
+                                    }else parentNames,
                                     sortedParentUid = parentUidList,
                                     parentParagraph = paragraph
                                 )
                             )
+                            iteratedFact.facts.forEach { nestedFact ->
+                                FactToGenerate(
+                                    data = nestedFact,
+                                    parentUnitUid = unit.uid,
+                                    sortedNames = parentNames.plus(iteratedFact.shortKeyInformation),
+                                    sortedParentUid = parentUidList.plus(iteratedFact.uid),
+                                    parentParagraph = paragraph,
+                                    parentFact = iteratedFact
+                                )
+                            }
                         }
 
                         paragraph.paragraphs.filter {
@@ -177,7 +193,9 @@ class QuestionGenerator @Inject constructor() {
                     )
                 }
             }
-            if(paragraphs.size > MINIMUM_RELATED_DATA_TO_GENERATE) {
+
+            // paragraphs turned into categories and no longer serve as a source of information
+            /*if(paragraphs.size > MINIMUM_RELATED_DATA_TO_GENERATE) {
                 paragraphs.filter { it.data.name.isNotBlank() }.forEach { iteratedParagraph ->
                     ParagraphGeneratingGoal.values().forEach { goal ->
                         questions.addAll(
@@ -190,7 +208,7 @@ class QuestionGenerator @Inject constructor() {
                         )
                     }
                 }
-            }
+            }*/
 
             BaseResponse(
                 data = questions,
@@ -227,39 +245,46 @@ class QuestionGenerator @Inject constructor() {
             map.forEach { chunk ->
                 if(chunk.value.size >= MINIMUM_RELATED_DATA_TO_GENERATE) {
                     chunk.value.forEach { iteratedFact ->
-                        val relatedFacts = chunk.value
-                            .shuffled()
-                            .filter {
-                                it.data.uid != iteratedFact.data.uid
-                                        /*&& (generatingGoal.isParent.not()
-                                        || it.sortedCategoryUid.lastOrNull() != iteratedFact.sortedCategoryUid.lastOrNull())*/
-                            }
-                            .map { fact ->
-                                fact to calculateWeights(
-                                    anchorList = iteratedFact.sortedNames,
-                                    currentList = fact.sortedNames
-                                )
-                            }
-                            // first we sort by type, as that the priority, then by similarities
-                            .sortedWith(compareByDescending<Pair<FactToGenerate, Int>> {
-                                if(it.first.data.type == iteratedFact.data.type) 1 else 0
-                            }.thenByDescending { it.second })
-                            .take(MINIMUM_RELATED_DATA_TO_GENERATE)
-
-                        if(relatedFacts.isNotEmpty()
-                            && (iteratedFact.data.type.isListType.not()
+                        // either not list type goal or there are list items
+                        if((iteratedFact.data.type.isListType.not()
                                     || iteratedFact.data.textList.isNotEmpty())
+
+                            // either not image prompt goal or there is an image
                             && (generatingGoal != FactGeneratingGoal.IMAGE_PROMPT
                                     || iteratedFact.data.promptImage != null)
+
+                            // either no nested facts goal or there are nested facts
+                            && ((generatingGoal != FactGeneratingGoal.NESTED_FACTS_LONG_KEY
+                                    && generatingGoal != FactGeneratingGoal.NESTED_FACTS_SHORT_KEY)
+                                    || iteratedFact.data.facts.isNotEmpty())
                         ) {
-                            questions.add(
-                                generateQuestionFinal(
-                                    context = context,
-                                    promptFact = iteratedFact,
-                                    relatedFacts = relatedFacts.map { it.first },
-                                    generatingGoal = generatingGoal
+                            val relatedFacts = chunk.value
+                                .shuffled()
+                                .filter {
+                                    it.data.uid != iteratedFact.data.uid
+                                }
+                                .map { fact ->
+                                    fact to calculateWeights(
+                                        anchorList = iteratedFact.sortedNames,
+                                        currentList = fact.sortedNames
+                                    )
+                                }
+                                // first we sort by type, as that the priority, then by similarities
+                                .sortedWith(compareByDescending<Pair<FactToGenerate, Int>> {
+                                    if(it.first.data.type == iteratedFact.data.type) 1 else 0
+                                }.thenByDescending { it.second })
+                                .take(MINIMUM_RELATED_DATA_TO_GENERATE)
+
+                            if(relatedFacts.isNotEmpty()) {
+                                questions.add(
+                                    generateQuestionFinal(
+                                        context = context,
+                                        promptFact = iteratedFact,
+                                        relatedFacts = relatedFacts.map { it.first },
+                                        generatingGoal = generatingGoal
+                                    )
                                 )
-                            )
+                            }
                         }
                     }
                 }else {
@@ -306,7 +331,7 @@ class QuestionGenerator @Inject constructor() {
     }
 
     /** Final step in generating question */
-    private fun generateQuestionFinal(
+    private suspend fun generateQuestionFinal(
         context: Context,
         promptFact: FactToGenerate,
         relatedFacts: List<FactToGenerate>,
@@ -315,381 +340,197 @@ class QuestionGenerator @Inject constructor() {
         val importedSource = promptFact.makeImportedSourceRoute()
 
         // list is different in that we try to list all items together with other options
-        return if(promptFact.data.type == FactType.LIST) {
-            if(generatingGoal == FactGeneratingGoal.SHORT_INFORMATION) {
-                // [Pair.first] - item, [Pair.second] - fact short key information
-                val relatedItems = relatedFacts
+        return when {
+            generatingGoal == FactGeneratingGoal.NESTED_FACTS_SHORT_KEY
+                    || generatingGoal == FactGeneratingGoal.NESTED_FACTS_LONG_KEY -> {
+                val incorrectFacts = relatedFacts
+                    .filter {
+                        it.parentFact?.uid != promptFact.data.uid
+                                && it.data.isSeriousDataPoint()
+                                && it.data.shortKeyInformation.lowercase() != promptFact.data.shortKeyInformation.lowercase()
+                                && promptFact.data.facts.none { i -> i.uid == it.data.uid }
+                    }
                     .take((MINIMUM_RELATED_ITEMS_TO_GENERATE_LIST..MAXIMUM_RELATED_ITEMS_TO_GENERATE_LIST).random())
 
                 QuestionIO(
-                    answers = relatedItems.map { mappingItem ->
+                    answers = incorrectFacts.map { mappingItem ->
                         QuestionAnswerIO(
-                            text = mappingItem.data.textList
-                                // no duplicate items
-                                .filter { filteredItem ->
-                                    promptFact.data.textList.none {
-                                        it.equals(filteredItem, true)
-                                    }
-                                }
-                                .random()
-                                .ifBlank {
-                                    mappingItem.data.longInformation
-                                },
+                            text = if(generatingGoal == FactGeneratingGoal.NESTED_FACTS_LONG_KEY) {
+                                mappingItem.data.longInformation
+                            }else mappingItem.data.shortKeyInformation,
                             explanationMessage = mappingItem.data.shortKeyInformation,
                             isCorrect = false,
+                            textList = if(generatingGoal == FactGeneratingGoal.NESTED_FACTS_LONG_KEY) {
+                                mappingItem.data.textList
+                            } else emptyList(),
                             importedSource = mappingItem.makeImportedSourceRoute()
                         )
                     }.toMutableList().apply {
                         // we add the correct answer
                         addAll(
-                            promptFact.data.textList.map { mappingItem ->
+                            promptFact.data.facts.map { mapped ->
                                 QuestionAnswerIO(
-                                    text = mappingItem,
-                                    isCorrect = true
+                                    text = if(generatingGoal == FactGeneratingGoal.NESTED_FACTS_LONG_KEY) {
+                                        mapped.longInformation
+                                    }else mapped.shortKeyInformation,
+                                    isCorrect = true,
+                                    textList = if(generatingGoal == FactGeneratingGoal.NESTED_FACTS_LONG_KEY) {
+                                        mapped.textList
+                                    } else emptyList()
                                 )
                             }
                         )
                     },
                     importedSource = importedSource,
                     prompt = context.getString(
-                        R.string.question_generating_fact_list,
+                        R.string.question_generating_fact_short,
                         promptFact.data.shortKeyInformation,
                         promptFact.parentParagraph.name
                     )
                 )
-            }else {
+            }
+            promptFact.data.type == FactType.LIST -> {
+                if(generatingGoal == FactGeneratingGoal.SHORT_INFORMATION) {
+                    // [Pair.first] - item, [Pair.second] - fact short key information
+                    val relatedItems = relatedFacts
+                        .take((MINIMUM_RELATED_ITEMS_TO_GENERATE_LIST..MAXIMUM_RELATED_ITEMS_TO_GENERATE_LIST).random())
+
+                    QuestionIO(
+                        answers = relatedItems.map { mappingItem ->
+                            QuestionAnswerIO(
+                                text = mappingItem.data.textList
+                                    // no duplicate items
+                                    .filter { filteredItem ->
+                                        promptFact.data.textList.none {
+                                            it.equals(filteredItem, true)
+                                        }
+                                    }
+                                    .random()
+                                    .ifBlank {
+                                        mappingItem.data.longInformation
+                                    },
+                                explanationMessage = mappingItem.data.shortKeyInformation,
+                                isCorrect = false,
+                                importedSource = mappingItem.makeImportedSourceRoute()
+                            )
+                        }.toMutableList().apply {
+                            // we add the correct answer
+                            addAll(
+                                promptFact.data.textList.map { mappingItem ->
+                                    QuestionAnswerIO(
+                                        text = mappingItem,
+                                        isCorrect = true
+                                    )
+                                }
+                            )
+                        },
+                        importedSource = importedSource,
+                        prompt = context.getString(
+                            R.string.question_generating_fact_list,
+                            promptFact.data.shortKeyInformation,
+                            promptFact.parentParagraph.name
+                        )
+                    )
+                }else {
+                    QuestionIO(
+                        answers = relatedFacts.map { mappingFact ->
+                            val makeImportedSourceRoute = mappingFact.makeImportedSourceRoute()
+
+                            QuestionAnswerIO(
+                                text = "${mappingFact.data.shortKeyInformation} (${mappingFact.parentParagraph.name})",
+                                explanationMessage = mappingFact.data.longInformation,
+                                imageExplanation = mappingFact.data.promptImage,
+                                explanationList = mappingFact.data.textList,
+                                isCorrect = false,
+                                importedSource = makeImportedSourceRoute
+                            )
+                        }.toMutableList().apply {
+                            // we add the correct answer
+                            add(
+                                QuestionAnswerIO(
+                                    text = "${promptFact.data.shortKeyInformation} (${promptFact.parentParagraph.name})",
+                                    isCorrect = true
+                                )
+                            )
+                        },
+                        importedSource = importedSource,
+                        promptList = promptFact.data.textList,
+                        prompt = context.getString(R.string.question_generating_fact_list_short_key)
+                    )
+                }
+            }
+            else -> {
                 QuestionIO(
                     answers = relatedFacts.map { mappingFact ->
                         val makeImportedSourceRoute = mappingFact.makeImportedSourceRoute()
+                        val shortKeyInformation = "${mappingFact.data.shortKeyInformation} (${mappingFact.parentParagraph.name})"
 
                         QuestionAnswerIO(
-                            text = "${mappingFact.data.shortKeyInformation} (${mappingFact.parentParagraph.name})",
-                            explanationMessage = mappingFact.data.longInformation,
-                            imageExplanation = mappingFact.data.promptImage,
-                            explanationList = mappingFact.data.textList,
+                            textList = if(generatingGoal == FactGeneratingGoal.SHORT_INFORMATION
+                                && mappingFact.data.type.isListType
+                            ) {
+                                mappingFact.data.textList
+                            }else listOf(),
+                            text = when(generatingGoal) {
+                                FactGeneratingGoal.SHORT_INFORMATION -> {
+                                    if(mappingFact.data.type.isListType) "" else mappingFact.data.longInformation
+                                }
+                                else -> shortKeyInformation
+                            },
                             isCorrect = false,
+                            explanationMessage = when(generatingGoal) {
+                                FactGeneratingGoal.SHORT_INFORMATION -> shortKeyInformation
+                                else -> mappingFact.data.longInformation
+                            },
+                            explanationList = mappingFact.data.textList,
+                            imageExplanation = mappingFact.data.promptImage,
                             importedSource = makeImportedSourceRoute
                         )
                     }.toMutableList().apply {
+                        val shortKeyInformation = "${promptFact.data.shortKeyInformation} (${promptFact.parentParagraph.name})"
+
                         // we add the correct answer
                         add(
                             QuestionAnswerIO(
-                                text = "${promptFact.data.shortKeyInformation} (${promptFact.parentParagraph.name})",
+                                textList = if(generatingGoal == FactGeneratingGoal.SHORT_INFORMATION){
+                                    promptFact.data.textList
+                                }else listOf(),
+                                text = when(generatingGoal) {
+                                    FactGeneratingGoal.SHORT_INFORMATION -> promptFact.data.longInformation
+                                    else -> shortKeyInformation
+                                },
                                 isCorrect = true
                             )
                         )
                     },
+                    imagePromptUrl = if(generatingGoal == FactGeneratingGoal.IMAGE_PROMPT) {
+                        promptFact.data.promptImage
+                    }else null,
                     importedSource = importedSource,
-                    promptList = promptFact.data.textList,
-                    prompt = context.getString(R.string.question_generating_fact_list_short_key)
+                    prompt = when(generatingGoal) {
+                        FactGeneratingGoal.IMAGE_PROMPT -> context.getString(R.string.question_generating_fact_image)
+                        FactGeneratingGoal.SHORT_INFORMATION -> {
+                            context.getString(
+                                R.string.question_generating_fact_short,
+                                promptFact.data.shortKeyInformation,
+                                promptFact.parentParagraph.name
+                            )
+                        }
+                        FactGeneratingGoal.LONG_INFORMATION -> {
+                            if(promptFact.data.type.isListType) {
+                                context.getString(R.string.question_generating_bulletin_points)
+                            }else context.getString(
+                                R.string.question_generating_fact_long,
+                                promptFact.data.longInformation,
+                                promptFact.parentParagraph.name
+                            )
+                        }
+                        else -> "" //shouldn't happen
+                    },
+                    promptList = if(generatingGoal == FactGeneratingGoal.LONG_INFORMATION) {
+                        promptFact.data.textList
+                    }else listOf()
                 )
-            }
-        }else {
-            QuestionIO(
-                answers = relatedFacts.map { mappingFact ->
-                    val makeImportedSourceRoute = mappingFact.makeImportedSourceRoute()
-                    val shortKeyInformation = "${mappingFact.data.shortKeyInformation} (${mappingFact.parentParagraph.name})"
-
-                    QuestionAnswerIO(
-                        textList = if(generatingGoal == FactGeneratingGoal.SHORT_INFORMATION
-                            && mappingFact.data.type.isListType
-                        ) {
-                            mappingFact.data.textList
-                        }else listOf(),
-                        text = when(generatingGoal) {
-                            FactGeneratingGoal.SHORT_INFORMATION -> {
-                                if(mappingFact.data.type.isListType) "" else mappingFact.data.longInformation
-                            }
-                            FactGeneratingGoal.LONG_INFORMATION -> shortKeyInformation
-                            FactGeneratingGoal.IMAGE_PROMPT -> shortKeyInformation
-                        },
-                        isCorrect = false,
-                        explanationMessage = when(generatingGoal) {
-                            FactGeneratingGoal.SHORT_INFORMATION -> shortKeyInformation
-                            FactGeneratingGoal.LONG_INFORMATION -> mappingFact.data.longInformation
-                            FactGeneratingGoal.IMAGE_PROMPT -> mappingFact.data.longInformation
-                        },
-                        explanationList = mappingFact.data.textList,
-                        imageExplanation = mappingFact.data.promptImage,
-                        importedSource = makeImportedSourceRoute
-                    )
-                }.toMutableList().apply {
-                    val shortKeyInformation = "${promptFact.data.shortKeyInformation} (${promptFact.parentParagraph.name})"
-
-                    // we add the correct answer
-                    add(
-                        QuestionAnswerIO(
-                            textList = if(generatingGoal == FactGeneratingGoal.SHORT_INFORMATION){
-                                promptFact.data.textList
-                            }else listOf(),
-                            text = when(generatingGoal) {
-                                FactGeneratingGoal.SHORT_INFORMATION -> promptFact.data.longInformation
-                                FactGeneratingGoal.LONG_INFORMATION -> shortKeyInformation
-                                FactGeneratingGoal.IMAGE_PROMPT -> shortKeyInformation
-                            },
-                            isCorrect = true
-                        )
-                    )
-                },
-                imagePromptUrl = if(generatingGoal == FactGeneratingGoal.IMAGE_PROMPT) {
-                    promptFact.data.promptImage
-                }else null,
-                importedSource = importedSource,
-                prompt = when(generatingGoal) {
-                    FactGeneratingGoal.IMAGE_PROMPT -> context.getString(R.string.question_generating_fact_image)
-                    FactGeneratingGoal.SHORT_INFORMATION -> {
-                        context.getString(
-                            R.string.question_generating_fact_short,
-                            promptFact.data.shortKeyInformation,
-                            promptFact.parentParagraph.name
-                        )
-                    }
-                    FactGeneratingGoal.LONG_INFORMATION -> {
-                        if(promptFact.data.type.isListType) {
-                            context.getString(R.string.question_generating_bulletin_points)
-                        }else context.getString(
-                            R.string.question_generating_fact_long,
-                            promptFact.data.longInformation,
-                            promptFact.parentParagraph.name
-                        )
-                    }
-                },
-                promptList = if(generatingGoal == FactGeneratingGoal.LONG_INFORMATION) {
-                    promptFact.data.textList
-                }else listOf()
-            )
-        }
-    }
-
-    //================================ PARAGRAPH AS A SOURCE =======================================
-
-    /**
-     * Generates a question from a paragraph with the most related paragraphs
-     * Facts are never really indexed, just layered, cannot be connected on index
-     */
-    private suspend fun generateParagraphQuestion(
-        paragraph: ParagraphToGenerate,
-        context: Context,
-        allParagraphs: List<ParagraphToGenerate>,
-        generatingGoal: ParagraphGeneratingGoal
-    ): List<QuestionIO>? {
-        return withContext(Dispatchers.Default) {
-            when {
-                // only paragraphs that act as a form of a "fact" - have some paragraphs
-                /*generatingGoal == ParagraphGeneratingGoal.LIST_OF_CHILDREN_PARAGRAPHS TODO children paragraph may not be unique
-                        && paragraph.data.paragraphs.count { it.isSeriousDataPoint() } < 2 -> {
-                    return@withContext null
-                }*/
-                // we need correct answers
-                generatingGoal == ParagraphGeneratingGoal.LIST_OF_CHILDREN_FACTS
-                        && (paragraph.data.facts.size < 2 || paragraph.data.isSeriousDataPoint().not()) -> {
-                    return@withContext null
-                }
-            }
-
-            val relatedParagraphs = allParagraphs
-                .shuffled()
-                .filter {
-                    it.data.uid != paragraph.data.uid
-                }
-                .map { paragraph ->
-                    paragraph to calculateWeights(
-                        anchorList = paragraph.sortedNames,
-                        currentList = paragraph.sortedNames
-                    )
-                }
-                .sortedByDescending { it.second }
-
-            when(generatingGoal) {
-                ParagraphGeneratingGoal.BULLET_POINTS_NAME -> {
-                    if(paragraph.data.isSeriousDataPoint().not()) return@withContext null
-                    val chosenParagraphs = relatedParagraphs
-                        .filter {
-                            it.first.data.isSeriousDataPoint()
-                                    && it.first.data.uid != paragraph.data.uid
-                        }
-
-                    if(chosenParagraphs.isEmpty()) return@withContext null
-
-                    val parentParagraph = paragraph.parentParagraph?.name
-                    listOf(
-                        QuestionIO(
-                            answers = chosenParagraphs
-                                .take(MINIMUM_RELATED_DATA_TO_GENERATE)
-                                .map { relatedParagraph ->
-                                    QuestionAnswerIO(
-                                        isCorrect = false,
-                                        textList = relatedParagraph.first.data.bulletPoints,
-                                        explanationMessage = relatedParagraph.first.data.name,
-                                        importedSource = relatedParagraph.first.makeImportedSourceRoute()
-                                    )
-                                }.toMutableList().apply {
-                                    add(
-                                        QuestionAnswerIO(
-                                            isCorrect = true,
-                                            textList = paragraph.data.bulletPoints,
-                                            explanationList = paragraph.data.bulletPoints
-                                        )
-                                    )
-                                },
-                            prompt = context.getString(
-                                R.string.question_generating_bulletin_name,
-                                paragraph.data.name
-                            ) + if(parentParagraph != null) " ($parentParagraph)" else ""
-                        )
-                    )
-                }
-                ParagraphGeneratingGoal.BULLET_POINTS_VALUES -> {
-                    if(paragraph.data.isSeriousDataPoint().not()) return@withContext null
-                    val chosenParagraphs = relatedParagraphs
-                        .filter {
-                            it.first.data.isSeriousDataPoint()
-                                    && it.first.data.uid != paragraph.data.uid
-                        }
-
-                    if(chosenParagraphs.isEmpty()) return@withContext null
-
-                    listOf(
-                        QuestionIO(
-                            answers = chosenParagraphs
-                                .take(MINIMUM_RELATED_DATA_TO_GENERATE)
-                                .map { relatedParagraph ->
-                                    val parentParagraph = relatedParagraph.first.parentParagraph?.name
-
-                                    QuestionAnswerIO(
-                                        isCorrect = false,
-                                        text = relatedParagraph.first.data.name + if(parentParagraph != null) " ($parentParagraph)" else "",
-                                        explanationList = relatedParagraph.first.data.bulletPoints,
-                                        importedSource = relatedParagraph.first.makeImportedSourceRoute()
-                                    )
-                                }.toMutableList().apply {
-                                    val parentParagraph = paragraph.parentParagraph?.name
-                                    add(
-                                        QuestionAnswerIO(
-                                            isCorrect = true,
-                                            text = paragraph.data.name + if(parentParagraph != null) " ($parentParagraph)" else "",
-                                            explanationList = paragraph.data.bulletPoints
-                                        )
-                                    )
-                                },
-                            prompt = context.getString(R.string.question_generating_bulletin_points)
-                                    + if(paragraph.parentParagraph != null) " (${paragraph.parentParagraph.name})" else "",
-                            promptList = paragraph.data.bulletPoints
-                        )
-                    )
-                }
-                /*ParagraphGeneratingGoal.LIST_OF_CHILDREN_PARAGRAPHS -> {
-                    val correctParagraphs = paragraph.data.paragraphs
-                        .filter { it.isSeriousDataPoint() }
-
-                    val relatedChildrenParagraphs = relatedParagraphs
-                        .filter { related ->
-                            correctParagraphs.none { it.uid == related.first.data.uid }
-                                    && related.first.data.isSeriousDataPoint()
-                        }
-                        .take(correctParagraphs.size)
-                        .flatMap { data -> data.first.data.paragraphs.map { it to data } }
-                    // if there are no related paragraphs
-                    if(relatedChildrenParagraphs.isEmpty()) return@withContext listOf()
-
-                    val subject = subjects.find { it.uid == paragraph.parentUnitUid }
-
-                    listOf(
-                        QuestionIO(
-                            answers = relatedChildrenParagraphs
-                                .shuffled()
-                                .take(MINIMUM_RELATED_DATA_TO_GENERATE)
-                                .map { childrenParagraph ->
-                                    val parentParagraph = childrenParagraph.second.first.parentParagraph?.localCategory?.name
-
-                                    QuestionAnswerIO(
-                                        text = (childrenParagraph.first.localCategory?.name ?: "") + if(parentParagraph != null) " ($parentParagraph)" else "",
-                                        explanationList = childrenParagraph.first.bulletPoints,
-                                        isCorrect = false,
-                                        importedSource = childrenParagraph.second.first.makeImportedSourceRoute()
-                                    )
-                                }.toMutableList().apply {
-                                    correctParagraphs.forEach { correctParagraph ->
-                                        correctParagraph.localCategory?.name?.let { name ->
-                                            add(
-                                                QuestionAnswerIO(
-                                                    text = name,
-                                                    explanationList = correctParagraph.bulletPoints,
-                                                    isCorrect = true
-                                                )
-                                            )
-                                        }
-                                    }
-                                },
-                            prompt = context.getString(
-                                R.string.question_generating_children_items,
-                                paragraph.data.localCategory?.name ?: "",
-                                paragraph.data.uid,
-                                subject?.name ?: "",
-                                subject?.uid ?: ""
-                            )
-                        )
-                    )
-                }*/
-                ParagraphGeneratingGoal.LIST_OF_CHILDREN_FACTS -> {
-                    if(paragraph.data.name.isBlank()) return@withContext null
-                    val correctFacts = paragraph.data.facts
-                        .filter {
-                            it.isEmpty.not()
-                        }
-                    val correctShortKeys = correctFacts.map { it.shortKeyInformation }
-                    val relatedFacts = relatedParagraphs
-                        .flatMap { data -> data.first.data.facts.map { it to data.first } }
-                        .filter { related ->
-                            correctFacts.none { it.uid == related.first.uid }
-                                    && related.first.isSeriousDataPoint()
-                                    && correctShortKeys.none { key ->
-                                related.first.shortKeyInformation.equals(key, true)
-                            }
-                        }
-                        .take(correctFacts.size)
-                    // if there are no related facts
-                    if(relatedFacts.isEmpty()) return@withContext null
-
-                    listOf(
-                        QuestionIO(
-                            answers = relatedFacts
-                                .shuffled()
-                                .take(MINIMUM_RELATED_DATA_TO_GENERATE)
-                                .map { childrenFact ->
-                                    QuestionAnswerIO(
-                                        text = childrenFact.first.shortKeyInformation,
-                                        explanationMessage = childrenFact.first.longInformation,
-                                        explanationList = childrenFact.first.textList,
-                                        imageExplanation = childrenFact.first.promptImage,
-                                        isCorrect = false,
-                                        importedSource = childrenFact.second.makeImportedSourceRoute()
-                                    )
-                                }.toMutableList().apply {
-                                    correctFacts.forEach { fact ->
-                                        add(
-                                            QuestionAnswerIO(
-                                                text = fact.shortKeyInformation,
-                                                explanationMessage = fact.longInformation,
-                                                explanationList = fact.textList,
-                                                imageExplanation = fact.promptImage,
-                                                isCorrect = true
-                                            )
-                                        )
-                                    }
-                                },
-                            prompt = context.getString(
-                                R.string.question_generating_children_items,
-                                paragraph.data.name,
-                                //paragraph.data.uid,
-                                paragraph.parentParagraph?.name ?: "",
-                                paragraph.parentParagraph?.uid ?: "-"
-                            )
-                        )
-                    )
-                }
-            }.onEach {
-                it.importedSource = paragraph.makeImportedSourceRoute()
             }
         }
     }
@@ -808,27 +649,18 @@ class QuestionGenerator @Inject constructor() {
     }
 
     /** What is the goal data by which we ask the question - what will be a prompt */
-    private enum class ParagraphGeneratingGoal {
-        /** bullet points under specific paragraph */
-        BULLET_POINTS_NAME,
-
-        /** bullet points under specific paragraph */
-        BULLET_POINTS_VALUES,
-
-        /** list of paragraphs under specific paragraph */
-        //LIST_OF_CHILDREN_PARAGRAPHS, TODO paragraphs may not be unique
-
-        /** list of facts under specific paragraph */
-        LIST_OF_CHILDREN_FACTS,
-    }
-
-    /** What is the goal data by which we ask the question - what will be a prompt */
     private enum class FactGeneratingGoal {
         /** Prompt is a short information */
         SHORT_INFORMATION,
 
         /** Prompt is an image */
         IMAGE_PROMPT,
+
+        /** prompts the nested fact with shortKeyInformation */
+        NESTED_FACTS_LONG_KEY,
+
+        /** prompts the nested fact with longKeyInformation */
+        NESTED_FACTS_SHORT_KEY,
 
         /** Prompt is a long information */
         LONG_INFORMATION;
@@ -837,6 +669,7 @@ class QuestionGenerator @Inject constructor() {
     private data class FactToGenerate(
         val data: FactIO,
         val parentParagraph: ParagraphIO,
+        val parentFact: FactIO? = null,
         val parentUnitUid: String,
         val sortedNames: List<String>,
         val sortedParentUid: List<String>,
