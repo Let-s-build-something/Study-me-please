@@ -50,8 +50,8 @@ fun SimpleDialog(
             shape = RoundedCornerShape(8.dp),
             elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
             colors = CardDefaults.cardColors(
-                containerColor = LocalTheme.colors.onBackgroundComponent,
-                contentColor = LocalTheme.colors.primary
+                containerColor = LocalTheme.current.colors.onBackgroundComponent,
+                contentColor = LocalTheme.current.colors.primary
             )
         ) {
             Column(
@@ -74,7 +74,7 @@ fun SimpleDialog(
                             Icon(
                                 imageVector = state.icon,
                                 contentDescription = "",
-                                tint = LocalTheme.colors.secondary
+                                tint = LocalTheme.current.colors.secondary
                             )
                         }
                         Text(
@@ -86,7 +86,7 @@ fun SimpleDialog(
                             style = TextStyle(
                                 fontSize = 20.sp,
                                 fontWeight = FontWeight.Medium,
-                                color = LocalTheme.colors.primary
+                                color = LocalTheme.current.colors.primary
                             )
                         )
                     }
@@ -100,7 +100,7 @@ fun SimpleDialog(
                         text = state.content,
                         style = TextStyle(
                             fontSize = 16.sp,
-                            color = LocalTheme.colors.primary
+                            color = LocalTheme.current.colors.primary
                         )
                     )
                 }
@@ -116,14 +116,14 @@ fun SimpleDialog(
                             OutlinedButton(
                                 text = state.negativeButtonState.text,
                                 onClick = state.negativeButtonState.onClick,
-                                activeColor = LocalTheme.colors.secondary
+                                activeColor = LocalTheme.current.colors.secondary
                             )
                         }
                         if( state.positiveButtonState != null) {
                             OutlinedButton(
                                 text = state.positiveButtonState.text,
                                 onClick = state.positiveButtonState.onClick,
-                                activeColor = LocalTheme.colors.brandMain
+                                activeColor = LocalTheme.current.colors.brandMain
                             )
                         }
                     }

@@ -31,7 +31,6 @@ import coil.decode.GifDecoder
 import coil.decode.ImageDecoderDecoder
 import coil.decode.SvgDecoder
 import coil.request.ImageRequest
-import com.squadris.squadris.compose.components.input.EditFieldInput
 import com.squadris.squadris.compose.theme.Colors
 import com.squadris.squadris.compose.theme.LocalTheme
 import kotlinx.coroutines.delay
@@ -81,9 +80,9 @@ fun EditableImageAsset(
                         .padding(bottom = 16.dp)
                         .size(32.dp)
                         .animateContentSize(),
-                    color = LocalTheme.colors.brandMain,
+                    color = LocalTheme.current.colors.brandMain,
                     strokeWidth = 2.dp,
-                    trackColor = LocalTheme.colors.secondary,
+                    trackColor = LocalTheme.current.colors.secondary,
                 )
             }
             if(!asset.isEmpty) {

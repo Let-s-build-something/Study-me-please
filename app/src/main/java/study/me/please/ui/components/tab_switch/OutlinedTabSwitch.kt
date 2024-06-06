@@ -13,7 +13,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.squadris.squadris.compose.theme.LocalTheme
-import com.squadris.squadris.compose.theme.StudyMeAppTheme
+import study.me.please.base.theme.AppTheme
 import study.me.please.ui.components.OutlinedButton
 
 /**
@@ -30,8 +30,8 @@ fun OutlinedTabSwitch(
         modifier = Modifier
             .fillMaxWidth()
             .wrapContentHeight()
-            .padding(vertical = LocalTheme.shapes.betweenItemsSpace),
-        horizontalArrangement = Arrangement.spacedBy(LocalTheme.shapes.betweenItemsSpace)
+            .padding(vertical = LocalTheme.current.shapes.betweenItemsSpace),
+        horizontalArrangement = Arrangement.spacedBy(LocalTheme.current.shapes.betweenItemsSpace)
     ) {
         items(state.tabs.size) { index ->
             state.tabs.getOrNull(index)?.let { tab ->
@@ -50,10 +50,10 @@ fun OutlinedTabSwitch(
 @Preview
 @Composable
 private fun Preview() {
-    StudyMeAppTheme(isDarkTheme = true) {
+    AppTheme(isDarkTheme = true) {
         Column(
             modifier = Modifier
-                .background(color = LocalTheme.colors.backgroundLight)
+                .background(color = LocalTheme.current.colors.backgroundLight)
         ) {
             OutlinedTabSwitch(
                 state = rememberTabSwitchState(

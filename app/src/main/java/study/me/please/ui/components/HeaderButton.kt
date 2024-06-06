@@ -40,7 +40,7 @@ private fun HeaderButton(
     extraContent: @Composable RowScope.() -> Unit = {},
     elevation: ButtonElevation? = null,
     textStyle: TextStyle? = null,
-    shape: Shape = LocalTheme.shapes.circularActionShape,
+    shape: Shape = LocalTheme.current.shapes.circularActionShape,
     onClick: () -> Unit = {}
 ) {
     Button(
@@ -54,11 +54,11 @@ private fun HeaderButton(
         colors = ButtonDefaults.buttonColors(
             containerColor = containerColor,
             contentColor = contentColor,
-            disabledContainerColor = LocalTheme.colors.disabled,
-            disabledContentColor = LocalTheme.colors.secondary
+            disabledContainerColor = LocalTheme.current.colors.disabled,
+            disabledContentColor = LocalTheme.current.colors.secondary
         ),
         elevation = elevation ?: ButtonDefaults.elevatedButtonElevation(
-            defaultElevation = LocalTheme.styles.actionElevation
+            defaultElevation = LocalTheme.current.styles.actionElevation
         )
     ) {
         if(text.isNotEmpty()) {
@@ -95,7 +95,7 @@ private fun HeaderButton(
 fun ComponentHeaderButton(
     modifier: Modifier = Modifier,
     text: String = "",
-    shape: Shape = LocalTheme.shapes.circularActionShape,
+    shape: Shape = LocalTheme.current.shapes.circularActionShape,
     textStyle: TextStyle? = null,
     startIconVector: ImageVector? = Icons.Outlined.Add,
     elevation: ButtonElevation? = null,
@@ -111,8 +111,8 @@ fun ComponentHeaderButton(
         textStyle = textStyle,
         extraContent = extraContent,
         endIconVector = startIconVector,
-        contentColor = LocalTheme.colors.secondary,
-        containerColor = LocalTheme.colors.onBackgroundComponent
+        contentColor = LocalTheme.current.colors.secondary,
+        containerColor = LocalTheme.current.colors.onBackgroundComponent
     )
 }
 
@@ -125,7 +125,7 @@ fun ComponentHeaderButton(
 fun ErrorHeaderButton(
     modifier: Modifier = Modifier,
     text: String = "",
-    shape: Shape = LocalTheme.shapes.circularActionShape,
+    shape: Shape = LocalTheme.current.shapes.circularActionShape,
     textStyle: TextStyle? = null,
     startIconVector: ImageVector? = Icons.Outlined.Add,
     elevation: ButtonElevation? = null,
@@ -141,7 +141,7 @@ fun ErrorHeaderButton(
         textStyle = textStyle,
         extraContent = extraContent,
         endIconVector = startIconVector,
-        contentColor = LocalTheme.colors.contrastAction,
+        contentColor = LocalTheme.current.colors.contrastAction,
         containerColor = Colors.RED_ERROR
     )
 }
@@ -162,7 +162,7 @@ fun BrandHeaderButton(
             .padding(bottom = 12.dp, top = 4.dp),
         text = text,
         onClick = onClick,
-        contentColor = LocalTheme.colors.tetrial,
-        containerColor = LocalTheme.colors.brandMain
+        contentColor = LocalTheme.current.colors.tetrial,
+        containerColor = LocalTheme.current.colors.brandMain
     )
 }

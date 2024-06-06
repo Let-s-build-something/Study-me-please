@@ -80,11 +80,11 @@ fun DragAndDropSourceButton(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(
-                    color = LocalTheme.colors.tetrial,
+                    color = LocalTheme.current.colors.tetrial,
                     shape = FloatingActionButtonDefaults.shape
                 )
                 .shadow(
-                    elevation = LocalTheme.styles.actionElevation,
+                    elevation = LocalTheme.current.styles.actionElevation,
                     shape = FloatingActionButtonDefaults.shape
                 ),
             contentAlignment = Alignment.Center
@@ -102,7 +102,7 @@ fun DragAndDropSourceButton(
                         style = TextStyle(
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Medium,
-                            color = LocalTheme.colors.brandMainDark
+                            color = LocalTheme.current.colors.brandMainDark
                         ),
                         text = text.uppercase()
                     )
@@ -110,7 +110,7 @@ fun DragAndDropSourceButton(
                 Icon(
                     modifier = Modifier.size(32.dp),
                     imageVector = imageVector,
-                    tint = LocalTheme.colors.brandMainDark,
+                    tint = LocalTheme.current.colors.brandMainDark,
                     contentDescription = contentDescription
                 )
             }

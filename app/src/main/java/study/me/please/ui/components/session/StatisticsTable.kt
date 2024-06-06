@@ -44,7 +44,7 @@ import kotlin.math.roundToInt
 fun StatisticsTable(
     modifier: Modifier = Modifier,
     questionModule: QuestionModule,
-    backgroundColor: Color = LocalTheme.colors.onBackgroundComponent
+    backgroundColor: Color = LocalTheme.current.colors.onBackgroundComponent
 ) {
     val items = questionModule.history//.filter { it.timeOfStart != null && it.isRepetition.not() }
     val responseTimeAverages = remember { mutableListOf<Long>() }
@@ -121,7 +121,7 @@ fun StatisticsTable(
         modifier = modifier
             .background(
                 color = backgroundColor,
-                shape = LocalTheme.shapes.componentShape
+                shape = LocalTheme.current.shapes.componentShape
             )
             .padding(12.dp)
     ) {
@@ -147,8 +147,8 @@ fun StatisticsTable(
                 .fillMaxWidth(0.8f),
             strokeCap = StrokeCap.Round,
             progress = { percentageDone.floatValue },
-            trackColor = LocalTheme.colors.tetrial,
-            color = LocalTheme.colors.brandMain
+            trackColor = LocalTheme.current.colors.tetrial,
+            color = LocalTheme.current.colors.brandMain
         )
         Text(
             modifier = Modifier
@@ -159,7 +159,7 @@ fun StatisticsTable(
                 percentageDone.floatValue.times(100f).roundToInt().toString()
             ),
             style = TextStyle(
-                color = LocalTheme.colors.primary,
+                color = LocalTheme.current.colors.primary,
                 fontSize = 14.sp
             )
         )
@@ -174,7 +174,7 @@ fun StatisticsTable(
             ),
             style = TextStyle(
                 fontSize = 14.sp,
-                color = LocalTheme.colors.secondary,
+                color = LocalTheme.current.colors.secondary,
                 textAlign = TextAlign.Center
             )
         )
@@ -188,7 +188,7 @@ fun StatisticsTable(
             ),
             style = TextStyle(
                 fontSize = 14.sp,
-                color = LocalTheme.colors.secondary,
+                color = LocalTheme.current.colors.secondary,
                 textAlign = TextAlign.Center
             )
         )

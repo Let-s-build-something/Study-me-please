@@ -36,8 +36,8 @@ fun ImageAction(
     leadingImageVector: ImageVector? = null,
     trailingImageVector: ImageVector? = null,
     onTrailingIconClick: (() -> Unit)? = null,
-    containerColor: Color = LocalTheme.colors.brandMain,
-    contentColor: Color = LocalTheme.colors.tetrial,
+    containerColor: Color = LocalTheme.current.colors.brandMain,
+    contentColor: Color = LocalTheme.current.colors.tetrial,
     onClick: () -> Unit
 ) {
     Button(
@@ -47,12 +47,12 @@ fun ImageAction(
             vertical = 0.dp,
             horizontal = 12.dp
         ),
-        shape = LocalTheme.shapes.circularActionShape,
+        shape = LocalTheme.current.shapes.circularActionShape,
         colors = ButtonDefaults.buttonColors(
             containerColor = containerColor,
             contentColor = contentColor,
-            disabledContainerColor = LocalTheme.colors.disabled,
-            disabledContentColor = LocalTheme.colors.secondary
+            disabledContainerColor = LocalTheme.current.colors.disabled,
+            disabledContentColor = LocalTheme.current.colors.secondary
         ),
         elevation = elevatedButtonElevation()
     ) {
@@ -68,7 +68,7 @@ fun ImageAction(
                 modifier = Modifier
                     .padding(horizontal = 8.dp),
                 text = text,
-                color = LocalTheme.colors.tetrial,
+                color = LocalTheme.current.colors.tetrial,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
                 maxLines = 1,

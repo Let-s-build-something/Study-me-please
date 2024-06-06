@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import study.me.please.base.BaseViewModel
+import com.squadris.squadris.compose.base.BaseViewModel
 import study.me.please.base.GeneralClipBoard
 import study.me.please.data.io.FactIO
 import study.me.please.data.io.UnitElement

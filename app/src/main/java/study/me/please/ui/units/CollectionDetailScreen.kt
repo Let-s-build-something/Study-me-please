@@ -63,16 +63,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.squadris.squadris.compose.components.SearchChip
+import com.squadris.squadris.compose.components.chips.SearchChip
 import com.squadris.squadris.compose.theme.LocalTheme
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import study.me.please.R
-import study.me.please.base.LocalNavController
-import study.me.please.base.navigation.ActionBarIcon
-import study.me.please.base.navigation.NavIconType
+import com.squadris.squadris.compose.base.LocalNavController
+import com.squadris.squadris.compose.components.navigation.ActionBarIcon
+import com.squadris.squadris.compose.components.navigation.NavIconType
 import study.me.please.base.navigation.NavigationNode.Companion.navigate
 import study.me.please.base.navigation.NavigationRoot
 import study.me.please.data.io.UnitsFilter
@@ -293,15 +293,15 @@ private fun ContentLayout(
                         modifier = Modifier
                             .padding(start = 4.dp)
                             .background(
-                                color = LocalTheme.colors.brandMain,
-                                shape = LocalTheme.shapes.chipShape
+                                color = LocalTheme.current.colors.brandMain,
+                                shape = LocalTheme.current.shapes.chipShape
                             )
                             .size(42.dp)
-                            .clip(LocalTheme.shapes.chipShape)
+                            .clip(LocalTheme.current.shapes.chipShape)
                             .clickable(
                                 indication = rememberRipple(
                                     bounded = true,
-                                    color = LocalTheme.colors.contrastActionLight
+                                    color = LocalTheme.current.colors.contrastActionLight
                                 ),
                                 interactionSource = remember { MutableInteractionSource() }
                             ) {
@@ -310,7 +310,7 @@ private fun ContentLayout(
                             .padding(6.dp),
                         imageVector = asset.first,
                         contentDescription = asset.second,
-                        tint = LocalTheme.colors.tetrial
+                        tint = LocalTheme.current.colors.tetrial
                     )
                 }
                 AnimatedVisibility(pagerState.pageCount > 1) {
@@ -343,10 +343,10 @@ private fun ContentLayout(
                             Row(
                                 modifier = Modifier
                                     .padding(start = 4.dp)
-                                    .clip(LocalTheme.shapes.chipShape)
+                                    .clip(LocalTheme.current.shapes.chipShape)
                                     .background(
-                                        color = LocalTheme.colors.brandMainDark,
-                                        shape = LocalTheme.shapes.chipShape
+                                        color = LocalTheme.current.colors.brandMainDark,
+                                        shape = LocalTheme.current.shapes.chipShape
                                     ),
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(4.dp)
@@ -402,7 +402,7 @@ private fun ContentLayout(
                                         .padding(2.dp),
                                     imageVector = Icons.Outlined.KeyboardArrowUp,
                                     contentDescription = stringResource(R.string.accessibility_search_up),
-                                    tint = if(isEnabled.value) Color.White else LocalTheme.colors.brandMain
+                                    tint = if(isEnabled.value) Color.White else LocalTheme.current.colors.brandMain
                                 )
 
                                 // move down
@@ -441,7 +441,7 @@ private fun ContentLayout(
                                         .padding(2.dp),
                                     imageVector = Icons.Outlined.KeyboardArrowDown,
                                     contentDescription = stringResource(R.string.accessibility_search_down),
-                                    tint = if(isEnabled.value) Color.White else LocalTheme.colors.brandMain
+                                    tint = if(isEnabled.value) Color.White else LocalTheme.current.colors.brandMain
                                 )
                                 Spacer(Modifier)
                             }
@@ -485,7 +485,7 @@ val PagerState.pageOffset: Float
 private fun PagerIndicatorRow(
     modifier: Modifier = Modifier,
     pagerState: PagerState,
-    color: Color = LocalTheme.colors.tetrial
+    color: Color = LocalTheme.current.colors.tetrial
 ) {
     val density = LocalDensity.current
 

@@ -83,7 +83,7 @@ fun CollectionCard(
             Card(
                 modifier = modifier
                     .wrapContentHeight()
-                    .clip(LocalTheme.shapes.componentShape)
+                    .clip(LocalTheme.current.shapes.componentShape)
                     .combinedClickable(
                         interactionSource = remember {
                             MutableInteractionSource()
@@ -103,11 +103,11 @@ fun CollectionCard(
                         },
                         enabled = state.isEnabled.value
                     ),
-                elevation = LocalTheme.styles.cardClickableElevation,
-                shape = LocalTheme.shapes.componentShape,
+                elevation = LocalTheme.current.styles.cardClickableElevation,
+                shape = LocalTheme.current.shapes.componentShape,
                 colors = CardDefaults.cardColors(
-                    containerColor = LocalTheme.colors.onBackgroundComponent,
-                    contentColor = LocalTheme.colors.onBackgroundComponent
+                    containerColor = LocalTheme.current.colors.onBackgroundComponent,
+                    contentColor = LocalTheme.current.colors.onBackgroundComponent
                 )
             ) {
                 AnimatedContent(
@@ -182,17 +182,17 @@ private fun DataCard(
                 onCheckedChange = { isChecked ->
                     state.isChecked.value = isChecked
                 },
-                colors = LocalTheme.styles.checkBoxColorsDefault
+                colors = LocalTheme.current.styles.checkBoxColorsDefault
             )
         }
         Image(
             modifier = Modifier
-                .size(LocalTheme.shapes.iconSizeMedium)
+                .size(LocalTheme.current.shapes.iconSizeMedium)
                 .background(
-                    color = LocalTheme.colors.brandMain,
-                    shape = LocalTheme.shapes.circularActionShape
+                    color = LocalTheme.current.colors.brandMain,
+                    shape = LocalTheme.current.shapes.circularActionShape
                 )
-                .clip(LocalTheme.shapes.circularActionShape)
+                .clip(LocalTheme.current.shapes.circularActionShape)
                 .padding(8.dp)
                 .constrainAs(imgIcon) {
                     top.linkTo(parent.top)
@@ -200,7 +200,7 @@ private fun DataCard(
                 },
             imageVector = data.defaultPreference.estimatedMode.icon,
             contentDescription = null,
-            colorFilter = ColorFilter.tint(color = LocalTheme.colors.tetrial)
+            colorFilter = ColorFilter.tint(color = LocalTheme.current.colors.tetrial)
         )
         Text(
             text = if(maxNameLength != null && maxNameLength < data.name.length) {
@@ -221,7 +221,7 @@ private fun DataCard(
             },
             fontSize = 16.sp,
             fontWeight = FontWeight.Medium,
-            color = LocalTheme.colors.primary,
+            color = LocalTheme.current.colors.primary,
             textAlign = TextAlign.Start
         )
         Text(
@@ -237,7 +237,7 @@ private fun DataCard(
                 },
             style = TextStyle(
                 fontSize = 14.sp,
-                color = LocalTheme.colors.secondary,
+                color = LocalTheme.current.colors.secondary,
             ),
             minLines = 2,
             maxLines = 2,
@@ -255,7 +255,7 @@ fun OptionsModeLayout(
 ) {
     Row(
         modifier = Modifier
-            .background(color = LocalTheme.colors.onBackgroundComponent)
+            .background(color = LocalTheme.current.colors.onBackgroundComponent)
             .fillMaxWidth()
             .then(modifier),
         horizontalArrangement = Arrangement.Center,
@@ -276,8 +276,8 @@ fun OptionsModeLayout(
                 .background(
                     color = Colors.RED_ERROR.copy(alpha = 0.4f),
                     shape = RoundedCornerShape(
-                        topStart = LocalTheme.shapes.componentCornerRadius,
-                        bottomStart = LocalTheme.shapes.componentCornerRadius
+                        topStart = LocalTheme.current.shapes.componentCornerRadius,
+                        bottomStart = LocalTheme.current.shapes.componentCornerRadius
                     )
                 )
                 .clickable(
@@ -302,7 +302,7 @@ fun OptionsModeLayout(
             modifier = itemModifier
                 .padding(vertical = 12.dp, horizontal = 6.dp)
                 .background(
-                    color = LocalTheme.colors.tetrial.copy(alpha = 0.4f)
+                    color = LocalTheme.current.colors.tetrial.copy(alpha = 0.4f)
                 )
                 .clickable(
                     indication = rememberRipple(bounded = true),
@@ -328,8 +328,8 @@ fun OptionsModeLayout(
                 .background(
                     color = Colors.GREEN_CORRECT.copy(alpha = 0.4f),
                     shape = RoundedCornerShape(
-                        topEnd = LocalTheme.shapes.componentCornerRadius,
-                        bottomEnd = LocalTheme.shapes.componentCornerRadius
+                        topEnd = LocalTheme.current.shapes.componentCornerRadius,
+                        bottomEnd = LocalTheme.current.shapes.componentCornerRadius
                     )
                 )
                 .clickable(

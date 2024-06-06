@@ -128,7 +128,7 @@ fun DraggableRefreshIndicator(
                         end = 4.dp,
                         bottom = 8.dp
                     )
-                    .background(LocalTheme.colors.tetrial, RoundedCornerShape(20.dp))
+                    .background(LocalTheme.current.colors.tetrial, RoundedCornerShape(20.dp))
                     .size(pullRefreshSize.minus(12.dp)),
                 composition = composition,
                 restartOnPlay = true,
@@ -145,7 +145,7 @@ fun DraggableRefreshIndicator(
                         end = 4.dp,
                         bottom = 8.dp
                     )
-                    .background(LocalTheme.colors.tetrial, RoundedCornerShape(20.dp))
+                    .background(LocalTheme.current.colors.tetrial, RoundedCornerShape(20.dp))
                     .size(pullRefreshSize.minus(12.dp))
             )
         }
@@ -176,7 +176,7 @@ fun ConstraintLayoutScope.ProgressBarRefreshIndicator(
                 top.linkTo(parent.top, (-4).dp)
                 width = Dimension.fillToConstraints
             },
-        color = LocalTheme.colors.tetrial,
+        color = LocalTheme.current.colors.tetrial,
         trackColor = Color.Transparent,
     )
     LinearProgressIndicator(
@@ -189,7 +189,7 @@ fun ConstraintLayoutScope.ProgressBarRefreshIndicator(
                 top.linkTo(parent.top, (-4).dp)
                 width = Dimension.fillToConstraints
             },
-        color = LocalTheme.colors.tetrial,
+        color = LocalTheme.current.colors.tetrial,
         trackColor = Color.Transparent,
     )
 }

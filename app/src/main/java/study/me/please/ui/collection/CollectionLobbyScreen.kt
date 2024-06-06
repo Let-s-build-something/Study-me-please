@@ -46,7 +46,7 @@ import androidx.lifecycle.Lifecycle
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.rememberLottieComposition
-import com.squadris.squadris.compose.components.DEFAULT_ANIMATION_LENGTH_SHORT
+import com.squadris.squadris.compose.components.chips.DEFAULT_ANIMATION_LENGTH_SHORT
 import com.squadris.squadris.compose.theme.Colors
 import com.squadris.squadris.compose.theme.LocalTheme
 import com.squadris.squadris.utils.OnLifecycleEvent
@@ -54,7 +54,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import study.me.please.R
-import study.me.please.base.LocalNavController
+import com.squadris.squadris.compose.base.LocalNavController
 import study.me.please.base.navigation.NavigationRoot
 import study.me.please.ui.collection.RefreshableViewModel.Companion.requestData
 import study.me.please.ui.components.BasicAlertDialog
@@ -237,13 +237,13 @@ fun CollectionLobbyScreen(
                                 stopChecking()
                             })
                         },
-                    verticalArrangement = Arrangement.spacedBy(LocalTheme.shapes.betweenItemsSpace)
+                    verticalArrangement = Arrangement.spacedBy(LocalTheme.current.shapes.betweenItemsSpace)
                 ) {
                     stickyHeader {
                         ComponentHeaderButton(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(top = LocalTheme.shapes.betweenItemsSpace),
+                                .padding(top = LocalTheme.current.shapes.betweenItemsSpace),
                             text = stringResource(id = R.string.add_new_collection)
                         ) {
                             navController?.navigate(
@@ -356,7 +356,7 @@ fun EmptyLayout(
                 ),
             text = emptyText,
             fontSize = 18.sp,
-            color = LocalTheme.colors.secondary,
+            color = LocalTheme.current.colors.secondary,
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center
         )

@@ -24,7 +24,7 @@ import com.squadris.squadris.compose.theme.LocalTheme
 fun MinimalisticIcon(
     modifier: Modifier = Modifier,
     imageVector: ImageVector,
-    tint: Color = LocalTheme.colors.primary,
+    tint: Color = LocalTheme.current.colors.primary,
     indication: Indication? = rememberRipple(bounded = false),
     contentDescription: String? = null,
     onClick: (() -> Unit)? = null

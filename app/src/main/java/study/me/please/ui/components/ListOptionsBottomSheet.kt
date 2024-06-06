@@ -50,12 +50,12 @@ fun ListOptionsBottomSheet(
                     .navigationBarsPadding()
                     .padding(horizontal = 8.dp, vertical = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(
-                    LocalTheme.shapes.betweenItemsSpace
+                    LocalTheme.current.shapes.betweenItemsSpace
                 )
             ) {
-                Spacer(modifier = Modifier.width(LocalTheme.shapes.betweenItemsSpace))
+                Spacer(modifier = Modifier.width(LocalTheme.current.shapes.betweenItemsSpace))
                 actions()
-                Spacer(modifier = Modifier.width(LocalTheme.shapes.betweenItemsSpace))
+                Spacer(modifier = Modifier.width(LocalTheme.current.shapes.betweenItemsSpace))
             }
         },
         modifier = modifier,

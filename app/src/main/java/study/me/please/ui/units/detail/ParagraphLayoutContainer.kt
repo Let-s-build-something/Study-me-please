@@ -2,6 +2,7 @@ package study.me.please.ui.units.detail
 
 import androidx.activity.OnBackPressedDispatcher
 import androidx.activity.OnBackPressedDispatcherOwner
+import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
@@ -34,8 +35,8 @@ import study.me.please.base.navigation.NavigationNotepadScreen
 import study.me.please.data.io.ImportSourceType
 import study.me.please.data.io.ImportedSource
 import study.me.please.ui.components.ComponentHeaderButton
-import study.me.please.ui.components.collapsing_layout.CollapsingBehavior
-import study.me.please.ui.components.collapsing_layout.CollapsingLayout
+import com.squadris.squadris.compose.components.collapsing_layout.CollapsingBehavior
+import com.squadris.squadris.compose.components.collapsing_layout.CollapsingLayout
 
 /** screen for subject detail with user's main notes for certain collection */
 @Composable
@@ -57,8 +58,8 @@ fun ParagraphLayoutContainer(
     CollapsingLayout(
         modifier = modifier
             .background(
-                LocalTheme.colors.onBackgroundComponentContrast,
-                shape = LocalTheme.shapes.componentShape
+                LocalTheme.current.colors.onBackgroundComponentContrast,
+                shape = LocalTheme.current.shapes.componentShape
             )
             .padding(4.dp)
             .nestedScroll(object : NestedScrollConnection {
@@ -111,13 +112,13 @@ fun ParagraphLayoutContainer(
             } to CollapsingBehavior.ALWAYS,
             @Composable {
                 CompositionLocalProvider(
-                    androidx.activity.compose.LocalOnBackPressedDispatcherOwner provides object: OnBackPressedDispatcherOwner {
+                    LocalOnBackPressedDispatcherOwner provides object: OnBackPressedDispatcherOwner {
                         override val lifecycle: Lifecycle = LocalLifecycleOwner.current.lifecycle
                         override val onBackPressedDispatcher: OnBackPressedDispatcher = OnBackPressedDispatcher()
                     }
                 ) {
                     NavHost(
-                        modifier = Modifier.background(color = LocalTheme.colors.backgroundLight),
+                        modifier = Modifier.background(color = LocalTheme.current.colors.backgroundLight),
                         navController = navController,
                         startDestination = NavigationNotepadScreen.Paragraph.route
                     ) {

@@ -136,7 +136,7 @@ fun DropTargetContainer(
                     .padding(start = padding)
                     .height(64.dp)
                     .background(
-                        color = LocalTheme.colors.brandMain,
+                        color = LocalTheme.current.colors.brandMain,
                     )
                     .then(enterModifier)
             )
@@ -216,9 +216,9 @@ fun Modifier.dragSource(
 ) = composed(
     factory = {
         val density = LocalDensity.current
-        val rectColor = LocalTheme.colors.onBackgroundComponent
+        val rectColor = LocalTheme.current.colors.onBackgroundComponent
         val cornerRadius = with(density) {
-            LocalTheme.shapes.componentCornerRadius.toPx()
+            LocalTheme.current.shapes.componentCornerRadius.toPx()
         }
 
         this.dragAndDropSource(
@@ -263,7 +263,7 @@ fun Modifier.drawSegmentedBorder(
     screenWidthDp: Int
 ) = composed(
     factory = {
-        val color = LocalTheme.colors.secondary
+        val color = LocalTheme.current.colors.secondary
         val density = LocalDensity.current
         val strokeWidthPx = density.run { 1.dp.toPx() }
         val xOffset = density.run {

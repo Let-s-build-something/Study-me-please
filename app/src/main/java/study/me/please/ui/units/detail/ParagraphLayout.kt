@@ -15,7 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import study.me.please.base.LocalIsTablet
+import com.squadris.squadris.compose.base.LocalIsTablet
 import study.me.please.ui.units.UnitViewModel
 import study.me.please.ui.units.components.paragraphBlock
 

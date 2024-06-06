@@ -35,7 +35,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.squadris.squadris.compose.components.DEFAULT_ANIMATION_LENGTH_SHORT
+import com.squadris.squadris.compose.components.chips.DEFAULT_ANIMATION_LENGTH_SHORT
 import com.squadris.squadris.compose.theme.LocalTheme
 
 /** Content that can be hidden below a line button */
@@ -43,9 +43,9 @@ import com.squadris.squadris.compose.theme.LocalTheme
 fun ExpandableContent(
     modifier: Modifier = Modifier,
     text: AnnotatedString = AnnotatedString(""),
-    containerColor: Color = LocalTheme.colors.onBackgroundComponent,
-    contentColor: Color = LocalTheme.colors.secondary,
-    textStyle: TextStyle = LocalTheme.styles.menuItem,
+    containerColor: Color = LocalTheme.current.colors.onBackgroundComponent,
+    contentColor: Color = LocalTheme.current.colors.secondary,
+    textStyle: TextStyle = LocalTheme.current.styles.menuItem,
     isExpanded: Boolean = false,
     collapsedPadding: Dp = 0.dp,
     arrowModifier: Modifier = Modifier,
@@ -91,11 +91,11 @@ fun LineButton(
     text: AnnotatedString,
     arrowModifier: Modifier = Modifier,
     arrowRotation: Float = 180f,
-    textStyle: TextStyle = LocalTheme.styles.linkText,
+    textStyle: TextStyle = LocalTheme.current.styles.linkText,
     shape: Shape = RectangleShape,
     collapsedContent: (@Composable () -> Unit)? = null,
-    containerColor: Color = LocalTheme.colors.onBackgroundComponent,
-    contentColor: Color = LocalTheme.colors.secondary
+    containerColor: Color = LocalTheme.current.colors.onBackgroundComponent,
+    contentColor: Color = LocalTheme.current.colors.secondary
 ) {
     Row(
         modifier = Modifier
@@ -143,8 +143,8 @@ private fun Preview() {
             text = AnnotatedString(
                 "Click me to expand XYZasdasdasdasdasdasdasdasdasdasdasdasdasdasdasdasdafgwsegdrthfth"
             ),
-            containerColor = LocalTheme.colors.brandMainDark,
-            contentColor = LocalTheme.colors.tetrial
+            containerColor = LocalTheme.current.colors.brandMainDark,
+            contentColor = LocalTheme.current.colors.tetrial
         ) {
             Text(
                 modifier = Modifier.height(400.dp),

@@ -45,7 +45,6 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.squadris.squadris.compose.components.input.EditFieldInput
 import com.squadris.squadris.compose.theme.LocalTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -66,13 +65,13 @@ fun EditFieldItemPicker(
     onValueChanged: (String) -> Unit,
     hint: String,
     enabled: Boolean = true,
-    textStyle: TextStyle = LocalTheme.styles.subheading
+    textStyle: TextStyle = LocalTheme.current.styles.subheading
 ) {
     val listShape = RoundedCornerShape(
         topStart = 0.dp,
-        topEnd = LocalTheme.shapes.componentCornerRadius,
-        bottomStart = LocalTheme.shapes.componentCornerRadius,
-        bottomEnd = LocalTheme.shapes.componentCornerRadius
+        topEnd = LocalTheme.current.shapes.componentCornerRadius,
+        bottomStart = LocalTheme.current.shapes.componentCornerRadius,
+        bottomEnd = LocalTheme.current.shapes.componentCornerRadius
     )
     val coroutineScope = rememberCoroutineScope()
     val localDensity = LocalDensity.current
@@ -164,7 +163,7 @@ fun EditFieldItemPicker(
             LazyColumn(
                 modifier = Modifier
                     .background(
-                        color = LocalTheme.colors.backgroundLight,
+                        color = LocalTheme.current.colors.backgroundLight,
                         shape = listShape
                     )
                     .fillMaxWidth(0.5f)
@@ -176,7 +175,7 @@ fun EditFieldItemPicker(
                             HorizontalDivider(
                                 modifier = Modifier.padding(horizontal = 12.dp),
                                 thickness = 1.dp,
-                                color = LocalTheme.colors.backgroundLight
+                                color = LocalTheme.current.colors.backgroundLight
                             )
                         }
                         Text(
@@ -195,13 +194,13 @@ fun EditFieldItemPicker(
                             text = name,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
-                            style = LocalTheme.styles.category
+                            style = LocalTheme.current.styles.category
                         )
                         if(filteredValues.value.lastIndex != index) {
                             HorizontalDivider(
                                 modifier = Modifier.padding(horizontal = 12.dp),
                                 thickness = 1.dp,
-                                color = LocalTheme.colors.secondary
+                                color = LocalTheme.current.colors.secondary
                             )
                         }
                     }
@@ -228,17 +227,17 @@ private fun AddMoreRow(onClick: () -> Unit) {
             )
             .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(LocalTheme.shapes.betweenItemsSpace)
+        horizontalArrangement = Arrangement.spacedBy(LocalTheme.current.shapes.betweenItemsSpace)
     ) {
         Icon(
             modifier = Modifier.sizeIn(minHeight = 24.dp, minWidth = 24.dp),
             imageVector = Icons.Outlined.Add,
             contentDescription = null,
-            tint = LocalTheme.colors.primary
+            tint = LocalTheme.current.colors.primary
         )
         Text(
             text = stringResource(R.string.edit_field_item_picked_create),
-            style = LocalTheme.styles.category
+            style = LocalTheme.current.styles.category
         )
     }
 }

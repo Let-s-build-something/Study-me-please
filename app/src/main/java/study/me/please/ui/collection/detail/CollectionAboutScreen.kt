@@ -22,7 +22,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
-import com.squadris.squadris.compose.components.input.EditFieldInput
+import study.me.please.ui.components.EditFieldInput
 import com.squadris.squadris.compose.theme.LocalTheme
 import com.squadris.squadris.ext.brandShimmerEffect
 import com.squadris.squadris.utils.OnLifecycleEvent
@@ -185,14 +185,14 @@ private fun ShimmerLayout(modifier: Modifier = Modifier) {
                 .height(70.dp)
                 .padding(top = 16.dp, start = 12.dp, end = 12.dp)
                 .fillMaxWidth()
-                .brandShimmerEffect(LocalTheme.shapes.componentShape)
+                .brandShimmerEffect(LocalTheme.current.shapes.componentShape)
         )
         Box(
             modifier = Modifier
                 .height(160.dp)
                 .padding(top = 8.dp, start = 12.dp, end = 12.dp)
                 .fillMaxWidth()
-                .brandShimmerEffect(LocalTheme.shapes.componentShape)
+                .brandShimmerEffect(LocalTheme.current.shapes.componentShape)
         )
         Spacer(modifier = Modifier.height(32.dp))
     }

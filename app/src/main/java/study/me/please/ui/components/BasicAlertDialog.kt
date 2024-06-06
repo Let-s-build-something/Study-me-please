@@ -42,14 +42,14 @@ fun BasicAlertDialog(
                     Icon(
                         imageVector = icon,
                         contentDescription = "",
-                        tint = LocalTheme.colors.secondary
+                        tint = LocalTheme.current.colors.secondary
                     )
                     Text(
                         text = title,
                         style = TextStyle(
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Medium,
-                            color = LocalTheme.colors.primary
+                            color = LocalTheme.current.colors.primary
                         )
                     )
                 }
@@ -61,7 +61,7 @@ fun BasicAlertDialog(
                     text = content,
                     style = TextStyle(
                         fontSize = 16.sp,
-                        color = LocalTheme.colors.primary
+                        color = LocalTheme.current.colors.primary
                     )
                 )
                 extraContent?.invoke()
@@ -79,7 +79,7 @@ fun BasicAlertDialog(
                         onDismissRequest()
                     },
                     enabled = confirmButtonState.enabled,
-                    activeColor = LocalTheme.colors.brandMain
+                    activeColor = LocalTheme.current.colors.brandMain
                 )
             }
         },
@@ -92,11 +92,11 @@ fun BasicAlertDialog(
                         onDismissRequest()
                     },
                     enabled = dismissButtonState.enabled,
-                    activeColor = LocalTheme.colors.secondary
+                    activeColor = LocalTheme.current.colors.secondary
                 )
             }
         },
-        containerColor = LocalTheme.colors.onBackgroundComponent,
+        containerColor = LocalTheme.current.colors.onBackgroundComponent,
         properties = properties
     )
 }

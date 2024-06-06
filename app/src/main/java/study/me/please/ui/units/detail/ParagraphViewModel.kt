@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import study.me.please.base.BaseViewModel
+import com.squadris.squadris.compose.base.BaseViewModel
 import study.me.please.data.io.subjects.ParagraphIO
 import javax.inject.Inject
 

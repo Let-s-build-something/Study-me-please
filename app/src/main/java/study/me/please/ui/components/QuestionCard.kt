@@ -30,7 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
-import com.squadris.squadris.compose.components.DEFAULT_ANIMATION_LENGTH_SHORT
+import com.squadris.squadris.compose.components.chips.DEFAULT_ANIMATION_LENGTH_SHORT
 import com.squadris.squadris.compose.theme.LocalTheme
 import study.me.please.data.io.QuestionIO
 
@@ -76,7 +76,7 @@ private fun ContentLayout(
         modifier = modifier
             .fillMaxWidth()
             .wrapContentHeight()
-            .clip(LocalTheme.shapes.componentShape)
+            .clip(LocalTheme.current.shapes.componentShape)
             .combinedClickable(
                 interactionSource = remember {
                     MutableInteractionSource()
@@ -89,11 +89,11 @@ private fun ContentLayout(
                     state.isChecked.value = true
                 }
             ),
-        elevation = LocalTheme.styles.cardClickableElevation,
-        shape = LocalTheme.shapes.componentShape,
+        elevation = LocalTheme.current.styles.cardClickableElevation,
+        shape = LocalTheme.current.shapes.componentShape,
         colors = CardDefaults.cardColors(
-            containerColor = LocalTheme.colors.onBackgroundComponent,
-            contentColor = LocalTheme.colors.onBackgroundComponent
+            containerColor = LocalTheme.current.colors.onBackgroundComponent,
+            contentColor = LocalTheme.current.colors.onBackgroundComponent
         )
     ) {
         Crossfade(
@@ -155,7 +155,7 @@ private fun DataCard(
                 onCheckedChange = { isChecked ->
                     state.isChecked.value = isChecked
                 },
-                colors = LocalTheme.styles.checkBoxColorsDefault
+                colors = LocalTheme.current.styles.checkBoxColorsDefault
             )
         }
         val answerModifier = Modifier
@@ -182,7 +182,7 @@ private fun DataCard(
             text = data.prompt,
             fontSize = 16.sp,
             fontWeight = FontWeight.Medium,
-            color = LocalTheme.colors.secondary,
+            color = LocalTheme.current.colors.secondary,
             maxLines = 3,
             overflow = TextOverflow.Ellipsis
         )
@@ -190,7 +190,7 @@ private fun DataCard(
             modifier = explanationModifier,
             text = data.textExplanation,
             fontSize = 14.sp,
-            color = LocalTheme.colors.secondary,
+            color = LocalTheme.current.colors.secondary,
             maxLines = 5,
             overflow = TextOverflow.Ellipsis
         )

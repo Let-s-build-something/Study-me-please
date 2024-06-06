@@ -47,16 +47,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImagePainter
-import com.squadris.squadris.compose.components.input.EditFieldInput
+import study.me.please.ui.components.EditFieldInput
 import com.squadris.squadris.compose.theme.LocalTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import study.me.please.R
-import study.me.please.base.LocalNavController
-import study.me.please.base.navigation.ActionBarIcon
-import study.me.please.base.navigation.NavIconType
+import com.squadris.squadris.compose.base.LocalNavController
+import com.squadris.squadris.compose.components.navigation.ActionBarIcon
+import com.squadris.squadris.compose.components.navigation.NavIconType
 import study.me.please.base.navigation.NavigationRoot
 import study.me.please.data.io.FactType
 import study.me.please.data.io.LargePathAsset
@@ -75,8 +75,8 @@ import study.me.please.ui.components.ListItemEditField
 import study.me.please.ui.components.OptionsLayout
 import study.me.please.ui.components.QuestionAnswerCard
 import study.me.please.ui.components.TextHeader
-import study.me.please.ui.components.collapsing_layout.CollapsingBehavior
-import study.me.please.ui.components.collapsing_layout.CollapsingLayout
+import com.squadris.squadris.compose.components.collapsing_layout.CollapsingBehavior
+import com.squadris.squadris.compose.components.collapsing_layout.CollapsingLayout
 import study.me.please.ui.components.pull_refresh.PullRefreshScreen
 
 /** Main communication bridge for question detail */
@@ -386,7 +386,7 @@ fun QuestionDetailScreen(
                                 .horizontalScroll(rememberScrollState())
                                 .padding(8.dp),
                             horizontalArrangement = Arrangement.spacedBy(
-                                LocalTheme.shapes.betweenItemsSpace
+                                LocalTheme.current.shapes.betweenItemsSpace
                             )
                         ) {
                             if(imagePromptUrl.value == null) {
@@ -436,7 +436,7 @@ fun QuestionDetailScreen(
                                 .horizontalScroll(rememberScrollState())
                                 .padding(8.dp),
                             horizontalArrangement = Arrangement.spacedBy(
-                                LocalTheme.shapes.betweenItemsSpace
+                                LocalTheme.current.shapes.betweenItemsSpace
                             )
                         ) {
                             if(imageExplanationUrl.value == null) {
@@ -462,10 +462,10 @@ fun QuestionDetailScreen(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .wrapContentHeight()
-                                        .padding(horizontal = LocalTheme.shapes.betweenItemsSpace)
+                                        .padding(horizontal = LocalTheme.current.shapes.betweenItemsSpace)
                                         .zIndex(10f),
                                     horizontalArrangement = Arrangement.spacedBy(
-                                        LocalTheme.shapes.betweenItemsSpace
+                                        LocalTheme.current.shapes.betweenItemsSpace
                                     )
                                 ) {
                                     BrandHeaderButton(

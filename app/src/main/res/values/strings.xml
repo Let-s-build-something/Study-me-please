@@ -12,9 +12,6 @@
     <string name="screen_collection_detail_new">New collection</string>
     <string name="screen_questions">Questions</string>
     <string name="screen_collection_about">About</string>
-    <string name="navigate_back">Back</string>
-    <string name="navigate_close">Close</string>
-    <string name="navigate_hamburger_menu">Menu</string>
 
     <string name="home_screen_collections_empty_action">Let\'s start collecting</string>
     <string name="home_screen_sessions_empty_action">Time to practice</string>

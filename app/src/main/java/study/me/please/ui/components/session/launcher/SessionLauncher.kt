@@ -46,12 +46,12 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
-import com.squadris.squadris.compose.components.DEFAULT_ANIMATION_LENGTH_SHORT
+import com.squadris.squadris.compose.components.chips.DEFAULT_ANIMATION_LENGTH_SHORT
 import com.squadris.squadris.compose.theme.LocalTheme
 import com.squadris.squadris.utils.OnLifecycleEvent
 import kotlinx.coroutines.launch
 import study.me.please.R
-import study.me.please.base.LocalNavController
+import com.squadris.squadris.compose.base.LocalNavController
 import study.me.please.base.navigation.NavigationRoot
 import study.me.please.ui.components.ImageAction
 import study.me.please.ui.components.InteractiveCardMode
@@ -169,13 +169,13 @@ fun SessionLauncher(
                         modifier = Modifier
                             .fillMaxWidth()
                             .wrapContentHeight(),
-                        verticalArrangement = Arrangement.spacedBy(LocalTheme.shapes.betweenItemsSpace)
+                        verticalArrangement = Arrangement.spacedBy(LocalTheme.current.shapes.betweenItemsSpace)
                     ) {
                         item {
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .clip(LocalTheme.shapes.circularActionShape)
+                                    .clip(LocalTheme.current.shapes.circularActionShape)
                                     .clickable {
                                         navController?.navigate(
                                             NavigationRoot.SessionDetail.createRoute(
@@ -196,7 +196,7 @@ fun SessionLauncher(
                                         .padding(8.dp),
                                     painter = rememberVectorPainter(image = Icons.Outlined.Add),
                                     contentDescription = null,
-                                    colorFilter = ColorFilter.tint(color = LocalTheme.colors.secondary)
+                                    colorFilter = ColorFilter.tint(color = LocalTheme.current.colors.secondary)
                                 )
                                 LineButton(
                                     modifier = Modifier
@@ -205,7 +205,7 @@ fun SessionLauncher(
                                     text = AnnotatedString(
                                         stringResource(R.string.session_launcher_new)
                                     ),
-                                    textStyle = LocalTheme.styles.menuItem.copy(color = LocalTheme.colors.secondary)
+                                    textStyle = LocalTheme.current.styles.menuItem.copy(color = LocalTheme.current.colors.secondary)
                                 )
                             }
                         }

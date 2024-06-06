@@ -4,7 +4,7 @@ import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.asStateFlow
-import study.me.please.base.BaseViewModel
+import com.squadris.squadris.compose.base.BaseViewModel
 import study.me.please.data.shared.SharedDataManager
 import javax.inject.Inject
 

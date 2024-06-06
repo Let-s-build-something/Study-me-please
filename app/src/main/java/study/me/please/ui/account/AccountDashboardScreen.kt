@@ -17,11 +17,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import com.squadris.squadris.compose.base.LocalNavController
+import com.squadris.squadris.compose.components.navigation.NavIconType
 import com.squadris.squadris.compose.theme.LocalTheme
 import study.me.please.R
 import study.me.please.base.BrandBaseScreen
-import study.me.please.base.LocalNavController
-import study.me.please.base.navigation.NavIconType
 import study.me.please.ui.components.ErrorHeaderButton
 
 /**
@@ -44,7 +44,11 @@ fun AccountDashboardScreen(
         subtitle = currentUser.value?.displayName,
         navIconType = NavIconType.HOME,
     ) {
-        Column(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+        ) {
             AsyncImage(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -56,12 +60,10 @@ fun AccountDashboardScreen(
                 modifier = Modifier
                     .padding(start = 8.dp, end = 8.dp, bottom = 8.dp)
                     .background(
-                        color = LocalTheme.colors.onBackgroundComponent,
-                        shape = LocalTheme.shapes.componentShape
+                        color = LocalTheme.current.colors.onBackgroundComponent,
+                        shape = LocalTheme.current.shapes.componentShape
                     )
-                    .fillMaxSize()
-                    .padding(vertical = 8.dp)
-                    .verticalScroll(rememberScrollState()),
+                    .padding(vertical = 8.dp),
                 verticalArrangement = Arrangement.Bottom
             ) {
                 ErrorHeaderButton(

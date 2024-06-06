@@ -13,7 +13,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import study.me.please.R
 import study.me.please.base.BrandBaseScreen
-import study.me.please.base.navigation.NavIconType
+import com.squadris.squadris.compose.components.navigation.NavIconType
 import study.me.please.ui.components.SwitchText
 
 /**

@@ -42,8 +42,8 @@ fun OutlinedButton(
     enabled: Boolean = true,
     trailingIcon: ImageVector? = null,
     content: @Composable RowScope.(TextStyle) -> Unit = {},
-    activeColor: Color = LocalTheme.colors.primary,
-    inactiveColor: Color = LocalTheme.colors.secondary,
+    activeColor: Color = LocalTheme.current.colors.primary,
+    inactiveColor: Color = LocalTheme.current.colors.secondary,
     onClick: () -> Unit
 ) {
     val color = if (isActivated && enabled) activeColor else inactiveColor
@@ -51,10 +51,10 @@ fun OutlinedButton(
         modifier = modifier
             .border(
                 width = if (enabled) 1.dp else 0.dp,
-                shape = LocalTheme.shapes.componentShape,
+                shape = LocalTheme.current.shapes.componentShape,
                 color = color
             )
-            .clip(LocalTheme.shapes.componentShape)
+            .clip(LocalTheme.current.shapes.componentShape)
             .clickable(
                 enabled = enabled,
                 indication = rememberRipple(bounded = false),
@@ -105,7 +105,7 @@ fun OutlinedButton(
 private fun Preview() {
     Row(
         modifier = Modifier
-            .background(LocalTheme.colors.backgroundLight)
+            .background(LocalTheme.current.colors.backgroundLight)
             .padding(16.dp)
     ) {
         val activated = true
@@ -114,8 +114,8 @@ private fun Preview() {
             isActivated = activated,
             trailingIcon = if(activated) Icons.Outlined.Check else Icons.Outlined.Close,
             onClick = {},
-            activeColor = LocalTheme.colors.disabled,
-            inactiveColor = LocalTheme.colors.secondary,
+            activeColor = LocalTheme.current.colors.disabled,
+            inactiveColor = LocalTheme.current.colors.secondary,
         )
     }
 }

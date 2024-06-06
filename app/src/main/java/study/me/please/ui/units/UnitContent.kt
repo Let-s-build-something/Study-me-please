@@ -54,15 +54,15 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.squadris.squadris.compose.components.FILTER_DELAY_DEFAULT
-import com.squadris.squadris.compose.components.input.EditFieldInput
+import com.squadris.squadris.compose.components.chips.FILTER_DELAY_DEFAULT
+import study.me.please.ui.components.EditFieldInput
 import com.squadris.squadris.compose.theme.LocalTheme
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import study.me.please.R
-import study.me.please.base.LocalIsTablet
+import com.squadris.squadris.compose.base.LocalIsTablet
 import study.me.please.data.io.FactIO
 import study.me.please.data.io.FactType
 import study.me.please.data.io.UnitElement
@@ -427,7 +427,7 @@ fun UnitContent(
                             .padding(start = 12.dp)
                             .widthIn(min = TextFieldDefaults.MinWidth)
                             .height(with(localDensity) {
-                                LocalTheme.styles.heading.fontSize.value.sp
+                                LocalTheme.current.styles.heading.fontSize.value.sp
                                     .toDp()
                                     .times(lineCount.intValue)
                                     .plus(16.dp)
@@ -436,7 +436,7 @@ fun UnitContent(
                         onTextLayout = { result ->
                             lineCount.intValue = result.lineCount
                         },
-                        textStyle = LocalTheme.styles.heading,
+                        textStyle = LocalTheme.current.styles.heading,
                         isUnfocusedTransparent = true,
                         hint = stringResource(id = R.string.unit_heading_prefix),
                         maxLines = 4,

@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -17,7 +16,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.squadris.squadris.compose.theme.LocalTheme
-import com.squadris.squadris.compose.theme.StudyMeAppTheme
+import study.me.please.base.theme.AppTheme
 
 /** combination of a multiline text and a switch, must be subscribed to a state data */
 @Composable
@@ -38,7 +37,7 @@ fun SwitchText(
                 .fillMaxWidth()
                 .weight(1f),
             text = text,
-            color = LocalTheme.colors.secondary,
+            color = LocalTheme.current.colors.secondary,
             fontSize = 16.sp
         )
         Switch(
@@ -47,7 +46,7 @@ fun SwitchText(
                 .wrapContentWidth(),
             checked = isChecked,
             onCheckedChange = onCheckChanged,
-            colors = LocalTheme.styles.switchColorsDefault
+            colors = LocalTheme.current.styles.switchColorsDefault
         )
     }
 }
@@ -55,10 +54,10 @@ fun SwitchText(
 @Preview
 @Composable
 private fun Preview() {
-    StudyMeAppTheme(isDarkTheme = true) {
+    AppTheme(isDarkTheme = true) {
         Column(
             modifier = Modifier
-                .background(color = LocalTheme.colors.backgroundLight)
+                .background(color = LocalTheme.current.colors.backgroundLight)
         ) {
             SwitchText(
                 text = "switch text",

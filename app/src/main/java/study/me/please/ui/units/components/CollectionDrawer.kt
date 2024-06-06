@@ -49,11 +49,11 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.squadris.squadris.compose.components.MinimalisticIcon
-import com.squadris.squadris.compose.components.input.EditFieldInput
+import study.me.please.ui.components.EditFieldInput
 import com.squadris.squadris.compose.theme.Colors
 import com.squadris.squadris.compose.theme.LocalTheme
 import study.me.please.R
-import study.me.please.base.LocalIsTablet
+import com.squadris.squadris.compose.base.LocalIsTablet
 import study.me.please.data.io.subjects.ParagraphIO
 import study.me.please.ui.components.BasicAlertDialog
 import study.me.please.ui.components.ButtonState
@@ -169,11 +169,11 @@ fun CollectionDrawer(
                     localFocusManager.clearFocus()
                 })
             },
-        elevation = LocalTheme.styles.cardClickableElevation,
+        elevation = LocalTheme.current.styles.cardClickableElevation,
         shape = RectangleShape,//LocalTheme.shapes.componentShape,
         colors = CardDefaults.cardColors(
-            containerColor = LocalTheme.colors.onBackgroundComponent,
-            contentColor = LocalTheme.colors.onBackgroundComponent
+            containerColor = LocalTheme.current.colors.onBackgroundComponent,
+            contentColor = LocalTheme.current.colors.onBackgroundComponent
         )
     ) {
         LazyColumn(
@@ -189,7 +189,7 @@ fun CollectionDrawer(
                 ) {
                     Text(
                         text = stringResource(R.string.units_overview),
-                        style = LocalTheme.styles.subheading
+                        style = LocalTheme.current.styles.subheading
                     )
                     MinimalisticIcon(
                         imageVector = Icons.Outlined.Close,
@@ -233,7 +233,7 @@ fun CollectionDrawer(
                                 state.isExpanded.value = false
                             },
                             text = stringResource(R.string.units_create_new),
-                            textStyle = LocalTheme.styles.menuItem.copy(color = LocalTheme.colors.secondary)
+                            textStyle = LocalTheme.current.styles.menuItem.copy(color = LocalTheme.current.colors.secondary)
                         )
                     }
                 }
@@ -255,7 +255,7 @@ fun CollectionDrawer(
                                     }
                                 }
                             },
-                            colors = LocalTheme.styles.checkBoxColorsDefault
+                            colors = LocalTheme.current.styles.checkBoxColorsDefault
                         )
                     }
                     ExpandableContent(
@@ -339,7 +339,7 @@ private fun DashboardChildParagraph(
                     )
                     .padding(8.dp),
                 text = nestedParagraph.name,
-                style = LocalTheme.styles.category
+                style = LocalTheme.current.styles.category
             )
         }else {
             val isExpanded = remember(paragraph.uid) {
@@ -368,7 +368,7 @@ private fun DashboardChildParagraph(
                     nestedParagraph.name.ifEmpty { stringResource(R.string.subject_add_paragraph) }
                 ),
                 collapsedPadding = 8.dp,
-                textStyle = LocalTheme.styles.category,
+                textStyle = LocalTheme.current.styles.category,
                 isExpanded = isExpanded.value
             ) {
                 DashboardChildParagraph(

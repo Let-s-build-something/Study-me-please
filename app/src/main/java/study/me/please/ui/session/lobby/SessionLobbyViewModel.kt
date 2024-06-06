@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import study.me.please.base.BaseViewModel
+import com.squadris.squadris.compose.base.BaseViewModel
 import study.me.please.data.io.session.SessionIO
 import study.me.please.data.io.preferences.SessionPreferencePack
 import study.me.please.ui.collection.RefreshableViewModel

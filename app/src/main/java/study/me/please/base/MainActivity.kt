@@ -14,14 +14,18 @@ import androidx.compose.runtime.remember
 import androidx.core.view.WindowCompat
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
+import com.squadris.squadris.compose.base.BaseSnackbarHost
+import com.squadris.squadris.compose.base.LocalActivity
+import com.squadris.squadris.compose.base.LocalIsTablet
+import com.squadris.squadris.compose.base.LocalNavController
+import com.squadris.squadris.compose.base.LocalSnackbarHost
 import com.squadris.squadris.compose.theme.LocalTheme
-import com.squadris.squadris.compose.theme.StudyMeAppTheme
 import com.squadris.squadris.ext.isTablet
 import dagger.hilt.android.AndroidEntryPoint
 import study.me.please.base.navigation.NavigationNode.Companion.composableNode
 import study.me.please.base.navigation.NavigationRoot
+import study.me.please.base.theme.AppTheme
 import study.me.please.data.shared.SharedViewModel
-import study.me.please.ui.session.play.SessionScreen
 import study.me.please.hilt.SharedPreferencesModule
 import study.me.please.ui.account.AccountDashboardScreen
 import study.me.please.ui.collection.CollectionLobbyScreen
@@ -31,6 +35,7 @@ import study.me.please.ui.collection.detail.questions.detail.QuestionDetailScree
 import study.me.please.ui.home.HomeScreen
 import study.me.please.ui.session.detail.SessionDetailScreen
 import study.me.please.ui.session.lobby.SessionLobbyScreen
+import study.me.please.ui.session.play.SessionScreen
 import study.me.please.ui.settings.SettingsScreen
 import study.me.please.ui.sign_up.SignUpScreen
 import study.me.please.ui.units.CollectionDetailScreen
@@ -64,14 +69,15 @@ class MainActivity: ComponentActivity(), BackboneChannel {
             ) }
             val snackbarHostState = remember { SnackbarHostState() }
 
-            Scaffold(
-                snackbarHost = {
-                    BaseSnackbarHost(hostState = snackbarHostState)
-                },
-                containerColor = LocalTheme.colors.brandMainDark,
-                contentColor = LocalTheme.colors.brandMainDark
-            ) { _ ->
-                StudyMeAppTheme(isDarkTheme = isDarkTheme.value) {
+            AppTheme(isDarkTheme = isDarkTheme.value) {
+                Scaffold(
+                    snackbarHost = {
+                        BaseSnackbarHost(hostState = snackbarHostState)
+                    },
+                    containerColor = LocalTheme.current.colors.brandMainDark,
+                    contentColor = LocalTheme.current.colors.brandMainDark
+                ) { _ ->
+
                     val navController = rememberNavController()
                     val isTablet = isTablet(activity = this)
 

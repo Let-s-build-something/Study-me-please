@@ -48,15 +48,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImagePainter
-import com.squadris.squadris.compose.components.DEFAULT_ANIMATION_LENGTH_SHORT
+import com.squadris.squadris.compose.components.chips.DEFAULT_ANIMATION_LENGTH_SHORT
 import com.squadris.squadris.compose.components.MinimalisticIcon
-import com.squadris.squadris.compose.components.input.EditFieldInput
 import com.squadris.squadris.compose.theme.LocalTheme
-import com.squadris.squadris.compose.theme.StudyMeAppTheme
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import study.me.please.R
+import study.me.please.base.theme.AppTheme
 import study.me.please.data.io.FactIO
 import study.me.please.data.io.FactType
 import study.me.please.data.io.LargePathAsset
@@ -116,7 +115,7 @@ private fun ContentLayout(
         modifier = modifier
             .fillMaxWidth()
             .wrapContentHeight()
-            .clip(LocalTheme.shapes.componentShape),
+            .clip(LocalTheme.current.shapes.componentShape),
         thenModifier = thenModifier,
         mode = mode,
         highlight = highlight,
@@ -199,8 +198,8 @@ private fun DataCard(
             .then(
                 if (showBackground && mode == InteractiveCardMode.DATA_DISPLAY) {
                     Modifier.background(
-                        color = LocalTheme.colors.onBackgroundComponentContrast,
-                        shape = LocalTheme.shapes.componentShape
+                        color = LocalTheme.current.colors.onBackgroundComponentContrast,
+                        shape = LocalTheme.current.shapes.componentShape
                     )
                 } else Modifier
             )
@@ -217,7 +216,7 @@ private fun DataCard(
             AnimatedVisibility(visible = isInEdit) {
                 MinimalisticIcon(
                     imageVector = Icons.Outlined.Close,
-                    tint = LocalTheme.colors.secondary,
+                    tint = LocalTheme.current.colors.secondary,
                     onClick = onClick
                 )
             }
@@ -235,7 +234,7 @@ private fun DataCard(
                         .padding(bottom = 2.dp, start = 4.dp),
                     text = stringResource(id = selectedFactType.value.getStringRes()),
                     fontSize = 16.sp,
-                    color = LocalTheme.colors.secondary,
+                    color = LocalTheme.current.colors.secondary,
                     textAlign = TextAlign.Left
                 )
                 MultiChoiceSwitch(
@@ -287,7 +286,7 @@ private fun DataCard(
                             value = data.shortKeyInformation,
                             hint = stringResource(selectedFactType.value.getShortHintStringRes()),
                             textStyle = TextStyle(
-                                color = LocalTheme.colors.primary,
+                                color = LocalTheme.current.colors.primary,
                                 fontSize = 18.sp,
                                 textAlign = TextAlign.Start,
                                 fontStyle = if(selectedFactType.value == FactType.QUOTE) FontStyle.Italic else FontStyle.Normal
@@ -318,7 +317,7 @@ private fun DataCard(
                                         ),
                                         style = TextStyle(
                                             fontSize = 18.sp,
-                                            color = LocalTheme.colors.primary,
+                                            color = LocalTheme.current.colors.primary,
                                             fontStyle = FontStyle.Italic
                                         ),
                                         maxLines = if(isReadOnly) Int.MAX_VALUE else 2,
@@ -334,7 +333,7 @@ private fun DataCard(
                                     ),
                                     style = TextStyle(
                                         fontSize = 18.sp,
-                                        color = LocalTheme.colors.primary
+                                        color = LocalTheme.current.colors.primary
                                     ),
                                     maxLines = if(isReadOnly) Int.MAX_VALUE else 3,
                                     overflow = TextOverflow.Ellipsis
@@ -349,7 +348,7 @@ private fun DataCard(
             ) {
                 MinimalisticIcon(
                     imageVector = Icons.Outlined.Edit,
-                    tint = LocalTheme.colors.secondary,
+                    tint = LocalTheme.current.colors.secondary,
                     onClick = onClick
                 )
             }
@@ -419,7 +418,7 @@ private fun DataCard(
                                                 highlight = highlight ?: "",
                                                 text = listItem
                                             ),
-                                            textStyle = LocalTheme.styles.category,
+                                            textStyle = LocalTheme.current.styles.category,
                                             maxLines = if(isReadOnly) Int.MAX_VALUE else 5,
                                             overflow = TextOverflow.Ellipsis,
                                             prefix = if(listItem.isNotEmpty()) "-" else null
@@ -511,7 +510,7 @@ private fun DataCard(
                     }else {
                         BulletPoint(
                             text = data.longInformation,
-                            textStyle = LocalTheme.styles.category,
+                            textStyle = LocalTheme.current.styles.category,
                             maxLines = if(isReadOnly) Int.MAX_VALUE else 5,
                             overflow = TextOverflow.Ellipsis,
                             prefix = if(data.longInformation.isNotEmpty()) "-" else null
@@ -575,7 +574,7 @@ private fun QuoteIcon() {
         modifier = Modifier.size(24.dp),
         imageVector = Icons.Outlined.FormatQuote,
         contentDescription = null,
-        tint = LocalTheme.colors.brandMain
+        tint = LocalTheme.current.colors.brandMain
     )
 }
 
@@ -583,8 +582,8 @@ private fun QuoteIcon() {
 @Preview(showBackground = true)
 @Composable
 private fun Preview() {
-    StudyMeAppTheme(isDarkTheme = true) {
-        Box(modifier = Modifier.background(LocalTheme.colors.backgroundLight)) {
+    AppTheme(isDarkTheme = true) {
+        Box(modifier = Modifier.background(LocalTheme.current.colors.backgroundLight)) {
             FactCard(
                 data = FactIO(
                     shortKeyInformation = "short key information",

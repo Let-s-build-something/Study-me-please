@@ -40,11 +40,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
-import com.squadris.squadris.compose.components.ChipState
-import com.squadris.squadris.compose.components.CustomChipGroup
-import com.squadris.squadris.compose.components.CustomChipType
-import com.squadris.squadris.compose.components.DEFAULT_ANIMATION_LENGTH_SHORT
-import com.squadris.squadris.compose.components.rememberCustomChipGroupState
+import com.squadris.squadris.compose.components.chips.ChipState
+import com.squadris.squadris.compose.components.chips.CustomChipGroup
+import com.squadris.squadris.compose.components.chips.CustomChipType
+import com.squadris.squadris.compose.components.chips.DEFAULT_ANIMATION_LENGTH_SHORT
+import com.squadris.squadris.compose.components.chips.rememberCustomChipGroupState
 import com.squadris.squadris.compose.theme.LocalTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancelChildren
@@ -52,7 +52,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import study.me.please.R
-import study.me.please.base.LocalNavController
+import com.squadris.squadris.compose.base.LocalNavController
 import study.me.please.base.navigation.NavigationRoot
 import study.me.please.data.io.QuestionIO
 import study.me.please.ui.collection.EmptyLayout
@@ -65,7 +65,7 @@ import study.me.please.ui.components.ImageAction
 import study.me.please.ui.components.InteractiveCardMode
 import study.me.please.ui.components.OptionsLayout
 import study.me.please.ui.components.QuestionCard
-import study.me.please.ui.components.ScrollBarProgressIndicator
+import com.squadris.squadris.compose.components.ScrollBarProgressIndicator
 import study.me.please.ui.components.rememberInteractiveCardState
 import study.me.please.ui.components.session.launcher.SessionLauncher
 
@@ -385,7 +385,7 @@ fun QuestionsList(
                         controller.openQuestion(question)
                     }
                 )
-                Spacer(modifier = Modifier.height(LocalTheme.shapes.betweenItemsSpace))
+                Spacer(modifier = Modifier.height(LocalTheme.current.shapes.betweenItemsSpace))
             }
         }
     }

@@ -83,7 +83,7 @@ private fun ShimmerLayout(modifier: Modifier = Modifier) {
                     .height(70.dp)
                     .padding(top = 8.dp, start = 12.dp, end = 12.dp)
                     .fillMaxWidth()
-                    .brandShimmerEffect(LocalTheme.shapes.componentShape)
+                    .brandShimmerEffect(LocalTheme.current.shapes.componentShape)
             )
         }
         Spacer(modifier = Modifier.height(32.dp))

@@ -25,7 +25,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.zIndex
-import com.squadris.squadris.compose.components.DEFAULT_ANIMATION_LENGTH_SHORT
+import com.squadris.squadris.compose.components.chips.DEFAULT_ANIMATION_LENGTH_SHORT
 import com.squadris.squadris.compose.theme.Colors
 import com.squadris.squadris.compose.theme.LocalTheme
 import study.me.please.R
@@ -56,7 +56,7 @@ fun OptionsLayout(
             .horizontalScroll(rememberScrollState())
             .zIndex(-1f),
         horizontalArrangement = Arrangement.spacedBy(
-            LocalTheme.shapes.betweenItemsSpace
+            LocalTheme.current.shapes.betweenItemsSpace
         )
     ) {
         AnimatedVisibility(
@@ -96,7 +96,7 @@ fun OptionsLayout(
                     .wrapContentWidth()
                     .wrapContentHeight(),
                 horizontalArrangement = Arrangement.spacedBy(
-                    LocalTheme.shapes.betweenItemsSpace
+                    LocalTheme.current.shapes.betweenItemsSpace
                 )
             ) {
                 ImageAction(
@@ -127,6 +127,6 @@ fun OptionsLayout(
             }
         }
         content(this)
-        Spacer(modifier = Modifier.width(LocalTheme.shapes.betweenItemsSpace))
+        Spacer(modifier = Modifier.width(LocalTheme.current.shapes.betweenItemsSpace))
     }
 }

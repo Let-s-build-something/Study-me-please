@@ -54,9 +54,8 @@ import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import coil.compose.AsyncImagePainter
-import com.squadris.squadris.compose.components.DEFAULT_ANIMATION_LENGTH_SHORT
+import com.squadris.squadris.compose.components.chips.DEFAULT_ANIMATION_LENGTH_SHORT
 import com.squadris.squadris.compose.components.MinimalisticIcon
-import com.squadris.squadris.compose.components.input.EditFieldInput
 import com.squadris.squadris.compose.theme.LocalTheme
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.delay
@@ -120,7 +119,7 @@ private fun ContentLayout(
         modifier = modifier
             .fillMaxWidth()
             .wrapContentHeight()
-            .clip(LocalTheme.shapes.componentShape)
+            .clip(LocalTheme.current.shapes.componentShape)
             .combinedClickable(
                 interactionSource = remember {
                     MutableInteractionSource()
@@ -131,11 +130,11 @@ private fun ContentLayout(
                 onClick = onClick,
                 onLongClick = onLongClick
             ),
-        elevation = LocalTheme.styles.cardClickableElevation,
-        shape = LocalTheme.shapes.componentShape,
+        elevation = LocalTheme.current.styles.cardClickableElevation,
+        shape = LocalTheme.current.shapes.componentShape,
         colors = CardDefaults.cardColors(
-            containerColor = LocalTheme.colors.onBackgroundComponentContrast,
-            contentColor = LocalTheme.colors.onBackgroundComponentContrast
+            containerColor = LocalTheme.current.colors.onBackgroundComponentContrast,
+            contentColor = LocalTheme.current.colors.onBackgroundComponentContrast
         )
     ) {
         DataCard(
@@ -191,7 +190,7 @@ private fun DataCard(
                 onCheckedChange = { isChecked ->
                     state.isChecked.value = isChecked
                 },
-                colors = LocalTheme.styles.checkBoxColorsDefault
+                colors = LocalTheme.current.styles.checkBoxColorsDefault
             )
         }
         val rightIconActionModifier = Modifier
@@ -274,7 +273,7 @@ private fun DataCard(
                     }else R.string.answer_field_content_header
                 ),
                 fontSize = 12.sp,
-                color = LocalTheme.colors.secondary
+                color = LocalTheme.current.colors.secondary
             )
             Crossfade(
                 targetState = isListType.value,
@@ -371,7 +370,7 @@ private fun DataCard(
                             Text(
                                 text = data.text,
                                 fontSize = 18.sp,
-                                color = LocalTheme.colors.primary,
+                                color = LocalTheme.current.colors.primary,
                                 maxLines = 3,
                                 overflow = TextOverflow.Ellipsis
                             )
@@ -393,7 +392,7 @@ private fun DataCard(
             Text(
                 text = stringResource(id = R.string.answer_field_explanation_header),
                 fontSize = 12.sp,
-                color = LocalTheme.colors.secondary
+                color = LocalTheme.current.colors.secondary
             )
         }
         Crossfade(
@@ -434,7 +433,7 @@ private fun DataCard(
                     modifier = Modifier.fillMaxWidth(),
                     text = data.explanationMessage,
                     fontSize = 16.sp,
-                    color = LocalTheme.colors.secondary,
+                    color = LocalTheme.current.colors.secondary,
                     maxLines = 5,
                     overflow = TextOverflow.Ellipsis
                 )

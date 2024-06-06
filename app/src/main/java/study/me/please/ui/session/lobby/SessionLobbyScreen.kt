@@ -42,7 +42,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
-import com.squadris.squadris.compose.components.DEFAULT_ANIMATION_LENGTH_SHORT
+import com.squadris.squadris.compose.components.chips.DEFAULT_ANIMATION_LENGTH_SHORT
 import com.squadris.squadris.compose.theme.Colors
 import com.squadris.squadris.compose.theme.LocalTheme
 import com.squadris.squadris.ext.brandShimmerEffect
@@ -50,7 +50,7 @@ import com.squadris.squadris.utils.OnLifecycleEvent
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import study.me.please.R
-import study.me.please.base.LocalNavController
+import com.squadris.squadris.compose.base.LocalNavController
 import study.me.please.base.navigation.NavigationRoot
 import study.me.please.base.navigation.SessionLobbyBarActions
 import study.me.please.data.io.preferences.SessionPreferencePack
@@ -283,14 +283,14 @@ fun SessionLobbyScreen(
                         modifier = Modifier.fillMaxSize(),
                         state = rememberLazyListState(),
                         verticalArrangement = Arrangement.spacedBy(
-                            LocalTheme.shapes.betweenItemsSpace
+                            LocalTheme.current.shapes.betweenItemsSpace
                         )
                     ) {
                         stickyHeader {
                             ComponentHeaderButton(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(top = LocalTheme.shapes.betweenItemsSpace),
+                                    .padding(top = LocalTheme.current.shapes.betweenItemsSpace),
                                 text = stringResource(id = R.string.home_screen_sessions_empty_action)
                             ) {
                                 listener.onCreateNewItem()
@@ -344,23 +344,23 @@ fun EditableListShimmerLayout(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier.fillMaxSize()
     ) {
-        Spacer(modifier = Modifier.height(LocalTheme.shapes.betweenItemsSpace))
+        Spacer(modifier = Modifier.height(LocalTheme.current.shapes.betweenItemsSpace))
         repeat(3) {
             Box(
                 modifier = Modifier
                     .height(70.dp)
                     .padding(start = 4.dp, end = 4.dp)
                     .fillMaxWidth()
-                    .brandShimmerEffect(LocalTheme.shapes.componentShape)
+                    .brandShimmerEffect(LocalTheme.current.shapes.componentShape)
             )
-            Spacer(modifier = Modifier.height(LocalTheme.shapes.betweenItemsSpace))
+            Spacer(modifier = Modifier.height(LocalTheme.current.shapes.betweenItemsSpace))
         }
         Box(
             modifier = Modifier
                 .height(55.dp)
                 .padding(start = 4.dp, end = 4.dp)
                 .fillMaxWidth()
-                .brandShimmerEffect(LocalTheme.shapes.componentShape)
+                .brandShimmerEffect(LocalTheme.current.shapes.componentShape)
         )
     }
 }

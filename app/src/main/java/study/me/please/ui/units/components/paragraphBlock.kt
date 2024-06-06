@@ -211,7 +211,7 @@ fun LazyGridScope.paragraphBlock(
                             ),
                             isExpanded = collapsedParagraphs.value.contains(paragraph.uid).not(),
                             shape = if(element.layer >= 0) RoundedCornerShape(
-                                topStart = LocalTheme.shapes.componentCornerRadius
+                                topStart = LocalTheme.current.shapes.componentCornerRadius
                             ) else RectangleShape,
                             collapsedContent = {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -242,7 +242,7 @@ fun LazyGridScope.paragraphBlock(
                                             text = paragraph.name
                                         ),
                                         hint = stringResource(R.string.subject_categorize_paragraph),
-                                        textStyle = LocalTheme.styles.subheading,
+                                        textStyle = LocalTheme.current.styles.subheading,
                                         onValueChanged = { output ->
                                             paragraph.name = output
                                             activatedParent.value = paragraph.uid
@@ -277,7 +277,7 @@ fun LazyGridScope.paragraphBlock(
                                     .fillMaxWidth()
                             ) {
                                 AnimatedVisibility(visible = activatedParent.value == paragraph.uid) {
-                                    HorizontalDivider(color = LocalTheme.colors.brandMainDark)
+                                    HorizontalDivider(color = LocalTheme.current.colors.brandMainDark)
                                 }
                                 Spacer(modifier = Modifier.height(8.dp))
 
@@ -477,20 +477,20 @@ fun LazyGridScope.paragraphBlock(
                                         when {
                                             element.data.facts.size > 0 -> {
                                                 Modifier.background(
-                                                    color = LocalTheme.colors.onBackgroundComponent,
+                                                    color = LocalTheme.current.colors.onBackgroundComponent,
                                                     shape = RoundedCornerShape(
-                                                        topStart = LocalTheme.shapes.componentCornerRadius,
-                                                        topEnd = LocalTheme.shapes.componentCornerRadius
+                                                        topStart = LocalTheme.current.shapes.componentCornerRadius,
+                                                        topEnd = LocalTheme.current.shapes.componentCornerRadius
                                                     )
                                                 )
                                             }
                                             element.isNested -> {
                                                 Modifier.background(
-                                                    color = LocalTheme.colors.onBackgroundComponent,
+                                                    color = LocalTheme.current.colors.onBackgroundComponent,
                                                     shape = if(element.isLast) {
                                                         RoundedCornerShape(
-                                                            bottomStart = LocalTheme.shapes.componentCornerRadius,
-                                                            bottomEnd = LocalTheme.shapes.componentCornerRadius
+                                                            bottomStart = LocalTheme.current.shapes.componentCornerRadius,
+                                                            bottomEnd = LocalTheme.current.shapes.componentCornerRadius
                                                         )
                                                     }else RectangleShape
                                                 )
@@ -505,8 +505,8 @@ fun LazyGridScope.paragraphBlock(
                                         if (activatedParent.value == fact.uid) {
                                             Modifier.border(
                                                 width = 0.75.dp,
-                                                color = LocalTheme.colors.brandMain,
-                                                shape = LocalTheme.shapes.componentShape
+                                                color = LocalTheme.current.colors.brandMain,
+                                                shape = LocalTheme.current.shapes.componentShape
                                             )
                                         } else Modifier
                                     )
@@ -515,8 +515,8 @@ fun LazyGridScope.paragraphBlock(
                                         if (dragAndDropTarget.value == fact.uid) {
                                             Modifier.border(
                                                 width = 1.5.dp,
-                                                color = LocalTheme.colors.brandMain,
-                                                shape = LocalTheme.shapes.componentShape
+                                                color = LocalTheme.current.colors.brandMain,
+                                                shape = LocalTheme.current.shapes.componentShape
                                             )
                                         } else Modifier
                                     ),
@@ -549,7 +549,7 @@ fun LazyGridScope.paragraphBlock(
                                     .fillMaxWidth()
                                     .height(64.dp)
                                     .background(
-                                        color = LocalTheme.colors.brandMain,
+                                        color = LocalTheme.current.colors.brandMain,
                                     )
                             )
                         }

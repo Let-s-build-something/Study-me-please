@@ -23,7 +23,7 @@ fun TextHeader(
             .padding(top = 8.dp, start = 8.dp, bottom = 2.dp),
         text = text,
         fontSize = 16.sp,
-        color = LocalTheme.colors.secondary,
+        color = LocalTheme.current.colors.secondary,
         fontWeight = FontWeight.Bold
     )
 }

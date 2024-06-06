@@ -40,9 +40,9 @@ import androidx.lifecycle.Lifecycle
 import com.squadris.squadris.compose.theme.LocalTheme
 import com.squadris.squadris.utils.OnLifecycleEvent
 import study.me.please.R
-import study.me.please.base.LocalActivity
-import study.me.please.base.LocalNavController
-import study.me.please.base.navigation.NavIconType
+import com.squadris.squadris.compose.base.LocalActivity
+import com.squadris.squadris.compose.base.LocalNavController
+import com.squadris.squadris.compose.components.navigation.NavIconType
 import study.me.please.base.navigation.NavigationRoot
 import study.me.please.data.io.CollectionIO
 import study.me.please.data.io.session.SessionIO
@@ -145,7 +145,7 @@ fun HomeScreen(
                     }
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(
-                    LocalTheme.shapes.betweenItemsSpace
+                    LocalTheme.current.shapes.betweenItemsSpace
                 )
             ) {
                 CollectionsRow(
@@ -229,7 +229,7 @@ private fun CollectionsRow(
         modifier = Modifier
             .padding(top = 10.dp, start = 8.dp),
         text = stringResource(id = R.string.screen_collection_title),
-        activeColor = LocalTheme.colors.secondary,
+        activeColor = LocalTheme.current.colors.secondary,
         onClick = {
             onNavigationToLobby(false)
         }
@@ -296,7 +296,7 @@ private fun SessionsRow(
         modifier = Modifier
             .padding(top = 16.dp, start = 8.dp),
         text = stringResource(id = R.string.screen_session_lobby_title),
-        activeColor = LocalTheme.colors.secondary,
+        activeColor = LocalTheme.current.colors.secondary,
         onClick = {
             onNavigationToLobby()
         }
@@ -311,7 +311,7 @@ private fun SessionsRow(
     }else {
         LazyRow(
             horizontalArrangement = Arrangement.spacedBy(
-                LocalTheme.shapes.betweenItemsSpace
+                LocalTheme.current.shapes.betweenItemsSpace
             )
         ) {
             item {
@@ -358,7 +358,7 @@ private fun EmptyElement(
     ) {
         Text(
             text = emptyText,
-            color = LocalTheme.colors.primary,
+            color = LocalTheme.current.colors.primary,
             fontSize = 16.sp
         )
         ImageAction(

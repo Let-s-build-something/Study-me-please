@@ -3,7 +3,6 @@ package study.me.please.ui.components
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.BottomSheetScaffoldState
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -52,13 +51,13 @@ fun SimpleBottomSheet(
         topBar = topBar,
         sheetContentColor = Color.Transparent,
         sheetShape = RoundedCornerShape(
-            topStart = LocalTheme.shapes.componentCornerRadius,
-            topEnd = LocalTheme.shapes.componentCornerRadius
+            topStart = LocalTheme.current.shapes.componentCornerRadius,
+            topEnd = LocalTheme.current.shapes.componentCornerRadius
         ),
-        sheetContainerColor = LocalTheme.colors.onBackgroundComponent,
+        sheetContainerColor = LocalTheme.current.colors.onBackgroundComponent,
         sheetDragHandle = {},
         containerColor = Color.Transparent,
-        sheetShadowElevation = LocalTheme.styles.actionElevation,
-        sheetTonalElevation = LocalTheme.styles.actionElevation
+        sheetShadowElevation = LocalTheme.current.styles.actionElevation,
+        sheetTonalElevation = LocalTheme.current.styles.actionElevation
     )
 }

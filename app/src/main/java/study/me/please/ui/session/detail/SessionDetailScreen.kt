@@ -46,14 +46,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
-import com.squadris.squadris.compose.components.DEFAULT_ANIMATION_LENGTH_SHORT
-import com.squadris.squadris.compose.components.input.EditFieldInput
+import com.squadris.squadris.compose.components.chips.DEFAULT_ANIMATION_LENGTH_SHORT
+import study.me.please.ui.components.EditFieldInput
 import com.squadris.squadris.compose.theme.LocalTheme
 import com.squadris.squadris.ext.brandShimmerEffect
 import com.squadris.squadris.utils.OnLifecycleEvent
 import study.me.please.R
-import study.me.please.base.LocalNavController
-import study.me.please.base.navigation.ActionBarIcon
+import com.squadris.squadris.compose.base.LocalNavController
+import com.squadris.squadris.compose.components.navigation.ActionBarIcon
 import study.me.please.base.navigation.NavigationRoot
 import study.me.please.data.io.CollectionIO
 import study.me.please.data.io.preferences.SessionPreferencePack
@@ -259,13 +259,13 @@ private fun ContentLayout(
                 bottom = 0.dp
             )
             .shadow(
-                elevation = LocalTheme.styles.componentElevation,
-                shape = LocalTheme.shapes.componentShape,
+                elevation = LocalTheme.current.styles.componentElevation,
+                shape = LocalTheme.current.shapes.componentShape,
                 clip = true
             )
             .background(
-                color = LocalTheme.colors.onBackgroundComponent,
-                shape = LocalTheme.shapes.componentShape
+                color = LocalTheme.current.colors.onBackgroundComponent,
+                shape = LocalTheme.current.shapes.componentShape
             )
             .fillMaxWidth()
             .wrapContentHeight()
@@ -274,10 +274,10 @@ private fun ContentLayout(
     ) {
         val rowModifier = Modifier
             .padding(vertical = 12.dp)
-            .clip(LocalTheme.shapes.componentShape)
+            .clip(LocalTheme.current.shapes.componentShape)
             .background(
-                color = LocalTheme.colors.onBackgroundComponentContrast,
-                shape = LocalTheme.shapes.componentShape
+                color = LocalTheme.current.colors.onBackgroundComponentContrast,
+                shape = LocalTheme.current.shapes.componentShape
             )
 
         // name
@@ -296,7 +296,7 @@ private fun ContentLayout(
                 StatisticsTable(
                     modifier = rowModifier.fillMaxWidth(),
                     questionModule = module,
-                    backgroundColor = LocalTheme.colors.onBackgroundComponentContrast
+                    backgroundColor = LocalTheme.current.colors.onBackgroundComponentContrast
                 )
             }
         }
@@ -333,7 +333,7 @@ private fun ContentLayout(
                 .zIndex(1f),
             state = rememberLazyListState(),
             horizontalArrangement = Arrangement.spacedBy(
-                LocalTheme.shapes.betweenItemsSpace
+                LocalTheme.current.shapes.betweenItemsSpace
             ),
             contentPadding = PaddingValues(vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically
@@ -410,7 +410,7 @@ private fun ContentLayout(
                 .zIndex(1f),
             state = rememberLazyListState(),
             horizontalArrangement = Arrangement.spacedBy(
-                LocalTheme.shapes.betweenItemsSpace
+                LocalTheme.current.shapes.betweenItemsSpace
             ),
             contentPadding = PaddingValues(vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically
@@ -509,8 +509,8 @@ private fun ShimmerLayout(modifier: Modifier = Modifier) {
             .fillMaxWidth()
             .verticalScroll(rememberScrollState())
             .background(
-                LocalTheme.colors.onBackgroundComponent,
-                shape = LocalTheme.shapes.componentShape
+                LocalTheme.current.colors.onBackgroundComponent,
+                shape = LocalTheme.current.shapes.componentShape
             )
             .padding(start = 4.dp, end = 4.dp, top = 8.dp, bottom = 32.dp)
     ) {
@@ -519,21 +519,21 @@ private fun ShimmerLayout(modifier: Modifier = Modifier) {
                 .height(60.dp)
                 .padding(top = 16.dp, start = 4.dp, end = 4.dp)
                 .fillMaxWidth()
-                .brandShimmerEffect(LocalTheme.shapes.componentShape)
+                .brandShimmerEffect(LocalTheme.current.shapes.componentShape)
         )
         Box(
             modifier = Modifier
                 .height(100.dp)
                 .padding(top = 8.dp, start = 4.dp, end = 4.dp)
                 .fillMaxWidth()
-                .brandShimmerEffect(LocalTheme.shapes.componentShape)
+                .brandShimmerEffect(LocalTheme.current.shapes.componentShape)
         )
         Box(
             modifier = Modifier
                 .height(55.dp)
                 .padding(top = 24.dp, start = 4.dp, end = 4.dp)
                 .fillMaxWidth()
-                .brandShimmerEffect(LocalTheme.shapes.componentShape)
+                .brandShimmerEffect(LocalTheme.current.shapes.componentShape)
         )
         Spacer(modifier = Modifier.height(32.dp))
         repeat(5) {
@@ -542,7 +542,7 @@ private fun ShimmerLayout(modifier: Modifier = Modifier) {
                     .height(40.dp)
                     .padding(top = 8.dp, start = 4.dp, end = 4.dp)
                     .fillMaxWidth()
-                    .brandShimmerEffect(LocalTheme.shapes.componentShape)
+                    .brandShimmerEffect(LocalTheme.current.shapes.componentShape)
             )
         }
     }

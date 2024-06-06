@@ -29,8 +29,8 @@ import coil.compose.AsyncImage
 import com.squadris.squadris.compose.theme.LocalTheme
 import study.me.please.R
 import study.me.please.base.BrandBaseScreen
-import study.me.please.base.LocalNavController
-import study.me.please.base.navigation.NavIconType
+import com.squadris.squadris.compose.base.LocalNavController
+import com.squadris.squadris.compose.components.navigation.NavIconType
 
 /** screen for sign up (registration) */
 @Composable
@@ -88,8 +88,8 @@ private fun SignUpContent(
                 .fillMaxWidth()
                 .wrapContentHeight()
                 .background(
-                    color = LocalTheme.colors.onBackgroundComponent,
-                    shape = LocalTheme.shapes.componentShape
+                    color = LocalTheme.current.colors.onBackgroundComponent,
+                    shape = LocalTheme.current.shapes.componentShape
                 )
                 .padding(vertical = 12.dp, horizontal = 8.dp),
             horizontalArrangement = Arrangement.Center
@@ -105,7 +105,7 @@ private fun SignUpContent(
                             context = context
                         )
                     },
-                painter = painterResource(LocalTheme.icons.googleSignUp),
+                painter = painterResource(LocalTheme.current.icons.googleSignUp),
                 contentDescription = null
             )
         }

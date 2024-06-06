@@ -2,9 +2,7 @@ package study.me.please.ui.components
 
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.systemBars
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
@@ -46,12 +44,12 @@ fun SimpleModalBottomSheet(
         onDismissRequest = onDismissRequest,
         content = content,
         sheetState = sheetState,
-        containerColor = LocalTheme.colors.onBackgroundComponent,
+        containerColor = LocalTheme.current.colors.onBackgroundComponent,
         shape = RoundedCornerShape(
-            topStart = LocalTheme.shapes.componentCornerRadius,
-            topEnd = LocalTheme.shapes.componentCornerRadius
+            topStart = LocalTheme.current.shapes.componentCornerRadius,
+            topEnd = LocalTheme.current.shapes.componentCornerRadius
         ),
-        tonalElevation = LocalTheme.styles.actionElevation,
+        tonalElevation = LocalTheme.current.styles.actionElevation,
         dragHandle = {  },
         windowInsets = windowInsets
     )

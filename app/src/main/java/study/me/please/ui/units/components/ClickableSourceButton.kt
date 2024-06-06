@@ -32,14 +32,14 @@ fun ClickableSourceButton(
                 }
             )
             .shadow(
-                elevation = LocalTheme.styles.actionElevation,
+                elevation = LocalTheme.current.styles.actionElevation,
                 shape = FloatingActionButtonDefaults.shape
             )
     ) {
         Box(
             modifier = Modifier
                 .background(
-                    color = LocalTheme.colors.tetrial,
+                    color = LocalTheme.current.colors.tetrial,
                     shape = FloatingActionButtonDefaults.shape
                 )
             ,
@@ -50,7 +50,7 @@ fun ClickableSourceButton(
                     .size(56.dp)
                     .padding(12.dp),
                 imageVector = imageVector,
-                tint = LocalTheme.colors.brandMainDark,
+                tint = LocalTheme.current.colors.brandMainDark,
                 contentDescription = contentDescription
             )
         }

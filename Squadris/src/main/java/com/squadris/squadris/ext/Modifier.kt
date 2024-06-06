@@ -77,8 +77,8 @@ fun Modifier.brandShimmerEffect(
     shape: Shape = RoundedCornerShape(8.dp)
 ): Modifier = composed {
     shimmerEffect(
-        stripeColor = LocalTheme.colors.overShimmer,
-        startEndColor = LocalTheme.colors.shimmer,
+        stripeColor = LocalTheme.current.colors.overShimmer,
+        startEndColor = LocalTheme.current.colors.shimmer,
         shape = shape
     )
 }

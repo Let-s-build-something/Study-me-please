@@ -55,9 +55,9 @@ import com.squadris.squadris.compose.theme.Colors
 import com.squadris.squadris.compose.theme.LocalTheme
 import kotlinx.coroutines.launch
 import study.me.please.R
-import study.me.please.base.LocalNavController
-import study.me.please.base.LocalSnackbarHost
-import study.me.please.base.navigation.NavIconType
+import com.squadris.squadris.compose.base.LocalNavController
+import com.squadris.squadris.compose.base.LocalSnackbarHost
+import com.squadris.squadris.compose.components.navigation.NavIconType
 import study.me.please.data.io.ImportSourceType
 import study.me.please.data.io.LargePathAsset
 import study.me.please.data.io.QuestionAnswerIO
@@ -70,7 +70,7 @@ import study.me.please.data.state.session.SessionScreenState
 import study.me.please.ui.components.BulletPoint
 import study.me.please.ui.components.ComponentHeaderButton
 import study.me.please.ui.components.EditableImageAsset
-import study.me.please.ui.components.HtmlClickableText
+import com.squadris.squadris.compose.components.HtmlClickableText
 import study.me.please.ui.components.OutlinedButton
 import study.me.please.ui.units.detail.ParagraphLayoutContainer
 
@@ -157,8 +157,8 @@ fun PromptLayout(
                 ) {
                     FloatingActionButton(
                         modifier = Modifier.padding(bottom = 8.dp),
-                        containerColor = LocalTheme.colors.tetrial,
-                        contentColor = LocalTheme.colors.brandMain,
+                        containerColor = LocalTheme.current.colors.tetrial,
+                        contentColor = LocalTheme.current.colors.brandMain,
                         onClick = {
                             stepForward()
                         }
@@ -178,7 +178,7 @@ fun PromptLayout(
         }
     ) {
         val promptStyle = TextStyle(
-            color = LocalTheme.colors.primary,
+            color = LocalTheme.current.colors.primary,
             fontWeight = FontWeight.Medium,
             fontSize = 22.sp
         )
@@ -238,7 +238,7 @@ fun PromptLayout(
                         style = promptStyle,
                         maxLines = 100,
                         softWrap = true,
-                        linkStyle = LocalTheme.styles.linkText.copy(
+                        linkStyle = LocalTheme.current.styles.linkText.copy(
                             fontSize = promptStyle.fontSize,
                             fontWeight = promptStyle.fontWeight
                         ),
@@ -269,7 +269,7 @@ fun PromptLayout(
                         Text(
                             modifier = Modifier.fillMaxWidth(),
                             text = question?.textExplanation ?: "",
-                            color = LocalTheme.colors.secondary,
+                            color = LocalTheme.current.colors.secondary,
                             fontSize = 14.sp
                         )
                     }
@@ -348,7 +348,7 @@ fun PromptLayout(
                                 color = if(validation?.isCorrect == true) {
                                     Colors.GREEN_CORRECT
                                 }else Colors.RED_ERROR,
-                                shape = LocalTheme.shapes.componentShape
+                                shape = LocalTheme.current.shapes.componentShape
                             )
                     }else Modifier)
                         .fillMaxWidth(),
@@ -394,8 +394,8 @@ fun PromptLayout(
                             }
                         }
                     },
-                    activeColor = if(showResult) Color.White else LocalTheme.colors.primary,
-                    inactiveColor = if(showResult) Color.White else LocalTheme.colors.secondary
+                    activeColor = if(showResult) Color.White else LocalTheme.current.colors.primary,
+                    inactiveColor = if(showResult) Color.White else LocalTheme.current.colors.secondary
                 )
                 if(screenMode == SessionScreenMode.LOCKED) {
                     Column(
@@ -413,7 +413,7 @@ fun PromptLayout(
                                         .padding(vertical = 2.dp),
                                     text = text,
                                     textStyle = TextStyle(
-                                        color = LocalTheme.colors.secondary,
+                                        color = LocalTheme.current.colors.secondary,
                                         fontSize = 12.sp
                                     )
                                 )
@@ -426,7 +426,7 @@ fun PromptLayout(
                                     start = 24.dp
                                 ),
                                 text = answer.explanationMessage,
-                                color = LocalTheme.colors.secondary,
+                                color = LocalTheme.current.colors.secondary,
                                 fontSize = 12.sp
                             )
                         }
@@ -457,7 +457,7 @@ fun PromptLayout(
 @Preview
 @Composable
 private fun PromptPreview() {
-    Box(modifier = Modifier.background(LocalTheme.colors.backgroundLight)) {
+    Box(modifier = Modifier.background(LocalTheme.current.colors.backgroundLight)) {
         val question = QuestionIO(
             prompt = "Some random prompt",
             promptList = listOf(

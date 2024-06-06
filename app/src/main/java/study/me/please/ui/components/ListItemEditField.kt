@@ -28,7 +28,6 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
-import com.squadris.squadris.compose.components.input.EditFieldInput
 import com.squadris.squadris.compose.theme.LocalTheme
 import study.me.please.R
 
@@ -61,7 +60,7 @@ fun ListItemEditField(
             .wrapContentWidth()
             .animateContentSize()
             .heightIn(min = with(localDensity) {
-                LocalTheme.styles.category.fontSize
+                LocalTheme.current.styles.category.fontSize
                     .toDp()
                     .plus(10.dp)
             })
@@ -71,7 +70,7 @@ fun ListItemEditField(
             }
             .height(
                 with(localDensity) {
-                    LocalTheme.styles.category.fontSize
+                    LocalTheme.current.styles.category.fontSize
                         .toDp()
                         .plus(1.5.dp)
                         .times(fieldLineCount)
@@ -93,11 +92,11 @@ fun ListItemEditField(
             ) {
                 Text(
                     text = prefix,
-                    style = LocalTheme.styles.category
+                    style = LocalTheme.current.styles.category
                 )
             }
         },
-        textStyle = LocalTheme.styles.category,
+        textStyle = LocalTheme.current.styles.category,
         isUnfocusedTransparent = true,
         minLines = 1,
         maxLines = maxLines,

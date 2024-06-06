@@ -23,7 +23,7 @@ fun BulletPoint(
     overflow: TextOverflow = TextOverflow.Clip,
     softWrap: Boolean = true,
     maxLines: Int = Int.MAX_VALUE,
-    textStyle: TextStyle = LocalTheme.styles.category,
+    textStyle: TextStyle = LocalTheme.current.styles.category,
 ) {
     Row(
         modifier = modifier.padding(vertical = 2.dp),
@@ -55,7 +55,7 @@ fun BulletPoint(
     overflow: TextOverflow = TextOverflow.Clip,
     softWrap: Boolean = true,
     maxLines: Int = Int.MAX_VALUE,
-    textStyle: TextStyle = LocalTheme.styles.category,
+    textStyle: TextStyle = LocalTheme.current.styles.category,
 ) {
     BulletPoint(
         modifier = modifier,

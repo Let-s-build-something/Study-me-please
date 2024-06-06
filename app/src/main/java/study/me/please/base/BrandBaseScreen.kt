@@ -7,13 +7,15 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.squadris.squadris.compose.theme.LocalTheme
+import com.squadris.squadris.compose.base.BaseScreen
+import com.squadris.squadris.compose.base.LocalNavController
+import com.squadris.squadris.compose.components.collapsing_layout.CollapsingLayoutState
+import com.squadris.squadris.compose.components.collapsing_layout.rememberCollapsingLayout
+import com.squadris.squadris.compose.components.navigation.NavIconType
 import study.me.please.base.navigation.DefaultAppBarActions
-import study.me.please.base.navigation.NavIconType
 import study.me.please.base.navigation.NavigationRoot
+import com.squadris.squadris.compose.theme.LocalTheme
 import study.me.please.data.shared.SharedViewModel
-import study.me.please.ui.components.collapsing_layout.CollapsingLayoutState
-import study.me.please.ui.components.collapsing_layout.rememberCollapsingLayout
 
 /**
  * Most simple screen for implementing bussiness level logic
@@ -30,7 +32,7 @@ fun BrandBaseScreen(
     onNavigationIconClick: (() -> Unit)? = null,
     contentModifier: Modifier = Modifier,
     appBarVisible: Boolean = true,
-    containerColor: Color? = LocalTheme.colors.backgroundLight,
+    containerColor: Color? = LocalTheme.current.colors.backgroundLight,
     contentColor: Color = Color.Transparent,
     floatingActionButtonPosition: FabPosition = FabPosition.End,
     floatingActionButton: @Composable () -> Unit = {},

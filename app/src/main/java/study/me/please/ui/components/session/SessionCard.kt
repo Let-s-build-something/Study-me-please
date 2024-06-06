@@ -72,7 +72,7 @@ fun SessionCard(
             Card(
                 modifier = modifier
                     .wrapContentHeight()
-                    .clip(LocalTheme.shapes.componentShape)
+                    .clip(LocalTheme.current.shapes.componentShape)
                     .combinedClickable(
                         interactionSource = remember {
                             MutableInteractionSource()
@@ -90,11 +90,11 @@ fun SessionCard(
                         },
                         enabled = state.isEnabled.value
                     ),
-                elevation = LocalTheme.styles.cardClickableElevation,
-                shape = LocalTheme.shapes.componentShape,
+                elevation = LocalTheme.current.styles.cardClickableElevation,
+                shape = LocalTheme.current.shapes.componentShape,
                 colors = CardDefaults.cardColors(
-                    containerColor = LocalTheme.colors.onBackgroundComponent,
-                    contentColor = LocalTheme.colors.onBackgroundComponent
+                    containerColor = LocalTheme.current.colors.onBackgroundComponent,
+                    contentColor = LocalTheme.current.colors.onBackgroundComponent
                 )
             ) {
                 AnimatedContent(
@@ -150,27 +150,27 @@ private fun ContentLayout(
                     onCheckedChange = { isChecked ->
                         state.isChecked.value = isChecked
                     },
-                    colors = LocalTheme.styles.checkBoxColorsDefault
+                    colors = LocalTheme.current.styles.checkBoxColorsDefault
                 )
             }
             Image(
                 modifier = Modifier
-                    .size(LocalTheme.shapes.iconSizeMedium)
+                    .size(LocalTheme.current.shapes.iconSizeMedium)
                     .background(
-                        color = LocalTheme.colors.brandMain,
-                        shape = LocalTheme.shapes.circularActionShape
+                        color = LocalTheme.current.colors.brandMain,
+                        shape = LocalTheme.current.shapes.circularActionShape
                     )
                     .padding(8.dp),
                 imageVector = (session.estimatedMode ?: QuestionMode.LEARNING).icon,
                 contentDescription = (session.estimatedMode ?: QuestionMode.LEARNING).icon.name,
-                colorFilter = ColorFilter.tint(color = LocalTheme.colors.tetrial)
+                colorFilter = ColorFilter.tint(color = LocalTheme.current.colors.tetrial)
             )
             Text(
                 modifier = Modifier
                     .padding(start = 8.dp, end = 4.dp)
                     .fillMaxWidth(),
                 text = session.name,
-                color = LocalTheme.colors.primary,
+                color = LocalTheme.current.colors.primary,
                 fontSize = 18.sp,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
@@ -202,7 +202,7 @@ private fun ShimmerLayout(
         modifier = modifier
             .fillMaxWidth()
             .wrapContentHeight()
-            .brandShimmerEffect(shape = LocalTheme.shapes.componentShape)
+            .brandShimmerEffect(shape = LocalTheme.current.shapes.componentShape)
     )
 }
 

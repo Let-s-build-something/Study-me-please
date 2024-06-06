@@ -48,9 +48,9 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
-import com.squadris.squadris.compose.components.DEFAULT_ANIMATION_LENGTH_LONG
-import com.squadris.squadris.compose.components.DEFAULT_ANIMATION_LENGTH_SHORT
-import com.squadris.squadris.compose.components.input.EditFieldInput
+import com.squadris.squadris.compose.components.chips.DEFAULT_ANIMATION_LENGTH_LONG
+import com.squadris.squadris.compose.components.chips.DEFAULT_ANIMATION_LENGTH_SHORT
+import study.me.please.ui.components.EditFieldInput
 import com.squadris.squadris.compose.components.MinimalisticIcon
 import com.squadris.squadris.compose.theme.Colors
 import com.squadris.squadris.compose.theme.LocalTheme
@@ -59,7 +59,7 @@ import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import study.me.please.R
-import study.me.please.base.navigation.ActionBarIcon
+import com.squadris.squadris.compose.components.navigation.ActionBarIcon
 import study.me.please.data.io.QuestionMode
 import study.me.please.data.io.preferences.SessionPreferencePack
 import study.me.please.ui.collection.detail.REQUEST_DATA_SAVE_DELAY
@@ -184,10 +184,10 @@ fun PreferenceChooser(
                         linkTo(parent.start, parent.end)
                         width = Dimension.fillToConstraints
                     }
-                    .clip(LocalTheme.shapes.componentShape)
+                    .clip(LocalTheme.current.shapes.componentShape)
                     .background(
-                        color = LocalTheme.colors.brandMain,
-                        shape = LocalTheme.shapes.componentShape
+                        color = LocalTheme.current.colors.brandMain,
+                        shape = LocalTheme.current.shapes.componentShape
                     ),
                 horizontalArrangement = Arrangement.spacedBy(4.dp),
                 contentPadding = PaddingValues(4.dp)
@@ -219,8 +219,8 @@ fun PreferenceChooser(
                             Modifier
                                 .border(
                                     width = 1.dp,
-                                    color = LocalTheme.colors.tetrial,
-                                    shape =  LocalTheme.shapes.rectangularActionShape
+                                    color = LocalTheme.current.colors.tetrial,
+                                    shape =  LocalTheme.current.shapes.rectangularActionShape
                                 )
                         } else Modifier)
                             .animateItemPlacement(
@@ -247,7 +247,7 @@ fun PreferenceChooser(
                             width = Dimension.fillToConstraints
                         }
                         .zIndex(1f)
-                        .clip(LocalTheme.shapes.componentShape)
+                        .clip(LocalTheme.current.shapes.componentShape)
                         .clickable(
                             indication = rememberRipple(),
                             interactionSource = remember { MutableInteractionSource() }
@@ -263,7 +263,7 @@ fun PreferenceChooser(
                             R.string.preference_chooser_preferences_hide
                         }else R.string.preference_chooser_preferences_show
                     ),
-                    color = LocalTheme.colors.secondary,
+                    color = LocalTheme.current.colors.secondary,
                     fontSize = 14.sp
                 )
                 Icon(
@@ -276,7 +276,7 @@ fun PreferenceChooser(
                         .padding(4.dp)
                         .rotate(expandRotationState),
                     imageVector = Icons.Outlined.KeyboardArrowDown,
-                    tint = LocalTheme.colors.secondary,
+                    tint = LocalTheme.current.colors.secondary,
                     contentDescription = null
                 )
                 if(preferencesShown.value) {
@@ -444,7 +444,7 @@ private fun Preview() {
     PreferenceChooser(
         modifier = Modifier
             .background(
-                color = LocalTheme.colors.onBackgroundComponent,
+                color = LocalTheme.current.colors.onBackgroundComponent,
                 shape = RoundedCornerShape(8.dp)
             ),
         preferencePacks = mutableListOf(),

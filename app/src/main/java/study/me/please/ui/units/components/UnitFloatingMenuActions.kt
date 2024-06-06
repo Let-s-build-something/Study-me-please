@@ -317,7 +317,7 @@ fun UnitFloatingMenuActions(
                     Column(
                         modifier = Modifier
                             .offset(y = WindowInsets.systemBars.getBottom(LocalDensity.current).dp)
-                            .background(LocalTheme.colors.onBackgroundComponent)
+                            .background(LocalTheme.current.colors.onBackgroundComponent)
                     ) {
                         Row(
                             modifier = Modifier
@@ -329,18 +329,18 @@ fun UnitFloatingMenuActions(
                             Text(
                                 modifier = Modifier.weight(1f),
                                 text = stringResource(R.string.accessibility_clipboard),
-                                style = LocalTheme.styles.subheading
+                                style = LocalTheme.current.styles.subheading
                             )
                             MinimalisticIcon(
                                 imageVector = Icons.Outlined.Delete,
-                                tint = LocalTheme.colors.secondary,
+                                tint = LocalTheme.current.colors.secondary,
                                 onClick = {
                                     showClearClipboardDialog.value = true
                                 }
                             )
                             MinimalisticIcon(
                                 imageVector = Icons.Outlined.Close,
-                                tint = LocalTheme.colors.secondary,
+                                tint = LocalTheme.current.colors.secondary,
                                 onClick = {
                                     unitActionType.value = DEFAULT
                                 }

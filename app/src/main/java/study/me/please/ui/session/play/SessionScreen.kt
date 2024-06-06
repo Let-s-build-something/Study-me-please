@@ -42,8 +42,8 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import study.me.please.R
 import study.me.please.base.BrandBaseScreen
-import study.me.please.base.LocalNavController
-import study.me.please.base.navigation.NavIconType
+import com.squadris.squadris.compose.base.LocalNavController
+import com.squadris.squadris.compose.components.navigation.NavIconType
 import study.me.please.base.navigation.SessionAppBarActions
 import study.me.please.data.io.BaseResponse
 import study.me.please.data.io.preferences.SessionPreferencePack
@@ -272,7 +272,7 @@ fun SessionScreen(
                                                 .fillMaxWidth(),
                                             questionModule = sessionState.module
                                         )
-                                        Spacer(modifier = Modifier.height(LocalTheme.shapes.betweenItemsSpace))
+                                        Spacer(modifier = Modifier.height(LocalTheme.current.shapes.betweenItemsSpace))
                                     }
                                     AnimatedVisibility(
                                         modifier = Modifier.padding(vertical = 4.dp),

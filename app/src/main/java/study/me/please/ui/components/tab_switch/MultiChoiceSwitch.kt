@@ -37,11 +37,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
-import com.squadris.squadris.compose.components.DEFAULT_ANIMATION_LENGTH_LONG
-import com.squadris.squadris.compose.components.DEFAULT_ANIMATION_LENGTH_SHORT
+import com.squadris.squadris.compose.components.chips.DEFAULT_ANIMATION_LENGTH_LONG
+import com.squadris.squadris.compose.components.chips.DEFAULT_ANIMATION_LENGTH_SHORT
 import com.squadris.squadris.compose.theme.Colors
 import com.squadris.squadris.compose.theme.LocalTheme
-import com.squadris.squadris.compose.theme.StudyMeAppTheme
+import study.me.please.base.theme.AppTheme
 
 @Composable
 fun MultiChoiceSwitch(
@@ -64,12 +64,12 @@ fun MultiChoiceSwitch(
 
     val shape = CircleShape
 
-    val unselectedTextColor = LocalTheme.colors.brandMain
-    val selectedTextColor = LocalTheme.colors.tetrial
+    val unselectedTextColor = LocalTheme.current.colors.brandMain
+    val selectedTextColor = LocalTheme.current.colors.tetrial
     ConstraintLayout(
         modifier = modifier
             .background(
-                color = LocalTheme.colors.tetrial,
+                color = LocalTheme.current.colors.tetrial,
                 shape = shape
             )
     ) {
@@ -77,11 +77,11 @@ fun MultiChoiceSwitch(
         Box(
             modifier = Modifier
                 .shadow(
-                    elevation = LocalTheme.styles.componentElevation,
+                    elevation = LocalTheme.current.styles.componentElevation,
                     shape = shape
                 )
                 .background(
-                    color = LocalTheme.colors.brandMain,
+                    color = LocalTheme.current.colors.brandMain,
                     shape = shape
                 )
                 .width(indicatorWidth.value)
@@ -118,7 +118,7 @@ fun MultiChoiceSwitch(
                 (onItemCreation ?: { modifier, _, color ->
                     Text(
                         modifier = modifier
-                            .padding(LocalTheme.shapes.betweenItemsSpace)
+                            .padding(LocalTheme.current.shapes.betweenItemsSpace)
                             .clickable(
                                 indication = null,
                                 interactionSource = remember { MutableInteractionSource() }
@@ -155,11 +155,11 @@ fun MultiChoiceSwitch(
 @Preview
 @Composable
 private fun Preview() {
-    StudyMeAppTheme(isDarkTheme = true) {
+    AppTheme(isDarkTheme = true) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(color = LocalTheme.colors.backgroundLight)
+                .background(color = LocalTheme.current.colors.backgroundLight)
         ) {
             MultiChoiceSwitch(
                 modifier = Modifier,
