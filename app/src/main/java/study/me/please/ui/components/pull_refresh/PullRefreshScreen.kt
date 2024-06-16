@@ -17,14 +17,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
-import com.squadris.squadris.compose.components.getDefaultPullRefreshSize
-import study.me.please.base.BrandBaseScreen
-import study.me.please.base.DraggableRefreshIndicator
 import com.squadris.squadris.compose.base.LocalIsTablet
+import com.squadris.squadris.compose.components.DraggableRefreshIndicator
+import com.squadris.squadris.compose.components.collapsing_layout.rememberCollapsingLayout
+import com.squadris.squadris.compose.components.getDefaultPullRefreshSize
 import com.squadris.squadris.compose.components.navigation.AppBarHeightDp
 import com.squadris.squadris.compose.components.navigation.NavIconType
-import study.me.please.ui.collection.RefreshableViewModel
-import com.squadris.squadris.compose.components.collapsing_layout.rememberCollapsingLayout
+import com.squadris.squadris.utils.RefreshableViewModel
+import study.me.please.base.BrandBaseScreen
 
 /**
  * Implementation of the [BrandBaseScreen] with pull to refresh logic

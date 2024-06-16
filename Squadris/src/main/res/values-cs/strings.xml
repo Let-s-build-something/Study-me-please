@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="navigate_home">Domů</string>
+    <string name="navigate_back">Zpět</string>
+    <string name="navigate_close">Zavřít</string>
+    <string name="navigate_hamburger_menu">Menu</string>
+</resources>

@@ -4,7 +4,6 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CardElevation
 import androidx.compose.material3.CheckboxColors
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.SelectableChipColors
 import androidx.compose.material3.SwitchColors
@@ -18,9 +17,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.squadris.squadris.compose.theme.Colors
 import com.squadris.squadris.compose.theme.BaseTheme
 import com.squadris.squadris.compose.theme.LocalTheme
+import com.squadris.squadris.compose.theme.SharedColors
 import com.squadris.squadris.compose.theme.ThemeStyle
 
 /** Styles specific to main app theme [BaseTheme.current] */
@@ -39,8 +38,8 @@ class AppThemeStyle: ThemeStyle {
                 disabledIndicatorColor = Color.Transparent,
                 errorContainerColor = LocalTheme.current.colors.onBackgroundComponentContrast,
                 errorIndicatorColor = Color.Transparent,
-                errorTextColor = Colors.RED_ERROR,
-                errorTrailingIconColor = Colors.RED_ERROR
+                errorTextColor = SharedColors.RED_ERROR,
+                errorTrailingIconColor = SharedColors.RED_ERROR
             )
         }
 
@@ -59,8 +58,8 @@ class AppThemeStyle: ThemeStyle {
                 disabledIndicatorColor = Color.Transparent,
                 errorContainerColor = Color.Transparent,
                 errorIndicatorColor = Color.Transparent,
-                errorTextColor = Colors.RED_ERROR,
-                errorTrailingIconColor = Colors.RED_ERROR,
+                errorTextColor = SharedColors.RED_ERROR,
+                errorTrailingIconColor = SharedColors.RED_ERROR,
                 disabledContainerColor = Color.Transparent,
                 disabledLabelColor = Color.Transparent,
                 disabledPrefixColor = LocalTheme.current.colors.secondary,
@@ -118,7 +117,6 @@ class AppThemeStyle: ThemeStyle {
             selected = false
         )
 
-    @OptIn(ExperimentalMaterial3Api::class)
     override val chipColorsDefault: SelectableChipColors
         @Composable get() = FilterChipDefaults.filterChipColors(
             containerColor = LocalTheme.current.colors.tetrial,

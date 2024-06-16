@@ -53,7 +53,7 @@ import study.me.please.ui.collection.detail.REQUEST_DATA_SAVE_DELAY
 import study.me.please.ui.components.BasicAlertDialog
 import study.me.please.ui.components.ButtonState
 import study.me.please.ui.components.ComponentHeaderButton
-import study.me.please.ui.components.SimpleModalBottomSheet
+import com.squadris.squadris.compose.components.SimpleModalBottomSheet
 import study.me.please.ui.components.preference_chooser.PreferenceChooser
 import study.me.please.ui.components.preference_chooser.PreferenceChooserController
 import study.me.please.ui.components.session.StatisticsTable

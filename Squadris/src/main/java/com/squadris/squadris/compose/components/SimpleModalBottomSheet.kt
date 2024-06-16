@@ -1,4 +1,4 @@
-package study.me.please.ui.components
+package com.squadris.squadris.compose.components
 
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.WindowInsets

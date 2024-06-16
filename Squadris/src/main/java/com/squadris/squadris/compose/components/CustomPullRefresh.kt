@@ -1,6 +1,5 @@
 package com.squadris.squadris.compose.components
 
-import android.app.Activity
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.ExperimentalMaterialApi
@@ -9,13 +8,10 @@ import androidx.compose.material.pullrefresh.pullRefreshIndicatorTransform
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.squadris.squadris.R
-import com.squadris.squadris.compose.theme.Colors
-import com.squadris.squadris.ext.isTablet
 
 private const val REFRESH_WIDTH_PERCENTILE_PHONE = 0.25
 private const val REFRESH_WIDTH_PERCENTILE_TABLET = 0.175

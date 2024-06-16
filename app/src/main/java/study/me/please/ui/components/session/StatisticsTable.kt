@@ -24,8 +24,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.squadris.squadris.compose.theme.Colors
 import com.squadris.squadris.compose.theme.LocalTheme
+import com.squadris.squadris.compose.theme.SharedColors
 import com.squadris.squadris.ext.roundOffDecimal
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -209,24 +209,24 @@ private const val GRADE_C2_PERCENTAGE = 50.0
 private fun getSuccessText(percentageSuccess: Float): Pair<String, Color> {
     return when(percentageSuccess) {
         in GRADE_A1_PERCENTAGE .. 100.0 -> {
-            stringResource(id = R.string.grade_a1) to Colors.GREEN_CORRECT
+            stringResource(id = R.string.grade_a1) to SharedColors.GREEN_CORRECT
         }
         in GRADE_A2_PERCENTAGE .. GRADE_A1_PERCENTAGE -> {
-            stringResource(id = R.string.grade_a2) to Colors.GREEN_CORRECT
+            stringResource(id = R.string.grade_a2) to SharedColors.GREEN_CORRECT
         }
         in GRADE_B1_PERCENTAGE .. GRADE_A2_PERCENTAGE -> {
-            stringResource(id = R.string.grade_b1) to Colors.YELLOW
+            stringResource(id = R.string.grade_b1) to SharedColors.YELLOW
         }
         in GRADE_B2_PERCENTAGE .. GRADE_B1_PERCENTAGE -> {
-            stringResource(id = R.string.grade_b1) to Colors.YELLOW
+            stringResource(id = R.string.grade_b1) to SharedColors.YELLOW
         }
         in GRADE_C1_PERCENTAGE .. GRADE_B2_PERCENTAGE -> {
-            stringResource(id = R.string.grade_c1) to Colors.YELLOW
+            stringResource(id = R.string.grade_c1) to SharedColors.YELLOW
         }
         in GRADE_C2_PERCENTAGE .. GRADE_C1_PERCENTAGE -> {
-            stringResource(id = R.string.grade_c2) to Colors.ORANGE
+            stringResource(id = R.string.grade_c2) to SharedColors.ORANGE
         }
-        else -> stringResource(id = R.string.grade_d) to Colors.RED_ERROR
+        else -> stringResource(id = R.string.grade_d) to SharedColors.RED_ERROR
     }
 }
 

@@ -31,8 +31,8 @@ import coil.decode.GifDecoder
 import coil.decode.ImageDecoderDecoder
 import coil.decode.SvgDecoder
 import coil.request.ImageRequest
-import com.squadris.squadris.compose.theme.Colors
 import com.squadris.squadris.compose.theme.LocalTheme
+import com.squadris.squadris.compose.theme.SharedColors
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import study.me.please.R
@@ -144,7 +144,7 @@ fun EditableImageAsset(
                             .padding(top = 2.dp, start = 8.dp, end = 8.dp, bottom = 8.dp),
                         text = stringResource(id = R.string.image_field_url_error_formats),
                         fontSize = 14.sp,
-                        color = Colors.RED_ERROR
+                        color = SharedColors.RED_ERROR
                     )
                 }
             }

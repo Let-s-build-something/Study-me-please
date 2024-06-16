@@ -43,7 +43,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import com.squadris.squadris.compose.components.chips.DEFAULT_ANIMATION_LENGTH_SHORT
-import com.squadris.squadris.compose.theme.Colors
 import com.squadris.squadris.compose.theme.LocalTheme
 import com.squadris.squadris.ext.brandShimmerEffect
 import com.squadris.squadris.utils.OnLifecycleEvent
@@ -51,6 +50,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import study.me.please.R
 import com.squadris.squadris.compose.base.LocalNavController
+import com.squadris.squadris.compose.theme.SharedColors
 import study.me.please.base.navigation.NavigationRoot
 import study.me.please.base.navigation.SessionLobbyBarActions
 import study.me.please.data.io.preferences.SessionPreferencePack
@@ -60,7 +60,7 @@ import study.me.please.ui.components.ComponentHeaderButton
 import study.me.please.ui.components.ImageAction
 import study.me.please.ui.components.InteractiveCardMode
 import study.me.please.ui.components.ListOptionsBottomSheet
-import study.me.please.ui.components.SimpleModalBottomSheet
+import com.squadris.squadris.compose.components.SimpleModalBottomSheet
 import study.me.please.ui.components.preference_chooser.PreferenceChooser
 import study.me.please.ui.components.preference_chooser.PreferenceChooserController
 import study.me.please.ui.components.pull_refresh.PullRefreshScreen
@@ -249,7 +249,7 @@ fun SessionLobbyScreen(
                     ImageAction(
                         leadingImageVector = Icons.Outlined.DeleteSweep,
                         text = stringResource(id = R.string.button_delete),
-                        containerColor = Colors.RED_ERROR
+                        containerColor = SharedColors.RED_ERROR
                     ) {
                         showDeleteDialog.value = true
                     }

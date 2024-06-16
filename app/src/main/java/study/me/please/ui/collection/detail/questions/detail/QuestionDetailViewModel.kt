@@ -10,7 +10,7 @@ import com.squadris.squadris.compose.base.BaseViewModel
 import study.me.please.base.GeneralClipBoard
 import study.me.please.data.io.QuestionAnswerIO
 import study.me.please.data.io.QuestionIO
-import study.me.please.ui.collection.RefreshableViewModel
+import com.squadris.squadris.utils.RefreshableViewModel
 import com.squadris.squadris.compose.components.collapsing_layout.CollapsingLayoutState
 import javax.inject.Inject
 

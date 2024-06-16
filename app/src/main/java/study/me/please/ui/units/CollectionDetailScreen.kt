@@ -77,7 +77,7 @@ import study.me.please.base.navigation.NavigationNode.Companion.navigate
 import study.me.please.base.navigation.NavigationRoot
 import study.me.please.data.io.UnitsFilter
 import study.me.please.data.io.subjects.UnitIO
-import study.me.please.ui.collection.RefreshableViewModel.Companion.requestData
+import com.squadris.squadris.utils.RefreshableViewModel.Companion.requestData
 import study.me.please.ui.collection.detail.questions.detail.INPUT_DELAYED_RESPONSE_MILLIS
 import study.me.please.ui.components.pull_refresh.PullRefreshScreen
 import study.me.please.ui.components.session.launcher.SessionLauncher

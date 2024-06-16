@@ -26,11 +26,11 @@ import androidx.compose.ui.unit.dp
 import androidx.credentials.CredentialManager
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import com.squadris.squadris.compose.base.LocalNavController
+import com.squadris.squadris.compose.components.navigation.NavIconType
 import com.squadris.squadris.compose.theme.LocalTheme
 import study.me.please.R
 import study.me.please.base.BrandBaseScreen
-import com.squadris.squadris.compose.base.LocalNavController
-import com.squadris.squadris.compose.components.navigation.NavIconType
 
 /** screen for sign up (registration) */
 @Composable
@@ -47,9 +47,6 @@ fun SignUpScreen(
         )
     }
 }
-
-private const val LOADING_DISPLAY_DELAY = 200L
-private const val DATA_REQUEST_DELAY = 1000L
 
 @Preview(showBackground = true)
 @Composable

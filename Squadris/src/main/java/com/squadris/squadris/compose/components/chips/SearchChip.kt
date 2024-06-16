@@ -53,8 +53,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.squadris.squadris.compose.components.MinimalisticIcon
 import com.squadris.squadris.compose.components.input.CustomTextField
-import com.squadris.squadris.compose.theme.Colors
 import com.squadris.squadris.compose.theme.LocalTheme
+import com.squadris.squadris.compose.theme.SharedColors
 
 private const val PERCENTAGE_OF_SCREEN_WIDTH = 0.3f
 
@@ -141,7 +141,7 @@ fun SearchChip(
             if(isInEdit) {
                 val controlColor by animateColorAsState(
                     when {
-                        isFieldError.value -> Colors.RED_ERROR
+                        isFieldError.value -> SharedColors.RED_ERROR
                         isFocused.value -> LocalTheme.current.colors.secondary
                         else -> LocalTheme.current.colors.brandMain
                     },

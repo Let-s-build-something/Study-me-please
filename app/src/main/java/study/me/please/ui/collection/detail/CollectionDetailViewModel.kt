@@ -16,7 +16,7 @@ import study.me.please.data.io.CollectionIO
 import study.me.please.data.io.FactIO
 import study.me.please.data.io.QuestionIO
 import study.me.please.data.shared.SharedDataManager
-import study.me.please.ui.collection.RefreshableViewModel
+import com.squadris.squadris.utils.RefreshableViewModel
 import study.me.please.ui.collection.detail.questions.QuestionsFilter
 import study.me.please.ui.collection.detail.questions.SortByType
 import java.util.UUID

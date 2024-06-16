@@ -22,8 +22,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.squadris.squadris.compose.theme.Colors
+import study.me.please.base.theme.Colors
 import com.squadris.squadris.compose.theme.LocalTheme
+import com.squadris.squadris.compose.theme.SharedColors
 import study.me.please.R
 
 /**
@@ -142,7 +143,7 @@ fun ErrorHeaderButton(
         extraContent = extraContent,
         endIconVector = startIconVector,
         contentColor = LocalTheme.current.colors.contrastAction,
-        containerColor = Colors.RED_ERROR
+        containerColor = SharedColors.RED_ERROR
     )
 }
 

@@ -51,7 +51,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.squadris.squadris.compose.theme.Colors
+import study.me.please.base.theme.Colors
 import com.squadris.squadris.compose.theme.LocalTheme
 import kotlinx.coroutines.launch
 import study.me.please.R
@@ -71,6 +71,7 @@ import study.me.please.ui.components.BulletPoint
 import study.me.please.ui.components.ComponentHeaderButton
 import study.me.please.ui.components.EditableImageAsset
 import com.squadris.squadris.compose.components.HtmlClickableText
+import com.squadris.squadris.compose.theme.SharedColors
 import study.me.please.ui.components.OutlinedButton
 import study.me.please.ui.units.detail.ParagraphLayoutContainer
 
@@ -346,8 +347,8 @@ fun PromptLayout(
                         Modifier
                             .background(
                                 color = if(validation?.isCorrect == true) {
-                                    Colors.GREEN_CORRECT
-                                }else Colors.RED_ERROR,
+                                    SharedColors.GREEN_CORRECT
+                                }else SharedColors.RED_ERROR,
                                 shape = LocalTheme.current.shapes.componentShape
                             )
                     }else Modifier)

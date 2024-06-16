@@ -19,7 +19,7 @@ import study.me.please.data.io.QuestionIO
 import study.me.please.data.io.preferences.SessionPreferencePack
 import study.me.please.data.io.subjects.UnitIO
 import study.me.please.data.state.session.QuestionModule
-import study.me.please.ui.collection.RefreshableViewModel.Companion.MINIMUM_REFRESH_DELAY
+import com.squadris.squadris.utils.RefreshableViewModel.Companion.MINIMUM_REFRESH_DELAY
 import study.me.please.ui.components.preference_chooser.PreferencePackDataManager
 import study.me.please.ui.components.preference_chooser.PreferencePackRepository
 import study.me.please.ui.components.preference_chooser.PreferencePackViewModel

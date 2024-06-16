@@ -51,9 +51,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
-import com.squadris.squadris.compose.theme.Colors
 import com.squadris.squadris.compose.theme.LocalTheme
+import com.squadris.squadris.compose.theme.SharedColors
 import study.me.please.R
+import study.me.please.base.theme.Colors
 import study.me.please.data.io.CollectionIO
 
 /** Item displaying collection and shortened information about it */
@@ -274,7 +275,7 @@ fun OptionsModeLayout(
                     bottom = 12.dp
                 )
                 .background(
-                    color = Colors.RED_ERROR.copy(alpha = 0.4f),
+                    color = SharedColors.RED_ERROR.copy(alpha = 0.4f),
                     shape = RoundedCornerShape(
                         topStart = LocalTheme.current.shapes.componentCornerRadius,
                         bottomStart = LocalTheme.current.shapes.componentCornerRadius
@@ -326,7 +327,7 @@ fun OptionsModeLayout(
             modifier = itemModifier
                 .padding(end = 12.dp, top = 12.dp, bottom = 12.dp)
                 .background(
-                    color = Colors.GREEN_CORRECT.copy(alpha = 0.4f),
+                    color = SharedColors.GREEN_CORRECT.copy(alpha = 0.4f),
                     shape = RoundedCornerShape(
                         topEnd = LocalTheme.current.shapes.componentCornerRadius,
                         bottomEnd = LocalTheme.current.shapes.componentCornerRadius

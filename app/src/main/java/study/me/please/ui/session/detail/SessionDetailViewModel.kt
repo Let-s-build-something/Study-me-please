@@ -8,7 +8,7 @@ import kotlinx.coroutines.launch
 import com.squadris.squadris.compose.base.BaseViewModel
 import study.me.please.data.io.session.SessionIO
 import study.me.please.data.state.session.QuestionModule
-import study.me.please.ui.collection.RefreshableViewModel
+import com.squadris.squadris.utils.RefreshableViewModel
 import study.me.please.ui.components.preference_chooser.PreferencePackViewModel
 import javax.inject.Inject
 

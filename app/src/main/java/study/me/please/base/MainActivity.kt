@@ -59,6 +59,7 @@ class MainActivity: ComponentActivity(), BackboneChannel {
         }
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
+        //enableEdgeToEdge()
         setContent {
             // Whether this app is in dark theme
             val isDarkTheme = remember { mutableStateOf(

@@ -46,7 +46,7 @@ import com.squadris.squadris.compose.components.navigation.NavIconType
 import study.me.please.base.navigation.NavigationRoot
 import study.me.please.data.io.CollectionIO
 import study.me.please.data.io.session.SessionIO
-import study.me.please.ui.collection.RefreshableViewModel.Companion.requestData
+import com.squadris.squadris.utils.RefreshableViewModel.Companion.requestData
 import study.me.please.ui.components.BasicAlertDialog
 import study.me.please.ui.components.ButtonState
 import study.me.please.ui.components.CollectionCard

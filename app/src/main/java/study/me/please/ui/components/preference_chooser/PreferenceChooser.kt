@@ -52,7 +52,7 @@ import com.squadris.squadris.compose.components.chips.DEFAULT_ANIMATION_LENGTH_L
 import com.squadris.squadris.compose.components.chips.DEFAULT_ANIMATION_LENGTH_SHORT
 import study.me.please.ui.components.EditFieldInput
 import com.squadris.squadris.compose.components.MinimalisticIcon
-import com.squadris.squadris.compose.theme.Colors
+import study.me.please.base.theme.Colors
 import com.squadris.squadris.compose.theme.LocalTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancelChildren
@@ -60,6 +60,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import study.me.please.R
 import com.squadris.squadris.compose.components.navigation.ActionBarIcon
+import com.squadris.squadris.compose.theme.SharedColors
 import study.me.please.data.io.QuestionMode
 import study.me.please.data.io.preferences.SessionPreferencePack
 import study.me.please.ui.collection.detail.REQUEST_DATA_SAVE_DELAY
@@ -318,7 +319,7 @@ fun PreferenceChooser(
                                 }
                                 ImageAction(
                                     leadingImageVector = Icons.Outlined.Delete,
-                                    containerColor = Colors.RED_ERROR
+                                    containerColor = SharedColors.RED_ERROR
                                 ) {
                                     coroutineScope.launch(Dispatchers.Default) {
                                         val oldIndex = preferencePacks.indexOfFirst { it.uid == selectedPreferencePack.value?.uid }

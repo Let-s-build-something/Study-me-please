@@ -46,17 +46,17 @@ import androidx.lifecycle.Lifecycle
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.rememberLottieComposition
+import com.squadris.squadris.compose.base.LocalNavController
 import com.squadris.squadris.compose.components.chips.DEFAULT_ANIMATION_LENGTH_SHORT
-import com.squadris.squadris.compose.theme.Colors
 import com.squadris.squadris.compose.theme.LocalTheme
+import com.squadris.squadris.compose.theme.SharedColors
 import com.squadris.squadris.utils.OnLifecycleEvent
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import study.me.please.R
-import com.squadris.squadris.compose.base.LocalNavController
 import study.me.please.base.navigation.NavigationRoot
-import study.me.please.ui.collection.RefreshableViewModel.Companion.requestData
+import com.squadris.squadris.utils.RefreshableViewModel.Companion.requestData
 import study.me.please.ui.components.BasicAlertDialog
 import study.me.please.ui.components.ButtonState
 import study.me.please.ui.components.CollectionCard
@@ -188,7 +188,7 @@ fun CollectionLobbyScreen(
                     ImageAction(
                         leadingImageVector = Icons.Outlined.DeleteSweep,
                         text = stringResource(id = R.string.button_delete),
-                        containerColor = Colors.RED_ERROR
+                        containerColor = SharedColors.RED_ERROR
                     ) {
                         showDeleteDialog.value = true
                     }

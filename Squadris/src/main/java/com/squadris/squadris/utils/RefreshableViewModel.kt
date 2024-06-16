@@ -1,8 +1,7 @@
-package study.me.please.ui.collection
+package com.squadris.squadris.utils
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.squadris.squadris.utils.DateUtils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow

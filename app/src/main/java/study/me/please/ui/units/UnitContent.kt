@@ -54,21 +54,21 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.squadris.squadris.compose.base.LocalIsTablet
 import com.squadris.squadris.compose.components.chips.FILTER_DELAY_DEFAULT
-import study.me.please.ui.components.EditFieldInput
 import com.squadris.squadris.compose.theme.LocalTheme
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import study.me.please.R
-import com.squadris.squadris.compose.base.LocalIsTablet
 import study.me.please.data.io.FactIO
 import study.me.please.data.io.FactType
 import study.me.please.data.io.UnitElement
 import study.me.please.data.io.subjects.ParagraphIO
 import study.me.please.data.io.subjects.UnitIO
 import study.me.please.ui.collection.detail.REQUEST_DATA_SAVE_DELAY
+import study.me.please.ui.components.EditFieldInput
 import study.me.please.ui.components.ListItemEditField
 import study.me.please.ui.units.UnitViewModel.Companion.INITIAL_LAYER
 import study.me.please.ui.units.components.UnitFloatingMenuActions
@@ -196,16 +196,15 @@ fun UnitContent(
                             }else 0
                         }
                         is UnitElement.Fact -> elements.value.indexOf(parentElement).plus(1)
-                        else -> null
+                        // unit - such as freshly created unit
+                        else -> 0
                     }
 
-                    index?.let {
-                        onItemDropped(
-                            targetElement = parentElement,
-                            index = lazyGridState.firstVisibleItemIndex.coerceAtLeast(it),
-                            nestUnder = parentElement is UnitElement.Fact
-                        )
-                    }
+                    onItemDropped(
+                        targetElement = parentElement,
+                        index = lazyGridState.firstVisibleItemIndex.coerceAtLeast(index),
+                        nestUnder = parentElement is UnitElement.Fact
+                    )
                 }
                 unitActionType.value = DEFAULT
             }

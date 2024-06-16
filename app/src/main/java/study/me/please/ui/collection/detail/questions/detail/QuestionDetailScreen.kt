@@ -61,7 +61,7 @@ import study.me.please.base.navigation.NavigationRoot
 import study.me.please.data.io.FactType
 import study.me.please.data.io.LargePathAsset
 import study.me.please.data.io.QuestionAnswerIO
-import study.me.please.ui.collection.RefreshableViewModel.Companion.requestData
+import com.squadris.squadris.utils.RefreshableViewModel.Companion.requestData
 import study.me.please.ui.collection.detail.REQUEST_DATA_SAVE_DELAY
 import study.me.please.ui.components.BasicAlertDialog
 import study.me.please.ui.components.BrandHeaderButton

@@ -6,7 +6,7 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
-import com.squadris.squadris.compose.theme.Colors
+import com.squadris.squadris.compose.theme.SharedColors
 
 /** Build an [AnnotatedString] with given highlight */
 @Composable
@@ -25,7 +25,7 @@ fun highlightedText(
                     append(textLeft.substring(0, index))
                     withStyle(style = SpanStyle(
                         fontWeight = FontWeight.ExtraBold,
-                        color = Colors.GREEN_CORRECT
+                        color = SharedColors.GREEN_CORRECT
                     )
                     ) {
                         append(textLeft.substring(index, index + highlight.length))

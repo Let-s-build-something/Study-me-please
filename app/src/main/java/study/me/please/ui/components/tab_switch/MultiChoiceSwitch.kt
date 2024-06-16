@@ -39,7 +39,7 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import com.squadris.squadris.compose.components.chips.DEFAULT_ANIMATION_LENGTH_LONG
 import com.squadris.squadris.compose.components.chips.DEFAULT_ANIMATION_LENGTH_SHORT
-import com.squadris.squadris.compose.theme.Colors
+import study.me.please.base.theme.Colors
 import com.squadris.squadris.compose.theme.LocalTheme
 import study.me.please.base.theme.AppTheme
 

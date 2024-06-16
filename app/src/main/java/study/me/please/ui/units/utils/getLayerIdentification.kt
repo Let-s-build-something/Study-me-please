@@ -2,7 +2,8 @@ package study.me.please.ui.units.utils
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
-import com.squadris.squadris.compose.theme.Colors
+import com.squadris.squadris.compose.theme.SharedColors
+import study.me.please.base.theme.Colors
 
 /** Returns text with its color based on the layer depth */
 @Composable
@@ -22,5 +23,5 @@ fun getLayerIdentification(layerDepth: Int): Pair<String, Color> {
 
     return (if(decimalRes > 0) {
         alphabet.getOrNull(decimalRes).toString() + res.toString()
-    } else alphabet.getOrNull(res)?.toString() ?: "") to (color ?: Colors.GREEN_CORRECT)
+    } else alphabet.getOrNull(res)?.toString() ?: "") to (color ?: SharedColors.GREEN_CORRECT)
 }

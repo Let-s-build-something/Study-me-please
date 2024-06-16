@@ -15,7 +15,7 @@ import study.me.please.data.io.CollectionIO
 import study.me.please.data.io.UnitsFilter
 import study.me.please.data.io.subjects.ParagraphIO
 import study.me.please.data.io.subjects.UnitIO
-import study.me.please.ui.collection.RefreshableViewModel
+import com.squadris.squadris.utils.RefreshableViewModel
 import study.me.please.ui.units.utils.UnitsUseCase
 import javax.inject.Inject
 

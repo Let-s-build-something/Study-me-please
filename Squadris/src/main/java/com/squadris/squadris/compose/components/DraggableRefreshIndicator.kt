@@ -1,4 +1,4 @@
-package study.me.please.base
+package com.squadris.squadris.compose.components
 
 import android.animation.ValueAnimator
 import androidx.compose.foundation.background
@@ -29,9 +29,6 @@ import androidx.core.animation.doOnEnd
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.rememberLottieComposition
-import com.squadris.squadris.compose.components.CustomPullRefresh
-import com.squadris.squadris.compose.components.REFRESH_RETURN_ANIMATION_LENGTH
-import com.squadris.squadris.compose.components.randomLoadingLottieAnim
 import com.squadris.squadris.compose.theme.LocalTheme
 
 private val animRawResBackground = mutableIntStateOf(randomLoadingLottieAnim)

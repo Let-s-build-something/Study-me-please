@@ -3,7 +3,7 @@ package study.me.please.ui.home
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import com.squadris.squadris.compose.base.BaseViewModel
-import study.me.please.ui.collection.RefreshableViewModel
+import com.squadris.squadris.utils.RefreshableViewModel
 import javax.inject.Inject
 
 @HiltViewModel

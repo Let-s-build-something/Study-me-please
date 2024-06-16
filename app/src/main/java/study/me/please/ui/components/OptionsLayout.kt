@@ -26,8 +26,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.zIndex
 import com.squadris.squadris.compose.components.chips.DEFAULT_ANIMATION_LENGTH_SHORT
-import com.squadris.squadris.compose.theme.Colors
 import com.squadris.squadris.compose.theme.LocalTheme
+import com.squadris.squadris.compose.theme.SharedColors
 import study.me.please.R
 
 /**
@@ -121,7 +121,7 @@ fun OptionsLayout(
                 ImageAction(
                     leadingImageVector = Icons.Outlined.DeleteSweep,
                     text = stringResource(id = R.string.button_delete),
-                    containerColor = Colors.RED_ERROR,
+                    containerColor = SharedColors.RED_ERROR,
                     onClick = onDeleteRequest
                 )
             }

@@ -11,7 +11,7 @@ import kotlinx.coroutines.launch
 import com.squadris.squadris.compose.base.BaseViewModel
 import study.me.please.data.io.session.SessionIO
 import study.me.please.data.io.preferences.SessionPreferencePack
-import study.me.please.ui.collection.RefreshableViewModel
+import com.squadris.squadris.utils.RefreshableViewModel
 import study.me.please.ui.components.preference_chooser.PreferencePackDataManager
 import study.me.please.ui.components.preference_chooser.PreferencePackRepository
 import study.me.please.ui.components.preference_chooser.PreferencePackViewModel

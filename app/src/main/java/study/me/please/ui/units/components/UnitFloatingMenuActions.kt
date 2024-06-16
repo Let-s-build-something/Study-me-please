@@ -45,8 +45,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.constraintlayout.compose.ConstraintLayout
 import com.squadris.squadris.compose.components.MinimalisticIcon
-import com.squadris.squadris.compose.theme.Colors
 import com.squadris.squadris.compose.theme.LocalTheme
+import com.squadris.squadris.compose.theme.SharedColors
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -367,8 +367,8 @@ fun UnitFloatingMenuActions(
                 },
         ) {
             DragAndDropTargetBox(
-                colorActive = Colors.YELLOW,
-                colorInactive = Colors.YELLOW_50,
+                colorActive = SharedColors.YELLOW,
+                colorInactive = SharedColors.YELLOW_50,
                 imageVector = Icons.Outlined.Archive,
                 contentDescription = stringResource(R.string.button_archive),
                 onDrop = {
@@ -389,8 +389,8 @@ fun UnitFloatingMenuActions(
                 }
             )
             DragAndDropTargetBox(
-                colorActive = Colors.GREEN_CORRECT,
-                colorInactive = Colors.GREEN_CORRECT_50,
+                colorActive = SharedColors.GREEN_CORRECT,
+                colorInactive = SharedColors.GREEN_CORRECT_50,
                 imageVector = Icons.Outlined.ContentCopy,
                 contentDescription = stringResource(R.string.button_copy),
                 onDrop = {
@@ -411,8 +411,8 @@ fun UnitFloatingMenuActions(
                 }
             )
             DragAndDropTargetBox(
-                colorActive = Colors.RED_ERROR,
-                colorInactive = Colors.RED_ERROR_50,
+                colorActive = SharedColors.RED_ERROR,
+                colorInactive = SharedColors.RED_ERROR_50,
                 imageVector = Icons.Outlined.Delete,
                 contentDescription = stringResource(R.string.accessibility_delete),
                 onDrop = {

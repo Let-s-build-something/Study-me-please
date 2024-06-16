@@ -50,10 +50,11 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.squadris.squadris.compose.components.MinimalisticIcon
 import study.me.please.ui.components.EditFieldInput
-import com.squadris.squadris.compose.theme.Colors
+import study.me.please.base.theme.Colors
 import com.squadris.squadris.compose.theme.LocalTheme
 import study.me.please.R
 import com.squadris.squadris.compose.base.LocalIsTablet
+import com.squadris.squadris.compose.theme.SharedColors
 import study.me.please.data.io.subjects.ParagraphIO
 import study.me.please.ui.components.BasicAlertDialog
 import study.me.please.ui.components.ButtonState
@@ -213,7 +214,7 @@ fun CollectionDrawer(
                                 modifier = Modifier.fillMaxWidth(),
                                 leadingImageVector = Icons.Outlined.DeleteSweep,
                                 text = stringResource(id = R.string.button_delete),
-                                containerColor = Colors.RED_ERROR
+                                containerColor = SharedColors.RED_ERROR
                             ) {
                                 showDeleteDialog.value = true
                             }

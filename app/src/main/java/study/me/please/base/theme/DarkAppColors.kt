@@ -2,7 +2,6 @@ package study.me.please.base.theme
 
 import androidx.compose.ui.graphics.Color
 import com.squadris.squadris.compose.theme.BaseColors
-import com.squadris.squadris.compose.theme.Colors
 
 object DarkAppColors: BaseColors {
 
