@@ -48,8 +48,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImagePainter
-import com.squadris.squadris.compose.components.chips.DEFAULT_ANIMATION_LENGTH_SHORT
 import com.squadris.squadris.compose.components.MinimalisticIcon
+import com.squadris.squadris.compose.components.chips.DEFAULT_ANIMATION_LENGTH_SHORT
 import com.squadris.squadris.compose.theme.LocalTheme
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.delay
@@ -194,7 +194,6 @@ private fun DataCard(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(top = 6.dp, bottom = 6.dp, start = 8.dp, end = 8.dp)
             .then(
                 if (showBackground && mode == InteractiveCardMode.DATA_DISPLAY) {
                     Modifier.background(
@@ -203,7 +202,7 @@ private fun DataCard(
                     )
                 } else Modifier
             )
-            .padding(start = 6.dp)
+            .padding(top = 6.dp, bottom = 6.dp, start = 14.dp, end = 8.dp)
             .then(thenModifier),
         horizontalAlignment = Alignment.Start,
         verticalArrangement = Arrangement.Top

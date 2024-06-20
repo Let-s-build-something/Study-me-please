@@ -1,7 +1,6 @@
 package study.me.please.ui.units.utils
 
 import android.content.Context
-import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import study.me.please.R
@@ -39,7 +38,7 @@ class QuestionGenerator @Inject constructor() {
         private const val MINIMUM_RELATED_ITEMS_TO_GENERATE_LIST = 2
 
         /** Maximum amount of related items from other lists for generating a question for a list */
-        private const val MAXIMUM_RELATED_ITEMS_TO_GENERATE_LIST = 4
+        private const val MAXIMUM_RELATED_ITEMS_TO_GENERATE_LIST = 3
 
         /** identification of a parent for its efficient sorting */
         private const val I_AM_PARENT_IDENTIFIER = "I_AM_PARENT_IDENTIFIER"
@@ -74,7 +73,7 @@ class QuestionGenerator @Inject constructor() {
                 // facts within units
                 unit.facts.filter {
                     excludedList.contains(it.uid).not()
-                            && it.isSeriousDataPoint()
+                            && (it.isSeriousDataPoint() || it.facts.isNotEmpty())
                 }.forEach { iteratedFact ->
                     facts.add(
                         FactToGenerate(
@@ -85,6 +84,18 @@ class QuestionGenerator @Inject constructor() {
                             parentParagraph = ParagraphIO(name = unit.name, uid = unit.uid)
                         )
                     )
+                    iteratedFact.facts.forEach { nestedFact ->
+                        facts.add(
+                            FactToGenerate(
+                                data = nestedFact,
+                                parentUnitUid = unit.uid,
+                                sortedNames = listOf(iteratedFact.shortKeyInformation),
+                                sortedParentUid = listOf(unit.uid).plus(iteratedFact.uid),
+                                parentParagraph = ParagraphIO(name = unit.name, uid = unit.uid),
+                                parentFact = iteratedFact
+                            )
+                        )
+                    }
                 }
 
                 // Questions within units
@@ -123,7 +134,7 @@ class QuestionGenerator @Inject constructor() {
                         }
                         paragraph.facts.filter {
                             excludedList.contains(it.uid).not()
-                                    && it.isSeriousDataPoint()
+                                    && (it.isSeriousDataPoint() || it.facts.isNotEmpty())
                         }.forEach { iteratedFact ->
                             facts.add(
                                 FactToGenerate(
@@ -138,13 +149,15 @@ class QuestionGenerator @Inject constructor() {
                                 )
                             )
                             iteratedFact.facts.forEach { nestedFact ->
-                                FactToGenerate(
-                                    data = nestedFact,
-                                    parentUnitUid = unit.uid,
-                                    sortedNames = parentNames.plus(iteratedFact.shortKeyInformation),
-                                    sortedParentUid = parentUidList.plus(iteratedFact.uid),
-                                    parentParagraph = paragraph,
-                                    parentFact = iteratedFact
+                                facts.add(
+                                    FactToGenerate(
+                                        data = nestedFact,
+                                        parentUnitUid = unit.uid,
+                                        sortedNames = parentNames.plus(iteratedFact.shortKeyInformation),
+                                        sortedParentUid = parentUidList.plus(iteratedFact.uid),
+                                        parentParagraph = paragraph,
+                                        parentFact = iteratedFact
+                                    )
                                 )
                             }
                         }
@@ -179,9 +192,6 @@ class QuestionGenerator @Inject constructor() {
                     )
                 }
             }
-
-            Log.d("kostka_test", "units: ${units.size}, fact: ${facts.size}, paragraphs: ${paragraphs.size}")
-
             if(facts.size > MINIMUM_RELATED_DATA_TO_GENERATE) {
                 FactGeneratingGoal.values().forEach { goal ->
                     questions.addAll(
@@ -234,57 +244,56 @@ class QuestionGenerator @Inject constructor() {
             val map = hashMapOf<FactType, MutableList<FactToGenerate>>()
             val leftovers = mutableListOf<FactToGenerate>()
 
-            (if(generatingGoal != FactGeneratingGoal.IMAGE_PROMPT) {
-                facts.filter { it.data.hasTextData() }
-            }else facts).forEach { toGenerate ->
+            facts.filter {
+                when(generatingGoal) {
+                    FactGeneratingGoal.SHORT_INFORMATION,
+                    FactGeneratingGoal.LONG_INFORMATION -> it.data.hasTextData()
+                    FactGeneratingGoal.IMAGE_PROMPT -> it.data.promptImage != null
+                    FactGeneratingGoal.NESTED_FACTS_LONG_KEY,
+                    FactGeneratingGoal.NESTED_FACTS_SHORT_KEY -> it.data.facts.isNotEmpty()
+                } && (it.data.type.isListType.not()
+                        || it.data.textList.isNotEmpty()
+                        || generatingGoal == FactGeneratingGoal.NESTED_FACTS_LONG_KEY
+                        || generatingGoal == FactGeneratingGoal.NESTED_FACTS_SHORT_KEY)
+            }.forEach { toGenerate ->
                 if(map.containsKey(toGenerate.data.type)) {
                     map[toGenerate.data.type]?.add(toGenerate)
                 }else map[toGenerate.data.type] = mutableListOf(toGenerate)
             }
 
             map.forEach { chunk ->
-                if(chunk.value.size >= MINIMUM_RELATED_DATA_TO_GENERATE) {
+                if(chunk.value.size + facts.size >= MINIMUM_RELATED_DATA_TO_GENERATE) {
                     chunk.value.forEach { iteratedFact ->
-                        // either not list type goal or there are list items
-                        if((iteratedFact.data.type.isListType.not()
-                                    || iteratedFact.data.textList.isNotEmpty())
-
-                            // either not image prompt goal or there is an image
-                            && (generatingGoal != FactGeneratingGoal.IMAGE_PROMPT
-                                    || iteratedFact.data.promptImage != null)
-
-                            // either no nested facts goal or there are nested facts
-                            && ((generatingGoal != FactGeneratingGoal.NESTED_FACTS_LONG_KEY
-                                    && generatingGoal != FactGeneratingGoal.NESTED_FACTS_SHORT_KEY)
-                                    || iteratedFact.data.facts.isNotEmpty())
-                        ) {
-                            val relatedFacts = chunk.value
-                                .shuffled()
-                                .filter {
-                                    it.data.uid != iteratedFact.data.uid
-                                }
-                                .map { fact ->
-                                    fact to calculateWeights(
-                                        anchorList = iteratedFact.sortedNames,
-                                        currentList = fact.sortedNames
-                                    )
-                                }
-                                // first we sort by type, as that the priority, then by similarities
-                                .sortedWith(compareByDescending<Pair<FactToGenerate, Int>> {
-                                    if(it.first.data.type == iteratedFact.data.type) 1 else 0
-                                }.thenByDescending { it.second })
-                                .take(MINIMUM_RELATED_DATA_TO_GENERATE)
-
-                            if(relatedFacts.isNotEmpty()) {
-                                questions.add(
-                                    generateQuestionFinal(
-                                        context = context,
-                                        promptFact = iteratedFact,
-                                        relatedFacts = relatedFacts.map { it.first },
-                                        generatingGoal = generatingGoal
-                                    )
+                        val relatedFacts = chunk.value.plus(facts)
+                            .shuffled()
+                            .filter {
+                                it.data.uid != iteratedFact.data.uid
+                                        && it.data.isSeriousDataPoint()
+                            }
+                            .map { fact ->
+                                fact to calculateWeights(
+                                    anchorList = iteratedFact.sortedNames,
+                                    currentList = fact.sortedNames
                                 )
                             }
+                            // first we sort by type, as that the priority, then by similarities
+                            .sortedWith(compareByDescending<Pair<FactToGenerate, Int>> {
+                                if(it.first.data.type == iteratedFact.data.type) 1 else 0
+                            }.thenByDescending { it.second })
+                            .take(if(generatingGoal == FactGeneratingGoal.NESTED_FACTS_LONG_KEY
+                                || generatingGoal == FactGeneratingGoal.NESTED_FACTS_SHORT_KEY) {
+                                MINIMUM_RELATED_DATA_TO_GENERATE * 2
+                            }else MINIMUM_RELATED_DATA_TO_GENERATE)
+
+                        if(relatedFacts.isNotEmpty()) {
+                            questions.add(
+                                generateQuestionFinal(
+                                    context = context,
+                                    promptFact = iteratedFact,
+                                    relatedFacts = relatedFacts.map { it.first },
+                                    generatingGoal = generatingGoal
+                                )
+                            )
                         }
                     }
                 }else {
@@ -383,7 +392,7 @@ class QuestionGenerator @Inject constructor() {
                     },
                     importedSource = importedSource,
                     prompt = context.getString(
-                        R.string.question_generating_fact_short,
+                        R.string.question_generating_fact_nested,
                         promptFact.data.shortKeyInformation,
                         promptFact.parentParagraph.name
                     )
@@ -428,7 +437,7 @@ class QuestionGenerator @Inject constructor() {
                         prompt = context.getString(
                             R.string.question_generating_fact_list,
                             promptFact.data.shortKeyInformation,
-                            promptFact.parentParagraph.name
+                            promptFact.parentFact?.shortKeyInformation ?: promptFact.parentParagraph.name
                         )
                     )
                 }else {
@@ -448,7 +457,9 @@ class QuestionGenerator @Inject constructor() {
                             // we add the correct answer
                             add(
                                 QuestionAnswerIO(
-                                    text = "${promptFact.data.shortKeyInformation} (${promptFact.parentParagraph.name})",
+                                    text = "${promptFact.data.shortKeyInformation} (${
+                                        promptFact.parentFact?.shortKeyInformation ?: promptFact.parentParagraph.name
+                                    })",
                                     isCorrect = true
                                 )
                             )
@@ -463,7 +474,9 @@ class QuestionGenerator @Inject constructor() {
                 QuestionIO(
                     answers = relatedFacts.map { mappingFact ->
                         val makeImportedSourceRoute = mappingFact.makeImportedSourceRoute()
-                        val shortKeyInformation = "${mappingFact.data.shortKeyInformation} (${mappingFact.parentParagraph.name})"
+                        val shortKeyInformation = "${mappingFact.data.shortKeyInformation} (${
+                            promptFact.parentFact?.shortKeyInformation ?: promptFact.parentParagraph.name
+                        })"
 
                         QuestionAnswerIO(
                             textList = if(generatingGoal == FactGeneratingGoal.SHORT_INFORMATION
@@ -487,7 +500,9 @@ class QuestionGenerator @Inject constructor() {
                             importedSource = makeImportedSourceRoute
                         )
                     }.toMutableList().apply {
-                        val shortKeyInformation = "${promptFact.data.shortKeyInformation} (${promptFact.parentParagraph.name})"
+                        val shortKeyInformation = "${promptFact.data.shortKeyInformation} (${
+                            promptFact.parentFact?.shortKeyInformation ?: promptFact.parentParagraph.name
+                        })"
 
                         // we add the correct answer
                         add(
@@ -513,7 +528,7 @@ class QuestionGenerator @Inject constructor() {
                             context.getString(
                                 R.string.question_generating_fact_short,
                                 promptFact.data.shortKeyInformation,
-                                promptFact.parentParagraph.name
+                                promptFact.parentFact?.shortKeyInformation ?: promptFact.parentParagraph.name
                             )
                         }
                         FactGeneratingGoal.LONG_INFORMATION -> {
@@ -522,7 +537,7 @@ class QuestionGenerator @Inject constructor() {
                             }else context.getString(
                                 R.string.question_generating_fact_long,
                                 promptFact.data.longInformation,
-                                promptFact.parentParagraph.name
+                                promptFact.parentFact?.shortKeyInformation ?: promptFact.parentParagraph.name
                             )
                         }
                         else -> "" //shouldn't happen

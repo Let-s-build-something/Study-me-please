@@ -53,7 +53,9 @@ fun ExpandableContent(
     collapsedContent: (@Composable () -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit
 ) {
-    val arrowDegreeRotation = remember { Animatable(90f) }
+    val arrowDegreeRotation = remember {
+        Animatable(if(isExpanded) 270f else 90f)
+    }
     LaunchedEffect(isExpanded) {
         arrowDegreeRotation.animateTo(
             if(isExpanded) 270f else 90f,

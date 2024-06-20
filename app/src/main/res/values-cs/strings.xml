@@ -189,6 +189,7 @@
     </string>
     <string name="question_generating_fact_parent_addition">, under <b><![CDATA[<a href="/paragraph/%2$s">%1$s</a>]]></b></string>-->
 
+    <string name="question_generating_fact_nested">Co se týká <b>\"%1$s\"</b> (<![CDATA[<a href="/category/%2$s">%2$s</a>]]>)?</string>
     <string name="question_generating_fact_short">Popiš <b>\"%1$s\" (<![CDATA[<a href="/category/%2$s">%2$s</a>]]>)</b></string>
     <string name="question_generating_fact_long">Co nejlépe vysvětluje: <b>\"%1$s\" (<![CDATA[<a href="/category/%2$s">%2$s</a>]]>)</b>?</string>
     <string name="question_generating_children_items">

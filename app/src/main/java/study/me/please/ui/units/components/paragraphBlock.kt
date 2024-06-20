@@ -502,19 +502,23 @@ fun LazyGridScope.paragraphBlock(
                                     .padding(start = if(element.isNested) screenWidthDp.dp * 2 / 30 else 0.dp)
                                     // indication of this Fact being focused as a last parent
                                     .then(
-                                        if (activatedParent.value == fact.uid) {
+                                        if(fact.facts.isNotEmpty()) {
                                             Modifier.border(
-                                                width = 0.75.dp,
-                                                color = LocalTheme.current.colors.brandMain,
+                                                width = if (activatedParent.value == fact.uid) {
+                                                    0.75.dp
+                                                } else 0.1.dp,
+                                                color = if (activatedParent.value == fact.uid) {
+                                                    LocalTheme.current.colors.brandMain
+                                                } else LocalTheme.current.colors.secondary,
                                                 shape = LocalTheme.current.shapes.componentShape
                                             )
-                                        } else Modifier
+                                        }else Modifier
                                     )
                                     // drag and drop target for nesting a Fact
                                     .then(
                                         if (dragAndDropTarget.value == fact.uid) {
                                             Modifier.border(
-                                                width = 1.5.dp,
+                                                width = 2.dp,
                                                 color = LocalTheme.current.colors.brandMain,
                                                 shape = LocalTheme.current.shapes.componentShape
                                             )
