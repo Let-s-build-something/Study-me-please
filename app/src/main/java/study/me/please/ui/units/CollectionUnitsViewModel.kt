@@ -1,6 +1,8 @@
 package study.me.please.ui.units
 
 import androidx.lifecycle.viewModelScope
+import com.squadris.squadris.compose.base.BaseViewModel
+import com.squadris.squadris.utils.RefreshableViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -9,13 +11,11 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import com.squadris.squadris.compose.base.BaseViewModel
 import study.me.please.base.GeneralClipBoard
 import study.me.please.data.io.CollectionIO
 import study.me.please.data.io.UnitsFilter
 import study.me.please.data.io.subjects.ParagraphIO
 import study.me.please.data.io.subjects.UnitIO
-import com.squadris.squadris.utils.RefreshableViewModel
 import study.me.please.ui.units.utils.UnitsUseCase
 import javax.inject.Inject
 
@@ -77,32 +77,42 @@ class CollectionUnitsViewModel @Inject constructor(
                         results.add(FocusedUnitElement(unitUid = unit.uid, emptyList()))
                     }
 
-                    unit.paragraphs.forEach { paragraph ->
-                        iterateFurtherAction(
-                            paragraph = paragraph,
-                            action = { elementPath, iteratedParagraph ->
-                                if (iteratedParagraph.name.lowercase().contains(prompt)
-                                    || iteratedParagraph.bulletPoints.any { it.lowercase().contains(prompt) }
+                    iterateFurtherAction(
+                        paragraphs = unit.paragraphs,
+                        action = { elementPath, iteratedParagraph ->
+                            if (iteratedParagraph.name.lowercase().contains(prompt)
+                                || iteratedParagraph.bulletPoints.any { it.lowercase().contains(prompt) }
+                            ) {
+                                results.add(FocusedUnitElement(unitUid = unit.uid, elementPath))
+                            }
+                            iteratedParagraph.facts.forEach { fact ->
+                                if (fact.shortKeyInformation.lowercase().contains(prompt)
+                                    || fact.longInformation.lowercase().contains(prompt)
+                                    || fact.textList.any { it.lowercase().contains(prompt) }
                                 ) {
-                                    results.add(FocusedUnitElement(unitUid = unit.uid, elementPath))
+                                    results.add(
+                                        FocusedUnitElement(
+                                            unitUid = unit.uid,
+                                            elementPath.plus(fact.uid)
+                                        )
+                                    )
                                 }
-                                iteratedParagraph.facts.forEach { fact ->
-                                    if (fact.shortKeyInformation.lowercase().contains(prompt)
-                                        || fact.longInformation.lowercase().contains(prompt)
-                                        || fact.textList.any { it.lowercase().contains(prompt) }
+                                fact.facts.forEach { nestedFact ->
+                                    if (nestedFact.shortKeyInformation.lowercase().contains(prompt)
+                                        || nestedFact.longInformation.lowercase().contains(prompt)
+                                        || nestedFact.textList.any { it.lowercase().contains(prompt) }
                                     ) {
                                         results.add(
                                             FocusedUnitElement(
                                                 unitUid = unit.uid,
-                                                elementPath.plus(fact.uid)
+                                                elementPath.plus(nestedFact.uid)
                                             )
                                         )
                                     }
                                 }
-                            },
-                            elementPath = listOf(paragraph.uid)
-                        )
-                    }
+                            }
+                        }
+                    )
                 }
                 results
             }else null
@@ -111,22 +121,20 @@ class CollectionUnitsViewModel @Inject constructor(
 
     /** iterates into all possible depths */
     private suspend fun iterateFurtherAction(
-        paragraph: ParagraphIO,
+        paragraphs: List<ParagraphIO>,
         elementPath: List<String> = emptyList(),
         action: suspend (List<String>, ParagraphIO) -> Unit
     ) {
         withContext(Dispatchers.Default) {
-            val paragraphsCopy = paragraph.paragraphs.toList()
-            paragraphsCopy.forEach { iterationParagraph ->
+            paragraphs.forEach { iterationParagraph ->
                 action(elementPath.plus(iterationParagraph.uid), iterationParagraph)
 
                 iterateFurtherAction(
-                    paragraph = iterationParagraph,
+                    paragraphs = iterationParagraph.paragraphs,
                     action = action,
                     elementPath = elementPath.plus(iterationParagraph.uid)
                 )
             }
-            paragraph.paragraphs = paragraphsCopy.toMutableList()
         }
     }
 

@@ -48,17 +48,16 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.squadris.squadris.compose.components.MinimalisticIcon
-import study.me.please.ui.components.EditFieldInput
-import study.me.please.base.theme.Colors
-import com.squadris.squadris.compose.theme.LocalTheme
-import study.me.please.R
 import com.squadris.squadris.compose.base.LocalIsTablet
+import com.squadris.squadris.compose.components.MinimalisticIcon
+import com.squadris.squadris.compose.theme.LocalTheme
 import com.squadris.squadris.compose.theme.SharedColors
+import study.me.please.R
 import study.me.please.data.io.subjects.ParagraphIO
 import study.me.please.ui.components.BasicAlertDialog
 import study.me.please.ui.components.ButtonState
 import study.me.please.ui.components.ComponentHeaderButton
+import study.me.please.ui.components.EditFieldInput
 import study.me.please.ui.components.ExpandableContent
 import study.me.please.ui.components.ImageAction
 import study.me.please.ui.units.CollectionUnitsViewModel
@@ -300,18 +299,16 @@ fun CollectionDrawer(
                         collapsedPadding = 8.dp,
                         isExpanded = expandedUnits.contains(unit.uid)
                     ) {
-                        unit.paragraphs.forEach { paragraph ->
-                            DashboardChildParagraph(
-                                paragraph = paragraph,
-                                openParagraph = { uidPath ->
-                                    onIndexChange(units.value?.indexOf(unit) ?: 0)
-                                    viewModel.scrollToElement.value = FocusedUnitElement(
-                                        elementPath = uidPath,
-                                        unitUid = unit.uid
-                                    )
-                                }
-                            )
-                        }
+                        DashboardChildParagraph(
+                            paragraphs = unit.paragraphs,
+                            openParagraph = { uidPath ->
+                                onIndexChange(units.value?.indexOf(unit) ?: 0)
+                                viewModel.scrollToElement.value = FocusedUnitElement(
+                                    elementPath = uidPath,
+                                    unitUid = unit.uid
+                                )
+                            }
+                        )
                     }
                 }
             }
@@ -321,11 +318,11 @@ fun CollectionDrawer(
 
 @Composable
 private fun DashboardChildParagraph(
-    paragraph: ParagraphIO,
+    paragraphs: List<ParagraphIO>,
     openParagraph: (uidPath: MutableList<String>) -> Unit,
-    uidPath: MutableList<String> = mutableListOf(paragraph.uid)
+    uidPath: MutableList<String> = mutableListOf()
 ) {
-    paragraph.paragraphs.forEach { nestedParagraph ->
+    paragraphs.forEach { nestedParagraph ->
         if(nestedParagraph.paragraphs.isEmpty()) {
             Text(
                 modifier = Modifier
@@ -343,7 +340,7 @@ private fun DashboardChildParagraph(
                 style = LocalTheme.current.styles.category
             )
         }else {
-            val isExpanded = remember(paragraph.uid) {
+            val isExpanded = remember(nestedParagraph.uid) {
                 mutableStateOf(false)
             }
 
@@ -355,14 +352,14 @@ private fun DashboardChildParagraph(
                         onClick = {
                             openParagraph(uidPath.apply { add(nestedParagraph.uid) })
                         },
-                        interactionSource = remember(paragraph.uid) { MutableInteractionSource() },
+                        interactionSource = remember(nestedParagraph.uid) { MutableInteractionSource() },
                         indication = rememberRipple()
                     ),
                 arrowModifier = Modifier.clickable(
                     onClick = {
                         isExpanded.value = !isExpanded.value
                     },
-                    interactionSource = remember(paragraph.uid) { MutableInteractionSource() },
+                    interactionSource = remember(nestedParagraph.uid) { MutableInteractionSource() },
                     indication = rememberRipple()
                 ),
                 text = AnnotatedString(
@@ -373,7 +370,7 @@ private fun DashboardChildParagraph(
                 isExpanded = isExpanded.value
             ) {
                 DashboardChildParagraph(
-                    paragraph = nestedParagraph,
+                    paragraphs = nestedParagraph.paragraphs,
                     uidPath = uidPath.apply { add(nestedParagraph.uid) },
                     openParagraph = openParagraph
                 )

@@ -2,6 +2,7 @@ package study.me.please.ui.units
 
 import android.util.Log
 import androidx.lifecycle.viewModelScope
+import com.squadris.squadris.compose.base.BaseViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -9,7 +10,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import com.squadris.squadris.compose.base.BaseViewModel
 import study.me.please.base.GeneralClipBoard
 import study.me.please.data.io.FactIO
 import study.me.please.data.io.UnitElement
@@ -619,65 +619,38 @@ class UnitViewModel @Inject constructor(
     fun requestParagraph(uid: String) {
         viewModelScope.launch {
             currentUnit = UnitIO(paragraphUidList = mutableListOf(uid), collectionUid = "").also { unit ->
-                unit.paragraphs.addAll(
-                    repository.getParagraphsBy(unit.paragraphUidList).orEmpty().sortedBy {
-                        unit.paragraphUidList.indexOf(it.uid)
-                    }.onEach { paragraph ->
-                        if(paragraph.factUidList.isNotEmpty()) {
-                            paragraph.facts.clear()
-                            paragraph.facts.addAll(
-                                repository.getFactsBy(paragraph.factUidList).orEmpty().sortedBy {
-                                    paragraph.factUidList.indexOf(it.uid)
-                                }.onEach {
-                                    if(it.factUidList.isNotEmpty()) {
-                                        it.facts.clear()
-                                        it.facts.addAll(
-                                            repository.getFactsBy(it.factUidList).orEmpty().sortedBy { sort ->
-                                                it.factUidList.indexOf(sort.uid)
-                                            }
-                                        )
-                                    }
-                                }
-                            )
-                        }
-                        if(paragraph.paragraphUidList.isNotEmpty()) {
-                            paragraph.paragraphs.clear()
-                            paragraph.paragraphs.addAll(
-                                repository.getParagraphsBy(paragraph.paragraphUidList)?.sortedBy {
-                                    paragraph.factUidList.indexOf(it.uid)
-                                }.orEmpty()
-                            )
-                        }
-
-                        iterateFurtherAction(paragraph) { iterationParagraph ->
-                            if(iterationParagraph.factUidList.isNotEmpty()) {
-                                iterationParagraph.facts.clear()
-                                iterationParagraph.facts.addAll(
-                                    repository.getFactsBy(iterationParagraph.factUidList).orEmpty().sortedBy {
-                                        iterationParagraph.factUidList.indexOf(it.uid)
-                                    }.onEach {
-                                        if(it.factUidList.isNotEmpty()) {
-                                            it.facts.clear()
-                                            it.facts.addAll(
-                                                repository.getFactsBy(it.factUidList).orEmpty().sortedBy { sort ->
-                                                    it.factUidList.indexOf(sort.uid)
-                                                }
-                                            )
+                val paragraphs = repository.getParagraphsBy(unit.paragraphUidList).orEmpty().sortedBy {
+                    unit.paragraphUidList.indexOf(it.uid)
+                }
+                iterateFurtherAction(paragraphs) { iterationParagraph ->
+                    if(iterationParagraph.factUidList.isNotEmpty()) {
+                        iterationParagraph.facts.clear()
+                        iterationParagraph.facts.addAll(
+                            repository.getFactsBy(iterationParagraph.factUidList).orEmpty().sortedBy {
+                                iterationParagraph.factUidList.indexOf(it.uid)
+                            }.onEach {
+                                if(it.factUidList.isNotEmpty()) {
+                                    it.facts.clear()
+                                    it.facts.addAll(
+                                        repository.getFactsBy(it.factUidList).orEmpty().sortedBy { sort ->
+                                            it.factUidList.indexOf(sort.uid)
                                         }
-                                    }
-                                )
+                                    )
+                                }
                             }
-                            if(iterationParagraph.paragraphUidList.isNotEmpty()) {
-                                iterationParagraph.paragraphs.clear()
-                                iterationParagraph.paragraphs.addAll(
-                                    repository.getParagraphsBy(iterationParagraph.paragraphUidList)?.sortedBy {
-                                        iterationParagraph.factUidList.indexOf(it.uid)
-                                    }.orEmpty()
-                                )
-                            }
-                        }
+                        )
                     }
-                )
+                    if(iterationParagraph.paragraphUidList.isNotEmpty()) {
+                        iterationParagraph.paragraphs.clear()
+                        iterationParagraph.paragraphs.addAll(
+                            repository.getParagraphsBy(iterationParagraph.paragraphUidList)?.sortedBy {
+                                iterationParagraph.factUidList.indexOf(it.uid)
+                            }.orEmpty()
+                        )
+                    }
+                }
+
+                unit.paragraphs.addAll(paragraphs)
             }
             requestElements()
         }
@@ -736,19 +709,17 @@ class UnitViewModel @Inject constructor(
 
     /** iterates into all possible depths */
     private suspend fun iterateFurtherAction(
-        paragraph: ParagraphIO,
+        paragraphs: List<ParagraphIO>,
         action: suspend (ParagraphIO) -> Unit
     ) {
         withContext(Dispatchers.Default) {
-            val paragraphsCopy = paragraph.paragraphs.toList()
-            paragraphsCopy.forEach { iterationParagraph ->
+            paragraphs.forEach { iterationParagraph ->
                 action(iterationParagraph)
                 iterateFurtherAction(
-                    paragraph = iterationParagraph,
+                    paragraphs = iterationParagraph.paragraphs,
                     action = action,
                 )
             }
-            paragraph.paragraphs = paragraphsCopy.toMutableList()
         }
     }
 
