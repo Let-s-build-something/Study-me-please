@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
@@ -63,21 +64,22 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.squadris.squadris.compose.base.LocalNavController
 import com.squadris.squadris.compose.components.chips.SearchChip
+import com.squadris.squadris.compose.components.navigation.ActionBarIcon
+import com.squadris.squadris.compose.components.navigation.NavIconType
 import com.squadris.squadris.compose.theme.LocalTheme
+import com.squadris.squadris.utils.RefreshableViewModel.Companion.requestData
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import study.me.please.R
-import com.squadris.squadris.compose.base.LocalNavController
-import com.squadris.squadris.compose.components.navigation.ActionBarIcon
-import com.squadris.squadris.compose.components.navigation.NavIconType
 import study.me.please.base.navigation.NavigationNode.Companion.navigate
 import study.me.please.base.navigation.NavigationRoot
 import study.me.please.data.io.UnitsFilter
 import study.me.please.data.io.subjects.UnitIO
-import com.squadris.squadris.utils.RefreshableViewModel.Companion.requestData
+import study.me.please.ui.collection.detail.REQUEST_DATA_SAVE_DELAY
 import study.me.please.ui.collection.detail.questions.detail.INPUT_DELAYED_RESPONSE_MILLIS
 import study.me.please.ui.components.pull_refresh.PullRefreshScreen
 import study.me.please.ui.components.session.launcher.SessionLauncher
@@ -241,6 +243,7 @@ private fun ContentLayout(
     val hasScrolled = rememberSaveable {
         mutableStateOf(false)
     }
+    val delayedScope = rememberCoroutineScope()
     val coroutineScope = rememberCoroutineScope()
     val inputScope = rememberCoroutineScope()
     val isSearchChipChecked = rememberSaveable(viewModel) { mutableStateOf(false) }
@@ -254,6 +257,15 @@ private fun ContentLayout(
     LaunchedEffect(pagerState) {
         snapshotFlow { pagerState.currentPage }.collect { index ->
             currentPagerIndex.value = index
+
+            if(index != viewModel.collection.value?.lastSelectedUnitIndex) {
+                viewModel.collection.value?.lastSelectedUnitIndex = index
+                delayedScope.coroutineContext.cancelChildren()
+                delayedScope.launch {
+                    delay(REQUEST_DATA_SAVE_DELAY)
+                    viewModel.updateCollection()
+                }
+            }
         }
     }
     LaunchedEffect(units.value?.size) {
@@ -313,7 +325,9 @@ private fun ContentLayout(
                         tint = LocalTheme.current.colors.tetrial
                     )
                 }
-                AnimatedVisibility(pagerState.pageCount > 1) {
+                AnimatedVisibility(
+                    visible = pagerState.pageCount > 1 && isSearchChipChecked.value.not()
+                ) {
                     PagerIndicatorRow(
                         modifier = Modifier
                             .align(Alignment.CenterVertically)
@@ -322,7 +336,7 @@ private fun ContentLayout(
                     )
                 }
                 SearchChip(
-                    modifier = Modifier.padding(end = 8.dp),
+                    modifier = Modifier.padding(end = 6.dp),
                     maxHeight = 38.sp,
                     isChecked = isSearchChipChecked,
                     text = filter.value.textFilter,
@@ -371,7 +385,7 @@ private fun ContentLayout(
                                 // move up
                                 Icon(
                                     modifier = Modifier
-                                        .size(with(density) { 38.sp.toDp() })
+                                        .requiredSize(with(density) { 38.sp.toDp() })
                                         .clickable(
                                             indication = rememberRipple(
                                                 bounded = true,
@@ -408,7 +422,7 @@ private fun ContentLayout(
                                 // move down
                                 Icon(
                                     modifier = Modifier
-                                        .size(with(density) { 38.sp.toDp() })
+                                        .requiredSize(with(density) { 38.sp.toDp() })
                                         .clickable(
                                             indication = rememberRipple(
                                                 bounded = true,

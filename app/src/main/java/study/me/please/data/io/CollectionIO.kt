@@ -51,7 +51,10 @@ data class CollectionIO(
     var factUidList: MutableList<String> = mutableListOf(),
 
     /** user who manages this collection */
-    var userUid: String? = null
+    var userUid: String? = null,
+
+    /**  index of last selected unit */
+    var lastSelectedUnitIndex: Int = 0
 ): Serializable {
 
     /** list of all units, received only from firebase */

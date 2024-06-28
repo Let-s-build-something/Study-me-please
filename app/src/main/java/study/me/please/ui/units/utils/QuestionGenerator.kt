@@ -265,11 +265,11 @@ class QuestionGenerator @Inject constructor() {
                 if(chunk.value.size + facts.size >= MINIMUM_RELATED_DATA_TO_GENERATE) {
                     chunk.value.forEach { iteratedFact ->
                         val relatedFacts = chunk.value.plus(facts)
-                            .shuffled()
                             .filter {
                                 it.data.uid != iteratedFact.data.uid
                                         && it.data.isSeriousDataPoint()
                             }
+                            .shuffled()
                             .map { fact ->
                                 fact to calculateWeights(
                                     anchorList = iteratedFact.sortedNames,
@@ -280,6 +280,7 @@ class QuestionGenerator @Inject constructor() {
                             .sortedWith(compareByDescending<Pair<FactToGenerate, Int>> {
                                 if(it.first.data.type == iteratedFact.data.type) 1 else 0
                             }.thenByDescending { it.second })
+                            .distinctBy { it.first.data.uid }
                             .take(if(generatingGoal == FactGeneratingGoal.NESTED_FACTS_LONG_KEY
                                 || generatingGoal == FactGeneratingGoal.NESTED_FACTS_SHORT_KEY) {
                                 MINIMUM_RELATED_DATA_TO_GENERATE * 2
@@ -310,9 +311,10 @@ class QuestionGenerator @Inject constructor() {
                     }
                     val sameType = otherFacts.filter { it.data.type == iteratedFact.data.type }
                     val relatedFacts = if(sameType.size >= MINIMUM_RELATED_DATA_TO_GENERATE) {
-                        sameType
+                        sameType.distinctBy { it.data.uid }
                     }else sameType.plus(
                         otherFacts.filter { it.data.type != iteratedFact.data.type }
+                            .distinctBy { it.data.uid }
                             .shuffled()
                             .take(MINIMUM_RELATED_DATA_TO_GENERATE.minus(sameType.size))
                     )

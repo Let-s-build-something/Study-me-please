@@ -18,6 +18,7 @@ import study.me.please.data.io.subjects.ParagraphIO
 import study.me.please.data.io.subjects.UnitIO
 import study.me.please.ui.units.utils.UnitsUseCase
 import javax.inject.Inject
+import kotlin.math.abs
 
 
 /** Communication bridge between UI and DB */
@@ -70,7 +71,10 @@ class CollectionUnitsViewModel @Inject constructor(
             val prompt = filter.textFilter.lowercase()
 
             if (prompt.isNotBlank()) {
-                units?.forEach { unit ->
+                units?.sortedBy {
+                    // serazeno podle vzdalenosti od aktualne vybraneho indexu
+                    abs(units.indexOf(it) - (collection.value?.lastSelectedUnitIndex ?: 0) + 1)
+                }?.forEach { unit ->
                     if (unit.name.contains(prompt)
                         || unit.bulletPoints.any { it.lowercase().contains(prompt) }
                     ) {
@@ -151,6 +155,15 @@ class CollectionUnitsViewModel @Inject constructor(
                 collectionUid = collectionUid,
                 unitUidList = unitUidList
             )
+        }
+    }
+
+    /** Makes a request for a collection save */
+    fun updateCollection() {
+        collection.value?.let {
+            viewModelScope.launch {
+                repository.updateCollection(it)
+            }
         }
     }
 

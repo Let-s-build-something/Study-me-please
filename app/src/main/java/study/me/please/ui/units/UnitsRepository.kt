@@ -91,6 +91,13 @@ class UnitsRepository @Inject constructor(
         }
     }
 
+    /** updates a specific collection */
+    suspend fun updateCollection(collection: CollectionIO) {
+        return withContext(Dispatchers.IO) {
+            collectionDao.insertCollection(collection)
+        }
+    }
+
     private val cancellableScope = CoroutineScope(Dispatchers.IO)
 
     /** updates a specific unit within a collection */
