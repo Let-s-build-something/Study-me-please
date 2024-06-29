@@ -73,7 +73,7 @@ class CollectionUnitsViewModel @Inject constructor(
             if (prompt.isNotBlank()) {
                 units?.sortedBy {
                     // serazeno podle vzdalenosti od aktualne vybraneho indexu
-                    abs(units.indexOf(it) - (collection.value?.lastSelectedUnitIndex ?: 0) + 1)
+                    abs(units.indexOf(it) - (collection.value?.lastSelectedUnitIndex ?: 0)) + 1
                 }?.forEach { unit ->
                     if (unit.name.contains(prompt)
                         || unit.bulletPoints.any { it.lowercase().contains(prompt) }

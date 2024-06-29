@@ -1,6 +1,7 @@
 package study.me.please.data.io.session
 
 import androidx.room.PrimaryKey
+import study.me.please.data.io.ImportedSource
 import study.me.please.data.io.QuestionIO
 import java.util.UUID
 
@@ -12,6 +13,9 @@ data class SessionHistoryItem(
             " TODO consider how questions will be saved if they will no longer be the primary source for Examinations (Units will)" +
             " POSSIBLE SOLUTION: having ImportedSource together with generatingGoal is the same as having the question!")
     val questionIO: QuestionIO? = null,
+
+    /** source of this item */
+    val importedSource: ImportedSource? = null,
 
     /** index of this question */
     val index: Int = -1,

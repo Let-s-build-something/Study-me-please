@@ -83,7 +83,8 @@ class SessionViewModel @Inject constructor(
     private suspend fun prepareQuestions(
         context: Context,
         sessionPreference: SessionPreferencePack,
-        selectedUidList: List<String>
+        selectedUidList: List<String>,
+        excludedList: List<String>
     ): List<QuestionIO> {
         return withContext(Dispatchers.Default) {
             if(dataManager.session.value == null) {
@@ -119,7 +120,8 @@ class SessionViewModel @Inject constructor(
                 val response = questionGenerator.generateQuestions(
                     context = context,
                     units = units,
-                    allUnits = units
+                    allUnits = units,
+                    excludedList = excludedList
                 )
                 // new questions generated - clear old ones, save new ones. Saves new snapshot hash
                 if(response.data?.isNotEmpty() == true) {
@@ -224,13 +226,18 @@ class SessionViewModel @Inject constructor(
             dataManager.collections.value = collections
 
             dataManager.preferencePack.value?.let { preferencePack ->
-                questions.addAll(
-                    prepareQuestions(
-                        context = context,
-                        sessionPreference = preferencePack,
-                        selectedUidList = preferencePack.selectedUidList
+                withContext(Dispatchers.Default) {
+                    questions.addAll(
+                        prepareQuestions(
+                            context = context,
+                            sessionPreference = preferencePack,
+                            selectedUidList = preferencePack.selectedUidList,
+                            excludedList = dataManager.questionModule.value?.history?.mapNotNull {
+                                it.questionIO?.importedSource?.sourceUid
+                            }.orEmpty()
+                        )
                     )
-                )
+                }
             }
 
             // save new module if it was just created

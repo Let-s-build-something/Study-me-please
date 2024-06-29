@@ -40,6 +40,7 @@ data class SessionScreenState(
 
     /** Sync current data with state model */
     suspend fun initialize(questions: List<QuestionIO>) {
+        if(timeOfStart != null) return
         module.setData(questions)
         timeOfStart = DateUtils.now
         liveIndex.value = module.currentIndex
@@ -89,6 +90,7 @@ data class SessionScreenState(
                     module.onQuestionAnswered(
                         SessionHistoryItem(
                             questionIO = item.question,
+                            importedSource = item.question?.importedSource,
                             index = liveIndex.value.minus(module.history.size.minus(1)),
                             answers = item.validations.toSet().toList(),
                             timeOfStart = timeOfStart?.timeInMillis,

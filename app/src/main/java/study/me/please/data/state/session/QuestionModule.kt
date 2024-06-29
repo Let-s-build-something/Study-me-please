@@ -172,9 +172,8 @@ data class QuestionModule(
         question: QuestionIO,
         index: Int
     ) {
-        val newIndex = this.currentIndex.plus(index)
-        if(newIndex < questionsStack.size) {
-            questionsStack.add(newIndex, QuestionItem(question.uid, isRepetition = true))
+        if(index < questionsStack.size) {
+            questionsStack.add(index, QuestionItem(question.uid, isRepetition = true))
         }else {
             questionsStack.add(QuestionItem(question.uid, isRepetition = true))
         }

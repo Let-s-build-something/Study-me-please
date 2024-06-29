@@ -1,5 +1,6 @@
 package study.me.please.data.io
 
+import study.me.please.ui.units.utils.QuestionGenerator
 import java.io.Serializable
 
 /** Information about source of import */
@@ -12,11 +13,11 @@ data class ImportedSource(
     val sourceUid: String? = null,
 
     /** Parent importing source */
-    val parent: ImportedSource? = null
-): Serializable {
+    val parent: ImportedSource? = null,
 
-    /** Finds first paragraph uid */
-    fun findParagraphUid(): String? {
-        return if(type == ImportSourceType.PARAGRAPH) sourceUid else parent?.findParagraphUid()
-    }
-}
+    /**
+     * Reason is an open enum value
+     * For question generating, [QuestionGenerator.FactGeneratingGoal] and [QuestionGenerator.UnitGeneratingGoal] is used
+     */
+    val reason: String? = null
+): Serializable

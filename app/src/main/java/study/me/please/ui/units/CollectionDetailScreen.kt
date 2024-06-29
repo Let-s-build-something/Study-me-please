@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
@@ -385,7 +384,7 @@ private fun ContentLayout(
                                 // move up
                                 Icon(
                                     modifier = Modifier
-                                        .requiredSize(with(density) { 38.sp.toDp() })
+                                        .size(with(density) { 38.sp.toDp() })
                                         .clickable(
                                             indication = rememberRipple(
                                                 bounded = true,
@@ -422,7 +421,7 @@ private fun ContentLayout(
                                 // move down
                                 Icon(
                                     modifier = Modifier
-                                        .requiredSize(with(density) { 38.sp.toDp() })
+                                        .size(with(density) { 38.sp.toDp() })
                                         .clickable(
                                             indication = rememberRipple(
                                                 bounded = true,
