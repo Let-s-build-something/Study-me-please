@@ -84,7 +84,9 @@ class QuestionGenerator @Inject constructor() {
                             parentParagraph = ParagraphIO(name = unit.name, uid = unit.uid)
                         )
                     )
-                    iteratedFact.facts.forEach { nestedFact ->
+                    iteratedFact.facts.filter {
+                        excludedList.contains(it.uid).not()
+                    }.forEach { nestedFact ->
                         facts.add(
                             FactToGenerate(
                                 data = nestedFact,
@@ -102,8 +104,8 @@ class QuestionGenerator @Inject constructor() {
                 if(units.size > MINIMUM_RELATED_DATA_TO_GENERATE) {
                     UnitGeneratingGoal.values().forEach { goal ->
                         generateSubjectQuestion(
-                            subject = unit,
-                            subjects = allUnits,
+                            unit = unit,
+                            units = allUnits,
                             generatingGoal = goal,
                             context = context
                         )?.let { nameQuestion ->
@@ -148,7 +150,9 @@ class QuestionGenerator @Inject constructor() {
                                     parentParagraph = paragraph
                                 )
                             )
-                            iteratedFact.facts.forEach { nestedFact ->
+                            iteratedFact.facts.filter {
+                                excludedList.contains(it.uid).not()
+                            }.forEach { nestedFact ->
                                 facts.add(
                                     FactToGenerate(
                                         data = nestedFact,
@@ -374,7 +378,7 @@ class QuestionGenerator @Inject constructor() {
                             textList = if(generatingGoal == FactGeneratingGoal.NESTED_FACTS_LONG_KEY) {
                                 mappingItem.data.textList
                             } else emptyList(),
-                            importedSource = mappingItem.makeImportedSourceRoute(generatingGoal)
+                            importedSource = mappingItem.makeImportedSourceRoute(null)
                         )
                     }.toMutableList().apply {
                         // we add the correct answer
@@ -385,6 +389,9 @@ class QuestionGenerator @Inject constructor() {
                                         mapped.longInformation
                                     }else mapped.shortKeyInformation,
                                     isCorrect = true,
+                                    explanationMessage = if(generatingGoal == FactGeneratingGoal.NESTED_FACTS_LONG_KEY) {
+                                        mapped.shortKeyInformation
+                                    }else mapped.longInformation,
                                     textList = if(generatingGoal == FactGeneratingGoal.NESTED_FACTS_LONG_KEY) {
                                         mapped.textList
                                     } else emptyList()
@@ -422,7 +429,7 @@ class QuestionGenerator @Inject constructor() {
                                     },
                                 explanationMessage = mappingItem.data.shortKeyInformation,
                                 isCorrect = false,
-                                importedSource = mappingItem.makeImportedSourceRoute(generatingGoal)
+                                importedSource = mappingItem.makeImportedSourceRoute(null)
                             )
                         }.toMutableList().apply {
                             // we add the correct answer
@@ -445,15 +452,13 @@ class QuestionGenerator @Inject constructor() {
                 }else {
                     QuestionIO(
                         answers = relatedFacts.map { mappingFact ->
-                            val makeImportedSourceRoute = mappingFact.makeImportedSourceRoute(generatingGoal)
-
                             QuestionAnswerIO(
                                 text = "${mappingFact.data.shortKeyInformation} (${mappingFact.parentParagraph.name})",
                                 explanationMessage = mappingFact.data.longInformation,
                                 imageExplanation = mappingFact.data.promptImage,
                                 explanationList = mappingFact.data.textList,
                                 isCorrect = false,
-                                importedSource = makeImportedSourceRoute
+                                importedSource = mappingFact.makeImportedSourceRoute(null)
                             )
                         }.toMutableList().apply {
                             // we add the correct answer
@@ -475,7 +480,6 @@ class QuestionGenerator @Inject constructor() {
             else -> {
                 QuestionIO(
                     answers = relatedFacts.map { mappingFact ->
-                        val makeImportedSourceRoute = mappingFact.makeImportedSourceRoute(generatingGoal)
                         val shortKeyInformation = "${mappingFact.data.shortKeyInformation} (${
                             promptFact.parentFact?.shortKeyInformation ?: promptFact.parentParagraph.name
                         })"
@@ -499,7 +503,7 @@ class QuestionGenerator @Inject constructor() {
                             },
                             explanationList = mappingFact.data.textList,
                             imageExplanation = mappingFact.data.promptImage,
-                            importedSource = makeImportedSourceRoute
+                            importedSource = mappingFact.makeImportedSourceRoute(null)
                         )
                     }.toMutableList().apply {
                         val shortKeyInformation = "${promptFact.data.shortKeyInformation} (${
@@ -556,26 +560,26 @@ class QuestionGenerator @Inject constructor() {
 
     /** Generates a question for specific Subject */
     private suspend fun generateSubjectQuestion(
-        subject: UnitIO,
-        subjects: List<UnitIO>,
+        unit: UnitIO,
+        units: List<UnitIO>,
         generatingGoal: UnitGeneratingGoal,
         context: Context
     ): QuestionIO? {
         return withContext(Dispatchers.Default) {
-            if(subject.isSeriousDataPoint()) {
+            if(unit.isSeriousDataPoint()) {
                 // we find related subjects to mislead question, there may be none,
                 // in which case we pick unrelated ones
-                val subjectForUse = subjects
+                val subjectForUse = units
                     .filter { filterSubject ->
-                        filterSubject.uid != subject.uid && filterSubject.isSeriousDataPoint()
+                        filterSubject.uid != unit.uid && filterSubject.isSeriousDataPoint()
                     }
 
                 // if there are less than minimum related subjects, we use other relatedness
                 if(subjectForUse.size < MINIMUM_RELATED_DATA_TO_GENERATE) {
                     // index in the field
-                    val subjectsByIndex = subjects.sortedBy { sortedSubject ->
+                    val subjectsByIndex = units.sortedBy { sortedSubject ->
                         kotlin.math.abs(
-                            subjects.indexOf(sortedSubject).minus(subjects.indexOf(subject))
+                            units.indexOf(sortedSubject).minus(units.indexOf(unit))
                         )
                     }
                     // if there are any category matches, we want to use them
@@ -610,19 +614,19 @@ class QuestionGenerator @Inject constructor() {
                             // we add the correct answer
                             add(
                                 if(generatingGoal == UnitGeneratingGoal.NAME) {
-                                    QuestionAnswerIO(textList = subject.bulletPoints, isCorrect = true)
-                                }else QuestionAnswerIO(text = subject.name, isCorrect = true)
+                                    QuestionAnswerIO(textList = unit.bulletPoints, isCorrect = true)
+                                }else QuestionAnswerIO(text = unit.name, isCorrect = true)
                             )
                         },
                         importedSource = ImportedSource(
                             type = ImportSourceType.UNIT,
-                            sourceUid = subject.uid
+                            sourceUid = unit.uid
                         ),
                         prompt = if(generatingGoal == UnitGeneratingGoal.NAME) {
-                            context.getString(R.string.question_generating_bulletin_name, subject.name)
+                            context.getString(R.string.question_generating_bulletin_name, unit.name)
                         }else context.getString(R.string.question_generating_bulletin_points),
                         promptList = if(generatingGoal == UnitGeneratingGoal.BULLET_POINTS) {
-                            subject.bulletPoints
+                            unit.bulletPoints
                         }else listOf()
                     )
                 }
@@ -693,7 +697,7 @@ class QuestionGenerator @Inject constructor() {
     ) {
 
         /** Creates imported source route from this paragraph */
-        fun makeImportedSourceRoute(generatingGoal: FactGeneratingGoal): ImportedSource {
+        fun makeImportedSourceRoute(generatingGoal: FactGeneratingGoal?): ImportedSource {
             var currentImportedSource = ImportedSource(
                 sourceUid = parentUnitUid,
                 type = ImportSourceType.UNIT
@@ -711,7 +715,7 @@ class QuestionGenerator @Inject constructor() {
                 sourceUid = data.uid,
                 type = ImportSourceType.FACT,
                 parent = currentImportedSource,
-                reason = generatingGoal.name
+                reason = generatingGoal?.name
             )
         }
     }
