@@ -32,6 +32,8 @@ import study.me.please.ui.collection.CollectionLobbyScreen
 import study.me.please.ui.collection.detail.CollectionAboutScreen
 import study.me.please.ui.collection.detail.CollectionQuestionsScreen
 import study.me.please.ui.collection.detail.questions.detail.QuestionDetailScreen
+import study.me.please.ui.community.CommunityScreen
+import study.me.please.ui.community.collection.PublicCollectionScreen
 import study.me.please.ui.home.HomeScreen
 import study.me.please.ui.session.detail.SessionDetailScreen
 import study.me.please.ui.session.lobby.SessionLobbyScreen
@@ -96,6 +98,9 @@ class MainActivity: ComponentActivity(), BackboneChannel {
                             composableNode(NavigationRoot.Home) { _, _ ->
                                 HomeScreen()
                             }
+                            composableNode(NavigationRoot.Community) { _, _ ->
+                                CommunityScreen()
+                            }
                             composableNode(NavigationRoot.CollectionLobby) { _, _ ->
                                 CollectionLobbyScreen()
                             }
@@ -130,8 +135,14 @@ class MainActivity: ComponentActivity(), BackboneChannel {
                             }
                             composableNode(NavigationRoot.CollectionDetail) { _, argument ->
                                 CollectionDetailScreen(
-                                    collectionUid = argument?.collectionUid ?: "",
+                                    collectionUid = argument?.collectionUid,
                                     toolbarTitle = argument?.toolbarTitle ?: ""
+                                )
+                            }
+                            composableNode(NavigationRoot.PublicCollection) { _, argument ->
+                                PublicCollectionScreen(
+                                    collectionUid = argument?.collectionUid ?: "",
+                                    collectionName = argument?.collectionName ?: ""
                                 )
                             }
                             composableNode(NavigationRoot.SessionPlay) { _, argument ->

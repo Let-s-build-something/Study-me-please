@@ -49,9 +49,9 @@ fun Modifier.shimmerEffect(
 ): Modifier = composed {
     var size by remember { mutableStateOf(IntSize.Zero) }
     val startOffsetX by rememberInfiniteTransition(label = "").animateFloat(
-        initialValue = (-1.5 * size.width).toFloat(),
-        targetValue = (1.5 * size.width).toFloat(),
-        animationSpec = infiniteRepeatable(animation = tween(1000)),
+        initialValue = (-2 * size.width).toFloat(),
+        targetValue = (2 * size.width).toFloat(),
+        animationSpec = infiniteRepeatable(animation = tween(800)),
         label = ""
     )
 
@@ -91,7 +91,7 @@ fun Modifier.scalingClickable(
     onTap: ((Offset) -> Unit)? = null,
     onDoubleTap: ((Offset) -> Unit)? = null,
     onLongPress: ((Offset) -> Unit)? = null,
-    scaleInto: Float = 0.85f
+    scaleInto: Float = 0.9f
 ): Modifier = composed {
     val isPressed = remember { mutableStateOf(false) }
     val scale = animateFloatAsState(

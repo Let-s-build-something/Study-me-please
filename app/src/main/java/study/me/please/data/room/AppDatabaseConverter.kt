@@ -201,19 +201,19 @@ class AppDatabaseConverter @Inject constructor(private val gson: Gson) {
 
     /** Converts string to [SessionHistoryItem] array */
     @TypeConverter
-    fun toSessionHistoryItemList(value: String): List<SessionHistoryItem> {
+    fun toSessionHistoryItemList(value: String): MutableList<SessionHistoryItem> {
         return gson.fromJson(
             value,
-            TypeToken.getParameterized(List::class.java, SessionHistoryItem::class.java).type
+            TypeToken.getParameterized(MutableList::class.java, SessionHistoryItem::class.java).type
         )
     }
 
     /** Converts [SessionHistoryItem] object array to string */
     @TypeConverter
-    fun fromSessionHistoryItemList(value: List<SessionHistoryItem>): String {
+    fun fromSessionHistoryItemList(value: MutableList<SessionHistoryItem>): String {
         return gson.toJson(
             value,
-            TypeToken.getParameterized(List::class.java, SessionHistoryItem::class.java).type
+            TypeToken.getParameterized(MutableList::class.java, SessionHistoryItem::class.java).type
         )
     }
 
@@ -380,19 +380,19 @@ class AppDatabaseConverter @Inject constructor(private val gson: Gson) {
 
     /** Converts string set to string */
     @TypeConverter
-    fun fromStringSet(value: Set<String>): String {
+    fun fromStringSet(value: MutableSet<String>): String {
         return gson.toJson(
             value,
-            TypeToken.getParameterized(Set::class.java, String::class.java).type
+            TypeToken.getParameterized(MutableSet::class.java, String::class.java).type
         )
     }
 
     /** Converts string to [SessionPreference] */
     @TypeConverter
-    fun toStringSet(value: String?): Set<String> {
-        return if(value.isNullOrEmpty()) setOf() else gson.fromJson(
+    fun toStringSet(value: String?): MutableSet<String> {
+        return if(value.isNullOrEmpty()) mutableSetOf() else gson.fromJson(
             value,
-            TypeToken.getParameterized(Set::class.java, String::class.java).type
+            TypeToken.getParameterized(MutableSet::class.java, String::class.java).type
         )
     }
 
@@ -416,19 +416,19 @@ class AppDatabaseConverter @Inject constructor(private val gson: Gson) {
 
     /** Converts list of [QuestionItem] object to string */
     @TypeConverter
-    fun fromQuestionItemList(value: List<QuestionItem>): String {
+    fun fromQuestionItemList(value: MutableList<QuestionItem>): String {
         return gson.toJson(
             value,
-            TypeToken.getParameterized(List::class.java, QuestionItem::class.java).type
+            TypeToken.getParameterized(MutableList::class.java, QuestionItem::class.java).type
         )
     }
 
     /** Converts string to [QuestionItem] list */
     @TypeConverter
-    fun toQuestionItemList(value: String): List<QuestionItem> {
+    fun toQuestionItemList(value: String): MutableList<QuestionItem> {
         return gson.fromJson(
             value,
-            TypeToken.getParameterized(List::class.java, QuestionItem::class.java).type
+            TypeToken.getParameterized(MutableList::class.java, QuestionItem::class.java).type
         )
     }
 
@@ -452,25 +452,25 @@ class AppDatabaseConverter @Inject constructor(private val gson: Gson) {
 
     /** Converts list of [QuestionAnswerIO] objects to string */
     @TypeConverter
-    fun fromQuestionAnswerIOList(value: List<QuestionAnswerIO>): String {
+    fun fromQuestionAnswerIOList(value: MutableList<QuestionAnswerIO>): String {
         return gson.toJson(
             value,
-            TypeToken.getParameterized(List::class.java, QuestionAnswerIO::class.java).type
+            TypeToken.getParameterized(MutableList::class.java, QuestionAnswerIO::class.java).type
         )
     }
 
     /** Converts string to list of [QuestionAnswerIO] */
     @TypeConverter
-    fun toQuestionAnswerIOList(value: String): List<QuestionAnswerIO> {
+    fun toQuestionAnswerIOList(value: String): MutableList<QuestionAnswerIO> {
         return gson.fromJson(
             value,
-            TypeToken.getParameterized(List::class.java, QuestionAnswerIO::class.java).type
+            TypeToken.getParameterized(MutableList::class.java, QuestionAnswerIO::class.java).type
         )
     }
 
     /** Converts list of strings to string */
     @TypeConverter
-    fun fromStringList(value: MutableList<String>): String {
+    fun fromMutableStringList(value: MutableList<String>): String {
         val copyOfValue = ArrayList(value)
         return gson.toJson(
             copyOfValue,
@@ -480,10 +480,29 @@ class AppDatabaseConverter @Inject constructor(private val gson: Gson) {
 
     /** Converts string to list of strings */
     @TypeConverter
-    fun toStringList(value: String): MutableList<String> {
+    fun toMutableStringList(value: String): MutableList<String> {
         return gson.fromJson(
             value,
             TypeToken.getParameterized(MutableList::class.java, String::class.java).type
+        ) ?: mutableListOf()
+    }
+
+    /** Converts list of strings to string */
+    @TypeConverter
+    fun fromStringList(value: List<String>): String {
+        val copyOfValue = ArrayList(value)
+        return gson.toJson(
+            copyOfValue,
+            TypeToken.getParameterized(List::class.java, String::class.java).type
+        )
+    }
+
+    /** Converts string to list of strings */
+    @TypeConverter
+    fun toStringList(value: String): List<String> {
+        return gson.fromJson(
+            value,
+            TypeToken.getParameterized(List::class.java, String::class.java).type
         ) ?: mutableListOf()
     }
 

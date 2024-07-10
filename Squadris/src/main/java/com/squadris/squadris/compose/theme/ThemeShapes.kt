@@ -15,6 +15,9 @@ interface ThemeShapes {
     /** shape for a component */
     val componentShape: Shape
 
+    /** shape for a rounded component */
+    val roundedComponentShape: Shape
+
     /** base component corner radius */
     val componentCornerRadius: Dp
 

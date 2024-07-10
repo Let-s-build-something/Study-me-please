@@ -2,6 +2,7 @@
 
 package study.me.please.ui.units
 
+import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -63,21 +64,22 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.squadris.squadris.compose.base.LocalNavController
 import com.squadris.squadris.compose.components.chips.SearchChip
+import com.squadris.squadris.compose.components.navigation.ActionBarIcon
+import com.squadris.squadris.compose.components.navigation.NavIconType
 import com.squadris.squadris.compose.theme.LocalTheme
+import com.squadris.squadris.utils.RefreshableViewModel.Companion.requestData
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import study.me.please.R
-import com.squadris.squadris.compose.base.LocalNavController
-import com.squadris.squadris.compose.components.navigation.ActionBarIcon
-import com.squadris.squadris.compose.components.navigation.NavIconType
 import study.me.please.base.navigation.NavigationNode.Companion.navigate
 import study.me.please.base.navigation.NavigationRoot
 import study.me.please.data.io.UnitsFilter
 import study.me.please.data.io.subjects.UnitIO
-import com.squadris.squadris.utils.RefreshableViewModel.Companion.requestData
+import study.me.please.ui.collection.detail.REQUEST_DATA_SAVE_DELAY
 import study.me.please.ui.collection.detail.questions.detail.INPUT_DELAYED_RESPONSE_MILLIS
 import study.me.please.ui.components.pull_refresh.PullRefreshScreen
 import study.me.please.ui.components.session.launcher.SessionLauncher
@@ -94,7 +96,7 @@ import study.me.please.ui.units.utils.UnitActionType
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun CollectionDetailScreen(
-    collectionUid: String,
+    collectionUid: String?,
     toolbarTitle: String? = "",
     viewModel: CollectionUnitsViewModel = hiltViewModel()
 ) {
@@ -120,6 +122,7 @@ fun CollectionDetailScreen(
     )
 
     LaunchedEffect(Unit) {
+        Log.d("kostka_test", "CollectionDetailScreen, collectionUid: $collectionUid")
         viewModel.collectionUid = collectionUid
         viewModel.defaultUnitPrefix = context.getString(R.string.unit_heading_prefix)
         viewModel.requestData(isSpecial = true)
@@ -127,7 +130,7 @@ fun CollectionDetailScreen(
 
     if(showSessionLauncher.value) {
         SessionLauncher(
-            collectionUidList = listOf(collectionUid),
+            collectionUidList = listOf(collectionUid ?: ""),
             containsAll = false,
             onDismissRequest = {
                 showSessionLauncher.value = false
@@ -192,7 +195,6 @@ fun CollectionDetailScreen(
                     .align(Alignment.CenterStart),
                 state = drawerState,
                 viewModel = viewModel,
-                collectionUid = collectionUid,
                 onIndexChange = { index ->
                     coroutineScope.launch {
                         pagerState.animateScrollToPage(index)
@@ -241,6 +243,7 @@ private fun ContentLayout(
     val hasScrolled = rememberSaveable {
         mutableStateOf(false)
     }
+    val delayedScope = rememberCoroutineScope()
     val coroutineScope = rememberCoroutineScope()
     val inputScope = rememberCoroutineScope()
     val isSearchChipChecked = rememberSaveable(viewModel) { mutableStateOf(false) }
@@ -254,6 +257,15 @@ private fun ContentLayout(
     LaunchedEffect(pagerState) {
         snapshotFlow { pagerState.currentPage }.collect { index ->
             currentPagerIndex.value = index
+
+            if(index != viewModel.collection.value?.lastSelectedUnitIndex) {
+                viewModel.collection.value?.lastSelectedUnitIndex = index
+                delayedScope.coroutineContext.cancelChildren()
+                delayedScope.launch {
+                    delay(REQUEST_DATA_SAVE_DELAY)
+                    viewModel.updateCollection()
+                }
+            }
         }
     }
     LaunchedEffect(units.value?.size) {
@@ -313,7 +325,9 @@ private fun ContentLayout(
                         tint = LocalTheme.current.colors.tetrial
                     )
                 }
-                AnimatedVisibility(pagerState.pageCount > 1) {
+                AnimatedVisibility(
+                    visible = pagerState.pageCount > 1 && isSearchChipChecked.value.not()
+                ) {
                     PagerIndicatorRow(
                         modifier = Modifier
                             .align(Alignment.CenterVertically)
@@ -322,7 +336,7 @@ private fun ContentLayout(
                     )
                 }
                 SearchChip(
-                    modifier = Modifier.padding(end = 8.dp),
+                    modifier = Modifier.padding(end = 6.dp),
                     maxHeight = 38.sp,
                     isChecked = isSearchChipChecked,
                     text = filter.value.textFilter,

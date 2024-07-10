@@ -27,6 +27,7 @@ import androidx.compose.ui.focus.onFocusEvent
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import com.squadris.squadris.compose.theme.LocalTheme
 import study.me.please.R
@@ -40,8 +41,10 @@ fun ListItemEditField(
     prefix: String,
     maxLines: Int = 20,
     identifier: String? = null,
+    paddingValues: PaddingValues = PaddingValues(horizontal = 8.dp),
     onEntered: ((value: CharSequence) -> Unit)? = null,
     hint: String = stringResource(R.string.list_item_generic_hint),
+    textStyle: TextStyle = LocalTheme.current.styles.category,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
     onBackspaceKey: (output: String) -> Unit = {},
@@ -60,7 +63,7 @@ fun ListItemEditField(
             .wrapContentWidth()
             .animateContentSize()
             .heightIn(min = with(localDensity) {
-                LocalTheme.current.styles.category.fontSize
+                textStyle.fontSize
                     .toDp()
                     .plus(10.dp)
             })
@@ -70,7 +73,7 @@ fun ListItemEditField(
             }
             .height(
                 with(localDensity) {
-                    LocalTheme.current.styles.category.fontSize
+                    textStyle.fontSize
                         .toDp()
                         .plus(1.5.dp)
                         .times(fieldLineCount)
@@ -78,6 +81,7 @@ fun ListItemEditField(
             )
             .widthIn(min = TextFieldDefaults.MinWidth),
         value = value,
+        paddingValues = paddingValues,
         identifier = identifier,
         keyboardOptions = keyboardOptions,
         keyboardActions = keyboardActions,
@@ -92,11 +96,11 @@ fun ListItemEditField(
             ) {
                 Text(
                     text = prefix,
-                    style = LocalTheme.current.styles.category
+                    style = textStyle
                 )
             }
         },
-        textStyle = LocalTheme.current.styles.category,
+        textStyle = textStyle,
         isUnfocusedTransparent = true,
         minLines = 1,
         maxLines = maxLines,
@@ -109,10 +113,9 @@ fun ListItemEditField(
                 }
             }
         },
-        paddingValues = PaddingValues(horizontal = 8.dp),
-        onValueChange = {
-            output.value = it
-            onValueChange(it.text)
+        onValueChange = { out ->
+            output.value = out
+            onValueChange(out.text)
         }
     )
 }

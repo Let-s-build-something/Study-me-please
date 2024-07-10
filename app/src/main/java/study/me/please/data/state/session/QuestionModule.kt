@@ -1,5 +1,6 @@
 package study.me.please.data.state.session
 
+import android.util.Log
 import androidx.room.Entity
 import androidx.room.Ignore
 import androidx.room.PrimaryKey
@@ -8,6 +9,7 @@ import com.squadris.squadris.utils.DateUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.withContext
+import study.me.please.data.io.ImportSourceType
 import study.me.please.data.io.QuestionIO
 import study.me.please.data.io.StopwatchCounter
 import study.me.please.data.io.session.QuestionItem
@@ -62,27 +64,50 @@ data class QuestionModule(
     /** sets all te necessary data for running questions */
     suspend fun setData(questions: List<QuestionIO>) {
         withContext(Dispatchers.Default) {
-            val questionUids = mutableListOf<String>()
+            Log.d("Session_Play", "setData questions: ${questions.size}")
             val questionItems = mutableListOf<QuestionItem>()
+
+            val questionUids = mutableListOf<String>()
+            val historyItems = history.mapNotNull { history ->
+                if(history.isRepetition.not()) {
+                    // non-generated questions
+                    (history.importedSource?.takeIf {
+                        it.type == ImportSourceType.QUESTION
+                    }?.sourceUid)?.let { uid ->
+                        questionUids.add(uid)
+                    }
+
+                    history.importedSource?.parent?.let { source ->
+                        source.sourceUid to source.reason
+                    }
+                }else null
+            }
 
             this@QuestionModule.questions = questions
             this@QuestionModule.questions.forEach { question ->
-                questionUids.add(question.uid)
-                questionItems.add(QuestionItem(question.uid))
+                if(historyItems.contains(
+                        question.importedSource?.sourceUid to question.importedSource?.reason
+                    ).not()
+                        && questionUids.contains(question.uid).not()
+                ) {
+                    questionItems.add(QuestionItem(question.uid))
+                }
             }
 
             if(questionsStack.isEmpty()) {
                 questionsStack.addAll(questionItems.shuffled().toMutableList())
             }else {
                 // if any questions were added
-                val allQuestions = questionsStack.map { it.uid }.plus(history.map { it.questionIO?.uid })
+                val allQuestions = questionsStack.map { it.uid }
                 questionItems.forEach { item ->
                     if(allQuestions.contains(item.uid).not()) {
                         questionsStack.add(item)
                     }
                 }
                 // if any questions were removed
-                questionsStack.removeAll { questionUids.contains(it.uid).not() }
+                questionsStack.removeAll {
+                    it.isRepetition.not() && questionItems.contains(it).not()
+                }
             }
             updateTotalBackStack()
         }
@@ -93,7 +118,9 @@ data class QuestionModule(
         currentItem?.historyItem?.wasRepeated = true
         // we don't want to allow user to repeat it again
         currentItem?.isRepetition = true
-        (currentItem?.data ?: currentItem?.historyItem?.questionIO)?.let { questionIO ->
+        (currentItem?.data ?: questions.find {
+            it.uid == currentItem?.historyItem?.importedSource?.sourceUid
+        })?.let { questionIO ->
             injectQuestion(
                 question = questionIO,
                 isMistake = false
@@ -111,18 +138,31 @@ data class QuestionModule(
                 SessionItem(
                     isHistory = true,
                     historyItem = historyItem,
+                    data = questions.find { it.uid == historyItem.importedSource?.sourceUid }?.copy(),
                     isRepetition = historyItem.isRepetition
                 )
             }
         }else {
-            val newItem = questionsStack.getOrNull(index.minus(history.size))
-            questions.find { it.uid == newItem?.uid }?.copy()?.let { question ->
+            if(index.minus(history.size) >= questionsStack.size) {
+                currentIndex = history.size
+                updateTotalBackStack()
+                return getStepAt(currentIndex)
+            }
 
-                SessionItem(
-                    isHistory = false,
-                    data = question,
-                    isRepetition = newItem?.isRepetition == true
-                )
+            val newItem = questionsStack.getOrNull(index.minus(history.size))
+            questions.find { it.uid == newItem?.uid }?.copy().let { question ->
+                if(question == null) {
+                    return if(index.minus(history.size) < questionsStack.size) {
+                        questionsStack.removeAt(index.minus(history.size))
+                        getStepAt(index)
+                    }else null
+                }else {
+                    SessionItem(
+                        isHistory = false,
+                        data = question,
+                        isRepetition = newItem?.isRepetition == true
+                    )
+                }
             }
         }
     }
@@ -172,9 +212,8 @@ data class QuestionModule(
         question: QuestionIO,
         index: Int
     ) {
-        val newIndex = this.currentIndex.plus(index)
-        if(newIndex < questionsStack.size) {
-            questionsStack.add(newIndex, QuestionItem(question.uid, isRepetition = true))
+        if(index < questionsStack.size) {
+            questionsStack.add(index, QuestionItem(question.uid, isRepetition = true))
         }else {
             questionsStack.add(QuestionItem(question.uid, isRepetition = true))
         }

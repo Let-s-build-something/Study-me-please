@@ -1,6 +1,8 @@
 package study.me.please.ui.units
 
 import androidx.lifecycle.viewModelScope
+import com.squadris.squadris.compose.base.BaseViewModel
+import com.squadris.squadris.utils.RefreshableViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -9,15 +11,15 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import com.squadris.squadris.compose.base.BaseViewModel
 import study.me.please.base.GeneralClipBoard
 import study.me.please.data.io.CollectionIO
 import study.me.please.data.io.UnitsFilter
 import study.me.please.data.io.subjects.ParagraphIO
 import study.me.please.data.io.subjects.UnitIO
-import com.squadris.squadris.utils.RefreshableViewModel
 import study.me.please.ui.units.utils.UnitsUseCase
+import java.util.UUID
 import javax.inject.Inject
+import kotlin.math.abs
 
 
 /** Communication bridge between UI and DB */
@@ -52,7 +54,7 @@ class CollectionUnitsViewModel @Inject constructor(
     val filter = MutableStateFlow(UnitsFilter())
 
     /** identifier of collection that should be requested */
-    var collectionUid: String = ""
+    var collectionUid: String? = null
 
     /** default prefix of new unit */
     var defaultUnitPrefix: String = ""
@@ -70,39 +72,52 @@ class CollectionUnitsViewModel @Inject constructor(
             val prompt = filter.textFilter.lowercase()
 
             if (prompt.isNotBlank()) {
-                units?.forEach { unit ->
+                units?.sortedBy {
+                    // serazeno podle vzdalenosti od aktualne vybraneho indexu
+                    abs(units.indexOf(it) - (collection.value?.lastSelectedUnitIndex ?: 0)) + 1
+                }?.forEach { unit ->
                     if (unit.name.contains(prompt)
                         || unit.bulletPoints.any { it.lowercase().contains(prompt) }
                     ) {
                         results.add(FocusedUnitElement(unitUid = unit.uid, emptyList()))
                     }
 
-                    unit.paragraphs.forEach { paragraph ->
-                        iterateFurtherAction(
-                            paragraph = paragraph,
-                            action = { elementPath, iteratedParagraph ->
-                                if (iteratedParagraph.name.lowercase().contains(prompt)
-                                    || iteratedParagraph.bulletPoints.any { it.lowercase().contains(prompt) }
+                    iterateFurtherAction(
+                        paragraphs = unit.paragraphs,
+                        action = { elementPath, iteratedParagraph ->
+                            if (iteratedParagraph.name.lowercase().contains(prompt)
+                                || iteratedParagraph.bulletPoints.any { it.lowercase().contains(prompt) }
+                            ) {
+                                results.add(FocusedUnitElement(unitUid = unit.uid, elementPath))
+                            }
+                            iteratedParagraph.facts.forEach { fact ->
+                                if (fact.shortKeyInformation.lowercase().contains(prompt)
+                                    || fact.longInformation.lowercase().contains(prompt)
+                                    || fact.textList.any { it.lowercase().contains(prompt) }
                                 ) {
-                                    results.add(FocusedUnitElement(unitUid = unit.uid, elementPath))
+                                    results.add(
+                                        FocusedUnitElement(
+                                            unitUid = unit.uid,
+                                            elementPath.plus(fact.uid)
+                                        )
+                                    )
                                 }
-                                iteratedParagraph.facts.forEach { fact ->
-                                    if (fact.shortKeyInformation.lowercase().contains(prompt)
-                                        || fact.longInformation.lowercase().contains(prompt)
-                                        || fact.textList.any { it.lowercase().contains(prompt) }
+                                fact.facts.forEach { nestedFact ->
+                                    if (nestedFact.shortKeyInformation.lowercase().contains(prompt)
+                                        || nestedFact.longInformation.lowercase().contains(prompt)
+                                        || nestedFact.textList.any { it.lowercase().contains(prompt) }
                                     ) {
                                         results.add(
                                             FocusedUnitElement(
                                                 unitUid = unit.uid,
-                                                elementPath.plus(fact.uid)
+                                                elementPath.plus(nestedFact.uid)
                                             )
                                         )
                                     }
                                 }
-                            },
-                            elementPath = listOf(paragraph.uid)
-                        )
-                    }
+                            }
+                        }
+                    )
                 }
                 results
             }else null
@@ -111,22 +126,20 @@ class CollectionUnitsViewModel @Inject constructor(
 
     /** iterates into all possible depths */
     private suspend fun iterateFurtherAction(
-        paragraph: ParagraphIO,
+        paragraphs: List<ParagraphIO>,
         elementPath: List<String> = emptyList(),
         action: suspend (List<String>, ParagraphIO) -> Unit
     ) {
         withContext(Dispatchers.Default) {
-            val paragraphsCopy = paragraph.paragraphs.toList()
-            paragraphsCopy.forEach { iterationParagraph ->
+            paragraphs.forEach { iterationParagraph ->
                 action(elementPath.plus(iterationParagraph.uid), iterationParagraph)
 
                 iterateFurtherAction(
-                    paragraph = iterationParagraph,
+                    paragraphs = iterationParagraph.paragraphs,
                     action = action,
                     elementPath = elementPath.plus(iterationParagraph.uid)
                 )
             }
-            paragraph.paragraphs = paragraphsCopy.toMutableList()
         }
     }
 
@@ -146,8 +159,18 @@ class CollectionUnitsViewModel @Inject constructor(
         }
     }
 
+    /** Makes a request for a collection save */
+    fun updateCollection() {
+        collection.value?.let {
+            viewModelScope.launch {
+                repository.updateCollection(it)
+            }
+        }
+    }
+
     /** Adds new unit but doesn't create a DB record for it */
-    fun addNewUnit(collectionUid: String, prefix: String) {
+    fun addNewUnit(collectionUid: String?, prefix: String) {
+        if(collectionUid == null) return
         viewModelScope.launch {
             _units.update { previousUnits ->
                 previousUnits?.toMutableList()?.apply {
@@ -183,13 +206,24 @@ class CollectionUnitsViewModel @Inject constructor(
 
     /** Makes a request to return subjects */
     private suspend fun requestUnits() {
-        if(collectionUid.isBlank() || defaultUnitPrefix.isBlank()) return
+        if(collectionUid.isNullOrBlank()) {
+            val newCollectionUid = UUID.randomUUID().toString()
+            _collection.value = CollectionIO(uid = newCollectionUid).also {
+                repository.insertCollection(it)
+            }
+            _units.value = listOf(UnitIO(
+                collectionUid = newCollectionUid,
+                name = defaultUnitPrefix.plus(" 1")
+            ))
+        }else {
+            collectionUid?.let { uid ->
+                if(uid.isBlank() || defaultUnitPrefix.isBlank()) return
 
-        _collection.value = repository.getCollection(collectionUid) ?: CollectionIO(uid = collectionUid).also {
-            repository.insertCollection(it)
-        }
-        _units.value = useCase.getUnitsByCollection(collectionUid).ifEmpty {
-            listOf(UnitIO(collectionUid = collectionUid, name = defaultUnitPrefix.plus(" 1")))
+                _collection.value = repository.getCollection(uid)
+                _units.value = useCase.getUnitsByCollection(uid).ifEmpty {
+                    listOf(UnitIO(collectionUid = uid, name = defaultUnitPrefix.plus(" 1")))
+                }
+            }
         }
     }
 }

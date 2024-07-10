@@ -21,4 +21,8 @@ interface FactDao {
     /** Inserts or updates a new fact [fact] into the database */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertFact(fact: FactIO)
+
+    /** Inserts or updates a new fact [fact] into the database */
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertFacts(facts: List<FactIO>)
 }

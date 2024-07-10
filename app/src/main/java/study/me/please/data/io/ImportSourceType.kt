@@ -6,5 +6,6 @@ enum class ImportSourceType {
     COLLECTION,
     PARAGRAPH,
     FACT,
+    QUESTION,
     NONE
 }

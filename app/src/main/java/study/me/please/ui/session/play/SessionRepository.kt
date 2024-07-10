@@ -94,9 +94,9 @@ class SessionRepository @Inject constructor(
     }
 
     /** Deletes all questions based on an uid list */
-    suspend fun deleteQuestions(uidList: List<String>) {
-        return withContext(Dispatchers.IO) {
-            questionDao.deleteQuestions(uidList)
+    suspend fun deleteQuestions(uidList: List<String>, excludedList: List<String>) {
+        withContext(Dispatchers.IO) {
+            questionDao.deleteQuestions(uidList, excludedList = excludedList)
         }
     }
 

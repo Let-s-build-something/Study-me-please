@@ -46,7 +46,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.squadris.squadris.compose.components.MinimalisticIcon
 import com.squadris.squadris.compose.components.input.CustomTextField
-import study.me.please.base.theme.Colors
 import com.squadris.squadris.compose.theme.LocalTheme
 import com.squadris.squadris.compose.theme.SharedColors
 import kotlinx.coroutines.delay
@@ -276,7 +275,10 @@ fun EditFieldInput(
         textStyle = textStyle,
         leadingIcon = if(leadingIcon != null) {
             {
-                MinimalisticIcon(imageVector = leadingIcon)
+                MinimalisticIcon(
+                    imageVector = leadingIcon,
+                    tint = LocalTheme.current.colors.secondary
+                )
             }
         }else null,
         colors = if(isUnfocusedTransparent) LocalTheme.current.styles.textFieldColorsOnFocus else LocalTheme.current.styles.textFieldColors,

@@ -15,6 +15,14 @@
 
     <string name="home_screen_collections_empty_action">Let\'s start collecting</string>
     <string name="home_screen_sessions_empty_action">Time to practice</string>
+    <string name="home_screen_community">Community</string>
+    <string name="home_screen_community_description">Space for individuals, who care about others</string>
+
+    <string name="community_search_empty">
+        You found a gap in the notes made, good job! You can be the first one to make some and gain the fame you surely desire.
+    </string>
+    <string name="community_search_action_one">Clear filters</string>
+    <string name="community_search_action_two">I\'m down</string>
 
     <string name="sign_up_username_helper">Choose your username</string>
     <string name="sign_up_username_hint">Call me daddy</string>
@@ -194,6 +202,7 @@
     </string>
     <string name="question_generating_fact_parent_addition">, under <b><![CDATA[<a href="/paragraph/%2$s">%1$s</a>]]></b></string>-->
 
+    <string name="question_generating_fact_nested">What relates to <b>\"%1$s\"</b> (<![CDATA[<a href="/category/%2$s">%2$s</a>]]>)?</string>
     <string name="question_generating_fact_short">Describe <b>\"%1$s\"</b> (<![CDATA[<a href="/category/%2$s">%2$s</a>]]>).</string>
     <string name="question_generating_fact_long">What best describes: <b>\"%1$s\"</b> (<![CDATA[<a href="/category/%2$s">%2$s</a>]]>)?</string>
     <string name="question_generating_children_items">
@@ -224,6 +233,7 @@
 
     <!--- =================================== BUTTONS ========================================== -->
     <string name="button_add">Add</string>
+    <string name="button_download">Download</string>
     <string name="button_add_to">Add to</string>
     <string name="button_add_image">Add an image</string>
     <string name="button_add_prompt_image">Add an image</string>

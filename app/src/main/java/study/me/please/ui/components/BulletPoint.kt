@@ -26,7 +26,7 @@ fun BulletPoint(
     textStyle: TextStyle = LocalTheme.current.styles.category,
 ) {
     Row(
-        modifier = modifier.padding(vertical = 2.dp),
+        modifier = modifier.padding(vertical = 4.dp),
     ) {
         AnimatedVisibility(
             modifier = Modifier.padding(end = 8.dp),

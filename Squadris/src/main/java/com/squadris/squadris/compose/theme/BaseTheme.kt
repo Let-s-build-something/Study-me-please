@@ -125,6 +125,12 @@ val LocalTheme = staticCompositionLocalOf<BaseTheme> {
             override val category: TextStyle
                 @Composable
                 get() = TextStyle.Default
+            override val title: TextStyle
+                @Composable
+                get() = TextStyle.Default
+            override val content: TextStyle
+                @Composable
+                get() = TextStyle.Default
             override val linkText: TextStyle
                 @Composable
                 get() = TextStyle.Default
@@ -145,6 +151,8 @@ val LocalTheme = staticCompositionLocalOf<BaseTheme> {
             override val componentShape: Shape
                 get() = RectangleShape
             override val chipShape: Shape
+                get() = RectangleShape
+            override val roundedComponentShape: Shape
                 get() = RectangleShape
             override val componentCornerRadius: Dp
                 get() = 0.dp

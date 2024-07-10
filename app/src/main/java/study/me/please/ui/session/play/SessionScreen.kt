@@ -1,5 +1,6 @@
 package study.me.please.ui.session.play
 
+import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -34,6 +35,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
+import com.squadris.squadris.compose.base.LocalNavController
+import com.squadris.squadris.compose.components.SimpleModalBottomSheet
+import com.squadris.squadris.compose.components.navigation.NavIconType
 import com.squadris.squadris.compose.theme.LocalTheme
 import com.squadris.squadris.utils.OnLifecycleEvent
 import kotlinx.coroutines.cancelChildren
@@ -42,8 +46,6 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import study.me.please.R
 import study.me.please.base.BrandBaseScreen
-import com.squadris.squadris.compose.base.LocalNavController
-import com.squadris.squadris.compose.components.navigation.NavIconType
 import study.me.please.base.navigation.SessionAppBarActions
 import study.me.please.data.io.BaseResponse
 import study.me.please.data.io.preferences.SessionPreferencePack
@@ -53,7 +55,6 @@ import study.me.please.ui.collection.detail.REQUEST_DATA_SAVE_DELAY
 import study.me.please.ui.components.BasicAlertDialog
 import study.me.please.ui.components.ButtonState
 import study.me.please.ui.components.ComponentHeaderButton
-import com.squadris.squadris.compose.components.SimpleModalBottomSheet
 import study.me.please.ui.components.preference_chooser.PreferenceChooser
 import study.me.please.ui.components.preference_chooser.PreferenceChooserController
 import study.me.please.ui.components.session.StatisticsTable
@@ -181,7 +182,9 @@ fun SessionScreen(
                             }else preferenceSheetState.hide()
                         }
                         LaunchedEffect(questions.value) {
-                            sessionState.initialize(questions = questions.value.orEmpty())
+                            if(questions.value.isNullOrEmpty().not()) {
+                                sessionState.initialize(questions = questions.value.orEmpty())
+                            }
                         }
 
                         Crossfade(
@@ -191,7 +194,7 @@ fun SessionScreen(
                             if(isDone) {
                                 val pagerState = rememberPagerState(
                                     pageCount = {
-                                        totalItemsCount.value
+                                        totalItemsCount.value.coerceAtLeast(2)
                                     },
                                     initialPage = sessionState.module.currentIndex
                                 )

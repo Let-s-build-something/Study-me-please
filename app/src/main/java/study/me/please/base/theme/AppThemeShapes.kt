@@ -18,5 +18,6 @@ class AppThemeShapes: ThemeShapes {
     override val circularActionShape: Shape = CircleShape
     override val rectangularActionShape: Shape = RoundedCornerShape(8.dp)
     override val componentShape: Shape = RoundedCornerShape(componentCornerRadius)
+    override val roundedComponentShape: Shape = RoundedCornerShape(24.dp)
     override val chipShape: Shape = CircleShape
 }

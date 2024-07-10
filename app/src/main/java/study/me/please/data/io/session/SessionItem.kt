@@ -28,11 +28,6 @@ data class SessionItem(
     val uid: String
         get() = data?.uid ?: historyItem?.uid ?: UUID.randomUUID().toString()
 
-    /** question data, historic or not */
-    @get:Ignore
-    val question
-        get() = historyItem?.questionIO ?: data
-
     /** current screen mode */
     @Ignore
     val mode: MutableState<SessionScreenMode> = mutableStateOf(SessionScreenMode.REGULAR)

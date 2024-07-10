@@ -3,7 +3,9 @@ package study.me.please.ui.session.play
 import android.content.Context
 import android.util.Log
 import androidx.lifecycle.viewModelScope
+import com.squadris.squadris.compose.base.BaseViewModel
 import com.squadris.squadris.utils.DateUtils
+import com.squadris.squadris.utils.RefreshableViewModel.Companion.MINIMUM_REFRESH_DELAY
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -12,20 +14,18 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import com.squadris.squadris.compose.base.BaseViewModel
 import study.me.please.data.io.BaseResponse
 import study.me.please.data.io.CollectionIO
 import study.me.please.data.io.QuestionIO
 import study.me.please.data.io.preferences.SessionPreferencePack
 import study.me.please.data.io.subjects.UnitIO
 import study.me.please.data.state.session.QuestionModule
-import com.squadris.squadris.utils.RefreshableViewModel.Companion.MINIMUM_REFRESH_DELAY
 import study.me.please.ui.components.preference_chooser.PreferencePackDataManager
 import study.me.please.ui.components.preference_chooser.PreferencePackRepository
 import study.me.please.ui.components.preference_chooser.PreferencePackViewModel
 import study.me.please.ui.units.utils.QuestionGenerator
-import study.me.please.ui.units.utils.convertToSha256
 import study.me.please.ui.units.utils.UnitsUseCase
+import study.me.please.ui.units.utils.convertToSha256
 import javax.inject.Inject
 
 @HiltViewModel
@@ -79,12 +79,16 @@ class SessionViewModel @Inject constructor(
      *
      * @param context required for generating questions - retrieving resources
      * @param selectedUidList mixture of both collection uids and unit uids
+     * @param excludedList list of elements to exclude from the generation, with specific reason - [Pair.second]
      */
     private suspend fun prepareQuestions(
         context: Context,
         sessionPreference: SessionPreferencePack,
-        selectedUidList: List<String>
+        selectedUidList: List<String>,
+        excludedList: List<Pair<String?, String?>>,
+        historyQuestionUidList: List<String> = emptyList()
     ): List<QuestionIO> {
+        Log.d("Session_Play", "prepareQuestions, excludedSize: ${excludedList.size}, historySize: ${historyQuestionUidList.size}")
         return withContext(Dispatchers.Default) {
             if(dataManager.session.value == null) {
                 throw IllegalStateException(
@@ -119,12 +123,16 @@ class SessionViewModel @Inject constructor(
                 val response = questionGenerator.generateQuestions(
                     context = context,
                     units = units,
-                    allUnits = units
+                    allUnits = units,
+                    excludedList = excludedList
                 )
+                Log.d("Session_Play", "prepareQuestions, number of questions generated: ${response.data?.size}")
                 // new questions generated - clear old ones, save new ones. Saves new snapshot hash
                 if(response.data?.isNotEmpty() == true) {
+                    // delete old unused questions outside of the historic questions
                     repository.deleteQuestions(
-                        dataManager.session.value?.questionUidList?.toList().orEmpty()
+                        dataManager.session.value?.questionUidList?.toList().orEmpty(),
+                        excludedList = historyQuestionUidList
                     )
 
                     dataManager.session.value?.apply {
@@ -135,6 +143,7 @@ class SessionViewModel @Inject constructor(
                         questionUidList.addAll(response.data.map { it.uid })
                     }
 
+                    // save the new questions
                     repository.saveQuestions(response.data)
                     requestSessionSave(
                         // if selection changed, we need to save it as well
@@ -148,7 +157,7 @@ class SessionViewModel @Inject constructor(
                 _questionsGeneratingResponse.emit(response.copy(
                     responseCode = response.responseCode
                 ))
-                response.data
+                response.data?.shuffled()
             }else repository.getQuestionsByUid(
                 dataManager.session.value?.questionUidList?.toList().orEmpty()
             )).orEmpty()
@@ -182,6 +191,7 @@ class SessionViewModel @Inject constructor(
             if(questionUids.isNullOrEmpty().not()) {
                 repository.getQuestionsByUid(questionUids.orEmpty())?.let { questionsOut ->
                     questions.addAll(questionsOut)
+                    Log.d("Session_Play", "static questions: ${questionsOut.size}")
                 }
             }
             // session has both collections and questions
@@ -197,6 +207,7 @@ class SessionViewModel @Inject constructor(
                     collections.add(collection)
                     repository.getQuestionsByUid(collection.questionUidList.toList())?.let { questionsOut ->
                         questions.addAll(questionsOut)
+                        Log.d("Session_Play", "static questions: ${questionsOut.size}")
                     }
                 }
             }
@@ -207,12 +218,15 @@ class SessionViewModel @Inject constructor(
                 repository.getPreferencePacks().let { preferencePacks ->
                     dataManager.preferencePacks.value = preferencePacks.toMutableList()
                 }
+                if(dataManager.questionModule.value == null) {
+                    dataManager.questionModule.value = QuestionModule()
+                }
             }
 
             // in case there is no preference pack, happens only while testing modules
             dataManager.preferencePack.value = if(dataManager.session.value == null
                 && (dataManager.preferencePack.value == null
-                || dataManager.preferencePacks.value?.isEmpty() == true)
+                        || dataManager.preferencePacks.value?.isEmpty() == true)
             ) {
                 SessionPreferencePack()
             }else if(dataManager.preferencePacks.value?.isNotEmpty() == true) {
@@ -223,20 +237,43 @@ class SessionViewModel @Inject constructor(
             // finalizing the data and generation of questions if needed
             dataManager.collections.value = collections
 
-            dataManager.preferencePack.value?.let { preferencePack ->
-                questions.addAll(
-                    prepareQuestions(
-                        context = context,
-                        sessionPreference = preferencePack,
-                        selectedUidList = preferencePack.selectedUidList
-                    )
-                )
-            }
+            if(isTestingMode.not()) {
+                val historyQuestionUidList = dataManager.questionModule.value?.history?.mapNotNull {
+                    if(it.isRepetition.not()) {
+                        it.importedSource?.sourceUid
+                    }else null
+                }.orEmpty().distinct()
 
-            // save new module if it was just created
-            if(dataManager.session.value?.questionModuleUid.isNullOrEmpty()) {
-                dataManager.questionModule.value?.let { newModule ->
-                    repository.saveQuestionModule(newModule)
+                dataManager.preferencePack.value?.let { preferencePack ->
+                    withContext(Dispatchers.Default) {
+                        questions.addAll(
+                            prepareQuestions(
+                                context = context,
+                                sessionPreference = preferencePack,
+                                selectedUidList = preferencePack.selectedUidList,
+                                historyQuestionUidList = historyQuestionUidList,
+                                excludedList = dataManager.questionModule.value?.history?.mapNotNull {
+                                    if(it.isRepetition.not()) {
+                                        it.importedSource?.parent?.let { source ->
+                                            source.sourceUid to source.reason
+                                        }
+                                    }else null
+                                }.orEmpty()
+                            )
+                        )
+                    }
+                }
+
+                // add historic questions - especially important for repetitions
+                questions.addAll(
+                    repository.getQuestionsByUid(historyQuestionUidList).orEmpty()
+                )
+
+                // save new module if it was just created
+                if(dataManager.session.value?.questionModuleUid.isNullOrEmpty()) {
+                    dataManager.questionModule.value?.let { newModule ->
+                        repository.saveQuestionModule(newModule)
+                    }
                 }
             }
 

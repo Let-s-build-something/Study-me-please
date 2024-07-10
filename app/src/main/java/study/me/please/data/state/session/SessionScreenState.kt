@@ -7,6 +7,8 @@ import com.squadris.squadris.utils.DateUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.withContext
+import study.me.please.data.io.ImportSourceType
+import study.me.please.data.io.ImportedSource
 import study.me.please.data.io.QuestionAnswerIO
 import study.me.please.data.io.QuestionIO
 import study.me.please.data.io.preferences.SessionPreferencePack
@@ -40,6 +42,7 @@ data class SessionScreenState(
 
     /** Sync current data with state model */
     suspend fun initialize(questions: List<QuestionIO>) {
+        if(timeOfStart != null) return
         module.setData(questions)
         timeOfStart = DateUtils.now
         liveIndex.value = module.currentIndex
@@ -50,7 +53,7 @@ data class SessionScreenState(
     /** Validates answer */
     suspend fun validateAnswer(item: SessionItem, answer: QuestionAnswerIO) {
         withContext(Dispatchers.Main) {
-            // we don't accept duplicite validations
+            // we don't accept duplicate validations
             if(item.validations.any { it.uid == answer.uid }) return@withContext
             item.validations.add(
                 SessionAnswerValidation(
@@ -64,7 +67,7 @@ data class SessionScreenState(
             ) {
                 item.mode.value = SessionScreenMode.LOCKED
                 item.injectCorrectValidations()
-            }else if(item.validations.filter { it.isCorrect }.size == item.question?.answers?.count { it.isCorrect }) {
+            }else if(item.validations.filter { it.isCorrect }.size == item.data?.answers?.count { it.isCorrect }) {
                 item.mode.value = SessionScreenMode.LOCKED
                 item.injectCorrectValidations()
             }
@@ -88,7 +91,11 @@ data class SessionScreenState(
                 if(liveIndex.value >= module.history.size.minus(1)) {
                     module.onQuestionAnswered(
                         SessionHistoryItem(
-                            questionIO = item.question,
+                            importedSource = ImportedSource(
+                                sourceUid = item.data?.uid,
+                                type = ImportSourceType.QUESTION,
+                                parent = item.data?.importedSource
+                            ),
                             index = liveIndex.value.minus(module.history.size.minus(1)),
                             answers = item.validations.toSet().toList(),
                             timeOfStart = timeOfStart?.timeInMillis,
