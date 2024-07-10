@@ -40,7 +40,7 @@ data class UnitIO(
     /** identifier of a collection holding this subject */
     @SerializedName("collection_uid")
     @ColumnInfo("collection_uid")
-    val collectionUid: String,
+    var collectionUid: String = "",
 
     /** date of creation of this data object */
     @SerializedName("date_created")
@@ -48,15 +48,19 @@ data class UnitIO(
     val dateCreated: Long = DateUtils.now.timeInMillis,
 
     /** list of all collapsed paragraphs - they are expanded by default */
+    @Exclude
     var collapsedParagraphs: List<String> = listOf(),
 
     /** last visible item within scroll field */
+    @Exclude
     var firstVisibleItemIndex: Int = 0,
 
     /** last Y direction scroll offset from [firstVisibleItemIndex] */
+    @Exclude
     var firstVisibleItemOffset: Int = 0,
 
     /** last parent container that was focused */
+    @Exclude
     var activatedParent: String? = null
 ): Serializable {
 

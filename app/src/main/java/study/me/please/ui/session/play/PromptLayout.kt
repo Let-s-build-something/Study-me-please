@@ -51,13 +51,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import study.me.please.base.theme.Colors
-import com.squadris.squadris.compose.theme.LocalTheme
-import kotlinx.coroutines.launch
-import study.me.please.R
 import com.squadris.squadris.compose.base.LocalNavController
 import com.squadris.squadris.compose.base.LocalSnackbarHost
+import com.squadris.squadris.compose.components.HtmlClickableText
 import com.squadris.squadris.compose.components.navigation.NavIconType
+import com.squadris.squadris.compose.theme.LocalTheme
+import com.squadris.squadris.compose.theme.SharedColors
+import kotlinx.coroutines.launch
+import study.me.please.R
 import study.me.please.data.io.ImportSourceType
 import study.me.please.data.io.LargePathAsset
 import study.me.please.data.io.QuestionAnswerIO
@@ -70,8 +71,6 @@ import study.me.please.data.state.session.SessionScreenState
 import study.me.please.ui.components.BulletPoint
 import study.me.please.ui.components.ComponentHeaderButton
 import study.me.please.ui.components.EditableImageAsset
-import com.squadris.squadris.compose.components.HtmlClickableText
-import com.squadris.squadris.compose.theme.SharedColors
 import study.me.please.ui.components.OutlinedButton
 import study.me.please.ui.units.detail.ParagraphLayoutContainer
 
@@ -88,7 +87,7 @@ fun PromptLayout(
     sessionPreferencePack: SessionPreferencePack
 ) {
     val screenMode = if(sessionItem.isHistory) SessionScreenMode.LOCKED else sessionItem.mode.value
-    val question = sessionItem.question
+    val question = sessionItem.data
     val isFinished = remember {
         derivedStateOf {
             screenMode == SessionScreenMode.LOCKED
@@ -96,8 +95,8 @@ fun PromptLayout(
     }
     val answers = remember(index) {
         if(isFinished.value) {
-            sessionItem.question?.answers
-        }else sessionItem.question?.answers
+            sessionItem.data?.answers
+        }else sessionItem.data?.answers
             ?.shuffled()
             ?.onEach { questionListItem ->
                 questionListItem.textList = questionListItem.textList.shuffled()
@@ -105,8 +104,8 @@ fun PromptLayout(
     }
     val promptList = remember(index) {
         if(isFinished.value) {
-            sessionItem.question?.promptList
-        }else sessionItem.question?.promptList?.shuffled()
+            sessionItem.data?.promptList
+        }else sessionItem.data?.promptList?.shuffled()
     }
 
     val coroutineScope = rememberCoroutineScope()
@@ -352,7 +351,8 @@ fun PromptLayout(
                                 shape = LocalTheme.current.shapes.componentShape
                             )
                     }else Modifier)
-                        .fillMaxWidth(),
+                        .fillMaxWidth()
+                        .animateContentSize(),
                     thenModifier = Modifier.padding(horizontal = 6.dp, vertical = 6.dp),
                     text = if(isListQuestion) null else answer.text,
                     content = { textStyle ->
@@ -398,7 +398,7 @@ fun PromptLayout(
                     activeColor = if(showResult) Color.White else LocalTheme.current.colors.primary,
                     inactiveColor = if(showResult) Color.White else LocalTheme.current.colors.secondary
                 )
-                if(screenMode == SessionScreenMode.LOCKED) {
+                AnimatedVisibility(screenMode == SessionScreenMode.LOCKED) {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()

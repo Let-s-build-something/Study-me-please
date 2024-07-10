@@ -31,7 +31,7 @@ import study.me.please.data.state.session.QuestionModule
         CategoryIO::class,
         ParagraphIO::class
     ],
-    version = 10,
+    version = 12,
     exportSchema = true
 )
 @TypeConverters(AppDatabaseConverter::class)
@@ -62,146 +62,6 @@ abstract class AppRoomDatabase: RoomDatabase() {
     abstract fun unitDao(): UnitDao
 
     companion object {
-
-        /*val MIGRATION_3_4 = object : Migration(3, 4) {
-            override fun migrate(db: SupportSQLiteDatabase) {
-                db.execSQL("ALTER TABLE $ROOM_UNIT_TABLE ADD COLUMN paragraphUidList TEXT NOT NULL DEFAULT ''")
-            }
-        }
-
-        val MIGRATION_4_5 = object : Migration(4, 5) {
-            override fun migrate(db: SupportSQLiteDatabase) {
-                db.execSQL("ALTER TABLE ROOM_SUBJECT_TABLE ADD COLUMN paragraphs TEXT NOT NULL DEFAULT ''")
-                db.execSQL("ALTER TABLE ROOM_SUBJECT_TABLE ADD COLUMN facts TEXT NOT NULL DEFAULT ''")
-            }
-        }
-
-        val MIGRATION_5_6 = object : Migration(5, 6) {
-            override fun migrate(db: SupportSQLiteDatabase) {
-                // Add paragraphUidList column to the ROOM_PARAGRAPH_TABLE
-                db.execSQL("ALTER TABLE ROOM_PARAGRAPH_TABLE ADD COLUMN paragraphUidList TEXT NOT NULL DEFAULT ''")
-
-                // Add factUidList column to the ROOM_PARAGRAPH_TABLE
-                db.execSQL("ALTER TABLE ROOM_PARAGRAPH_TABLE ADD COLUMN factUidList TEXT NOT NULL DEFAULT ''")
-
-                // Create new table with desired structure
-                db.execSQL("""
-            CREATE TABLE new_ROOM_PARAGRAPH_TABLE (
-                uid TEXT PRIMARY KEY NOT NULL,
-                bulletPoints TEXT NOT NULL DEFAULT '',
-                paragraphUidList TEXT NOT NULL DEFAULT '',
-                categoryUid TEXT,
-                factUidList TEXT NOT NULL DEFAULT '',
-                localCategory TEXT
-            )
-        """.trimIndent())
-
-                // Copy data from old table to new table
-                db.execSQL("""
-            INSERT INTO new_ROOM_PARAGRAPH_TABLE (uid, bulletPoints, paragraphUidList, categoryUid, factUidList, localCategory)
-            SELECT uid, bulletPoints, paragraphUidList, categoryUid, factUidList, localCategory FROM ROOM_PARAGRAPH_TABLE
-        """.trimIndent())
-
-                // Drop old table
-                db.execSQL("DROP TABLE ROOM_PARAGRAPH_TABLE")
-
-                // Rename new table to old table's name
-                db.execSQL("ALTER TABLE new_ROOM_PARAGRAPH_TABLE RENAME TO ROOM_PARAGRAPH_TABLE")
-            }
-        }
-
-        val MIGRATION_6_7 = object : Migration(6, 7) {
-            override fun migrate(db: SupportSQLiteDatabase) {
-                db.execSQL("ALTER TABLE ROOM_PARAGRAPH_TABLE ADD COLUMN name TEXT NOT NULL DEFAULT ''")
-
-                // Create new table with desired structure
-                db.execSQL("""
-            CREATE TABLE new_ROOM_SUBJECT_TABLE (
-                uid TEXT PRIMARY KEY NOT NULL,
-                bulletPoints TEXT NOT NULL DEFAULT '',
-                paragraphUidList TEXT NOT NULL DEFAULT '',
-                factUidList TEXT NOT NULL DEFAULT '',
-                name TEXT NOT NULL DEFAULT '',
-                collection_uid TEXT NOT NULL,
-                date_created INTEGER NOT NULL,
-                collapsedParagraphs TEXT NOT NULL DEFAULT ''
-            )
-        """.trimIndent())
-                // Copy data from old table to new table
-                db.execSQL("""
-            INSERT INTO new_ROOM_SUBJECT_TABLE (uid, bulletPoints, paragraphUidList, factUidList, name, collection_uid, date_created, collapsedParagraphs)
-            SELECT uid, bulletPoints, paragraphUidList, factUidList, name, collection_uid, date_created, collapsedParagraphs FROM ROOM_SUBJECT_TABLE
-        """.trimIndent())
-
-                // Drop old table
-                db.execSQL("DROP TABLE ROOM_SUBJECT_TABLE")
-
-                // Rename new table to old table's name
-                db.execSQL("ALTER TABLE new_ROOM_SUBJECT_TABLE RENAME TO ROOM_SUBJECT_TABLE")
-
-
-                // PARAGRAPHS
-                db.execSQL("""
-            CREATE TABLE new_ROOM_PARAGRAPH_TABLE (
-                uid TEXT PRIMARY KEY NOT NULL,
-                bulletPoints TEXT NOT NULL DEFAULT '',
-                paragraphUidList TEXT NOT NULL DEFAULT '',
-                factUidList TEXT NOT NULL DEFAULT '',
-                name TEXT NOT NULL DEFAULT ''
-            )
-        """.trimIndent())
-
-                // Copy data from old table to new table
-                db.execSQL("""
-            INSERT INTO new_ROOM_PARAGRAPH_TABLE (uid, bulletPoints, paragraphUidList, factUidList, name)
-            SELECT uid, bulletPoints, paragraphUidList, factUidList, name FROM ROOM_PARAGRAPH_TABLE
-        """.trimIndent())
-
-                // Drop old table
-                db.execSQL("DROP TABLE ROOM_PARAGRAPH_TABLE")
-
-                // Rename new table to old table's name
-                db.execSQL("ALTER TABLE new_ROOM_PARAGRAPH_TABLE RENAME TO ROOM_PARAGRAPH_TABLE")
-            }
-        }
-
-        val MIGRATION_7_8 = object : Migration(7, 8) {
-            override fun migrate(db: SupportSQLiteDatabase) {
-                // Add firstVisibleItemIndex column to the ROOM_UNIT_TABLE
-                db.execSQL("ALTER TABLE $ROOM_UNIT_TABLE ADD COLUMN firstVisibleItemIndex INTEGER NOT NULL DEFAULT 0")
-
-                // Add firstVisibleItemOffset column to the ROOM_UNIT_TABLE
-                db.execSQL("ALTER TABLE $ROOM_UNIT_TABLE ADD COLUMN firstVisibleItemOffset INTEGER NOT NULL DEFAULT 0")
-            }
-        }
-
-        val MIGRATION_8_9 = object : Migration(8, 9) {
-            override fun migrate(db: SupportSQLiteDatabase) {
-                // Create ROOM_UNIT_ELEMENT_FACT table
-                db.execSQL("""
-            CREATE TABLE IF NOT EXISTS `${ROOM_UNIT_ELEMENT_FACT}` (
-                `elementUid` TEXT NOT NULL,
-                `data` TEXT NOT NULL,
-                `parentUid` TEXT NOT NULL,
-                `isLastParagraph` INTEGER NOT NULL,
-                `layer` INTEGER NOT NULL,
-                `notLastLayers` TEXT NOT NULL,
-                PRIMARY KEY(`elementUid`)
-            )
-        """.trimIndent())
-
-                // Create ROOM_UNIT_ELEMENT_PARAGRAPH table
-                db.execSQL("""
-            CREATE TABLE IF NOT EXISTS `${ROOM_UNIT_ELEMENT_PARAGRAPH}` (
-                `elementUid` TEXT NOT NULL,
-                `data` TEXT NOT NULL,
-                `layer` INTEGER NOT NULL,
-                `notLastLayers` TEXT NOT NULL,
-                PRIMARY KEY(`elementUid`)
-            )
-        """.trimIndent())
-            }
-        }*/
 
         val MIGRATION_1_2 = object : Migration(1, 2) {
             override fun migrate(db: SupportSQLiteDatabase) {
@@ -306,6 +166,20 @@ abstract class AppRoomDatabase: RoomDatabase() {
         val MIGRATION_9_10 = object : Migration(9, 10) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE $ROOM_COLLECTION_TABLE ADD COLUMN lastSelectedUnitIndex INTEGER NOT NULL DEFAULT 0")
+            }
+        }
+
+        val MIGRATION_10_11 = object : Migration(10, 11) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE $ROOM_COLLECTION_TABLE DROP COLUMN defaultPreference")
+                db.execSQL("ALTER TABLE $ROOM_COLLECTION_TABLE ADD COLUMN categoryUidList TEXT NOT NULL DEFAULT ''")
+            }
+        }
+
+        val MIGRATION_11_12 = object : Migration(11, 12) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE $ROOM_COLLECTION_TABLE DROP COLUMN userUid")
+                db.execSQL("ALTER TABLE $ROOM_COLLECTION_TABLE ADD COLUMN authorUid TEXT")
             }
         }
 

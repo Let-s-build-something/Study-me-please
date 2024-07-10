@@ -2,16 +2,19 @@ package study.me.please.ui.collection.detail.questions
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -38,8 +41,8 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
-import androidx.constraintlayout.compose.ConstraintLayout
-import androidx.constraintlayout.compose.Dimension
+import com.squadris.squadris.compose.base.LocalNavController
+import com.squadris.squadris.compose.components.ScrollBarProgressIndicator
 import com.squadris.squadris.compose.components.chips.ChipState
 import com.squadris.squadris.compose.components.chips.CustomChipGroup
 import com.squadris.squadris.compose.components.chips.CustomChipType
@@ -52,7 +55,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import study.me.please.R
-import com.squadris.squadris.compose.base.LocalNavController
 import study.me.please.base.navigation.NavigationRoot
 import study.me.please.data.io.QuestionIO
 import study.me.please.ui.collection.EmptyLayout
@@ -65,7 +67,6 @@ import study.me.please.ui.components.ImageAction
 import study.me.please.ui.components.InteractiveCardMode
 import study.me.please.ui.components.OptionsLayout
 import study.me.please.ui.components.QuestionCard
-import com.squadris.squadris.compose.components.ScrollBarProgressIndicator
 import study.me.please.ui.components.rememberInteractiveCardState
 import study.me.please.ui.components.session.launcher.SessionLauncher
 
@@ -274,118 +275,115 @@ fun QuestionsList(
         )
     }
 
-    ConstraintLayout(modifier = modifier.fillMaxSize()) {
-        val (progressScrollbar, content) = createRefs()
+    Crossfade(
+        modifier = modifier.fillMaxSize(),
+        targetState = questions.value.isEmpty(),
+        label = "crossfadeLoadingContent"
+    ) { isLoading ->
+        if(isLoading) {
+            EmptyLayout(
+                emptyText = stringResource(id = R.string.collection_questions_empty_error)
+            )
+        }else {
+            Box {
+                val questionsScrollState = rememberLazyListState()
 
-        val questionsScrollState = rememberLazyListState()
-        ScrollBarProgressIndicator(
-            modifier = Modifier
-                .zIndex(2f)
-                .rotate(90f)
-                .width(LocalConfiguration.current.screenHeightDp.dp)
-                .constrainAs(progressScrollbar) {
-                    linkTo(content.end, content.end)
-                    linkTo(content.top, content.bottom)
-                },
-            scrollState = questionsScrollState,
-            totalItems = questions.value.size
-        )
-
-        LazyColumn(
-            modifier = Modifier
-                .constrainAs(content) {
-                    linkTo(parent.start, parent.end, 4.dp, 4.dp)
-                    linkTo(parent.top, parent.bottom)
-                    width = Dimension.fillToConstraints
-                    height = Dimension.fillToConstraints
-                }
-                .imePadding(),
-            state = questionsScrollState,
-            verticalArrangement = Arrangement.Top,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            stickyHeader {
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    if(questions.value.isNotEmpty() || chipsFilter.value.isEmpty().not()) {
-                        CustomChipGroup(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .zIndex(10f)
-                                .animateItemPlacement(),
-                            state = chipGroupState,
-                            chips = remember {
-                                mutableStateListOf(*chips.toTypedArray())
+                ScrollBarProgressIndicator(
+                    modifier = Modifier
+                        .zIndex(2f)
+                        .rotate(90f)
+                        .width(LocalConfiguration.current.screenHeightDp.dp)
+                        .offset(y = (-LocalConfiguration.current.screenWidthDp.dp / 2) + 6.dp)
+                        .align(Alignment.CenterEnd),
+                    scrollState = questionsScrollState,
+                    totalItems = questions.value.size
+                )
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .imePadding(),
+                    state = questionsScrollState,
+                    verticalArrangement = Arrangement.Top,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    stickyHeader {
+                        Column(modifier = Modifier.fillMaxWidth()) {
+                            if(questions.value.isNotEmpty() || chipsFilter.value.isEmpty().not()) {
+                                CustomChipGroup(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(start = 4.dp)
+                                        .zIndex(10f),
+                                    state = chipGroupState,
+                                    chips = remember {
+                                        mutableStateListOf(*chips.toTypedArray())
+                                    }
+                                )
                             }
-                        )
-                    }
 
-                    BrandHeaderButton(
-                        modifier = Modifier
-                            .padding(horizontal = 8.dp)
-                            .zIndex(10f)
-                            .fillMaxWidth(),
-                        text = stringResource(id = R.string.collection_detail_add_question)
-                    ) {
-                        controller.stopChecking()
-                        controller.addQuestion()
-                    }
-
-                    OptionsLayout(
-                        onCopyRequest = { controller.copyItems() },
-                        onPasteRequest = {
-                            viewModel.pasteQuestionsClipBoard()
-                            controller.stopChecking()
-                        },
-                        onDeleteRequest = { showDeleteDialog.value = true },
-                        onSelectAll = {
-                            interactiveStates.forEach {
-                                it.isChecked.value = true
-                            }
-                        },
-                        onDeselectAll = { controller.selectedQuestionUids.clear() },
-                        isEditMode = controller.selectedQuestionUids.size > 0,
-                        hasPasteOption = viewModel.clipBoard.questions.isEmpty.value.not(),
-                        animateTopDown = true,
-                        onClipBoardRemoval = { viewModel.clipBoard.questions.clear() }
-                    ) {
-                        AnimatedVisibility(visible = controller.selectedQuestionUids.size > 0) {
-                            ImageAction(
-                                leadingImageVector = Icons.Outlined.PlayArrow,
-                                text = stringResource(id = R.string.button_start_session)
+                            BrandHeaderButton(
+                                modifier = Modifier
+                                    .padding(horizontal = 8.dp)
+                                    .zIndex(10f)
+                                    .fillMaxWidth(),
+                                text = stringResource(id = R.string.collection_detail_add_question)
                             ) {
                                 controller.stopChecking()
-                                showSessionLauncher.value = true
+                                controller.addQuestion()
+                            }
+
+                            OptionsLayout(
+                                onCopyRequest = { controller.copyItems() },
+                                onPasteRequest = {
+                                    viewModel.pasteQuestionsClipBoard()
+                                    controller.stopChecking()
+                                },
+                                onDeleteRequest = { showDeleteDialog.value = true },
+                                onSelectAll = {
+                                    interactiveStates.forEach {
+                                        it.isChecked.value = true
+                                    }
+                                },
+                                onDeselectAll = { controller.selectedQuestionUids.clear() },
+                                isEditMode = controller.selectedQuestionUids.size > 0,
+                                hasPasteOption = viewModel.clipBoard.questions.isEmpty.value.not(),
+                                animateTopDown = true,
+                                onClipBoardRemoval = { viewModel.clipBoard.questions.clear() }
+                            ) {
+                                AnimatedVisibility(visible = controller.selectedQuestionUids.size > 0) {
+                                    ImageAction(
+                                        leadingImageVector = Icons.Outlined.PlayArrow,
+                                        text = stringResource(id = R.string.button_start_session)
+                                    ) {
+                                        controller.stopChecking()
+                                        showSessionLauncher.value = true
+                                    }
+                                }
                             }
                         }
                     }
-                }
-            }
-            item {
-                AnimatedVisibility(visible = questions.value.isEmpty()) {
-                    EmptyLayout(
-                        emptyText = stringResource(id = R.string.collection_questions_empty_error)
-                    )
-                }
-            }
-            itemsIndexed(
-                questions.value,
-                key = { _, question -> question.uid }
-            ) { index, question ->
-                QuestionCard(
-                    modifier = Modifier
-                        .animateItemPlacement(
-                            tween(
-                                durationMillis = DEFAULT_ANIMATION_LENGTH_SHORT,
-                                easing = LinearOutSlowInEasing
-                            )
-                        ),
-                    data = question,
-                    state = interactiveStates.getOrNull(index) ?: rememberInteractiveCardState(),
-                    onClick = {
-                        controller.openQuestion(question)
+                    itemsIndexed(
+                        questions.value,
+                        key = { _, question -> question.uid }
+                    ) { index, question ->
+                        QuestionCard(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .animateItemPlacement(
+                                    tween(
+                                        durationMillis = DEFAULT_ANIMATION_LENGTH_SHORT,
+                                        easing = LinearOutSlowInEasing
+                                    )
+                                ),
+                            data = question,
+                            state = interactiveStates.getOrNull(index) ?: rememberInteractiveCardState(),
+                            onClick = {
+                                controller.openQuestion(question)
+                            }
+                        )
+                        Spacer(modifier = Modifier.height(LocalTheme.current.shapes.betweenItemsSpace))
                     }
-                )
-                Spacer(modifier = Modifier.height(LocalTheme.current.shapes.betweenItemsSpace))
+                }
             }
         }
     }

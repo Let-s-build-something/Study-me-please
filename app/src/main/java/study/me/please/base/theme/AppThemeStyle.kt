@@ -148,6 +148,22 @@ class AppThemeStyle: ThemeStyle {
             fontWeight = FontWeight.Medium
         )
 
+    override val title: TextStyle
+        @Composable
+        get() = TextStyle(
+            color = LocalTheme.current.colors.primary,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Normal
+        )
+
+    override val content: TextStyle
+        @Composable
+        get() = TextStyle(
+            color = LocalTheme.current.colors.secondary,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Normal
+        )
+
     override val menuItem: TextStyle
         @Composable
         get() = TextStyle(

@@ -47,12 +47,13 @@ class QuestionGenerator @Inject constructor() {
     /**
      * Generates Questions from Units
      * @param excludedList list of UIDs excluded from generating
+     * * @param excludedList list of elements to exclude from the generation, with specific reason - [Pair.second]
      */
     suspend fun generateQuestions(
         context: Context,
         units: List<UnitIO>,
         allUnits: List<UnitIO>,
-        excludedList: List<String> = listOf()
+        excludedList: List<Pair<String?, String?>> = listOf()
     ): BaseResponse<List<QuestionIO>> {
         return withContext(Dispatchers.Default) {
 
@@ -67,13 +68,10 @@ class QuestionGenerator @Inject constructor() {
             // 4. Add all parent categories to facts and paragraphs - list. Looking for similarities will bounce from number of ? (differences?)
             //          1 category to 1 category is highest match, 2 to 2 is the same, 1 to 2 is lower, 0 to 2 shouldn't be matched
 
-            units.filter {
-                excludedList.contains(it.uid).not()
-            }.forEach { unit ->
+            units.forEach { unit ->
                 // facts within units
                 unit.facts.filter {
-                    excludedList.contains(it.uid).not()
-                            && (it.isSeriousDataPoint() || it.facts.isNotEmpty())
+                    (it.isSeriousDataPoint() || it.facts.isNotEmpty())
                 }.forEach { iteratedFact ->
                     facts.add(
                         FactToGenerate(
@@ -84,9 +82,7 @@ class QuestionGenerator @Inject constructor() {
                             parentParagraph = ParagraphIO(name = unit.name, uid = unit.uid)
                         )
                     )
-                    iteratedFact.facts.filter {
-                        excludedList.contains(it.uid).not()
-                    }.forEach { nestedFact ->
+                    iteratedFact.facts.forEach { nestedFact ->
                         facts.add(
                             FactToGenerate(
                                 data = nestedFact,
@@ -135,8 +131,7 @@ class QuestionGenerator @Inject constructor() {
                             )
                         }
                         paragraph.facts.filter {
-                            excludedList.contains(it.uid).not()
-                                    && (it.isSeriousDataPoint() || it.facts.isNotEmpty())
+                            it.isSeriousDataPoint() || it.facts.isNotEmpty()
                         }.forEach { iteratedFact ->
                             facts.add(
                                 FactToGenerate(
@@ -150,9 +145,7 @@ class QuestionGenerator @Inject constructor() {
                                     parentParagraph = paragraph
                                 )
                             )
-                            iteratedFact.facts.filter {
-                                excludedList.contains(it.uid).not()
-                            }.forEach { nestedFact ->
+                            iteratedFact.facts.forEach { nestedFact ->
                                 facts.add(
                                     FactToGenerate(
                                         data = nestedFact,
@@ -166,9 +159,7 @@ class QuestionGenerator @Inject constructor() {
                             }
                         }
 
-                        paragraph.paragraphs.filter {
-                            excludedList.contains(it.uid).not()
-                        }.forEach { iteratedParagraph ->
+                        paragraph.paragraphs.forEach { iteratedParagraph ->
                             iterateFurther(
                                 parentParagraph = paragraph,
                                 paragraph = iteratedParagraph,
@@ -185,9 +176,7 @@ class QuestionGenerator @Inject constructor() {
                     }
                 }
 
-                unit.paragraphs.filter {
-                    excludedList.contains(it.uid).not()
-                }.forEach { paragraph ->
+                unit.paragraphs.forEach { paragraph ->
                     iterateFurther(
                         paragraph = paragraph,
                         parentParagraph = null,
@@ -203,6 +192,7 @@ class QuestionGenerator @Inject constructor() {
                             context = context,
                             facts = facts,
                             generatingGoal = goal,
+                            excludedList = excludedList
                         )
                     )
                 }
@@ -241,7 +231,8 @@ class QuestionGenerator @Inject constructor() {
     private suspend fun generateFactQuestion(
         context: Context,
         facts: List<FactToGenerate>,
-        generatingGoal: FactGeneratingGoal
+        generatingGoal: FactGeneratingGoal,
+        excludedList: List<Pair<String?, String?>>
     ): List<QuestionIO> {
         return withContext(Dispatchers.Default) {
             val questions = mutableListOf<QuestionIO>()
@@ -268,37 +259,40 @@ class QuestionGenerator @Inject constructor() {
             map.forEach { chunk ->
                 if(chunk.value.size + facts.size >= MINIMUM_RELATED_DATA_TO_GENERATE) {
                     chunk.value.forEach { iteratedFact ->
-                        val relatedFacts = chunk.value.plus(facts)
-                            .filter {
-                                it.data.uid != iteratedFact.data.uid
-                                        && it.data.isSeriousDataPoint()
-                            }
-                            .shuffled()
-                            .map { fact ->
-                                fact to calculateWeights(
-                                    anchorList = iteratedFact.sortedNames,
-                                    currentList = fact.sortedNames
-                                )
-                            }
-                            // first we sort by type, as that the priority, then by similarities
-                            .sortedWith(compareByDescending<Pair<FactToGenerate, Int>> {
-                                if(it.first.data.type == iteratedFact.data.type) 1 else 0
-                            }.thenByDescending { it.second })
-                            .distinctBy { it.first.data.uid }
-                            .take(if(generatingGoal == FactGeneratingGoal.NESTED_FACTS_LONG_KEY
-                                || generatingGoal == FactGeneratingGoal.NESTED_FACTS_SHORT_KEY) {
-                                MINIMUM_RELATED_DATA_TO_GENERATE * 2
-                            }else MINIMUM_RELATED_DATA_TO_GENERATE)
+                        // only non-excluded pairs of facts and goals
+                        if(excludedList.contains(iteratedFact.data.uid to generatingGoal.name).not()) {
+                            val relatedFacts = chunk.value.plus(facts)
+                                .filter {
+                                    it.data.uid != iteratedFact.data.uid
+                                            && it.data.isSeriousDataPoint()
+                                }
+                                .shuffled()
+                                .map { fact ->
+                                    fact to calculateWeights(
+                                        anchorList = iteratedFact.sortedNames,
+                                        currentList = fact.sortedNames
+                                    )
+                                }
+                                // first we sort by type, as that the priority, then by similarities
+                                .sortedWith(compareByDescending<Pair<FactToGenerate, Int>> {
+                                    if(it.first.data.type == iteratedFact.data.type) 1 else 0
+                                }.thenByDescending { it.second })
+                                .distinctBy { it.first.data.uid }
+                                .take(if(generatingGoal == FactGeneratingGoal.NESTED_FACTS_LONG_KEY
+                                    || generatingGoal == FactGeneratingGoal.NESTED_FACTS_SHORT_KEY) {
+                                    MINIMUM_RELATED_DATA_TO_GENERATE * 2
+                                }else MINIMUM_RELATED_DATA_TO_GENERATE)
 
-                        if(relatedFacts.isNotEmpty()) {
-                            questions.add(
-                                generateQuestionFinal(
-                                    context = context,
-                                    promptFact = iteratedFact,
-                                    relatedFacts = relatedFacts.map { it.first },
-                                    generatingGoal = generatingGoal
+                            if(relatedFacts.isNotEmpty()) {
+                                questions.add(
+                                    generateQuestionFinal(
+                                        context = context,
+                                        promptFact = iteratedFact,
+                                        relatedFacts = relatedFacts.map { it.first },
+                                        generatingGoal = generatingGoal
+                                    )
                                 )
-                            )
+                            }
                         }
                     }
                 }else {
@@ -373,8 +367,13 @@ class QuestionGenerator @Inject constructor() {
                             text = if(generatingGoal == FactGeneratingGoal.NESTED_FACTS_LONG_KEY) {
                                 mappingItem.data.longInformation
                             }else mappingItem.data.shortKeyInformation,
-                            explanationMessage = mappingItem.data.shortKeyInformation,
+                            explanationMessage = if(generatingGoal == FactGeneratingGoal.NESTED_FACTS_LONG_KEY) {
+                                mappingItem.data.longInformation
+                            }else mappingItem.data.shortKeyInformation,
                             isCorrect = false,
+                            explanationList = if(generatingGoal == FactGeneratingGoal.NESTED_FACTS_LONG_KEY) {
+                                emptyList()
+                            } else mappingItem.data.textList,
                             textList = if(generatingGoal == FactGeneratingGoal.NESTED_FACTS_LONG_KEY) {
                                 mappingItem.data.textList
                             } else emptyList(),
@@ -392,6 +391,9 @@ class QuestionGenerator @Inject constructor() {
                                     explanationMessage = if(generatingGoal == FactGeneratingGoal.NESTED_FACTS_LONG_KEY) {
                                         mapped.shortKeyInformation
                                     }else mapped.longInformation,
+                                    explanationList = if(generatingGoal == FactGeneratingGoal.NESTED_FACTS_LONG_KEY) {
+                                        emptyList()
+                                    } else mapped.textList,
                                     textList = if(generatingGoal == FactGeneratingGoal.NESTED_FACTS_LONG_KEY) {
                                         mapped.textList
                                     } else emptyList()

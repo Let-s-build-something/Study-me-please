@@ -275,7 +275,10 @@ fun EditFieldInput(
         textStyle = textStyle,
         leadingIcon = if(leadingIcon != null) {
             {
-                MinimalisticIcon(imageVector = leadingIcon)
+                MinimalisticIcon(
+                    imageVector = leadingIcon,
+                    tint = LocalTheme.current.colors.secondary
+                )
             }
         }else null,
         colors = if(isUnfocusedTransparent) LocalTheme.current.styles.textFieldColorsOnFocus else LocalTheme.current.styles.textFieldColors,

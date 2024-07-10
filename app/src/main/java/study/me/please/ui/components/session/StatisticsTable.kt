@@ -249,11 +249,11 @@ private fun Preview() {
     StatisticsTable(
         questionModule = QuestionModule(
             history = mutableListOf(
-                SessionHistoryItem(null, null, 0, listOf(),
+                SessionHistoryItem(null, 0, listOf(),
                     timeToAnswer = 0L
                 ),
-                SessionHistoryItem(null, null, 0, listOf(), timeToAnswer = 0L),
-                SessionHistoryItem(null, null, 0, listOf(), timeToAnswer = 0L),
+                SessionHistoryItem(null, 0, listOf(), timeToAnswer = 0L),
+                SessionHistoryItem(null, 0, listOf(), timeToAnswer = 0L),
             ),
         ).apply {
             questions = listOf(

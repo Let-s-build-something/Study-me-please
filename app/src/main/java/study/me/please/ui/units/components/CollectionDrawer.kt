@@ -24,7 +24,6 @@ import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.DeleteSweep
 import androidx.compose.material.ripple.rememberRipple
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
@@ -103,7 +102,6 @@ fun CollectionDrawer(
     modifier: Modifier = Modifier,
     viewModel: CollectionUnitsViewModel,
     onIndexChange: (index: Int) -> Unit,
-    collectionUid: String,
     state: EmbeddedDrawerState = rememberEmbeddedDrawerState()
 ) {
     val context = LocalContext.current
@@ -113,7 +111,7 @@ fun CollectionDrawer(
     val columnState = rememberLazyListState()
 
     val showDeleteDialog = remember(viewModel) { mutableStateOf(false) }
-    val checkedUnits = remember(collectionUid) { mutableStateListOf<String>() }
+    val checkedUnits = remember(viewModel.collectionUid) { mutableStateListOf<String>() }
     val expandedUnits = remember { mutableStateListOf<String>() }
 
     if(showDeleteDialog.value) {
@@ -221,12 +219,9 @@ fun CollectionDrawer(
                     }else {
                         ComponentHeaderButton(
                             modifier = Modifier.fillMaxWidth(),
-                            elevation = ButtonDefaults.elevatedButtonElevation(
-                                0.dp, 0.dp, 0.dp, 0.dp, 0.dp
-                            ),
                             onClick = {
                                 viewModel.addNewUnit(
-                                    collectionUid = collectionUid,
+                                    collectionUid = viewModel.collectionUid,
                                     prefix = context.getString(R.string.unit_heading_prefix)
                                 )
                                 onIndexChange(units.value?.size ?: 0)

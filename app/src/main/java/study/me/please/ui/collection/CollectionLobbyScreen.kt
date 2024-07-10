@@ -6,6 +6,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -51,12 +52,12 @@ import com.squadris.squadris.compose.components.chips.DEFAULT_ANIMATION_LENGTH_S
 import com.squadris.squadris.compose.theme.LocalTheme
 import com.squadris.squadris.compose.theme.SharedColors
 import com.squadris.squadris.utils.OnLifecycleEvent
+import com.squadris.squadris.utils.RefreshableViewModel.Companion.requestData
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import study.me.please.R
 import study.me.please.base.navigation.NavigationRoot
-import com.squadris.squadris.utils.RefreshableViewModel.Companion.requestData
 import study.me.please.ui.components.BasicAlertDialog
 import study.me.please.ui.components.ButtonState
 import study.me.please.ui.components.CollectionCard
@@ -68,11 +69,11 @@ import study.me.please.ui.components.pull_refresh.PullRefreshScreen
 import study.me.please.ui.components.rememberInteractiveCardState
 import study.me.please.ui.components.session.launcher.SessionLauncher
 import study.me.please.ui.session.lobby.EditableListShimmerLayout
-import java.util.UUID
 
 /** Screen with user's collections */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
+@Deprecated("Absolute trash code, replace with something better")
 fun CollectionLobbyScreen(
     viewModel: CollectionViewModel = hiltViewModel()
 ) {
@@ -137,14 +138,16 @@ fun CollectionLobbyScreen(
             confirmButtonState = ButtonState(
                 text = stringResource(id = R.string.button_confirm)
             ) {
+                // TODO WTF is this????? WHY IS THIS STORED IN COMPOSE STATE?????
+                val selectedCollections = selectedCollectionUids.toSet()
                 coroutineScope.launch(Dispatchers.Default) {
-                    collections.removeAll { selectedCollectionUids.contains(it.uid) }
+                    collections.removeAll { selectedCollections.contains(it.uid) }
                     viewModel.dataManager.collections.update { list ->
                         list?.toMutableList()?.apply {
-                            removeAll { selectedCollectionUids.contains(it.uid) }
+                            removeAll { selectedCollections.contains(it.uid) }
                         }
                     }
-                    viewModel.requestCollectionDeletion(uidList = selectedCollectionUids.toSet())
+                    viewModel.requestCollectionDeletion(uidList = selectedCollections)
                     stopChecking()
                 }
             },
@@ -249,8 +252,7 @@ fun CollectionLobbyScreen(
                             navController?.navigate(
                                 NavigationRoot.CollectionDetail.createRoute(
                                     NavigationRoot.CollectionDetail.CollectionDetailArgument(
-                                        toolbarTitle = context.getString(R.string.screen_collection_detail_new),
-                                        collectionUid = UUID.randomUUID().toString()
+                                        toolbarTitle = context.getString(R.string.screen_collection_detail_new)
                                     )
                                 )
                             )
@@ -319,7 +321,8 @@ fun CollectionLobbyScreen(
 fun EmptyLayout(
     modifier: Modifier = Modifier,
     rawAnimation: Int = R.raw.animation_empty,
-    emptyText: String
+    emptyText: String,
+    content : @Composable ColumnScope.() -> Unit = {}
 ) {
     val localConfiguration = LocalConfiguration.current
     val composition by rememberLottieComposition(
@@ -360,5 +363,6 @@ fun EmptyLayout(
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center
         )
+        content()
     }
 }

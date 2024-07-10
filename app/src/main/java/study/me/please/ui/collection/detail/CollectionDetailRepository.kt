@@ -7,10 +7,10 @@ import kotlinx.coroutines.withContext
 import study.me.please.data.io.CollectionIO
 import study.me.please.data.io.FactIO
 import study.me.please.data.io.QuestionIO
+import study.me.please.data.io.firebase.FirebaseCollections
 import study.me.please.data.room.CollectionDao
 import study.me.please.data.room.FactDao
 import study.me.please.data.room.QuestionDao
-import study.me.please.ui.units.UnitsRepository.FirebaseCollections
 import javax.inject.Inject
 
 /** Proxy for calling network end points */
@@ -35,9 +35,9 @@ class CollectionDetailRepository @Inject constructor(
     }
 
     /** removes all questions with uid from the provided list [uidList] */
-    suspend fun deleteQuestions(uidList: List<String>) {
+    suspend fun deleteQuestions(uidList: List<String>, excludedList: List<String> = emptyList()) {
         withContext(Dispatchers.IO) {
-            questionDao.deleteQuestions(uidList)
+            questionDao.deleteQuestions(uidList, excludedList = excludedList)
         }
     }
 
@@ -52,7 +52,7 @@ class CollectionDetailRepository @Inject constructor(
                     .collection(FirebaseCollections.COLLECTIONS.name)
                     .document(collection.uid)
                     .set(collection.apply {
-                        this.userUid = userUid
+                        this.authorUid = userUid
                     })
             }
 

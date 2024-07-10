@@ -1,5 +1,6 @@
 package study.me.please.ui.session.play
 
+import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -193,7 +194,7 @@ fun SessionScreen(
                             if(isDone) {
                                 val pagerState = rememberPagerState(
                                     pageCount = {
-                                        totalItemsCount.value
+                                        totalItemsCount.value.coerceAtLeast(2)
                                     },
                                     initialPage = sessionState.module.currentIndex
                                 )

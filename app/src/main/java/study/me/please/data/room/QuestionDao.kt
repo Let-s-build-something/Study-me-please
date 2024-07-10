@@ -24,8 +24,8 @@ interface QuestionDao {
     suspend fun getQuestionsByUid(questionUids: List<String>): List<QuestionIO>?
 
     /** Removes questions from the database within given list */
-    @Query("DELETE FROM ${AppRoomDatabase.ROOM_QUESTION_TABLE} WHERE uid IN (:uidList)")
-    suspend fun deleteQuestions(uidList: List<String>)
+    @Query("DELETE FROM ${AppRoomDatabase.ROOM_QUESTION_TABLE} WHERE uid IN (:uidList) AND uid NOT IN (:excludedList)")
+    suspend fun deleteQuestions(uidList: List<String>, excludedList: List<String> = emptyList())
 
     /** Inserts or updates a new question [question] into the database */
     @Insert(onConflict = OnConflictStrategy.REPLACE)

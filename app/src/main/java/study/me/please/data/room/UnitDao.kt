@@ -35,7 +35,15 @@ interface UnitDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertUnit(unit: UnitIO)
 
+    /** Inserts or updates a new unit [unit] into the database */
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertUnits(units: List<UnitIO>)
+
     /** Inserts or updates a new paragraph [paragraph] into the database */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertParagraph(paragraph: ParagraphIO)
+
+    /** Inserts or updates a new paragraph [paragraph] into the database */
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertParagraphs(paragraphs: List<ParagraphIO>)
 }

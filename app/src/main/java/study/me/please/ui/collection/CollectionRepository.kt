@@ -6,18 +6,20 @@ import study.me.please.data.io.CollectionIO
 import study.me.please.data.io.session.SessionIO
 import study.me.please.data.room.CollectionDao
 import study.me.please.data.room.SessionDao
+import study.me.please.data.shared.SharedDataManager
 import javax.inject.Inject
 
 /** Proxy for calling network end points */
 class CollectionRepository @Inject constructor(
     private val collectionDao: CollectionDao,
-    private val sessionDao: SessionDao
+    private val sessionDao: SessionDao,
+    private val sharedDataManager: SharedDataManager
 ) {
 
     /** Get list of all collections */
     suspend fun getCollections(): List<CollectionIO>? {
         return withContext(Dispatchers.IO) {
-            collectionDao.getAllCollections()
+            collectionDao.getUserCollections(sharedDataManager.currentUser.value?.uid)
         }
     }
 

@@ -21,8 +21,8 @@ import androidx.lifecycle.Lifecycle
 import com.squadris.squadris.compose.theme.LocalTheme
 import com.squadris.squadris.ext.brandShimmerEffect
 import com.squadris.squadris.utils.OnLifecycleEvent
-import study.me.please.R
 import com.squadris.squadris.utils.RefreshableViewModel.Companion.requestData
+import study.me.please.R
 import study.me.please.ui.collection.detail.questions.QuestionsList
 import study.me.please.ui.components.pull_refresh.PullRefreshScreen
 
@@ -58,11 +58,7 @@ fun CollectionQuestionsScreen(
         if(collectionUid.isNullOrEmpty().not() && collectionDetail.value == null) {
             ShimmerLayout()
         }else {
-            QuestionsList(
-                modifier = Modifier
-                    .padding(top = 8.dp),
-                viewModel = viewModel
-            )
+            QuestionsList(viewModel = viewModel)
         }
     }
 }

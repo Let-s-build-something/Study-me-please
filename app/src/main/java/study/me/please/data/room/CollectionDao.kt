@@ -13,10 +13,10 @@ interface CollectionDao {
 
     //TODO custom order from user
     /** Returns all collections */
-    @Query("SELECT * FROM ${AppRoomDatabase.ROOM_COLLECTION_TABLE} ORDER BY date_modified DESC")
-    suspend fun getAllCollections(): List<CollectionIO>?
+    @Query("SELECT * FROM ${AppRoomDatabase.ROOM_COLLECTION_TABLE} WHERE authorUid == :userUid ORDER BY date_modified DESC")
+    suspend fun getUserCollections(userUid: String?): List<CollectionIO>?
 
-    /** Returns a single collection based on their identification [collectionUid] */
+    /** Returns a single collection based on their identification [collectionUids] */
     @Query("SELECT * FROM ${AppRoomDatabase.ROOM_COLLECTION_TABLE} WHERE uid in (:collectionUids)")
     suspend fun getCollectionsByUid(collectionUids: List<String>): List<CollectionIO>?
 

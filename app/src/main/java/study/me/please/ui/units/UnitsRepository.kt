@@ -12,6 +12,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import study.me.please.data.io.CollectionIO
 import study.me.please.data.io.FactIO
+import study.me.please.data.io.firebase.FirebaseCollections
 import study.me.please.data.io.subjects.ParagraphIO
 import study.me.please.data.io.subjects.UnitIO
 import study.me.please.data.room.CollectionDao
@@ -103,8 +104,10 @@ class UnitsRepository @Inject constructor(
     /** updates a specific unit within a collection */
     suspend fun updateFirebaseUnit(
         unit: UnitIO,
-        collectionUid: String
+        collectionUid: String?
     ) {
+        if(collectionUid == null) return
+
         cancellableScope.coroutineContext.cancelChildren()
         cancellableScope.launch {
             delay(NETWORK_UPDATE_DELAY)
@@ -118,8 +121,10 @@ class UnitsRepository @Inject constructor(
     /** updates a specific unit within a collection */
     suspend fun deleteFirebaseUnits(
         unitUidList: List<String>,
-        collectionUid: String
+        collectionUid: String?
     ) {
+        if(collectionUid == null) return
+
         val updateMap = mutableMapOf<String, Any>()
         unitUidList.forEach {
             updateMap["units.$it"] = FieldValue.delete()
@@ -146,10 +151,6 @@ class UnitsRepository @Inject constructor(
         }
     }
 
-    enum class FirebaseCollections {
-        COLLECTIONS
-    }
-
     /** Inserts or updates a new collection [collection] into the database */
     suspend fun insertCollection(collection: CollectionIO) {
         return withContext(Dispatchers.IO) {
@@ -158,7 +159,7 @@ class UnitsRepository @Inject constructor(
                     .collection(FirebaseCollections.COLLECTIONS.name)
                     .document(collection.uid)
                     .set(collection.apply {
-                        this.userUid = userUid
+                        this.authorUid = userUid
                     })
             }
 

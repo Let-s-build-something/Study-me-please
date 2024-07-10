@@ -17,6 +17,7 @@ import study.me.please.data.io.UnitsFilter
 import study.me.please.data.io.subjects.ParagraphIO
 import study.me.please.data.io.subjects.UnitIO
 import study.me.please.ui.units.utils.UnitsUseCase
+import java.util.UUID
 import javax.inject.Inject
 import kotlin.math.abs
 
@@ -53,7 +54,7 @@ class CollectionUnitsViewModel @Inject constructor(
     val filter = MutableStateFlow(UnitsFilter())
 
     /** identifier of collection that should be requested */
-    var collectionUid: String = ""
+    var collectionUid: String? = null
 
     /** default prefix of new unit */
     var defaultUnitPrefix: String = ""
@@ -168,7 +169,8 @@ class CollectionUnitsViewModel @Inject constructor(
     }
 
     /** Adds new unit but doesn't create a DB record for it */
-    fun addNewUnit(collectionUid: String, prefix: String) {
+    fun addNewUnit(collectionUid: String?, prefix: String) {
+        if(collectionUid == null) return
         viewModelScope.launch {
             _units.update { previousUnits ->
                 previousUnits?.toMutableList()?.apply {
@@ -204,13 +206,24 @@ class CollectionUnitsViewModel @Inject constructor(
 
     /** Makes a request to return subjects */
     private suspend fun requestUnits() {
-        if(collectionUid.isBlank() || defaultUnitPrefix.isBlank()) return
+        if(collectionUid.isNullOrBlank()) {
+            val newCollectionUid = UUID.randomUUID().toString()
+            _collection.value = CollectionIO(uid = newCollectionUid).also {
+                repository.insertCollection(it)
+            }
+            _units.value = listOf(UnitIO(
+                collectionUid = newCollectionUid,
+                name = defaultUnitPrefix.plus(" 1")
+            ))
+        }else {
+            collectionUid?.let { uid ->
+                if(uid.isBlank() || defaultUnitPrefix.isBlank()) return
 
-        _collection.value = repository.getCollection(collectionUid) ?: CollectionIO(uid = collectionUid).also {
-            repository.insertCollection(it)
-        }
-        _units.value = useCase.getUnitsByCollection(collectionUid).ifEmpty {
-            listOf(UnitIO(collectionUid = collectionUid, name = defaultUnitPrefix.plus(" 1")))
+                _collection.value = repository.getCollection(uid)
+                _units.value = useCase.getUnitsByCollection(uid).ifEmpty {
+                    listOf(UnitIO(collectionUid = uid, name = defaultUnitPrefix.plus(" 1")))
+                }
+            }
         }
     }
 }

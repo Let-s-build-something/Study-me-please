@@ -6,7 +6,6 @@ import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredWidth
@@ -16,10 +15,8 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.ArrowForwardIos
 import androidx.compose.material.icons.outlined.DoorBack
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -32,33 +29,33 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.constraintlayout.compose.ConstraintLayout
-import androidx.constraintlayout.compose.Dimension
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
-import com.squadris.squadris.compose.theme.LocalTheme
-import com.squadris.squadris.utils.OnLifecycleEvent
-import study.me.please.R
 import com.squadris.squadris.compose.base.LocalActivity
+import com.squadris.squadris.compose.base.LocalIsTablet
 import com.squadris.squadris.compose.base.LocalNavController
 import com.squadris.squadris.compose.components.navigation.NavIconType
+import com.squadris.squadris.compose.theme.LocalTheme
+import com.squadris.squadris.utils.OnLifecycleEvent
+import com.squadris.squadris.utils.RefreshableViewModel.Companion.requestData
+import study.me.please.R
 import study.me.please.base.navigation.NavigationRoot
 import study.me.please.data.io.CollectionIO
 import study.me.please.data.io.session.SessionIO
-import com.squadris.squadris.utils.RefreshableViewModel.Companion.requestData
 import study.me.please.ui.components.BasicAlertDialog
 import study.me.please.ui.components.ButtonState
 import study.me.please.ui.components.CollectionCard
 import study.me.please.ui.components.ComponentHeaderButton
-import study.me.please.ui.components.ImageAction
+import study.me.please.ui.components.ContentTile
+import study.me.please.ui.components.HorizontalBlock
 import study.me.please.ui.components.InteractiveCardState
-import study.me.please.ui.components.OutlinedButton
 import study.me.please.ui.components.pull_refresh.PullRefreshScreen
 import study.me.please.ui.components.rememberInteractiveCardState
 import study.me.please.ui.components.session.SessionCard
 import study.me.please.ui.components.session.launcher.SessionLauncher
 import java.util.UUID
+
+const val IMAGE_URL_DISCOVER = "https://www.cubeit.cz/assets/img/analysis.jpg"
 
 /** Main screen, visible first when user opens the app */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -128,89 +125,86 @@ fun HomeScreen(
             )
         }
 
-        // hotfix to Google bug - crash on "replace()..."
-        ConstraintLayout(
+        Column(
             modifier = Modifier
-                .fillMaxSize()
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(
+                LocalTheme.current.shapes.betweenItemsSpace
+            )
         ) {
-            val contentRef = createRef()
-
-            Column(
+            ContentTile(
                 modifier = Modifier
-                    .constrainAs(contentRef) {
-                        linkTo(parent.start, parent.end)
-                        linkTo(parent.top, parent.bottom)
-                        width = Dimension.fillToConstraints
-                        height = Dimension.fillToConstraints
-                    }
-                    .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(
-                    LocalTheme.current.shapes.betweenItemsSpace
-                )
-            ) {
-                CollectionsRow(
-                    interactiveStates = interactiveCollectionStates,
-                    configuration = configuration,
-                    collections = collections.value,
-                    onNavigationToDetail = { collection ->
+                    .fillMaxWidth()
+                    .padding(top = 16.dp, start = 8.dp, end = 8.dp),
+                imageUrl = IMAGE_URL_DISCOVER,
+                title = stringResource(R.string.home_screen_community),
+                description = stringResource(R.string.home_screen_community_description),
+                onClick = {
+                    navController?.navigate(NavigationRoot.Community.route)
+                }
+            )
+            CollectionsRow(
+                interactiveStates = interactiveCollectionStates,
+                configuration = configuration,
+                collections = collections.value,
+                onNavigationToDetail = { collection ->
+                    navController?.navigate(
+                        NavigationRoot.CollectionDetail.createRoute(
+                            NavigationRoot.CollectionDetail.CollectionDetailArgument(
+                                collectionUid = collection.uid,
+                                toolbarTitle = collection.name.ifEmpty {
+                                    context.getString(R.string.screen_collection_detail_new)
+                                }
+                            )
+                        )
+                    )
+                },
+                onNavigationToLobby = { createNewItem ->
+                    if(createNewItem) {
                         navController?.navigate(
                             NavigationRoot.CollectionDetail.createRoute(
                                 NavigationRoot.CollectionDetail.CollectionDetailArgument(
-                                    collectionUid = collection.uid,
-                                    toolbarTitle = collection.name.ifEmpty {
-                                        context.getString(R.string.screen_collection_detail_new)
-                                    }
+                                    toolbarTitle = context.getString(R.string.screen_collection_detail_new)
                                 )
                             )
                         )
-                    },
-                    onNavigationToLobby = { createNewItem ->
-                        if(createNewItem) {
-                            navController?.navigate(
-                                NavigationRoot.CollectionDetail.createRoute(
-                                    NavigationRoot.CollectionDetail.CollectionDetailArgument(
-                                        toolbarTitle = context.getString(R.string.screen_collection_detail_new),
-                                        collectionUid = UUID.randomUUID().toString()
-                                    )
-                                )
-                            )
-                        }else {
-                            navController?.navigate(NavigationRoot.CollectionLobby.route)
-                        }
-                    },
-                    onNavigationToSession = { collection ->
-                        showSessionLauncher.value = collection.uid
+                    }else {
+                        navController?.navigate(NavigationRoot.CollectionLobby.route)
                     }
-                )
-                SessionsRow(
-                    interactiveStates = interactiveSessionStates,
-                    sessions = sessions.value,
-                    configuration = configuration,
-                    onNavigationToLobby = {
-                        navController?.navigate(NavigationRoot.SessionLobby.route)
-                    },
-                    onNavigationToSession = { session ->
-                        navController?.navigate(
-                            NavigationRoot.SessionPlay.createRoute(
-                                NavigationRoot.SessionPlay.SessionPlayArgument(
-                                    toolbarTitle = session.name,
-                                    sessionUid = session.uid
-                                )
+                },
+                onNavigationToSession = { collection ->
+                    showSessionLauncher.value = collection.uid
+                }
+            )
+            SessionsRow(
+                interactiveStates = interactiveSessionStates,
+                sessions = sessions.value,
+                configuration = configuration,
+                onNavigationToLobby = {
+                    navController?.navigate(NavigationRoot.SessionLobby.route)
+                },
+                onNavigationToSession = { session ->
+                    navController?.navigate(
+                        NavigationRoot.SessionPlay.createRoute(
+                            NavigationRoot.SessionPlay.SessionPlayArgument(
+                                toolbarTitle = session.name,
+                                sessionUid = session.uid
                             )
                         )
-                    },
-                    onNavigationToDetail = { session ->
-                        navController?.navigate(
-                            NavigationRoot.SessionDetail.createRoute(
-                                NavigationRoot.SessionDetail.SessionDetailArgument(
-                                    toolbarTitle = session.name,
-                                    sessionUid = session.uid
-                                )
+                    )
+                },
+                onNavigationToDetail = { session ->
+                    navController?.navigate(
+                        NavigationRoot.SessionDetail.createRoute(
+                            NavigationRoot.SessionDetail.SessionDetailArgument(
+                                toolbarTitle = session.name,
+                                sessionUid = session.uid
                             )
                         )
-                    }
-                )
-            }
+                    )
+                }
+            )
         }
     }
 }
@@ -225,23 +219,13 @@ private fun CollectionsRow(
     onNavigationToSession: (collection: CollectionIO) -> Unit,
     onNavigationToDetail: (collection: CollectionIO) -> Unit
 ) {
-    OutlinedButton(
-        modifier = Modifier
-            .padding(top = 10.dp, start = 8.dp),
-        text = stringResource(id = R.string.screen_collection_title),
-        activeColor = LocalTheme.current.colors.secondary,
-        onClick = {
-            onNavigationToLobby(false)
-        }
-    )
-    if(collections?.isEmpty() == true) {
-        EmptyElement(
-            emptyText = stringResource(id = R.string.collection_empty_error),
-            actionText = stringResource(id = R.string.home_screen_collections_empty_action)
-        ) {
-            onNavigationToLobby(true)
-        }
-    }else {
+    HorizontalBlock(
+        isEmpty = collections?.isEmpty() == true,
+        emptyTitle = stringResource(R.string.collection_empty_error),
+        emptyText = stringResource(R.string.home_screen_collections_empty_action),
+        onActionClicked = onNavigationToLobby,
+        heading = stringResource(R.string.screen_collection_title)
+    ) {
         LazyRow(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier.animateContentSize(),
@@ -256,8 +240,9 @@ private fun CollectionsRow(
             ) { index, collection ->
                 (interactiveStates?.getOrNull(index))?.let { state ->
                     CollectionCard(
-                        modifier = Modifier
-                            .requiredWidth(configuration.screenWidthDp.div(2).dp),
+                        modifier = Modifier.width(
+                            configuration.screenWidthDp.div(if(LocalIsTablet.current) 4 else 2).dp
+                        ),
                         data = collection,
                         onNavigateToDetail = {
                             collection?.let(onNavigationToDetail)
@@ -292,27 +277,17 @@ private fun SessionsRow(
     onNavigationToSession: (session: SessionIO) -> Unit,
     onNavigationToDetail: (session: SessionIO) -> Unit
 ) {
-    OutlinedButton(
-        modifier = Modifier
-            .padding(top = 16.dp, start = 8.dp),
-        text = stringResource(id = R.string.screen_session_lobby_title),
-        activeColor = LocalTheme.current.colors.secondary,
-        onClick = {
+    HorizontalBlock(
+        isEmpty = sessions?.isEmpty() == true,
+        emptyTitle = stringResource(id = R.string.session_lobby_screen_empty_text),
+        emptyText = stringResource(id = R.string.home_screen_sessions_empty_action),
+        onActionClicked = {
             onNavigationToLobby()
-        }
-    )
-    if(sessions?.isEmpty() == true) {
-        EmptyElement(
-            emptyText = stringResource(id = R.string.session_lobby_screen_empty_text),
-            actionText = stringResource(id = R.string.home_screen_sessions_empty_action)
-        ) {
-            onNavigationToLobby()
-        }
-    }else {
+        },
+        heading = stringResource(id = R.string.screen_session_lobby_title)
+    ) {
         LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(
-                LocalTheme.current.shapes.betweenItemsSpace
-            )
+            horizontalArrangement = Arrangement.spacedBy(LocalTheme.current.shapes.betweenItemsSpace)
         ) {
             item {
                 Spacer(modifier = Modifier.width(6.dp))
@@ -340,31 +315,5 @@ private fun SessionsRow(
                 Spacer(modifier = Modifier.width(6.dp))
             }
         }
-    }
-}
-
-/** Element to place shown whenever row content is empty */
-@Composable
-private fun EmptyElement(
-    emptyText: String = "",
-    actionText: String = "",
-    onActionClicked: () -> Unit = {}
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 12.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            text = emptyText,
-            color = LocalTheme.current.colors.primary,
-            fontSize = 16.sp
-        )
-        ImageAction(
-            text = actionText,
-            trailingImageVector = Icons.AutoMirrored.Outlined.ArrowForwardIos,
-            onClick = onActionClicked
-        )
     }
 }

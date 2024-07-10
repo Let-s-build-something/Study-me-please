@@ -22,15 +22,19 @@ fun ScrollBarProgressIndicator(
     totalItems: Int,
     scrollState: LazyListState
 ) {
-    val lastVisibleItemIndex = remember(scrollState) { derivedStateOf {
-        scrollState.layoutInfo.visibleItemsInfo.lastOrNull()?.index
-    } }
-    val scrollLastIndex = remember(totalItems) { Animatable((lastVisibleItemIndex.value ?: 0).toFloat()) }
+    val lastVisibleItemIndex = remember(scrollState) {
+        derivedStateOf {
+            scrollState.layoutInfo.visibleItemsInfo.lastOrNull()?.index
+        }
+    }
+    val scrollLastIndex = remember(scrollState) {
+        Animatable((lastVisibleItemIndex.value ?: 0).toFloat())
+    }
 
     LaunchedEffect(lastVisibleItemIndex.value) {
         scrollLastIndex.animateTo(
             lastVisibleItemIndex.value?.toFloat() ?: 0f,
-            animationSpec = tween(DEFAULT_ANIMATION_LENGTH_SHORT,)
+            animationSpec = tween(DEFAULT_ANIMATION_LENGTH_SHORT)
         )
     }
 

@@ -67,6 +67,9 @@ sealed class NavigationRoot<T>(
         argumentKClass = CollectionQuestions.CollectionQuestionsArgument::class
     )
 
+    /** screen for community section */
+    object Community: NavigationScreen(identification = "community")
+
     /** screen for signing up */
     object SignUp: NavigationScreen(identification = "sign-up")
 
@@ -126,6 +129,21 @@ sealed class NavigationRoot<T>(
 
             /** unique identifier for the collection */
             val collectionUid: String = ""
+        )
+    }
+
+    /** screen for units with user's main notes for certain collection */
+    object PublicCollection: NavigationRoot<PublicCollection.PublicCollectionArgument>(
+        identification = "community/collections",
+        argumentKClass = PublicCollectionArgument::class
+    ) {
+        /** Argument for collection detail screen */
+        data class PublicCollectionArgument(
+            /** title for the toolbar */
+            val collectionName: String,
+
+            /** unique identifier for the collection */
+            val collectionUid: String
         )
     }
 }
