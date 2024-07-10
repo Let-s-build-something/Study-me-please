@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -36,6 +37,7 @@ import com.squadris.squadris.compose.base.LocalIsTablet
 import com.squadris.squadris.compose.base.LocalNavController
 import com.squadris.squadris.compose.components.navigation.NavIconType
 import com.squadris.squadris.compose.theme.LocalTheme
+import com.squadris.squadris.ext.scalingClickable
 import com.squadris.squadris.utils.OnLifecycleEvent
 import com.squadris.squadris.utils.RefreshableViewModel.Companion.requestData
 import study.me.please.R
@@ -145,7 +147,6 @@ fun HomeScreen(
                 }
             )
             CollectionsRow(
-                interactiveStates = interactiveCollectionStates,
                 configuration = configuration,
                 collections = collections.value,
                 onNavigationToDetail = { collection ->
@@ -212,13 +213,14 @@ fun HomeScreen(
 
 @Composable
 private fun CollectionsRow(
-    interactiveStates: List<InteractiveCardState>?,
     collections: List<CollectionIO>?,
     configuration: Configuration,
     onNavigationToLobby: (createNewItem: Boolean) -> Unit,
     onNavigationToSession: (collection: CollectionIO) -> Unit,
     onNavigationToDetail: (collection: CollectionIO) -> Unit
 ) {
+    val selectedUid = remember { mutableStateOf<String?>(null) }
+
     HorizontalBlock(
         isEmpty = collections?.isEmpty() == true,
         emptyTitle = stringResource(R.string.collection_empty_error),
@@ -234,25 +236,32 @@ private fun CollectionsRow(
             item {
                 Spacer(modifier = Modifier.width(6.dp))
             }
-            itemsIndexed(
+            items(
                 collections ?: arrayOfNulls<CollectionIO?>(5).toList(),
-                key = { _, collection -> collection?.uid ?: UUID.randomUUID().toString() }
-            ) { index, collection ->
-                (interactiveStates?.getOrNull(index))?.let { state ->
-                    CollectionCard(
-                        modifier = Modifier.width(
+                key = { collection -> collection?.uid ?: UUID.randomUUID().toString() }
+            ) { collection ->
+                CollectionCard(
+                    modifier = Modifier
+                        .scalingClickable(
+                            onTap = {
+                                selectedUid.value = collection?.uid
+                            }
+                        )
+                        .width(
                             configuration.screenWidthDp.div(if(LocalIsTablet.current) 4 else 2).dp
                         ),
-                        data = collection,
-                        onNavigateToDetail = {
-                            collection?.let(onNavigationToDetail)
-                        },
-                        onNavigateToSession = {
-                            collection?.let(onNavigationToSession)
-                        },
-                        state = state
-                    )
-                }
+                    data = collection,
+                    onNavigateToDetail = {
+                        collection?.let(onNavigationToDetail)
+                    },
+                    onNavigateToSession = {
+                        collection?.let(onNavigationToSession)
+                    },
+                    onCheckedChange = {
+                        selectedUid.value = null
+                    },
+                    isSelected = selectedUid.value == collection?.uid,
+                )
             }
             item {
                 ComponentHeaderButton(

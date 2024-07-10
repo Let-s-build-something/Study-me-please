@@ -1,9 +1,8 @@
 package study.me.please.ui.collection
 
-import androidx.compose.animation.core.LinearOutSlowInEasing
-import androidx.compose.animation.core.tween
+import android.util.Log
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -12,7 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Delete
@@ -33,7 +32,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
@@ -48,13 +46,11 @@ import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.squadris.squadris.compose.base.LocalNavController
-import com.squadris.squadris.compose.components.chips.DEFAULT_ANIMATION_LENGTH_SHORT
 import com.squadris.squadris.compose.theme.LocalTheme
 import com.squadris.squadris.compose.theme.SharedColors
+import com.squadris.squadris.ext.scalingClickable
 import com.squadris.squadris.utils.OnLifecycleEvent
 import com.squadris.squadris.utils.RefreshableViewModel.Companion.requestData
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import study.me.please.R
 import study.me.please.base.navigation.NavigationRoot
@@ -63,22 +59,19 @@ import study.me.please.ui.components.ButtonState
 import study.me.please.ui.components.CollectionCard
 import study.me.please.ui.components.ComponentHeaderButton
 import study.me.please.ui.components.ImageAction
-import study.me.please.ui.components.InteractiveCardMode
 import study.me.please.ui.components.ListOptionsBottomSheet
 import study.me.please.ui.components.pull_refresh.PullRefreshScreen
-import study.me.please.ui.components.rememberInteractiveCardState
 import study.me.please.ui.components.session.launcher.SessionLauncher
 import study.me.please.ui.session.lobby.EditableListShimmerLayout
 
 /** Screen with user's collections */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
-@Deprecated("Absolute trash code, replace with something better")
 fun CollectionLobbyScreen(
     viewModel: CollectionViewModel = hiltViewModel()
 ) {
     val coroutineScope = rememberCoroutineScope()
-    val collectionsFlow = viewModel.dataManager.collections.collectAsState()
+    val collections = viewModel.collections.collectAsState()
 
     val bottomSheetState = rememberBottomSheetScaffoldState(
         bottomSheetState = rememberStandardBottomSheetState(skipHiddenState = false)
@@ -86,15 +79,8 @@ fun CollectionLobbyScreen(
 
     val showDeleteDialog = remember { mutableStateOf(false) }
     val showSessionLauncher = remember { mutableStateOf<Boolean?>(null) }
-    val collections = remember(collectionsFlow.value) {
-        mutableStateListOf(
-            *collectionsFlow.value?.toTypedArray().orEmpty()
-        )
-    }
-    val selectedCollectionUids = remember(collectionsFlow.value) { mutableStateListOf<String>() }
-    val interactiveStates = collections.map {
-        rememberInteractiveCardState()
-    }
+    val checkedUidList = remember { mutableStateListOf<String>() }
+    val selectedUid = remember { mutableStateOf<String?>(null) }
 
     val navController = LocalNavController.current
     val context = LocalContext.current
@@ -107,21 +93,16 @@ fun CollectionLobbyScreen(
 
 
     val stopChecking = {
-        interactiveStates.forEach {
-            it.isChecked.value = false
-            it.mode.value = InteractiveCardMode.DATA_DISPLAY
-        }
-        selectedCollectionUids.clear()
+        Log.d("kostka_test", "stopChecking")
+        checkedUidList.clear()
         coroutineScope.launch {
             bottomSheetState.bottomSheetState.hide()
         }
     }
-    LaunchedEffect(selectedCollectionUids.size) {
+
+    LaunchedEffect(checkedUidList.size) {
         coroutineScope.launch {
-            if(selectedCollectionUids.size > 0) {
-                interactiveStates.forEach {
-                    it.mode.value = InteractiveCardMode.CHECKING
-                }
+            if(checkedUidList.size > 0) {
                 bottomSheetState.bottomSheetState.expand()
             } else stopChecking()
         }
@@ -132,24 +113,14 @@ fun CollectionLobbyScreen(
             title = stringResource(id = R.string.collection_delete_dialog_title),
             content = stringResource(
                 id = R.string.collection_delete_dialog_description,
-                selectedCollectionUids.size
+                checkedUidList.size
             ),
             icon = Icons.Outlined.Delete,
             confirmButtonState = ButtonState(
                 text = stringResource(id = R.string.button_confirm)
             ) {
-                // TODO refactor all of this
-                val selectedCollections = selectedCollectionUids.toSet()
-                coroutineScope.launch(Dispatchers.Default) {
-                    collections.removeAll { selectedCollections.contains(it.uid) }
-                    viewModel.dataManager.collections.update { list ->
-                        list?.toMutableList()?.apply {
-                            removeAll { selectedCollections.contains(it.uid) }
-                        }
-                    }
-                    viewModel.requestCollectionDeletion(uidList = selectedCollections)
-                    stopChecking()
-                }
+                viewModel.requestCollectionDeletion(checkedUidList.toSet())
+                stopChecking()
             },
             dismissButtonState = ButtonState(
                 text = stringResource(id = R.string.button_dismiss)
@@ -161,7 +132,7 @@ fun CollectionLobbyScreen(
     // whether it should contain all or not
     showSessionLauncher.value?.let { justAdding ->
         SessionLauncher(
-            collectionUidList = selectedCollectionUids,
+            collectionUidList = checkedUidList,
             containsAll = justAdding,
             onDismissRequest = {
                 showSessionLauncher.value = null
@@ -172,19 +143,18 @@ fun CollectionLobbyScreen(
     PullRefreshScreen(
         modifier = Modifier.fillMaxSize(),
         viewModel = viewModel,
-        onBackPressed = {
-            if(selectedCollectionUids.size > 0) {
-                stopChecking()
-            }
-            selectedCollectionUids.size == 0
-        },
         title = stringResource(id = R.string.screen_collection_title)
     ) {
-        if(collectionsFlow.value == null) {
+        BackHandler(checkedUidList.size > 0) {
+            stopChecking()
+        }
+
+        if(collections.value == null) {
             EditableListShimmerLayout()
         }else {
             ListOptionsBottomSheet(
                 onDismissRequest = {
+                    Log.d("kostka_test", "onDismissRequest")
                     stopChecking()
                 },
                 actions = {
@@ -199,15 +169,13 @@ fun CollectionLobbyScreen(
                         leadingImageVector = Icons.Outlined.SelectAll,
                         text = stringResource(id = R.string.button_select_all)
                     ) {
-                        interactiveStates.forEach {
-                            it.isChecked.value = true
-                        }
+                        checkedUidList.addAll(collections.value?.map { it.uid }.orEmpty())
                     }
                     ImageAction(
                         leadingImageVector = Icons.Outlined.Deselect,
                         text = stringResource(id = R.string.button_deselect)
                     ) {
-                        selectedCollectionUids.clear()
+                        checkedUidList.clear()
                     }
                     ImageAction(
                         leadingImageVector = Icons.Outlined.Add,
@@ -224,7 +192,7 @@ fun CollectionLobbyScreen(
                             NavigationRoot.SessionDetail.createRoute(
                                 NavigationRoot.SessionDetail.SessionDetailArgument(
                                     toolbarTitle = toolbarText,
-                                    collectionUidList = selectedCollectionUids
+                                    collectionUidList = checkedUidList
                                 )
                             )
                         )
@@ -234,12 +202,6 @@ fun CollectionLobbyScreen(
                 state = bottomSheetState
             ) { _ ->
                 LazyColumn(
-                    modifier = Modifier
-                        .pointerInput(Unit) {
-                            detectTapGestures(onTap = {
-                                stopChecking()
-                            })
-                        },
                     verticalArrangement = Arrangement.spacedBy(LocalTheme.current.shapes.betweenItemsSpace)
                 ) {
                     stickyHeader {
@@ -258,48 +220,60 @@ fun CollectionLobbyScreen(
                             )
                         }
                     }
-                    if(collections.isNotEmpty()) {
-                        itemsIndexed(
-                            items = collections,
-                            key = { _, item ->
+                    if(collections.value.isNullOrEmpty().not()) {
+                        items(
+                            items = collections.value.orEmpty(),
+                            key = { item ->
                                 item.uid
                             }
-                        ) { index, collection ->
-                            (interactiveStates.getOrNull(index) ?: rememberInteractiveCardState()).let { state ->
-                                LaunchedEffect(key1 = state.isChecked.value) {
-                                    if (state.isChecked.value) {
-                                        selectedCollectionUids.add(collection.uid)
-                                    } else selectedCollectionUids.remove(collection.uid)
-                                }
-                                CollectionCard(
-                                    modifier = Modifier
-                                        .animateItemPlacement(
-                                            tween(
-                                                durationMillis = DEFAULT_ANIMATION_LENGTH_SHORT,
-                                                easing = LinearOutSlowInEasing
-                                            )
-                                        ),
-                                    data = collection,
-                                    onNavigateToDetail = {
-                                        navController?.navigate(
-                                            NavigationRoot.CollectionDetail.createRoute(
-                                                NavigationRoot.CollectionDetail.CollectionDetailArgument(
-                                                    collectionUid = collection.uid,
-                                                    toolbarTitle = collection.name.ifEmpty {
-                                                        context.getString(R.string.screen_collection_detail_new)
-                                                    }
-                                                )
+                        ) { collection ->
+                            CollectionCard(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .scalingClickable(
+                                        onTap = {
+                                            if (checkedUidList.size > 0) {
+                                                if (checkedUidList.contains(collection.uid)) {
+                                                    checkedUidList.remove(collection.uid)
+                                                } else checkedUidList.add(collection.uid)
+                                            } else {
+                                                selectedUid.value = collection.uid
+                                            }
+                                        },
+                                        onLongPress = {
+                                            checkedUidList.add(collection.uid)
+                                        }
+                                    )
+                                    .animateItemPlacement(),
+                                data = collection,
+                                onNavigateToDetail = {
+                                    navController?.navigate(
+                                        NavigationRoot.CollectionDetail.createRoute(
+                                            NavigationRoot.CollectionDetail.CollectionDetailArgument(
+                                                collectionUid = collection.uid,
+                                                toolbarTitle = collection.name.ifEmpty {
+                                                    context.getString(R.string.screen_collection_detail_new)
+                                                }
                                             )
                                         )
-                                    },
-                                    onNavigateToSession = {
-                                        showSessionLauncher.value = false
-                                    },
-                                    state = state
-                                )
-                            }
+                                    )
+                                },
+                                onNavigateToSession = {
+                                    showSessionLauncher.value = false
+                                },
+                                onCheckedChange = { isChecked ->
+                                    if(isChecked) {
+                                        checkedUidList.add(collection.uid)
+                                    }else checkedUidList.remove(collection.uid)
+                                    selectedUid.value = null
+                                },
+                                isSelected = selectedUid.value == collection.uid,
+                                isChecked = if(checkedUidList.size > 0) {
+                                    checkedUidList.contains(collection.uid)
+                                } else null
+                            )
                         }
-                    }else if(collections.isEmpty() && collectionsFlow.value != null) {
+                    }else if(collections.value?.isEmpty() == true) {
                         item {
                             EmptyLayout(
                                 emptyText = stringResource(id = R.string.collection_empty_error)

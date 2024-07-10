@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -39,6 +38,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -46,22 +46,23 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
+import com.squadris.squadris.compose.base.LocalNavController
 import com.squadris.squadris.compose.components.chips.DEFAULT_ANIMATION_LENGTH_SHORT
-import study.me.please.ui.components.EditFieldInput
+import com.squadris.squadris.compose.components.navigation.ActionBarIcon
 import com.squadris.squadris.compose.theme.LocalTheme
 import com.squadris.squadris.ext.brandShimmerEffect
+import com.squadris.squadris.ext.scalingClickable
 import com.squadris.squadris.utils.OnLifecycleEvent
+import com.squadris.squadris.utils.RefreshableViewModel.Companion.requestData
 import study.me.please.R
-import com.squadris.squadris.compose.base.LocalNavController
-import com.squadris.squadris.compose.components.navigation.ActionBarIcon
 import study.me.please.base.navigation.NavigationRoot
 import study.me.please.data.io.CollectionIO
 import study.me.please.data.io.preferences.SessionPreferencePack
 import study.me.please.data.io.session.SessionIO
-import com.squadris.squadris.utils.RefreshableViewModel.Companion.requestData
 import study.me.please.ui.components.BasicAlertDialog
 import study.me.please.ui.components.ButtonState
 import study.me.please.ui.components.CollectionCard
+import study.me.please.ui.components.EditFieldInput
 import study.me.please.ui.components.InteractiveCardMode
 import study.me.please.ui.components.OptionsLayout
 import study.me.please.ui.components.QuestionCard
@@ -71,9 +72,6 @@ import study.me.please.ui.components.preference_chooser.PreferenceChooserControl
 import study.me.please.ui.components.pull_refresh.PullRefreshScreen
 import study.me.please.ui.components.rememberInteractiveCardState
 import study.me.please.ui.components.session.StatisticsTable
-
-/** length of a [CollectionCard] name in shorten version */
-private const val COLLECTION_CARD_NAME_SHORT_LENGTH = 24
 
 enum class DialogToShow {
     DeleteCollections,
@@ -177,6 +175,7 @@ private fun ContentLayout(
     onAddCollection: () -> Unit
 ) {
     val localFocusManager = LocalFocusManager.current
+    val configuration = LocalConfiguration.current
 
     val questions = viewModel.questions.collectAsState()
     val questionModule = viewModel.questionModule.collectAsState()
@@ -358,22 +357,13 @@ private fun ContentLayout(
                     }
                     CollectionCard(
                         modifier = Modifier
-                            .wrapContentHeight()
-                            .wrapContentWidth()
-                            .animateItemPlacement(
-                                tween(
-                                    durationMillis = DEFAULT_ANIMATION_LENGTH_SHORT,
-                                    easing = LinearOutSlowInEasing
-                                )
-                            ),
-                        data = collection,
-                        state = cardState,
-                        skipOptions = true,
-                        onNavigateToDetail = {
-                            navigateToCollection(collection)
-                        },
-                        clipToName = true,
-                        maxNameLength = COLLECTION_CARD_NAME_SHORT_LENGTH
+                            .scalingClickable(
+                                onTap = {
+                                    navigateToCollection(collection)
+                                }
+                            )
+                            .width(configuration.screenWidthDp.times(0.4f).dp),
+                        data = collection
                     )
                 }
                 session?.collectionUidList
