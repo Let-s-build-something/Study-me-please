@@ -1,17 +1,19 @@
 package study.me.please.ui.collection
 
 import androidx.lifecycle.viewModelScope
-import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.launch
 import com.squadris.squadris.compose.base.BaseViewModel
 import com.squadris.squadris.utils.RefreshableViewModel
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class CollectionViewModel @Inject constructor(
     private val repository: CollectionRepository,
-    val dataManager: CollectionDataManager
+    private val dataManager: CollectionDataManager
 ): BaseViewModel(), RefreshableViewModel {
 
     override val isRefreshing = MutableStateFlow(false)
@@ -24,9 +26,15 @@ class CollectionViewModel @Inject constructor(
         }
     }
 
+    /** list of all collections saved locally */
+    val collections = dataManager.collections.asStateFlow()
+
     /** Requests for a removal of collections */
     fun requestCollectionDeletion(uidList: Set<String>) {
         viewModelScope.launch {
+            dataManager.collections.update {
+                it?.filter { collection -> collection.uid !in uidList }
+            }
             repository.deleteCollections(uidList.toList())
         }
     }

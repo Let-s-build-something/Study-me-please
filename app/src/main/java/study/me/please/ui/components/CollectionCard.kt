@@ -1,22 +1,22 @@
 package study.me.please.ui.components
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
@@ -46,34 +46,31 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.constraintlayout.compose.ConstraintLayout
-import androidx.constraintlayout.compose.Dimension
 import com.squadris.squadris.compose.theme.LocalTheme
 import com.squadris.squadris.compose.theme.SharedColors
+import com.squadris.squadris.ext.brandShimmerEffect
 import study.me.please.R
+import study.me.please.base.theme.AppTheme
 import study.me.please.base.theme.Colors
 import study.me.please.data.io.CollectionIO
 
 /** Item displaying collection and shortened information about it */
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun CollectionCard(
     modifier: Modifier = Modifier,
     data: CollectionIO? = null,
-    state: InteractiveCardState,
-    skipOptions: Boolean = false,
-    maxNameLength: Int? = null,
-    clipToName: Boolean = false,
+    isChecked: Boolean? = null,
+    isSelected: Boolean = false,
+    onCheckedChange: (Boolean) -> Unit = {},
     onNavigateToDetail: () -> Unit = {},
     onNavigateToSession: () -> Unit = {}
 ) {
-    //TODO shimmer effect
     AnimatedContent(
         targetState = data == null,
         label = ""
     ) { shimmer ->
         if(shimmer) {
-            ShimmerLayout()
+            ShimmerLayout(modifier)
         }else {
             val localDensity = LocalDensity.current
             var cardHeight by remember { mutableStateOf(0.dp) }
@@ -81,26 +78,7 @@ fun CollectionCard(
             Card(
                 modifier = modifier
                     .wrapContentHeight()
-                    .clip(LocalTheme.current.shapes.componentShape)
-                    .combinedClickable(
-                        interactionSource = remember {
-                            MutableInteractionSource()
-                        },
-                        indication = rememberRipple(bounded = true),
-                        onClick = {
-                            if (state.mode.value == InteractiveCardMode.CHECKING) {
-                                state.isChecked.value = state.isChecked.value.not()
-                            } else if (state.mode.value == InteractiveCardMode.DATA_DISPLAY) {
-                                if (skipOptions) {
-                                    onNavigateToDetail()
-                                } else state.mode.value = InteractiveCardMode.OPTIONS
-                            }
-                        },
-                        onLongClick = {
-                            state.isChecked.value = true
-                        },
-                        enabled = state.isEnabled.value
-                    ),
+                    .clip(LocalTheme.current.shapes.componentShape),
                 elevation = LocalTheme.current.styles.cardClickableElevation,
                 shape = LocalTheme.current.shapes.componentShape,
                 colors = CardDefaults.cardColors(
@@ -109,7 +87,7 @@ fun CollectionCard(
                 )
             ) {
                 AnimatedContent(
-                    targetState = state.mode.value == InteractiveCardMode.OPTIONS,
+                    targetState = isSelected,
                     label = ""
                 ) { isOptions ->
                     if(isOptions) {
@@ -118,25 +96,18 @@ fun CollectionCard(
                             onEditOptionPressed = onNavigateToDetail,
                             onPlayOptionPressed = onNavigateToSession,
                             onCancelClick = {
-                                state.mode.value = InteractiveCardMode.DATA_DISPLAY
+                                onCheckedChange(false)
                             }
                         )
                     }else if(data != null) {
                         DataCard(
                             modifier = Modifier
                                 .onGloballyPositioned { coordinates ->
-                                    cardHeight =
-                                        with(localDensity) { coordinates.size.height.toDp() }
-                                }
-                                .then(
-                                    if (maxNameLength != null) {
-                                        Modifier.wrapContentWidth()
-                                    } else Modifier.fillMaxWidth()
-                                ),
-                            maxNameLength = maxNameLength,
-                            clipToName = clipToName,
+                                    cardHeight = with(localDensity) { coordinates.size.height.toDp() }
+                                },
                             data = data,
-                            state = state
+                            isChecked = isChecked,
+                            onCheckedChange = onCheckedChange
                         )
                     }
                 }
@@ -146,102 +117,58 @@ fun CollectionCard(
 }
 
 @Composable
-private fun ShimmerLayout() {
-
+private fun ShimmerLayout(modifier: Modifier) {
+    Box(
+        modifier = modifier
+            .height(72.dp)
+            .brandShimmerEffect()
+    )
 }
 
 @Composable
 private fun DataCard(
     modifier: Modifier,
-    maxNameLength: Int?,
-    clipToName: Boolean,
     data: CollectionIO,
-    state: InteractiveCardState
+    onCheckedChange: (Boolean) -> Unit = {},
+    isChecked: Boolean? = null
 ) {
-    ConstraintLayout(
-        modifier = modifier
-            .padding(vertical = 8.dp, horizontal = 12.dp)
+    Row(
+        modifier = modifier.padding(vertical = 8.dp, horizontal = 12.dp)
     ) {
-        val (
-            txtHeading,
-            txtDescription,
-            imgIcon,
-            checkBox
-        ) = createRefs()
-
-        if(state.mode.value == InteractiveCardMode.CHECKING) {
+        AnimatedVisibility(visible = isChecked != null) {
             Checkbox(
-                modifier = Modifier.constrainAs(checkBox) {
-                    start.linkTo(parent.start, (-8).dp)
-                    top.linkTo(parent.top, (-12).dp)
-                },
-                enabled = state.isEnabled.value,
-                checked = state.isChecked.value,
-                onCheckedChange = { isChecked ->
-                    state.isChecked.value = isChecked
-                },
+                modifier = Modifier
+                    .offset(x = -(12).dp, y = (-8).dp),
+                checked = isChecked == true,
+                onCheckedChange = onCheckedChange,
                 colors = LocalTheme.current.styles.checkBoxColorsDefault
             )
         }
-        /*Image(
-            modifier = Modifier
-                .size(LocalTheme.current.shapes.iconSizeMedium)
-                .background(
-                    color = LocalTheme.current.colors.brandMain,
-                    shape = LocalTheme.current.shapes.circularActionShape
-                )
-                .clip(LocalTheme.current.shapes.circularActionShape)
-                .padding(8.dp)
-                .constrainAs(imgIcon) {
-                    top.linkTo(parent.top)
-                    end.linkTo(parent.end)
-                },
-            imageVector = data.defaultPreference.estimatedMode.icon,
-            contentDescription = null,
-            colorFilter = ColorFilter.tint(color = LocalTheme.current.colors.tetrial)
-        )*/
-        Text(
-            text = if(maxNameLength != null && maxNameLength < data.name.length) {
-                data.name.substring(0, maxNameLength).plus("...")
-            }else data.name,
-            modifier = Modifier.constrainAs(txtHeading) {
-                top.linkTo(parent.top, 4.dp)
-                linkTo(
-                    if(state.mode.value == InteractiveCardMode.CHECKING) {
-                        checkBox.end
-                    }else parent.start,
-                    imgIcon.start,
-                    endMargin = 6.dp
-                )
-                if(clipToName.not()) {
-                    width = Dimension.fillToConstraints
-                }
-            },
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Medium,
-            color = LocalTheme.current.colors.primary,
-            textAlign = TextAlign.Start
-        )
-        Text(
-            text = data.description,
-            modifier = Modifier
-                .constrainAs(txtDescription) {
-                    top.linkTo(txtHeading.bottom, 4.dp)
-                    start.linkTo(txtHeading.start)
-                    if(clipToName) {
-                        end.linkTo(txtHeading.end)
-                    }else end.linkTo(imgIcon.start, 6.dp)
-                    width = Dimension.fillToConstraints
-                },
-            style = TextStyle(
-                fontSize = 14.sp,
-                color = LocalTheme.current.colors.secondary,
-            ),
-            minLines = 2,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis
-        )
+        Column {
+            Text(
+                text = data.name,
+                modifier = Modifier.padding(top = 4.dp),
+                fontSize = 16.sp,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                fontWeight = FontWeight.Medium,
+                color = LocalTheme.current.colors.primary,
+                textAlign = TextAlign.Start
+            )
+            Text(
+                text = data.description,
+                modifier = Modifier,
+                style = TextStyle(
+                    fontSize = 14.sp,
+                    color = LocalTheme.current.colors.secondary,
+                ),
+                minLines = 2,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
     }
+
 }
 
 @Composable
@@ -255,6 +182,7 @@ fun OptionsModeLayout(
         modifier = Modifier
             .background(color = LocalTheme.current.colors.onBackgroundComponent)
             .fillMaxWidth()
+            .clip(LocalTheme.current.shapes.componentShape)
             .then(modifier),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically
@@ -266,11 +194,7 @@ fun OptionsModeLayout(
 
         Box(
             modifier = itemModifier
-                .padding(
-                    start = 12.dp,
-                    top = 12.dp,
-                    bottom = 12.dp
-                )
+                .padding(top = 12.dp, bottom = 12.dp, end = 3.dp)
                 .background(
                     color = SharedColors.RED_ERROR.copy(alpha = 0.4f),
                     shape = RoundedCornerShape(
@@ -298,7 +222,7 @@ fun OptionsModeLayout(
         }
         Box(
             modifier = itemModifier
-                .padding(vertical = 12.dp, horizontal = 6.dp)
+                .padding(vertical = 12.dp, horizontal = 3.dp)
                 .background(
                     color = LocalTheme.current.colors.tetrial.copy(alpha = 0.4f)
                 )
@@ -322,7 +246,7 @@ fun OptionsModeLayout(
         }
         Box(
             modifier = itemModifier
-                .padding(end = 12.dp, top = 12.dp, bottom = 12.dp)
+                .padding(top = 12.dp, bottom = 12.dp, start = 3.dp)
                 .background(
                     color = SharedColors.GREEN_CORRECT.copy(alpha = 0.4f),
                     shape = RoundedCornerShape(
@@ -348,18 +272,23 @@ fun OptionsModeLayout(
                 tint = Colors.DARK_BLUE_70
             )
         }
-        //TODO buttons icons and transparent color background which looses the
-        //TODO transparency after pressing
     }
 }
 
-@Preview(widthDp = 360)
+@Preview(showBackground = true)
 @Composable
 private fun Preview() {
-    CollectionCard(
-        data = CollectionIO(name = "collection"),
-        onNavigateToSession = {},
-        onNavigateToDetail = {},
-        state = rememberInteractiveCardState()
-    )
+    AppTheme(isDarkTheme = true) {
+        Row(modifier = Modifier.fillMaxWidth()) {
+            CollectionCard(
+                modifier = Modifier.weight(1f),
+                data = null
+            )
+            CollectionCard(
+                modifier = Modifier.weight(1f),
+                data = CollectionIO(name = "collection", description = "description"),
+                isChecked = true
+            )
+        }
+    }
 }
