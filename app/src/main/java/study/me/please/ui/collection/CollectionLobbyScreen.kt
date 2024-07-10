@@ -138,7 +138,7 @@ fun CollectionLobbyScreen(
             confirmButtonState = ButtonState(
                 text = stringResource(id = R.string.button_confirm)
             ) {
-                // TODO WTF is this????? WHY IS THIS STORED IN COMPOSE STATE?????
+                // TODO refactor all of this
                 val selectedCollections = selectedCollectionUids.toSet()
                 coroutineScope.launch(Dispatchers.Default) {
                     collections.removeAll { selectedCollections.contains(it.uid) }
