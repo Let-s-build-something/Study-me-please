@@ -22,22 +22,20 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
-import study.me.please.ui.components.EditFieldInput
 import com.squadris.squadris.compose.theme.LocalTheme
 import com.squadris.squadris.ext.brandShimmerEffect
 import com.squadris.squadris.utils.OnLifecycleEvent
+import com.squadris.squadris.utils.RefreshableViewModel.Companion.requestData
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import study.me.please.R
 import study.me.please.data.io.CollectionIO
-import com.squadris.squadris.utils.RefreshableViewModel.Companion.requestData
 import study.me.please.ui.collection.detail.questions.detail.INPUT_DELAYED_RESPONSE_MILLIS
+import study.me.please.ui.components.EditFieldInput
 import study.me.please.ui.components.pull_refresh.PullRefreshScreen
 
-const val REQUEST_DATA_SAVE_DELAY = 200L
-
-const val PAGE_INDEX_QUESTIONS = 0
+const val REQUEST_DATA_SAVE_DELAY = 400L
 
 /** Main communication and controlling channel */
 interface CollectionDetailBridge {
@@ -115,7 +113,7 @@ private fun ContentLayout(
                 coroutineScope.coroutineContext.cancelChildren()
                 coroutineScope.launch {
                     delay(REQUEST_DATA_SAVE_DELAY)
-                    viewModel.requestCollectionSave(collectionDetail)
+                    viewModel.updateCollectionAbout(collectionDetail)
                 }
             }
 

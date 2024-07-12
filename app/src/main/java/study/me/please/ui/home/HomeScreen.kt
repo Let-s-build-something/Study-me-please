@@ -222,6 +222,7 @@ private fun CollectionsRow(
     val selectedUid = remember { mutableStateOf<String?>(null) }
 
     HorizontalBlock(
+        modifier = Modifier.animateContentSize(),
         isEmpty = collections?.isEmpty() == true,
         emptyTitle = stringResource(R.string.collection_empty_error),
         emptyText = stringResource(R.string.home_screen_collections_empty_action),
@@ -230,7 +231,6 @@ private fun CollectionsRow(
     ) {
         LazyRow(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.animateContentSize(),
             verticalAlignment = Alignment.CenterVertically
         ) {
             item {

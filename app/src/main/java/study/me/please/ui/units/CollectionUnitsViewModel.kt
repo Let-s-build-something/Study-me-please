@@ -169,12 +169,13 @@ class CollectionUnitsViewModel @Inject constructor(
     }
 
     /** Adds new unit but doesn't create a DB record for it */
-    fun addNewUnit(collectionUid: String?, prefix: String) {
-        if(collectionUid == null) return
-        viewModelScope.launch {
-            _units.update { previousUnits ->
-                previousUnits?.toMutableList()?.apply {
-                    add(UnitIO(collectionUid = collectionUid, name = "$prefix ${this.size.plus(1)}"))
+    fun addNewUnit(prefix: String) {
+        collectionUid?.let { uid ->
+            viewModelScope.launch {
+                _units.update { previousUnits ->
+                    previousUnits?.toMutableList()?.apply {
+                        add(UnitIO(collectionUid = uid, name = "$prefix ${this.size.plus(1)}"))
+                    }
                 }
             }
         }
@@ -215,6 +216,7 @@ class CollectionUnitsViewModel @Inject constructor(
                 collectionUid = newCollectionUid,
                 name = defaultUnitPrefix.plus(" 1")
             ))
+            collectionUid = newCollectionUid
         }else {
             collectionUid?.let { uid ->
                 if(uid.isBlank() || defaultUnitPrefix.isBlank()) return

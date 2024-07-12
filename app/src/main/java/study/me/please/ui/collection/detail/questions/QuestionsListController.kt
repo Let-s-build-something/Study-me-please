@@ -5,7 +5,6 @@ import study.me.please.data.io.QuestionIO
 /** interface for interacting with list of questions */
 interface QuestionsListController {
     fun addQuestion()
-    fun stopChecking()
     fun deleteQuestions()
     fun openQuestion(question: QuestionIO)
     fun copyItems()

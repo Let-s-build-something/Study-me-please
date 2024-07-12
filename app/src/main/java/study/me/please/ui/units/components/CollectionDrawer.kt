@@ -221,7 +221,6 @@ fun CollectionDrawer(
                             modifier = Modifier.fillMaxWidth(),
                             onClick = {
                                 viewModel.addNewUnit(
-                                    collectionUid = viewModel.collectionUid,
                                     prefix = context.getString(R.string.unit_heading_prefix)
                                 )
                                 onIndexChange(units.value?.size ?: 0)

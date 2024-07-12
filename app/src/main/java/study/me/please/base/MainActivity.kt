@@ -161,7 +161,8 @@ class MainActivity: ComponentActivity(), BackboneChannel {
                             composableNode(NavigationRoot.QuestionDetail) { _, argument ->
                                 QuestionDetailScreen(
                                     questionUid = argument?.questionUid ?: "",
-                                    toolbarTitle = argument?.toolbarTitle
+                                    toolbarTitle = argument?.toolbarTitle,
+                                    collectionUid = argument?.collectionUid ?: ""
                                 )
                             }
                         }

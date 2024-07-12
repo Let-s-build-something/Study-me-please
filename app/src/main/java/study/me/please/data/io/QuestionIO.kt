@@ -3,6 +3,7 @@ package study.me.please.data.io
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import com.google.firebase.firestore.Exclude
 import com.google.gson.annotations.SerializedName
 import com.squadris.squadris.utils.DateUtils
 import kotlinx.coroutines.Dispatchers
@@ -31,14 +32,6 @@ data class QuestionIO (
 
     /** List of options that can be answered */
     var answers: MutableList<QuestionAnswerIO> = mutableListOf(),
-
-    /** Number of question from workbook */
-    @SerializedName("question_number")
-    val questionNumber: Int = -1,
-
-    /** User input for where this question originates from */
-    @SerializedName("category_name")
-    val categoryName: String = "",
 
     /** path to audio file with prompt */
     @SerializedName("audio_prompt_url")
@@ -69,6 +62,7 @@ data class QuestionIO (
 ): Serializable {
 
     /** Whether this data can be taken seriously */
+    @Exclude
     suspend fun isSeriousDataPoint(): Boolean = withContext(Dispatchers.Default) {
         (prompt.isNotBlank() || promptList.any { it.isNotBlank() }) && answers.none { it.isEmpty }
     }

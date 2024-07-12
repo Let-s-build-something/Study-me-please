@@ -1,12 +1,12 @@
 {
   "formatVersion": 1,
   "database": {
-    "version": 12,
-    "identityHash": "04955603327415034ef0d1fd7cb88d85",
+    "version": 14,
+    "identityHash": "d263b8045524a79c2bfc83a0998bfadc",
     "entities": [
       {
         "tableName": "ROOM_COLLECTION_TABLE",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`name` TEXT NOT NULL, `categoryUidList` TEXT NOT NULL, `description` TEXT NOT NULL, `icon` TEXT, `date_created` INTEGER, `date_modified` INTEGER NOT NULL, `uid` TEXT NOT NULL, `questionUidList` TEXT NOT NULL, `authorUid` TEXT, `lastSelectedUnitIndex` INTEGER NOT NULL, PRIMARY KEY(`uid`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`name` TEXT NOT NULL, `categoryUidList` TEXT NOT NULL, `description` TEXT NOT NULL, `icon` TEXT, `date_created` INTEGER, `date_modified` INTEGER NOT NULL, `uid` TEXT NOT NULL, `authorUid` TEXT, `questionUidList` TEXT NOT NULL, `lastSelectedUnitIndex` INTEGER NOT NULL, PRIMARY KEY(`uid`))",
         "fields": [
           {
             "fieldPath": "name",
@@ -51,16 +51,16 @@
             "notNull": true
           },
           {
-            "fieldPath": "questionUidList",
-            "columnName": "questionUidList",
-            "affinity": "TEXT",
-            "notNull": true
-          },
-          {
             "fieldPath": "authorUid",
             "columnName": "authorUid",
             "affinity": "TEXT",
             "notNull": false
+          },
+          {
+            "fieldPath": "questionUidList",
+            "columnName": "questionUidList",
+            "affinity": "TEXT",
+            "notNull": true
           },
           {
             "fieldPath": "lastSelectedUnitIndex",
@@ -80,7 +80,7 @@
       },
       {
         "tableName": "ROOM_QUESTION_TABLE",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`prompt` TEXT NOT NULL, `promptList` TEXT NOT NULL, `textExplanation` TEXT NOT NULL, `imageExplanationUrl` TEXT, `answers` TEXT NOT NULL, `questionNumber` INTEGER NOT NULL, `categoryName` TEXT NOT NULL, `audioPromptUrl` TEXT, `videoPromptUrl` TEXT, `imagePromptUrl` TEXT, `uid` TEXT NOT NULL, `type` TEXT NOT NULL, `importedSource` TEXT, `date_created` INTEGER NOT NULL, PRIMARY KEY(`uid`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`prompt` TEXT NOT NULL, `promptList` TEXT NOT NULL, `textExplanation` TEXT NOT NULL, `imageExplanationUrl` TEXT, `answers` TEXT NOT NULL, `audioPromptUrl` TEXT, `videoPromptUrl` TEXT, `imagePromptUrl` TEXT, `uid` TEXT NOT NULL, `type` TEXT NOT NULL, `importedSource` TEXT, `date_created` INTEGER NOT NULL, PRIMARY KEY(`uid`))",
         "fields": [
           {
             "fieldPath": "prompt",
@@ -109,18 +109,6 @@
           {
             "fieldPath": "answers",
             "columnName": "answers",
-            "affinity": "TEXT",
-            "notNull": true
-          },
-          {
-            "fieldPath": "questionNumber",
-            "columnName": "questionNumber",
-            "affinity": "INTEGER",
-            "notNull": true
-          },
-          {
-            "fieldPath": "categoryName",
-            "columnName": "categoryName",
             "affinity": "TEXT",
             "notNull": true
           },
@@ -696,7 +684,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '04955603327415034ef0d1fd7cb88d85')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'd263b8045524a79c2bfc83a0998bfadc')"
     ]
   }
 }
