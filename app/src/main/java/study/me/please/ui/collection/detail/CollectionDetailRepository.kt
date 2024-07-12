@@ -1,11 +1,12 @@
 package study.me.please.ui.collection.detail
 
+import android.util.Log
+import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import study.me.please.data.io.CollectionIO
-import study.me.please.data.io.FactIO
 import study.me.please.data.io.QuestionIO
 import study.me.please.data.io.firebase.FirebaseCollections
 import study.me.please.data.room.CollectionDao
@@ -44,17 +45,16 @@ class CollectionDetailRepository @Inject constructor(
     /** saves a collection */
     suspend fun saveCollection(
         collection: CollectionIO,
-        userUid: String? = null
+        updateMap: Map<String, Any?>
     ) {
         return withContext(Dispatchers.IO) {
-            userUid?.let { userUid ->
-                Firebase.firestore
-                    .collection(FirebaseCollections.COLLECTIONS.name)
-                    .document(collection.uid)
-                    .set(collection.apply {
-                        this.authorUid = userUid
-                    })
-            }
+            Firebase.firestore
+                .collection(FirebaseCollections.COLLECTIONS.name)
+                .document(collection.uid)
+                .update(updateMap).addOnCompleteListener {
+                    Log.d("kostka_test", "(${Firebase.auth.currentUser?.uid}) inserted collection," +
+                            " success: ${it.isSuccessful},error: ${it.exception}")
+                }
 
             collectionDao.insertCollection(collection)
         }
@@ -64,22 +64,6 @@ class CollectionDetailRepository @Inject constructor(
     suspend fun saveQuestion(question: QuestionIO) {
         return withContext(Dispatchers.IO) {
             questionDao.insertQuestion(question)
-        }
-    }
-
-    //========= FACTS ===========
-
-    /** removes all facts with uid from the provided list [uidList] */
-    suspend fun deleteFacts(uidList: List<String>) {
-        withContext(Dispatchers.IO) {
-            factDao.deleteFacts(uidList)
-        }
-    }
-
-    /** saves a fact */
-    suspend fun saveFact(fact: FactIO) {
-        return withContext(Dispatchers.IO) {
-            factDao.insertFact(fact)
         }
     }
 }

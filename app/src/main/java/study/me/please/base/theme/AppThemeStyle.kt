@@ -29,9 +29,10 @@ class AppThemeStyle: ThemeStyle {
             return TextFieldDefaults.colors(
                 focusedContainerColor = LocalTheme.current.colors.onBackgroundComponentContrast,
                 unfocusedContainerColor = LocalTheme.current.colors.onBackgroundComponentContrast,
+                disabledContainerColor = LocalTheme.current.colors.onBackgroundComponentContrast,
                 unfocusedIndicatorColor = Color.Transparent,
                 focusedIndicatorColor = Color.Transparent,
-                disabledTextColor = LocalTheme.current.colors.disabled,
+                disabledTextColor = LocalTheme.current.colors.secondary,
                 focusedTextColor = LocalTheme.current.colors.primary,
                 unfocusedTextColor = LocalTheme.current.colors.secondary,
                 cursorColor = LocalTheme.current.colors.secondary,
@@ -49,6 +50,7 @@ class AppThemeStyle: ThemeStyle {
                 focusedContainerColor = Color.Transparent,
                 unfocusedContainerColor = Color.Transparent,
                 unfocusedIndicatorColor = Color.Transparent,
+                disabledContainerColor = Color.Transparent,
                 focusedIndicatorColor = Color.Transparent,
                 unfocusedLabelColor = Color.Transparent,
                 disabledTextColor = LocalTheme.current.colors.secondary,
@@ -60,7 +62,6 @@ class AppThemeStyle: ThemeStyle {
                 errorIndicatorColor = Color.Transparent,
                 errorTextColor = SharedColors.RED_ERROR,
                 errorTrailingIconColor = SharedColors.RED_ERROR,
-                disabledContainerColor = Color.Transparent,
                 disabledLabelColor = Color.Transparent,
                 disabledPrefixColor = LocalTheme.current.colors.secondary,
                 disabledSuffixColor = LocalTheme.current.colors.secondary

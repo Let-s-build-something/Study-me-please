@@ -3,6 +3,7 @@ package study.me.please.data.io
 import android.net.Uri
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import com.google.firebase.firestore.Exclude
 import study.me.please.data.room.AppRoomDatabase
 import java.io.Serializable
 import java.util.UUID
@@ -32,10 +33,12 @@ data class LargePathAsset(
 ): Serializable {
 
     /** whether the file is sourced locally */
+    @get:Exclude
     val isLocal: Boolean
         get() = localUri?.path.isNullOrEmpty().not()
 
     /** whether this object is empty or not */
+    @get:Exclude
     val isEmpty: Boolean
         get() = urlPath.isNullOrEmpty()
             && localUri?.path.isNullOrEmpty()
@@ -43,6 +46,7 @@ data class LargePathAsset(
             && presetImageUid.isNullOrEmpty()
 
     /** returns url of the file */
+    @get:Exclude
     val url: String?
         get() = urlPath ?: fbStoragePath
 }

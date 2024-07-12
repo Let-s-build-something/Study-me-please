@@ -2,7 +2,6 @@
 
 package study.me.please.ui.units
 
-import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -122,8 +121,9 @@ fun CollectionDetailScreen(
     )
 
     LaunchedEffect(Unit) {
-        Log.d("kostka_test", "CollectionDetailScreen, collectionUid: $collectionUid")
-        viewModel.collectionUid = collectionUid
+        if(collectionUid.isNullOrBlank().not()) {
+            viewModel.collectionUid = collectionUid
+        }
         viewModel.defaultUnitPrefix = context.getString(R.string.unit_heading_prefix)
         viewModel.requestData(isSpecial = true)
     }

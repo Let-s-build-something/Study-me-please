@@ -1,7 +1,9 @@
 package study.me.please.ui.collection.detail
 
 import androidx.lifecycle.viewModelScope
+import com.squadris.squadris.compose.base.BaseViewModel
 import com.squadris.squadris.utils.DateUtils
+import com.squadris.squadris.utils.RefreshableViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -10,16 +12,12 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import com.squadris.squadris.compose.base.BaseViewModel
 import study.me.please.base.GeneralClipBoard
 import study.me.please.data.io.CollectionIO
-import study.me.please.data.io.FactIO
 import study.me.please.data.io.QuestionIO
 import study.me.please.data.shared.SharedDataManager
-import com.squadris.squadris.utils.RefreshableViewModel
 import study.me.please.ui.collection.detail.questions.QuestionsFilter
 import study.me.please.ui.collection.detail.questions.SortByType
-import java.util.UUID
 import javax.inject.Inject
 
 @HiltViewModel
@@ -69,18 +67,32 @@ class CollectionDetailViewModel @Inject constructor(
     }
 
     /** Requests for a collection data save */
-    fun requestCollectionSave(collection: CollectionIO) {
+    private fun requestCollectionSave(
+        collection: CollectionIO,
+        updateMap: Map<String, Any?>
+    ) {
         viewModelScope.launch(Dispatchers.Default) {
             if(collection.isNotEmpty) {
                 repository.saveCollection(
                     collection = collection.apply {
                         dateModified = DateUtils.now.timeInMillis
-                        if(collection.dateCreated == null) dateCreated = DateUtils.now.timeInMillis
                     },
-                    userUid = sharedDataManager.currentUser.value?.uid
+                    updateMap = updateMap
                 )
             }
         }
+    }
+
+    /** Requests for a collection data save */
+    fun updateCollectionAbout(collection: CollectionIO) {
+        requestCollectionSave(
+            collection = collection,
+            updateMap = mapOf(
+                "dateModified" to DateUtils.now.timeInMillis,
+                "description" to collection.description,
+                "name" to collection.name
+            )
+        )
     }
 
     private fun requestCachedQuestions(questionUidList: List<String>) {
@@ -116,16 +128,9 @@ class CollectionDetailViewModel @Inject constructor(
         }
     }
 
-    /** Requests for a fact data save */
-    private fun requestFactSave(fact: FactIO) {
-        viewModelScope.launch {
-            repository.saveFact(fact)
-        }
-    }
-
     /** Adds a new question */
     fun addNewQuestion(): QuestionIO {
-        val newQuestion = QuestionIO(uid = "TESTING QUESTION CREATION".plus(UUID.randomUUID().toString()))
+        val newQuestion = QuestionIO()
         dataManager.collectionQuestions.update {
             it.toMutableList().apply {
                 add(0, newQuestion)
@@ -134,25 +139,14 @@ class CollectionDetailViewModel @Inject constructor(
         viewModelScope.launch {
             dataManager.collectionDetail.value?.apply {
                 questionUidList.add(newQuestion.uid)
-            }?.let { requestCollectionSave(it) }
+            }?.let {
+                requestCollectionSave(
+                    it,
+                    updateMap = mapOf("questions.${newQuestion.uid}" to newQuestion)
+                )
+            }
         }
         return newQuestion
-    }
-
-    /** Pastes current clipboard */
-    fun pasteFactsClipBoard() {
-        viewModelScope.launch {
-            val clipBoard = clipBoard.facts.paste()
-            clipBoard.forEach {
-                requestFactSave(it)
-            }
-            dataManager.collectionDetail.value?.apply {
-                factUidList.addAll(clipBoard.map { it.uid })
-            }?.let { requestCollectionSave(it) }
-            dataManager.collectionFacts.update {
-                it.toMutableList().apply { addAll(0, clipBoard) }
-            }
-        }
     }
 
     /** Pastes current clipboard */
@@ -164,7 +158,12 @@ class CollectionDetailViewModel @Inject constructor(
             }
             dataManager.collectionDetail.value?.apply {
                 questionUidList.addAll(clipBoard.map { it.uid })
-            }?.let { requestCollectionSave(it) }
+            }?.let { collection ->
+                requestCollectionSave(
+                    collection,
+                    updateMap = mapOf("questions" to clipBoard.map { it.uid to it }.plus(collection.questions))
+                )
+            }
             dataManager.collectionQuestions.update {
                 it.toMutableList().apply { addAll(0, clipBoard) }
             }

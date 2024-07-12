@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -25,6 +24,7 @@ import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -48,6 +48,7 @@ import com.squadris.squadris.compose.base.LocalNavController
 import com.squadris.squadris.compose.components.navigation.ActionBarIcon
 import com.squadris.squadris.compose.components.navigation.NavIconType
 import com.squadris.squadris.compose.theme.LocalTheme
+import com.squadris.squadris.ext.scalingClickable
 import com.squadris.squadris.utils.RefreshableViewModel.Companion.requestData
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancelChildren
@@ -65,8 +66,6 @@ import study.me.please.ui.components.ButtonState
 import study.me.please.ui.components.EditFieldInput
 import study.me.please.ui.components.EditableImageAsset
 import study.me.please.ui.components.ImageAction
-import study.me.please.ui.components.InteractiveCardMode
-import study.me.please.ui.components.InteractiveCardState
 import study.me.please.ui.components.ListItemEditField
 import study.me.please.ui.components.OptionsLayout
 import study.me.please.ui.components.QuestionAnswerCard
@@ -80,6 +79,7 @@ const val INPUT_DELAYED_RESPONSE_MILLIS = 500L
 @Composable
 fun QuestionDetailScreen(
     questionUid: String,
+    collectionUid: String,
     toolbarTitle: String?,
     viewModel: QuestionDetailViewModel = hiltViewModel()
 ) {
@@ -90,11 +90,12 @@ fun QuestionDetailScreen(
     val navController = LocalNavController.current
     val savingScope = rememberCoroutineScope()
     val coroutineScope = rememberCoroutineScope()
-    val scrollState = rememberLazyListState()
     val promptSingleFR = remember(questionUid) { FocusRequester() }
     val promptMultiFR = remember(questionUid) { FocusRequester() }
 
-    val livePrompt = remember(questionUid) { mutableStateOf(question.value?.prompt) }
+    val livePrompt = remember(questionUid) {
+        mutableStateOf(question.value?.promptList?.firstOrNull())
+    }
     val imagePromptUrl = remember(question.value?.imagePromptUrl) {
         mutableStateOf(question.value?.imagePromptUrl)
     }
@@ -102,11 +103,6 @@ fun QuestionDetailScreen(
         mutableStateOf(question.value?.imageExplanationUrl)
     }
     var showDeleteDialog by remember { mutableStateOf(false) }
-    val answers = remember(questionUid) {
-        mutableStateListOf(
-            *question.value?.answers?.map { it to InteractiveCardState() }?.toTypedArray().orEmpty()
-        )
-    }
     val listItems = remember(question.value?.promptList) {
         mutableStateListOf(
             *question.value?.promptList?.ifEmpty {
@@ -114,38 +110,43 @@ fun QuestionDetailScreen(
             }?.toTypedArray().orEmpty()
         )
     }
+    val checkedAnswerUidList = remember {
+        mutableStateListOf<String>()
+    }
+    val isReadOnly = remember {
+        derivedStateOf { collectionUid.isBlank() }
+    }
+    val selectedAnswerUid = remember {
+        mutableStateOf<String?>(null)
+    }
 
     val bridge = remember(questionUid) {
         object: QuestionDetailBridge {
-            val selectedAnswerUids = mutableStateListOf<String>()
-
-            override fun stopChecking() {
-                answers.forEach {
-                    it.second.isChecked.value = false
-                    it.second.mode.value = InteractiveCardMode.DATA_DISPLAY
-                }
-                selectedAnswerUids.clear()
-            }
-
             override fun addNewAnswer() {
-                answers.add(0, QuestionAnswerIO() to InteractiveCardState())
-                stopChecking()
-                answers.firstOrNull()?.second?.mode?.value = InteractiveCardMode.EDIT
+                val newAnswer = QuestionAnswerIO()
+                viewModel.addNewAnswer(newAnswer)
+                checkedAnswerUidList.clear()
+                selectedAnswerUid.value = newAnswer.uid
             }
 
             override fun updateAnswer(answer: QuestionAnswerIO) {
-                viewModel.updateAnswer(answer)
+                savingScope.coroutineContext.cancelChildren()
+                savingScope.launch {
+                    delay(REQUEST_DATA_SAVE_DELAY)
+                    question.value?.let {
+                        viewModel.updateAnswer(answer)
+                    }
+                }
             }
 
             override fun pasteRequest() {
                 viewModel.pasteAnswers()
-                stopChecking()
+                checkedAnswerUidList.clear()
             }
 
             override fun deleteAnswers(uids: List<String>) {
                 viewModel.requestAnswersDeletion(uids.toSet())
-                answers.removeAll { uids.contains(it.first.uid) }
-                stopChecking()
+                checkedAnswerUidList.clear()
             }
 
             override fun updateQuestion() {
@@ -162,49 +163,16 @@ fun QuestionDetailScreen(
 
     LaunchedEffect(Unit) {
         viewModel.questionUid = questionUid
+        viewModel.collectionUid = collectionUid
         viewModel.requestData(isSpecial = true)
     }
 
-    LaunchedEffect(bridge.selectedAnswerUids.size) {
-        if(bridge.selectedAnswerUids.size > 0) {
-            answers.forEach {
-                it.second.mode.value = InteractiveCardMode.CHECKING
-            }
-        }else {
-            bridge.stopChecking()
-        }
-    }
-
-    LaunchedEffect(answers.size) {
-        if((question.value?.answers?.size ?: 0) < answers.size) {
-            question.value?.copy(answers = answers.map { it.first }.toMutableList())?.let {
+    LaunchedEffect(listItems.size) {
+        if((question.value?.promptList?.size ?: 0) != listItems.size) {
+            question.value?.copy(promptList = listItems.toMutableList())?.let {
                 viewModel.updateQuestion(it)
             }
         }
-    }
-    LaunchedEffect(question.value) {
-        question.value?.answers?.let { originAnswers ->
-            if(originAnswers.size > answers.size) {
-                answers.clear()
-                answers.addAll(originAnswers.map { it to InteractiveCardState() })
-            }
-        }
-    }
-    question.value?.answers?.forEachIndexed { index, answer ->
-        answers.getOrNull(index)?.let { state ->
-            LaunchedEffect(state.second.isChecked.value) {
-                if(state.second.isChecked.value) {
-                    bridge.selectedAnswerUids.add(answer.uid)
-                }else bridge.selectedAnswerUids.remove(answer.uid)
-            }
-            LaunchedEffect(state.second.mode.value == InteractiveCardMode.EDIT) {
-                scrollState.scrollToItem(index)
-            }
-        }
-    }
-
-    BackHandler(bridge.selectedAnswerUids.size > 0) {
-        bridge.stopChecking()
     }
 
     if(showDeleteDialog) {
@@ -212,14 +180,14 @@ fun QuestionDetailScreen(
             title = stringResource(id = R.string.answer_delete_dialog_title),
             content = stringResource(
                 id = R.string.answer_delete_dialog_description,
-                bridge.selectedAnswerUids.size
+                checkedAnswerUidList.size
             ),
             icon = Icons.Outlined.Delete,
             confirmButtonState = ButtonState(
                 text = stringResource(id = R.string.button_confirm)
             ) {
-                bridge.deleteAnswers(bridge.selectedAnswerUids)
-                bridge.stopChecking()
+                bridge.deleteAnswers(checkedAnswerUidList)
+                checkedAnswerUidList.clear()
             },
             dismissButtonState = ButtonState(
                 text = stringResource(id = R.string.button_dismiss)
@@ -251,6 +219,10 @@ fun QuestionDetailScreen(
             )
         }
     ) {
+        BackHandler(checkedAnswerUidList.size > 0) {
+            checkedAnswerUidList.clear()
+        }
+
         val itemModifier = Modifier
             .padding(vertical = 8.dp)
             .wrapContentHeight()
@@ -285,6 +257,7 @@ fun QuestionDetailScreen(
                                     .focusRequester(promptSingleFR)
                                     .fillMaxWidth(),
                                 value = listItem,
+                                enabled = isReadOnly.value.not(),
                                 hint = stringArrayResource(id = R.array.field_prompt_hint).random(),
                                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
                                 keyboardActions = KeyboardActions(
@@ -308,6 +281,7 @@ fun QuestionDetailScreen(
                                 identifier = questionUid
                             ) { output ->
                                 listItems[0] = output
+                                livePrompt.value = output
                                 question.value?.promptList = listOf(output)
                                 bridge.updateQuestion()
                             }
@@ -354,6 +328,9 @@ fun QuestionDetailScreen(
                                 hint = stringArrayResource(id = R.array.field_prompt_hint).random(),
                                 value = AnnotatedString(listItem),
                                 onValueChange = { output ->
+                                    if(index == 0) {
+                                        livePrompt.value = output
+                                    }
                                     if(listItems.size > index) {
                                         listItems[index] = output
                                         question.value?.promptList = listItems.toList()
@@ -408,6 +385,7 @@ fun QuestionDetailScreen(
             TextHeader(text = stringResource(id = R.string.question_field_explanation_header))
             EditFieldInput(
                 modifier = itemModifier,
+                enabled = isReadOnly.value.not(),
                 value = question.value?.textExplanation ?: "",
                 hint = stringResource(id = R.string.question_edit_field_hint_explanation),
                 minLines = 5,
@@ -422,7 +400,7 @@ fun QuestionDetailScreen(
                     modifier = itemModifier
                         .animateContentSize(),
                     asset = imageExplanationUrl.value,
-                    isInEditMode = true,
+                    isInEditMode = isReadOnly.value.not(),
                     onUrlChange = { output ->
                         imageExplanationUrl.value = LargePathAsset(urlPath = output)
                     },
@@ -454,24 +432,26 @@ fun QuestionDetailScreen(
                 }
             }
 
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .wrapContentHeight()
-                    .padding(horizontal = LocalTheme.current.shapes.betweenItemsSpace)
-                    .zIndex(10f),
-                horizontalArrangement = Arrangement.spacedBy(
-                    LocalTheme.current.shapes.betweenItemsSpace
-                )
-            ) {
-                BrandHeaderButton(
-                    modifier = Modifier.weight(1f),
-                    text = stringResource(id = R.string.question_detail_new_answer)
+            if(isReadOnly.value.not()) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .wrapContentHeight()
+                        .padding(horizontal = LocalTheme.current.shapes.betweenItemsSpace)
+                        .zIndex(10f),
+                    horizontalArrangement = Arrangement.spacedBy(
+                        LocalTheme.current.shapes.betweenItemsSpace
+                    )
                 ) {
-                    if(answers.firstOrNull()?.first?.isEmpty != true) {
-                        bridge.addNewAnswer()
-                    }else {
-                        answers.firstOrNull()?.second?.mode?.value = InteractiveCardMode.EDIT
+                    BrandHeaderButton(
+                        modifier = Modifier.weight(1f),
+                        text = stringResource(id = R.string.question_detail_new_answer)
+                    ) {
+                        if(question.value?.answers?.firstOrNull()?.isEmpty != true) {
+                            bridge.addNewAnswer()
+                        }else {
+                            selectedAnswerUid.value = question.value?.answers?.firstOrNull()?.uid
+                        }
                     }
                 }
             }
@@ -481,34 +461,57 @@ fun QuestionDetailScreen(
                 onCopyRequest = {
                     coroutineScope.launch(Dispatchers.Default) {
                         viewModel.clipBoard.answers.copyItems(
-                            answers.filter { bridge.selectedAnswerUids.contains(it.first.uid) }
-                                .map { it.first }
+                            question.value?.answers?.filter { checkedAnswerUidList.contains(it.uid) }.orEmpty()
                         )
-                        bridge.stopChecking()
+                        checkedAnswerUidList.clear()
                     }
                 },
                 onPasteRequest = { bridge.pasteRequest() },
                 onDeleteRequest = { showDeleteDialog = true },
                 onSelectAll = {
-                    answers.forEach {
-                        it.second.isChecked.value = true
-                    }
+                    checkedAnswerUidList.addAll(question.value?.answers?.map { it.uid }.orEmpty())
                 },
-                onDeselectAll = { bridge.selectedAnswerUids.clear() },
-                isEditMode = bridge.selectedAnswerUids.size > 0,
+                onDeselectAll = { checkedAnswerUidList.clear() },
+                isEditMode = checkedAnswerUidList.size > 0,
                 hasPasteOption = viewModel.clipBoard.answers.isEmpty.value.not(),
                 animateTopDown = true,
                 onClipBoardRemoval = { viewModel.clipBoard.answers.clear() }
             )
 
-            answers.forEach { answer ->
+            question.value?.answers?.forEach { answer ->
                 QuestionAnswerCard(
-                    modifier = Modifier.padding(vertical = 4.dp),
+                    modifier = Modifier
+                        .scalingClickable(
+                            onTap = {
+                                if (checkedAnswerUidList.size > 0) {
+                                    if (checkedAnswerUidList.contains(answer.uid)) {
+                                        checkedAnswerUidList.remove(answer.uid)
+                                    } else checkedAnswerUidList.add(answer.uid)
+                                } else {
+                                    selectedAnswerUid.value = answer.uid
+                                }
+                            },
+                            onLongPress = {
+                                checkedAnswerUidList.add(answer.uid)
+                            }
+                        )
+                        .padding(vertical = 4.dp),
                     requestDataSave = {
-                        bridge.updateAnswer(answer.first)
+                        bridge.updateAnswer(it)
                     },
-                    state = answer.second,
-                    data = answer.first
+                    data = answer,
+                    isSelected = selectedAnswerUid.value == answer.uid,
+                    isChecked = if(checkedAnswerUidList.size > 0) {
+                        checkedAnswerUidList.contains(answer.uid)
+                    }else null,
+                    onCheckedChange = {
+                        if(it && checkedAnswerUidList.contains(answer.uid).not()) {
+                            checkedAnswerUidList.add(answer.uid)
+                        }else {
+                            checkedAnswerUidList.remove(answer.uid)
+                        }
+                        selectedAnswerUid.value = null
+                    }
                 )
             }
             Spacer(modifier = Modifier.height(32.dp))

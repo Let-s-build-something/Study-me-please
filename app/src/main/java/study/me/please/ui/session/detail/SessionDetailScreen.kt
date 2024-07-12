@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
@@ -57,6 +58,7 @@ import com.squadris.squadris.utils.RefreshableViewModel.Companion.requestData
 import study.me.please.R
 import study.me.please.base.navigation.NavigationRoot
 import study.me.please.data.io.CollectionIO
+import study.me.please.data.io.QuestionIO
 import study.me.please.data.io.preferences.SessionPreferencePack
 import study.me.please.data.io.session.SessionIO
 import study.me.please.ui.components.BasicAlertDialog
@@ -72,6 +74,7 @@ import study.me.please.ui.components.preference_chooser.PreferenceChooserControl
 import study.me.please.ui.components.pull_refresh.PullRefreshScreen
 import study.me.please.ui.components.rememberInteractiveCardState
 import study.me.please.ui.components.session.StatisticsTable
+import java.util.UUID
 
 enum class DialogToShow {
     DeleteCollections,
@@ -176,6 +179,7 @@ private fun ContentLayout(
 ) {
     val localFocusManager = LocalFocusManager.current
     val configuration = LocalConfiguration.current
+    val navController = LocalNavController.current
 
     val questions = viewModel.questions.collectAsState()
     val questionModule = viewModel.questionModule.collectAsState()
@@ -189,25 +193,16 @@ private fun ContentLayout(
     val interactiveCollectionStates = collections.value?.map {
         rememberInteractiveCardState()
     }
-    val interactiveQuestionStates = questions.value?.map {
-        rememberInteractiveCardState()
-    }
     val stopChecking = {
         interactiveCollectionStates?.forEach {
             it.isChecked.value = false
             it.mode.value = InteractiveCardMode.DATA_DISPLAY
         }
         selectedCollectionUids.clear()
-        interactiveQuestionStates?.forEach {
-            it.isChecked.value = false
-            it.mode.value = InteractiveCardMode.DATA_DISPLAY
-        }
         selectedQuestionUids.clear()
     }
-    if(selectedCollectionUids.size > 0 || selectedQuestionUids.size > 0) {
-        BackHandler {
-            stopChecking()
-        }
+    BackHandler(selectedCollectionUids.size > 0 || selectedQuestionUids.size > 0) {
+        stopChecking()
     }
 
     if(showDialog.value != null) {
@@ -413,33 +408,47 @@ private fun ContentLayout(
                     onAddCollection()
                 }
             }
-            itemsIndexed(
-                questions.value.orEmpty(),
-                key = { _, question ->  question.uid }
-            ) { index, question ->
-                interactiveQuestionStates?.getOrNull(index)?.let { cardState ->
-                    LaunchedEffect(cardState.isChecked.value) {
-                        if(cardState.isChecked.value) {
-                            selectedQuestionUids.add(question.uid)
-                        }else selectedQuestionUids.remove(question.uid)
-                    }
-                    QuestionCard(
-                        modifier = Modifier
-                            .animateItemPlacement(
-                                tween(
-                                    durationMillis = DEFAULT_ANIMATION_LENGTH_SHORT,
-                                    easing = LinearOutSlowInEasing
-                                )
-                            ),
-                        data = question,
-                        state = cardState
-                    ) {
-                        if(cardState.mode.value == InteractiveCardMode.CHECKING) {
-                            cardState.isChecked.value = cardState.isChecked.value.not()
-                        }
-                    }
-                }
-                session?.collectionUidList
+            items(
+                questions.value ?: arrayOfNulls<QuestionIO>(6).toList(),
+                key = { question ->  question?.uid ?: UUID.randomUUID().toString() }
+            ) { question ->
+                QuestionCard(
+                    modifier = Modifier
+                        .scalingClickable(
+                            onTap = {
+                                if(question != null) {
+                                    if(selectedQuestionUids.size > 0) {
+                                        if(selectedQuestionUids.contains(question.uid)) {
+                                            selectedQuestionUids.remove(question.uid)
+                                        }else {
+                                            selectedQuestionUids.add(question.uid)
+                                        }
+                                    }else {
+                                        navController?.navigate(
+                                            NavigationRoot.QuestionDetail.createRoute(
+                                                NavigationRoot.QuestionDetail.QuestionDetailArgument(
+                                                    toolbarTitle = question.prompt,
+                                                    questionUid = question.uid
+                                                )
+                                            )
+                                        )
+                                    }
+                                }
+                            },
+                            onLongPress = {
+                                if(selectedQuestionUids.size == 0) {
+                                    selectedQuestionUids.add(question?.uid ?: "")
+                                }
+                            }
+                        )
+                        .animateItemPlacement(
+                            tween(
+                                durationMillis = DEFAULT_ANIMATION_LENGTH_SHORT,
+                                easing = LinearOutSlowInEasing
+                            )
+                        ),
+                    data = question
+                )
             }
         }
         OptionsLayout(
@@ -454,9 +463,7 @@ private fun ContentLayout(
 
             },
             onSelectAll = {
-                interactiveQuestionStates?.forEach {
-                    it.isChecked.value = true
-                }
+                selectedQuestionUids.addAll(questions.value.orEmpty().map { it.uid })
             },
             selectAllVisible = questions.value.orEmpty().size.minus(selectedQuestionUids.size) > 1,
             deselectAllVisible = selectedQuestionUids.size > 1,
@@ -471,16 +478,6 @@ private fun ContentLayout(
     LaunchedEffect(selectedCollectionUids.size) {
         if(selectedCollectionUids.size > 0) {
             interactiveCollectionStates?.forEach {
-                it.mode.value = InteractiveCardMode.CHECKING
-            }
-        }else {
-            stopChecking()
-            selectedCollectionUids.clear()
-        }
-    }
-    LaunchedEffect(selectedCollectionUids.size) {
-        if(selectedCollectionUids.size > 0) {
-            interactiveQuestionStates?.forEach {
                 it.mode.value = InteractiveCardMode.CHECKING
             }
         }else {

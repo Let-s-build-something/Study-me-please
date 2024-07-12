@@ -5,9 +5,6 @@ import study.me.please.data.io.QuestionAnswerIO
 /** Main communication bridge for question detail */
 interface QuestionDetailBridge {
 
-    /** stops checking the items */
-    fun stopChecking()
-
     /** request to delete question answers and update data */
     fun deleteAnswers(uids: List<String>)
 

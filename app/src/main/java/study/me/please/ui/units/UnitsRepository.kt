@@ -20,7 +20,7 @@ import study.me.please.data.room.FactDao
 import study.me.please.data.room.UnitDao
 import javax.inject.Inject
 
-private const val NETWORK_UPDATE_DELAY = 5_000L
+const val NETWORK_UPDATE_DELAY = 3_000L
 
 /** Proxy for calling network end points */
 class UnitsRepository @Inject constructor(

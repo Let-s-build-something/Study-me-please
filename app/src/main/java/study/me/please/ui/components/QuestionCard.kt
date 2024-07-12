@@ -1,18 +1,13 @@
 package study.me.please.ui.components
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
@@ -33,39 +28,35 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.squadris.squadris.compose.theme.LocalTheme
 import com.squadris.squadris.ext.brandShimmerEffect
+import study.me.please.base.theme.AppTheme
 import study.me.please.data.io.QuestionIO
 
 /** Card with the option of editing data inside */
 @Composable
 fun QuestionCard(
     modifier: Modifier = Modifier,
-    state: InteractiveCardState = rememberInteractiveCardState(),
     data: QuestionIO?,
-    onClick: () -> Unit = {}
+    isChecked: Boolean? = null,
+    onCheckedChange: (Boolean) -> Unit = {}
 ) {
     if(data != null) {
         ContentLayout(
             modifier = modifier,
             data = data,
-            state = state,
-            onClick = {
-                if(state.mode.value == InteractiveCardMode.CHECKING) {
-                    state.isChecked.value = state.isChecked.value.not()
-                }else onClick()
-            }
+            onCheckedChange = onCheckedChange,
+            isChecked = isChecked
         )
     }else {
         ShimmerLayout(modifier = modifier)
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun ContentLayout(
     modifier: Modifier,
     data: QuestionIO,
-    state: InteractiveCardState,
-    onClick: () -> Unit
+    onCheckedChange: (Boolean) -> Unit = {},
+    isChecked: Boolean? = null
 ) {
     val localDensity = LocalDensity.current
     var cardHeight by remember { mutableStateOf(0.dp) }
@@ -73,19 +64,7 @@ private fun ContentLayout(
     Card(
         modifier = modifier
             .wrapContentHeight()
-            .clip(LocalTheme.current.shapes.componentShape)
-            .combinedClickable(
-                interactionSource = remember {
-                    MutableInteractionSource()
-                },
-                indication = rememberRipple(
-                    bounded = true
-                ),
-                onClick = onClick,
-                onLongClick = {
-                    state.isChecked.value = true
-                }
-            ),
+            .clip(LocalTheme.current.shapes.componentShape),
         elevation = LocalTheme.current.styles.cardClickableElevation,
         shape = LocalTheme.current.shapes.componentShape,
         colors = CardDefaults.cardColors(
@@ -97,7 +76,8 @@ private fun ContentLayout(
             modifier = Modifier.onGloballyPositioned { coordinates ->
                 cardHeight = with(localDensity) { coordinates.size.height.toDp() }
             },
-            state = state,
+            isChecked = isChecked,
+            onCheckedChange = onCheckedChange,
             data = data
         )
     }
@@ -107,44 +87,46 @@ private fun ContentLayout(
 private fun DataCard(
     modifier: Modifier = Modifier,
     data: QuestionIO,
-    state: InteractiveCardState
+    onCheckedChange: (Boolean) -> Unit = {},
+    isChecked: Boolean? = null
 ) {
     Column(
         modifier = modifier.padding(vertical = 8.dp, horizontal = 12.dp)
     ) {
         Row {
-            AnimatedVisibility(state.mode.value == InteractiveCardMode.CHECKING) {
+            AnimatedVisibility(isChecked != null) {
                 Checkbox(
                     modifier = Modifier.offset(x = -(12).dp, y = (-8).dp),
-                    checked = state.isChecked.value,
-                    onCheckedChange = { isChecked ->
-                        state.isChecked.value = isChecked
-                    },
+                    checked = isChecked == true,
+                    onCheckedChange = onCheckedChange,
                     colors = LocalTheme.current.styles.checkBoxColorsDefault
                 )
             }
-            Text(
-                text = data.prompt,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Medium,
-                color = LocalTheme.current.colors.secondary,
-                maxLines = 3,
-                overflow = TextOverflow.Ellipsis
-            )
+            Column {
+                Text(
+                    text = data.promptList.ifEmpty { listOf(data.prompt) }
+                        .joinToString(separator = ", "),
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = LocalTheme.current.colors.secondary,
+                    maxLines = 3,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    text = data.textExplanation,
+                    fontSize = 14.sp,
+                    color = LocalTheme.current.colors.secondary,
+                    maxLines = 5,
+                    overflow = TextOverflow.Ellipsis
+                )
+                EditableImageAsset(
+                    modifier = Modifier
+                        .wrapContentHeight()
+                        .padding(top = 6.dp),
+                    asset = data.imagePromptUrl
+                )
+            }
         }
-        Text(
-            text = data.textExplanation,
-            fontSize = 14.sp,
-            color = LocalTheme.current.colors.secondary,
-            maxLines = 5,
-            overflow = TextOverflow.Ellipsis
-        )
-        EditableImageAsset(
-            modifier = Modifier
-                .wrapContentHeight()
-                .padding(top = 6.dp),
-            asset = data.imagePromptUrl
-        )
     }
 }
 
@@ -153,19 +135,26 @@ private fun ShimmerLayout(modifier: Modifier) {
     Box(
         modifier = modifier
             .brandShimmerEffect()
-            .height(165.dp)
+            .height(110.dp)
     )
 }
 
 @Preview(showBackground = true)
 @Composable
 private fun Preview() {
-    QuestionCard(
-        modifier = Modifier.fillMaxWidth(),
-        data = QuestionIO(
-            prompt = "This is my question prompt",
-            textExplanation = "This question is veeeeeeery easy, so If you failed, you're a loser lol"
-        ),
-        onClick = {}
-    )
+    AppTheme(isDarkTheme = true) {
+        Row {
+            QuestionCard(
+                modifier = Modifier.weight(1f),
+                data = QuestionIO(
+                    prompt = "This is my question prompt",
+                    textExplanation = "This question is veeeeeeery easy, so If you failed, you're a loser lol"
+                )
+            )
+            QuestionCard(
+                modifier = Modifier.weight(1f),
+                data = null
+            )
+        }
+    }
 }

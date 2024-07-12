@@ -5,14 +5,12 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
@@ -23,7 +21,6 @@ import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Image
-import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
@@ -56,6 +53,7 @@ import coil.compose.AsyncImagePainter
 import com.squadris.squadris.compose.components.MinimalisticIcon
 import com.squadris.squadris.compose.components.chips.DEFAULT_ANIMATION_LENGTH_SHORT
 import com.squadris.squadris.compose.theme.LocalTheme
+import com.squadris.squadris.ext.brandShimmerEffect
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -69,45 +67,34 @@ import study.me.please.ui.collection.detail.questions.detail.INPUT_DELAYED_RESPO
 @Composable
 fun QuestionAnswerCard(
     modifier: Modifier = Modifier,
-    state: InteractiveCardState = rememberInteractiveCardState(),
     data: QuestionAnswerIO?,
-    requestDataSave: () -> Unit
+    isSelected: Boolean,
+    isChecked: Boolean?,
+    onCheckedChange: (Boolean) -> Unit,
+    requestDataSave: (QuestionAnswerIO) -> Unit
 ) {
     if(data != null) {
         ContentLayout(
             modifier = modifier,
             data = data,
-            state = state,
             requestDataSave = requestDataSave,
-            onClick = {
-                when(state.mode.value) {
-                    InteractiveCardMode.CHECKING -> {
-                        state.isChecked.value = state.isChecked.value.not()
-                    }
-                    InteractiveCardMode.DATA_DISPLAY -> {
-                        state.mode.value = InteractiveCardMode.EDIT
-                    }
-                    else -> {}
-                }
-            },
-            onLongClick = {
-                state.isChecked.value = true
-            }
+            isSelected = isSelected,
+            isChecked = isChecked,
+            onCheckedChange = onCheckedChange
         )
     }else {
-        ShimmerLayout()
+        ShimmerLayout(modifier = modifier)
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun ContentLayout(
     modifier: Modifier,
     data: QuestionAnswerIO,
-    state: InteractiveCardState,
-    requestDataSave: () -> Unit,
-    onClick: () -> Unit,
-    onLongClick: () -> Unit
+    isSelected: Boolean,
+    isChecked: Boolean?,
+    onCheckedChange: (Boolean) -> Unit,
+    requestDataSave: (QuestionAnswerIO) -> Unit
 ) {
     val localDensity = LocalDensity.current
     var cardHeight by remember { mutableStateOf(0.dp) }
@@ -116,17 +103,7 @@ private fun ContentLayout(
         modifier = modifier
             .fillMaxWidth()
             .wrapContentHeight()
-            .clip(LocalTheme.current.shapes.componentShape)
-            .combinedClickable(
-                interactionSource = remember {
-                    MutableInteractionSource()
-                },
-                indication = rememberRipple(
-                    bounded = true
-                ),
-                onClick = onClick,
-                onLongClick = onLongClick
-            ),
+            .clip(LocalTheme.current.shapes.componentShape),
         elevation = LocalTheme.current.styles.cardClickableElevation,
         shape = LocalTheme.current.shapes.componentShape,
         colors = CardDefaults.cardColors(
@@ -138,9 +115,11 @@ private fun ContentLayout(
             modifier = Modifier.onGloballyPositioned { coordinates ->
                 cardHeight = with(localDensity) { coordinates.size.height.toDp() }
             },
-            state = state,
             data = data,
-            requestDataSave = requestDataSave
+            requestDataSave = requestDataSave,
+            isSelected = isSelected,
+            isChecked = isChecked,
+            onCheckedChange = onCheckedChange
         )
     }
 }
@@ -148,8 +127,10 @@ private fun ContentLayout(
 @Composable
 private fun DataCard(
     modifier: Modifier = Modifier,
-    state: InteractiveCardState,
-    requestDataSave: () -> Unit,
+    requestDataSave: (QuestionAnswerIO) -> Unit,
+    isSelected: Boolean,
+    isChecked: Boolean?,
+    onCheckedChange: (Boolean) -> Unit,
     data: QuestionAnswerIO
 ) {
     val focusManager = LocalFocusManager.current
@@ -173,9 +154,9 @@ private fun DataCard(
         isCorrect.value = data.isCorrect
     }
 
-    LaunchedEffect(state.mode.value) {
-        if(state.mode.value == InteractiveCardMode.EDIT) {
-            if(data.text.isNotEmpty() && data.explanationMessage.isEmpty()) {
+    LaunchedEffect(Unit) {
+        if(isSelected) {
+            if(listItems.firstOrNull()?.isBlank() == true && data.explanationMessage.isEmpty()) {
                 explanationFR.requestFocus()
             }else {
                 delay(300)
@@ -194,44 +175,21 @@ private fun DataCard(
             .animateContentSize()
             .fillMaxWidth()
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Box(modifier = Modifier.weight(1f, fill = true)) {
-                this@Row.AnimatedVisibility(
-                    visible = state.mode.value == InteractiveCardMode.CHECKING
-                ) {
-                    Checkbox(
-                        modifier = Modifier
-                            .align(Alignment.TopStart)
-                            .offset(x = -(12).dp, y = (-8).dp),
-                        checked = state.isChecked.value,
-                        onCheckedChange = { isChecked ->
-                            state.isChecked.value = isChecked
-                        },
-                        colors = LocalTheme.current.styles.checkBoxColorsDefault
-                    )
+        Crossfade(
+            modifier = Modifier.align(Alignment.End),
+            targetState = isSelected,
+            label = "crossfadeRightIcon"
+        ) { isEditMode ->
+            if(isEditMode) {
+                MinimalisticIcon(imageVector = Icons.Outlined.Close) {
+                    onCheckedChange(false)
                 }
-            }
-
-            Crossfade(
-                targetState = state.mode.value == InteractiveCardMode.EDIT,
-                label = "crossfadeRightIcon"
-            ) { isEditMode ->
-                if(isEditMode) {
-                    MinimalisticIcon(imageVector = Icons.Outlined.Close) {
-                        state.mode.value = InteractiveCardMode.DATA_DISPLAY
-                    }
-                }else {
-                    MinimalisticIcon(imageVector = Icons.Outlined.Edit) {
-                        state.mode.value = InteractiveCardMode.EDIT
-                    }
-                }
+            }else {
+                MinimalisticIcon(imageVector = Icons.Outlined.Edit)
             }
         }
 
-        AnimatedVisibility(visible = state.mode.value == InteractiveCardMode.EDIT) {
+        AnimatedVisibility(visible = isSelected) {
             Text(
                 modifier = Modifier.padding(bottom = 2.dp),
                 text = stringResource(R.string.answer_field_content_header),
@@ -240,34 +198,107 @@ private fun DataCard(
             )
         }
 
-        Column(
-            verticalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            val isIrremovable = listItems.size <= 1
+        Row {
+            this@Row.AnimatedVisibility(
+                visible = isChecked != null
+            ) {
+                Checkbox(
+                    modifier = Modifier
+                        .offset(x = -(12).dp, y = (-8).dp),
+                    checked = isChecked == true,
+                    onCheckedChange = onCheckedChange,
+                    colors = LocalTheme.current.styles.checkBoxColorsDefault
+                )
+            }
+            Column {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    val isIrremovable = listItems.size <= 1
 
-            listItems.forEachIndexed { index, listItem ->
-                Crossfade(
-                    modifier = Modifier.animateContentSize(),
-                    targetState = listItems.size == 1,
-                    label = "SingleEditToMultipleCrossfade"
-                ) { isSingleItem ->
-                    if(isSingleItem) {
+                    listItems.forEachIndexed { index, listItem ->
                         Crossfade(
-                            targetState = state.mode.value == InteractiveCardMode.EDIT,
-                            label = "",
-                            animationSpec = tween(durationMillis = DEFAULT_ANIMATION_LENGTH_SHORT)
-                        ) { inEditMode ->
-                            if(inEditMode) {
-                                EditFieldInput(
+                            modifier = Modifier.animateContentSize(),
+                            targetState = listItems.size == 1,
+                            label = "SingleEditToMultipleCrossfade"
+                        ) { isSingleItem ->
+                            if(isSingleItem) {
+                                Crossfade(
+                                    targetState = isSelected,
+                                    label = "",
+                                    animationSpec = tween(durationMillis = DEFAULT_ANIMATION_LENGTH_SHORT)
+                                ) { inEditMode ->
+                                    if(inEditMode) {
+                                        EditFieldInput(
+                                            modifier = Modifier
+                                                .focusRequester(answerSingleFR)
+                                                .fillMaxWidth(),
+                                            value = listItem,
+                                            enabled = isSelected,
+                                            hint = stringResource(R.string.answer_edit_field_hint_content),
+                                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                                            keyboardActions = KeyboardActions(
+                                                onNext = {
+                                                    listItems.add("")
+                                                    scope.launch {
+                                                        delay(50)
+                                                        focusManager.moveFocus(FocusDirection.Down)
+                                                    }
+                                                }
+                                            ),
+                                            onEntered = { text ->
+                                                listItems.add(index + 1, text.toString())
+                                                scope.launch {
+                                                    delay(50)
+                                                    focusManager.moveFocus(FocusDirection.Down)
+                                                }
+                                            },
+                                            minLines = 1,
+                                            maxLines = 5,
+                                            identifier = "${index}_${data.uid}"
+                                        ) { output ->
+                                            listItems[0] = output
+                                            requestDataSave(data.apply {
+                                                textList = listOf(output)
+                                            })
+                                        }
+                                    }else {
+                                        BulletPoint(
+                                            text = listItem,
+                                            textStyle = LocalTheme.current.styles.category,
+                                            maxLines = 5,
+                                            overflow = TextOverflow.Ellipsis,
+                                            prefix = if(listItem.isNotEmpty()) "-" else null
+                                        )
+                                    }
+                                }
+                            }else {
+                                ListItemEditField(
                                     modifier = Modifier
-                                        .focusRequester(answerSingleFR)
-                                        .fillMaxWidth(),
-                                    value = listItem,
-                                    hint = stringResource(R.string.answer_edit_field_hint_content),
+                                        .then(
+                                            if (index == listItems.lastIndex) {
+                                                Modifier.focusRequester(answerMultiFR)
+                                            } else Modifier
+                                        ),
+                                    prefix = FactType.BULLET_POINT_PREFIX,
+                                    identifier = "${index}_${data.uid}",
+                                    onBackspaceKey = {
+                                        if(isIrremovable.not()) {
+                                            if(index > 0 && it.isNotBlank()) {
+                                                listItems[index - 1] += it
+                                            }
+                                            if(listItems.size > 1 && index != 0) {
+                                                focusManager.moveFocus(FocusDirection.Up)
+                                            }
+                                            if(it.isEmpty() || index > 0) {
+                                                listItems.removeAt(index)
+                                            }
+                                        }
+                                    },
                                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
                                     keyboardActions = KeyboardActions(
                                         onNext = {
-                                            listItems.add("")
+                                            listItems.add(index + 1, "")
                                             scope.launch {
                                                 delay(50)
                                                 focusManager.moveFocus(FocusDirection.Down)
@@ -281,127 +312,78 @@ private fun DataCard(
                                             focusManager.moveFocus(FocusDirection.Down)
                                         }
                                     },
-                                    minLines = 1,
-                                    maxLines = 5,
-                                    identifier = "${index}_${data.uid}"
-                                ) { output ->
-                                    listItems[0] = output
-                                    data.textList = listOf(output)
-                                    requestDataSave()
-                                }
-                            }else {
-                                BulletPoint(
-                                    text = listItem,
-                                    textStyle = LocalTheme.current.styles.category,
-                                    maxLines = 5,
-                                    overflow = TextOverflow.Ellipsis,
-                                    prefix = if(listItem.isNotEmpty()) "-" else null
+                                    hint = stringResource(R.string.list_item_generic_hint),
+                                    value = AnnotatedString(listItem),
+                                    onValueChange = { output ->
+                                        if(listItems.size > index) {
+                                            listItems[index] = output
+                                            requestDataSave(data.apply {
+                                                textList = listItems.toList()
+                                            })
+                                        }
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+
+                AnimatedVisibility(visible = isSelected) {
+                    Text(
+                        text = stringResource(id = R.string.answer_field_explanation_header),
+                        fontSize = 12.sp,
+                        color = LocalTheme.current.colors.secondary
+                    )
+                }
+                Crossfade(
+                    targetState = isSelected,
+                    modifier = Modifier.animateContentSize(),
+                    label = "",
+                    animationSpec = tween(durationMillis = DEFAULT_ANIMATION_LENGTH_SHORT)
+                ) { inEditMode ->
+                    if(inEditMode) {
+                        EditFieldInput(
+                            modifier = Modifier
+                                .focusRequester(explanationFR)
+                                .fillMaxWidth(),
+                            value = data.explanationMessage,
+                            enabled = isSelected,
+                            identifier = data.uid,
+                            hint = stringResource(id = R.string.question_edit_field_hint_explanation),
+                            minLines = 2,
+                            maxLines = 2
+                        ) { output ->
+                            //data.explanationMessage = output
+                            inputScope.coroutineContext.cancelChildren()
+                            inputScope.launch {
+                                delay(INPUT_DELAYED_RESPONSE_MILLIS)
+                                requestDataSave(
+                                    data.apply {
+                                        explanationMessage = output
+                                    }
                                 )
                             }
                         }
                     }else {
-                        ListItemEditField(
-                            modifier = Modifier
-                                .then(
-                                    if (index == listItems.lastIndex) {
-                                        Modifier.focusRequester(answerMultiFR)
-                                    } else Modifier
-                                ),
-                            prefix = FactType.BULLET_POINT_PREFIX,
-                            identifier = "${index}_${data.uid}",
-                            onBackspaceKey = {
-                                if(isIrremovable.not()) {
-                                    if(index > 0 && it.isNotBlank()) {
-                                        listItems[index - 1] += it
-                                    }
-                                    if(listItems.size > 1 && index != 0) {
-                                        focusManager.moveFocus(FocusDirection.Up)
-                                    }
-                                    if(it.isEmpty() || index > 0) {
-                                        listItems.removeAt(index)
-                                    }
-                                }
-                            },
-                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-                            keyboardActions = KeyboardActions(
-                                onNext = {
-                                    listItems.add(index + 1, "")
-                                    scope.launch {
-                                        delay(50)
-                                        focusManager.moveFocus(FocusDirection.Down)
-                                    }
-                                }
-                            ),
-                            onEntered = { text ->
-                                listItems.add(index + 1, text.toString())
-                                scope.launch {
-                                    delay(50)
-                                    focusManager.moveFocus(FocusDirection.Down)
-                                }
-                            },
-                            hint = stringResource(R.string.list_item_generic_hint),
-                            value = AnnotatedString(listItem),
-                            onValueChange = { output ->
-                                if(listItems.size > index) {
-                                    listItems[index] = output
-                                    data.textList = listItems.toList()
-                                    requestDataSave()
-                                }
-                            }
+                        Text(
+                            modifier = Modifier.fillMaxWidth(),
+                            text = data.explanationMessage,
+                            fontSize = 16.sp,
+                            color = LocalTheme.current.colors.secondary,
+                            maxLines = 5,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
             }
         }
 
-        AnimatedVisibility(visible = state.mode.value == InteractiveCardMode.EDIT) {
-            Text(
-                text = stringResource(id = R.string.answer_field_explanation_header),
-                fontSize = 12.sp,
-                color = LocalTheme.current.colors.secondary
-            )
-        }
-        Crossfade(
-            targetState = state.mode.value == InteractiveCardMode.EDIT,
-            modifier = Modifier.animateContentSize(),
-            label = "",
-            animationSpec = tween(durationMillis = DEFAULT_ANIMATION_LENGTH_SHORT)
-        ) { inEditMode ->
-            if(inEditMode) {
-                EditFieldInput(
-                    modifier = Modifier
-                        .focusRequester(explanationFR)
-                        .fillMaxWidth(),
-                    value = data.explanationMessage,
-                    identifier = data.uid,
-                    hint = stringResource(id = R.string.question_edit_field_hint_explanation),
-                    minLines = 2,
-                    maxLines = 2
-                ) { output ->
-                    data.explanationMessage = output
-                    inputScope.coroutineContext.cancelChildren()
-                    inputScope.launch {
-                        delay(INPUT_DELAYED_RESPONSE_MILLIS)
-                        requestDataSave()
-                    }
-                }
-            }else {
-                Text(
-                    modifier = Modifier.fillMaxWidth(),
-                    text = data.explanationMessage,
-                    fontSize = 16.sp,
-                    color = LocalTheme.current.colors.secondary,
-                    maxLines = 5,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-        }
         EditableImageAsset(
             modifier = Modifier
                 .animateContentSize()
                 .wrapContentHeight(),
             asset = imageAsset.value,
-            isInEditMode = state.mode.value == InteractiveCardMode.EDIT,
+            isInEditMode = isSelected,
             onUrlChange = { output ->
                 inputScope.coroutineContext.cancelChildren()
                 inputScope.launch {
@@ -411,17 +393,23 @@ private fun DataCard(
                     )
                 }
                 if(output.isEmpty()) {
-                    requestDataSave()
+                    requestDataSave(data.apply {
+                        imageExplanation = imageAsset.value
+                    })
                 }
             },
             onLoadState = { loadState ->
                 if(loadState is AsyncImagePainter.State.Success) {
                     data.imageExplanation = imageAsset.value
-                    requestDataSave()
+                    requestDataSave(
+                        data.apply {
+                            imageExplanation = imageAsset.value
+                        }
+                    )
                 }
             }
         )
-        if(state.mode.value == InteractiveCardMode.EDIT && imageAsset.value == null) {
+        if(isSelected && imageAsset.value == null) {
             ImageAction(
                 modifier = Modifier.animateContentSize(),
                 leadingImageVector = Icons.Outlined.Image,
@@ -436,7 +424,11 @@ private fun DataCard(
             onClick = {
                 data.isCorrect = isCorrect.value.not()
                 isCorrect.value = isCorrect.value.not()
-                requestDataSave()
+                requestDataSave(
+                    data.apply {
+                        this.isCorrect = isCorrect.value
+                    }
+                )
             },
             text = stringResource(
                 id = if(isCorrect.value) {
@@ -451,8 +443,12 @@ private fun DataCard(
 }
 
 @Composable
-private fun ShimmerLayout() {
-
+private fun ShimmerLayout(modifier: Modifier) {
+    Box(
+        modifier = modifier
+            .height(80.dp)
+            .brandShimmerEffect()
+    )
 }
 
 @SuppressLint("UnrememberedMutableState")
@@ -465,8 +461,8 @@ private fun Preview() {
             explanationMessage = "This answer isn't correct, due to gramatical error"
         ),
         requestDataSave = {},
-        state = InteractiveCardState(
-            mode = mutableStateOf(InteractiveCardMode.EDIT)
-        )
+        isSelected = true,
+        isChecked = true,
+        onCheckedChange = {}
     )
 }

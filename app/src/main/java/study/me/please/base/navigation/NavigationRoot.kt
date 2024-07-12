@@ -8,22 +8,22 @@ sealed class NavigationRoot<T>(
 ): NavigationNode<T>(identification, argumentKClass) where T: Any {
 
     /** home page screen */
-    object Home: NavigationScreen(identification = "home")
+    data object Home: NavigationScreen(identification = "home")
 
     /** screen for seeing and modifying app and user settings */
-    object Settings: NavigationScreen(identification = "settings")
+    data object Settings: NavigationScreen(identification = "settings")
 
     /** list of all collections screen */
-    object CollectionLobby: NavigationScreen(identification = "collection_lobby")
+    data object CollectionLobby: NavigationScreen(identification = "collection_lobby")
 
     /** User profile dashboard with action */
-    object UserAccountDashboard: NavigationScreen(identification = "account")
+    data object UserAccountDashboard: NavigationScreen(identification = "account")
 
     /** list of all sessions screen */
-    object SessionLobby: NavigationScreen(identification = "session_lobby")
+    data object SessionLobby: NavigationScreen(identification = "session_lobby")
 
     /** screen with concrete session detail */
-    object SessionDetail: NavigationRoot<SessionDetail.SessionDetailArgument>(
+    data object SessionDetail: NavigationRoot<SessionDetail.SessionDetailArgument>(
         identification = "sessions/detail",
         argumentKClass = SessionDetailArgument::class
     ) {
@@ -45,7 +45,7 @@ sealed class NavigationRoot<T>(
     }
 
     /** screen with concrete collection detail */
-    object CollectionQuestions: NavigationRoot<CollectionQuestions.CollectionQuestionsArgument>(
+    data object CollectionQuestions: NavigationRoot<CollectionQuestions.CollectionQuestionsArgument>(
         identification = "collection/question",
         argumentKClass = CollectionQuestionsArgument::class
     ) {
@@ -54,7 +54,7 @@ sealed class NavigationRoot<T>(
         data class CollectionQuestionsArgument(
 
             /** unique identifier for the collection */
-            val collectionUid: String = "",
+            val collectionUid: String,
 
             /** title for the toolbar */
             val toolbarTitle: String = ""
@@ -62,19 +62,19 @@ sealed class NavigationRoot<T>(
     }
 
     /** screen with collection detail general info */
-    object CollectionAbout: NavigationRoot<CollectionQuestions.CollectionQuestionsArgument>(
+    data object CollectionAbout: NavigationRoot<CollectionQuestions.CollectionQuestionsArgument>(
         identification = "collection/about",
         argumentKClass = CollectionQuestions.CollectionQuestionsArgument::class
     )
 
     /** screen for community section */
-    object Community: NavigationScreen(identification = "community")
+    data object Community: NavigationScreen(identification = "community")
 
     /** screen for signing up */
-    object SignUp: NavigationScreen(identification = "sign-up")
+    data object SignUp: NavigationScreen(identification = "sign-up")
 
     /** screen for session - questioning play-through */
-    object SessionPlay: NavigationRoot<SessionPlay.SessionPlayArgument>(
+    data object SessionPlay: NavigationRoot<SessionPlay.SessionPlayArgument>(
         identification = "session/play",
         argumentKClass = SessionPlayArgument::class
     ) {
@@ -102,7 +102,7 @@ sealed class NavigationRoot<T>(
     }
 
     /** screen for editable question detail */
-    object QuestionDetail: NavigationRoot<QuestionDetail.QuestionDetailArgument>(
+    data object QuestionDetail: NavigationRoot<QuestionDetail.QuestionDetailArgument>(
         identification = "questions/detail",
         argumentKClass = QuestionDetailArgument::class
     ) {
@@ -113,12 +113,15 @@ sealed class NavigationRoot<T>(
             val toolbarTitle: String,
 
             /** unique identifier for the question */
-            val questionUid: String
+            val questionUid: String,
+
+            /** unique identifier for the collection */
+            val collectionUid: String = ""
         )
     }
 
     /** screen for units with user's main notes for certain collection */
-    object CollectionDetail: NavigationRoot<CollectionDetail.CollectionDetailArgument>(
+    data object CollectionDetail: NavigationRoot<CollectionDetail.CollectionDetailArgument>(
         identification = "collections/units",
         argumentKClass = CollectionDetailArgument::class
     ) {
@@ -133,7 +136,7 @@ sealed class NavigationRoot<T>(
     }
 
     /** screen for units with user's main notes for certain collection */
-    object PublicCollection: NavigationRoot<PublicCollection.PublicCollectionArgument>(
+    data object PublicCollection: NavigationRoot<PublicCollection.PublicCollectionArgument>(
         identification = "community/collections",
         argumentKClass = PublicCollectionArgument::class
     ) {

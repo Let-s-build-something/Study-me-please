@@ -3,6 +3,7 @@ package study.me.please.data.io
 import androidx.room.Entity
 import androidx.room.Ignore
 import androidx.room.PrimaryKey
+import com.google.firebase.firestore.Exclude
 import com.google.gson.annotations.SerializedName
 import study.me.please.data.room.AppRoomDatabase
 import java.io.Serializable
@@ -12,6 +13,7 @@ import java.util.UUID
 data class QuestionAnswerIO (
 
     /** Answer text to be displayed */
+    @Deprecated("Use textList instead")
     var text: String = "",
 
     /** list of texts */
@@ -44,14 +46,18 @@ data class QuestionAnswerIO (
 ): Serializable {
 
     /** whether this object has no important data */
+    @get:Exclude
     @get:Ignore
     val isEmpty: Boolean
         get() = text.isBlank()
                 && textList.none { it.isNotBlank() }
+                && explanationMessage.isBlank()
 
     /** Updates this object with new question */
     fun updateTO(answer: QuestionAnswerIO) {
         this.text = answer.text
+        this.textList = answer.textList
+        this.explanationList = answer.explanationList
         this.explanationMessage = answer.explanationMessage
         this.imageExplanation = answer.imageExplanation
         this.isCorrect = answer.isCorrect

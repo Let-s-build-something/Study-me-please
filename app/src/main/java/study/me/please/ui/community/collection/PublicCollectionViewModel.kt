@@ -51,7 +51,7 @@ class PublicCollectionViewModel @Inject constructor(
             //TODO questions are not getting saved to firebase - fix
             collection.value?.newInstance(sharedDataManager.currentUser.value?.uid)?.let { newInstance ->
                 repository.insertCollection(newInstance)
-                repository.insertQuestions(newInstance.questions)
+                repository.insertQuestions(newInstance.questions.map { it.value })
                 repository.insertUnits(
                     newInstance.units.map { it.value }.onEach {
                         repository.insertFacts(it.facts.onEach { fact ->
