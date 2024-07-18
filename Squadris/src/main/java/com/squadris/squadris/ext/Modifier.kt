@@ -91,6 +91,7 @@ fun Modifier.scalingClickable(
     onTap: ((Offset) -> Unit)? = null,
     onDoubleTap: ((Offset) -> Unit)? = null,
     onLongPress: ((Offset) -> Unit)? = null,
+    enabled: Boolean = true,
     scaleInto: Float = 0.9f
 ): Modifier = composed {
     val isPressed = remember { mutableStateOf(false) }
@@ -99,19 +100,21 @@ fun Modifier.scalingClickable(
         label = "scalingClickableAnimation"
     )
 
-    scale(scale.value)
-        .pointerInput(Unit) {
-            detectTapGestures(
-                onPress = {
-                    isPressed.value = true
-                    tryAwaitRelease()
-                    isPressed.value = false
-                },
-                onTap = onTap,
-                onDoubleTap = onDoubleTap,
-                onLongPress = onLongPress
-            )
-        }
+    if(enabled) {
+        scale(scale.value)
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onPress = {
+                        isPressed.value = true
+                        tryAwaitRelease()
+                        isPressed.value = false
+                    },
+                    onTap = onTap,
+                    onDoubleTap = onDoubleTap,
+                    onLongPress = onLongPress
+                )
+            }
+    }else Modifier
 }
 
 /**

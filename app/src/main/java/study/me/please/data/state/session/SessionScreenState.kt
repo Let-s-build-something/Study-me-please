@@ -11,6 +11,7 @@ import study.me.please.data.io.ImportSourceType
 import study.me.please.data.io.ImportedSource
 import study.me.please.data.io.QuestionAnswerIO
 import study.me.please.data.io.QuestionIO
+import study.me.please.data.io.preferences.PreferenceOption
 import study.me.please.data.io.preferences.SessionPreferencePack
 import study.me.please.data.io.session.SessionAnswerValidation
 import study.me.please.data.io.session.SessionHistoryItem
@@ -63,7 +64,7 @@ data class SessionScreenState(
             )
 
             if(item.validations.any { it.isCorrect.not() }
-                && sessionPreferencePack.value.waitForCorrectAnswer.value.not()
+                && sessionPreferencePack.value.preferences[PreferenceOption.WaitForCorrectAnswer] == false
             ) {
                 item.mode.value = SessionScreenMode.LOCKED
                 item.injectCorrectValidations()
@@ -75,7 +76,7 @@ data class SessionScreenState(
             // end of session
             if(item.mode.value == SessionScreenMode.LOCKED
                 && item.validations.any { it.isCorrect.not() }
-                && sessionPreferencePack.value.repeatOnMistake.value
+                && sessionPreferencePack.value.preferences[PreferenceOption.RepeatOnMistake] == true
                 && item.isHistory.not()
             ) {
                 item.data?.let { question ->

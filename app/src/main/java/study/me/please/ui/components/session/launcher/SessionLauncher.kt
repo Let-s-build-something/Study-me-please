@@ -21,7 +21,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.PlayArrow
@@ -29,10 +29,8 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -50,15 +48,14 @@ import com.squadris.squadris.compose.base.LocalNavController
 import com.squadris.squadris.compose.components.SimpleModalBottomSheet
 import com.squadris.squadris.compose.components.chips.DEFAULT_ANIMATION_LENGTH_SHORT
 import com.squadris.squadris.compose.theme.LocalTheme
+import com.squadris.squadris.ext.scalingClickable
 import com.squadris.squadris.utils.OnLifecycleEvent
 import kotlinx.coroutines.launch
 import study.me.please.R
 import study.me.please.base.navigation.NavigationRoot
 import study.me.please.ui.components.ImageAction
-import study.me.please.ui.components.InteractiveCardMode
 import study.me.please.ui.components.LineButton
 import study.me.please.ui.components.OutlinedButton
-import study.me.please.ui.components.rememberInteractiveCardState
 import study.me.please.ui.components.session.SessionCard
 
 /**
@@ -109,7 +106,7 @@ fun SessionLauncher(
                 //TODO shimmer
             }else {
                 val coroutineScope = rememberCoroutineScope()
-                val selectedSessionUidList = remember { mutableStateListOf<String>() }
+                val checkedSessionUidList = remember { mutableStateListOf<String>() }
 
                 Column(
                     modifier = modifier
@@ -119,52 +116,6 @@ fun SessionLauncher(
                         .padding(16.dp)
                         .padding(bottom = 16.dp)
                 ) {
-                    val footerItem: @Composable () -> Unit = {
-                        AnimatedVisibility(
-                            visible = selectedSessionUidList.size > 0,
-                            enter = slideInVertically(initialOffsetY = { it.times(2) }),
-                            exit = slideOutVertically(targetOffsetY = { it.times(2) })
-                        ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 12.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.End
-                            ) {
-                                OutlinedButton(
-                                    thenModifier = Modifier
-                                        .padding(vertical = 6.dp, horizontal = 6.dp),
-                                    text = stringResource(id = R.string.button_cancel),
-                                    isActivated = false,
-                                    onClick = {
-                                        selectedSessionUidList.clear()
-                                        coroutineScope.launch {
-                                            sheetState.hide()
-                                        }
-                                    }
-                                )
-                                Spacer(modifier = Modifier.width(12.dp))
-                                ImageAction(
-                                    text = stringResource(id = R.string.session_launcher_action_confirm),
-                                    onClick = {
-                                        viewModel.saveSessionSelection(
-                                            selectedSessionUidList = selectedSessionUidList,
-                                            collectionUidList = collectionUidList,
-                                            questionUidList = questionUidList
-                                        )
-                                    }
-                                )
-                            }
-                        }
-                    }
-
-                    val interactiveCardStates = sessions.value?.map {
-                        rememberInteractiveCardState(mode = mutableStateOf(
-                            InteractiveCardMode.CHECKING
-                        ))
-                    }
-
                     LazyColumn(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -209,61 +160,102 @@ fun SessionLauncher(
                                 )
                             }
                         }
-                        itemsIndexed(
+                        items(
                             sessions.value.orEmpty(),
-                            key = { _, session -> session.uid }
-                        ) { index, session ->
-                            interactiveCardStates?.getOrNull(index)?.let { state ->
-                                LaunchedEffect(state.isChecked.value) {
-                                    if(state.isChecked.value && state.isEnabled.value) {
-                                        selectedSessionUidList.add(session.uid)
-                                    }else selectedSessionUidList.remove(session.uid)
-                                }
-
-                                LaunchedEffect(Unit) {
-                                    state.isEnabled.value = session.isPlayable.not()
-                                    state.isChecked.value = session.isPlayable
-                                }
-
-                                Row(
+                            key = { session -> session.uid }
+                        ) { session ->
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .animateItemPlacement(
+                                        tween(
+                                            durationMillis = DEFAULT_ANIMATION_LENGTH_SHORT,
+                                            easing = LinearOutSlowInEasing
+                                        )
+                                    ),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                SessionCard(
                                     modifier = Modifier
-                                        .fillMaxWidth()
-                                        .animateItemPlacement(
-                                            tween(
-                                                durationMillis = DEFAULT_ANIMATION_LENGTH_SHORT,
-                                                easing = LinearOutSlowInEasing
-                                            )
-                                        ),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    SessionCard(
-                                        modifier = Modifier.fillMaxWidth(0.8f),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        session = session,
-                                        state = state
-                                    )
-                                    AnimatedVisibility(session.isPlayable) {
-                                        ImageAction(
-                                            modifier = Modifier.wrapContentWidth(),
-                                            leadingImageVector = Icons.Outlined.PlayArrow,
-                                            text = stringResource(id = R.string.button_play)
-                                        ) {
-                                            navController?.navigate(
-                                                NavigationRoot.SessionPlay.createRoute(
-                                                    NavigationRoot.SessionPlay.SessionPlayArgument(
-                                                        toolbarTitle = session.name,
-                                                        sessionUid = session.uid
-                                                    )
+                                        .scalingClickable(
+                                            enabled = session.isPlayable.not(),
+                                            onTap = {
+                                                if (checkedSessionUidList.contains(session.uid)) {
+                                                    checkedSessionUidList.remove(session.uid)
+                                                } else checkedSessionUidList.add(session.uid)
+                                            }
+                                        )
+                                        .fillMaxWidth(0.8f),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    session = session,
+                                    isChecked = session.isPlayable || checkedSessionUidList.contains(session.uid),
+                                    enabled = session.isPlayable.not(),
+                                    onCheckedChange = { isChecked ->
+                                        if(isChecked) {
+                                            checkedSessionUidList.add(session.uid)
+                                        }else {
+                                            checkedSessionUidList.remove(session.uid)
+                                        }
+                                    }
+                                )
+                                AnimatedVisibility(session.isPlayable) {
+                                    ImageAction(
+                                        modifier = Modifier.wrapContentWidth(),
+                                        leadingImageVector = Icons.Outlined.PlayArrow,
+                                        text = stringResource(id = R.string.button_play)
+                                    ) {
+                                        navController?.navigate(
+                                            NavigationRoot.SessionPlay.createRoute(
+                                                NavigationRoot.SessionPlay.SessionPlayArgument(
+                                                    toolbarTitle = session.name,
+                                                    sessionUid = session.uid
                                                 )
                                             )
-                                            onDismissRequest()
-                                        }
+                                        )
+                                        onDismissRequest()
                                     }
                                 }
                             }
                         }
                         item {
-                            footerItem()
+                            AnimatedVisibility(
+                                visible = checkedSessionUidList.size > 0,
+                                enter = slideInVertically(initialOffsetY = { it.times(2) }),
+                                exit = slideOutVertically(targetOffsetY = { it.times(2) })
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 12.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.End
+                                ) {
+                                    OutlinedButton(
+                                        thenModifier = Modifier
+                                            .padding(vertical = 6.dp, horizontal = 6.dp),
+                                        text = stringResource(id = R.string.button_cancel),
+                                        isActivated = false,
+                                        onClick = {
+                                            checkedSessionUidList.clear()
+                                            coroutineScope.launch {
+                                                sheetState.hide()
+                                            }
+                                        }
+                                    )
+                                    Spacer(modifier = Modifier.width(12.dp))
+                                    ImageAction(
+                                        text = stringResource(id = R.string.session_launcher_action_confirm),
+                                        onClick = {
+                                            viewModel.saveSessionSelection(
+                                                selectedSessionUidList = checkedSessionUidList.toList(),
+                                                collectionUidList = collectionUidList,
+                                                questionUidList = questionUidList
+                                            )
+                                            checkedSessionUidList.clear()
+                                        }
+                                    )
+                                }
+                            }
                         }
                     }
                 }

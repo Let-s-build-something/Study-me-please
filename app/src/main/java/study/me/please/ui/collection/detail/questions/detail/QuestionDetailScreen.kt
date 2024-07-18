@@ -25,12 +25,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.focus.FocusRequester
@@ -68,8 +66,10 @@ import study.me.please.ui.components.EditableImageAsset
 import study.me.please.ui.components.ImageAction
 import study.me.please.ui.components.ListItemEditField
 import study.me.please.ui.components.OptionsLayout
+import study.me.please.ui.components.OptionsLayoutAction
 import study.me.please.ui.components.QuestionAnswerCard
 import study.me.please.ui.components.TextHeader
+import study.me.please.ui.components.checkedOptionsItems
 import study.me.please.ui.components.pull_refresh.PullRefreshScreen
 
 /** delay for a generic reaction to an input value change */
@@ -102,7 +102,7 @@ fun QuestionDetailScreen(
     val imageExplanationUrl = remember(question.value?.imageExplanationUrl) {
         mutableStateOf(question.value?.imageExplanationUrl)
     }
-    var showDeleteDialog by remember { mutableStateOf(false) }
+    val showDeleteDialog = remember { mutableStateOf(false) }
     val listItems = remember(question.value?.promptList) {
         mutableStateListOf(
             *question.value?.promptList?.ifEmpty {
@@ -175,7 +175,7 @@ fun QuestionDetailScreen(
         }
     }
 
-    if(showDeleteDialog) {
+    if(showDeleteDialog.value) {
         BasicAlertDialog(
             title = stringResource(id = R.string.answer_delete_dialog_title),
             content = stringResource(
@@ -192,7 +192,7 @@ fun QuestionDetailScreen(
             dismissButtonState = ButtonState(
                 text = stringResource(id = R.string.button_dismiss)
             ),
-            onDismissRequest = { showDeleteDialog = false }
+            onDismissRequest = { showDeleteDialog.value = false }
         )
     }
 
@@ -458,24 +458,44 @@ fun QuestionDetailScreen(
 
             // options row
             OptionsLayout(
-                onCopyRequest = {
-                    coroutineScope.launch(Dispatchers.Default) {
-                        viewModel.clipBoard.answers.copyItems(
-                            question.value?.answers?.filter { checkedAnswerUidList.contains(it.uid) }.orEmpty()
-                        )
-                        checkedAnswerUidList.clear()
+                actions = mutableListOf<OptionsLayoutAction>().apply {
+                    if (viewModel.clipBoard.answers.isEmpty.value.not()) {
+                        add(OptionsLayoutAction.Paste)
+                    }
+                    if(checkedAnswerUidList.size > 0) {
+                        add(OptionsLayoutAction.Copy)
+                        addAll(checkedOptionsItems)
                     }
                 },
-                onPasteRequest = { bridge.pasteRequest() },
-                onDeleteRequest = { showDeleteDialog = true },
-                onSelectAll = {
-                    checkedAnswerUidList.addAll(question.value?.answers?.map { it.uid }.orEmpty())
+                onClick = { action ->
+                    when(action) {
+                        is OptionsLayoutAction.SelectAll -> {
+                            checkedAnswerUidList.clear()
+                            checkedAnswerUidList.addAll(question.value?.answers?.map { it.uid }.orEmpty())
+                        }
+                        is OptionsLayoutAction.DeselectAll -> {
+                            checkedAnswerUidList.clear()
+                        }
+                        is OptionsLayoutAction.Delete -> {
+                            showDeleteDialog.value = true
+                        }
+                        is OptionsLayoutAction.Copy -> {
+                            coroutineScope.launch(Dispatchers.Default) {
+                                viewModel.clipBoard.answers.copyItems(
+                                    question.value?.answers?.filter { checkedAnswerUidList.contains(it.uid) }.orEmpty()
+                                )
+                                checkedAnswerUidList.clear()
+                            }
+                        }
+                        is OptionsLayoutAction.Paste -> {
+                            bridge.pasteRequest()
+                        }
+                        else -> {}
+                    }
                 },
-                onDeselectAll = { checkedAnswerUidList.clear() },
-                isEditMode = checkedAnswerUidList.size > 0,
-                hasPasteOption = viewModel.clipBoard.answers.isEmpty.value.not(),
-                animateTopDown = true,
-                onClipBoardRemoval = { viewModel.clipBoard.answers.clear() }
+                onClearClick = {
+                    viewModel.clipBoard.answers.clear()
+                }
             )
 
             question.value?.answers?.forEach { answer ->
@@ -492,7 +512,9 @@ fun QuestionDetailScreen(
                                 }
                             },
                             onLongPress = {
-                                checkedAnswerUidList.add(answer.uid)
+                                if(checkedAnswerUidList.size == 0) {
+                                    checkedAnswerUidList.add(answer.uid)
+                                }
                             }
                         )
                         .padding(vertical = 4.dp),

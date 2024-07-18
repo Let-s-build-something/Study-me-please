@@ -117,6 +117,7 @@
     <string name="session_launcher_new">Vytvořit nový. Čas si hrát!</string>
     <string name="session_launcher_action_confirm">Přidat</string>
     <string name="session_detail_default_toolbar">Nový cvičení</string>
+    <string name="session_detail_mode_title">Volba módu</string>
     <string name="session_lobby_screen_empty_text">Zatím netrénuješ znalosti…zatím!</string>
     <string name="session_play_repeated_snackbar">
         Supr dupr! Tohle se brzo naučíš. My se o to postaráme:)
@@ -133,6 +134,10 @@
     </string>
     <string name="collection_empty_error">
         Nejsou tu žádné kolce…zatím! Ale můžeš začít hned teď:)
+    </string>
+    <string name="collection_remove_dialog_title">Smazání položek</string>
+    <string name="collection_remove_dialog_description">
+        Jste si jistí, že chcete permanentně smazat (%1$d) vybraných položek z cvičení?
     </string>
     <string name="collection_delete_dialog_title">Smazání kolekcí</string>
     <string name="collection_delete_dialog_description">
@@ -165,11 +170,11 @@
 
     <string name="preference_chooser_preferences_show">Změnit nastavení</string>
     <string name="preference_chooser_preferences_hide">Zavřít nastavení</string>
-    <string name="preference_chooser_field_name_hint">Název preference</string>
     <string name="preference_chooser_preferences_header">Tvoje preference</string>
     <string name="preference_chooser_studying_header">Studování</string>
     <string name="preference_chooser_practicing_header">Procvičování</string>
     <string name="preference_chooser_examination_header">Cvičení</string>
+    <string name="preference_chooser_advanced_options">Pro profíky</string>
     <string name="preference_chooser_add_new">Vytvořit</string>
     <string name="preference_wait_for_correct_answer_desc">
         Opravovat moje chyby odkud nevyberu správnou
@@ -227,7 +232,7 @@
     <string name="button_add_image">Přidat obrázek</string>
     <string name="button_add_prompt_image">Přidat obrázek</string>
     <string name="button_add_explanation_image">Přidat vysvětlující obrázek</string>
-    <string name="button_start_session">Zacvičit</string>
+    <string name="button_start_session">Do cvičky</string>
     <string name="button_copy">Koprívovat</string>
     <string name="button_paste">Vložit</string>
     <string name="button_dismiss">Zrušit</string>

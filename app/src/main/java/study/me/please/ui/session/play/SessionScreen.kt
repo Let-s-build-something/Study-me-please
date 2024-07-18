@@ -1,6 +1,5 @@
 package study.me.please.ui.session.play
 
-import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -48,7 +47,6 @@ import study.me.please.R
 import study.me.please.base.BrandBaseScreen
 import study.me.please.base.navigation.SessionAppBarActions
 import study.me.please.data.io.BaseResponse
-import study.me.please.data.io.preferences.SessionPreferencePack
 import study.me.please.data.state.session.SessionScreenMode
 import study.me.please.ui.collection.EmptyLayout
 import study.me.please.ui.collection.detail.REQUEST_DATA_SAVE_DELAY
@@ -56,7 +54,6 @@ import study.me.please.ui.components.BasicAlertDialog
 import study.me.please.ui.components.ButtonState
 import study.me.please.ui.components.ComponentHeaderButton
 import study.me.please.ui.components.preference_chooser.PreferenceChooser
-import study.me.please.ui.components.preference_chooser.PreferenceChooserController
 import study.me.please.ui.components.session.StatisticsTable
 
 /** how many items behind the front can be skipped forward */
@@ -67,7 +64,6 @@ private const val INDEXES_FOR_SKIP_TO_FRONT = 5
  * @param isTestingMode the session will not be saved.
  *                      Session also has extra functionality for discovery purposes
  * @param sessionUid session identifier
- * @param preferencePackUid identifier for chosen session preferences
  * @param collectionUid collection identifier
  * @param questionUid question identifier
  * @param questionUids question identifiers
@@ -78,7 +74,6 @@ fun SessionScreen(
     title: String? = null,
     isTestingMode: Boolean = false,
     sessionUid: String? = null,
-    preferencePackUid: String? = null,
     collectionUid: String? = null,
     questionUid: String? = null,
     questionUids: List<String>? = null,
@@ -89,7 +84,6 @@ fun SessionScreen(
 
     val questionModule = viewModel.questionModule.collectAsState()
     val questions = viewModel.questions.collectAsState()
-    val preferencePacks = viewModel.preferencePacks.collectAsState()
     val preferencePack = viewModel.preferencePack.collectAsState()
     val generatingResponse = viewModel.questionsGeneratingResponse.collectAsState()
 
@@ -123,8 +117,7 @@ fun SessionScreen(
             sessionUid = sessionUid,
             collectionUid = collectionUid,
             questionUid = questionUid,
-            questionUids = questionUids,
-            preferencePackUid = preferencePackUid
+            questionUids = questionUids
         )
     }
 
@@ -245,23 +238,11 @@ fun SessionScreen(
                                             modifier = Modifier
                                                 .padding(8.dp)
                                                 .padding(bottom = 32.dp),
-                                            controller = object: PreferenceChooserController {
-                                                override fun addPreferencePack(name: String): SessionPreferencePack {
-                                                    return viewModel.addNewPreferencePack(name = name)
-                                                }
-                                                override fun savePreference(preference: SessionPreferencePack) {
-                                                    viewModel.requestPreferencePackSave(preference)
-                                                }
-                                                override fun deletePreference(preferenceUid: String) {
-                                                    viewModel.requestPreferencePackDelete(preferenceUid)
-                                                }
-                                                override fun choosePreference(preference: SessionPreferencePack) {
-                                                    sessionState.sessionPreferencePack.value = preference
-                                                    viewModel.requestSessionSave(preferencePack = preference)
-                                                }
+                                            preferencePack = sessionState.sessionPreferencePack.value,
+                                            onSaveRequest = { newPack ->
+                                                sessionState.sessionPreferencePack.value = newPack
+                                                viewModel.updatePreferencePack(newPack)
                                             },
-                                            defaultPreferencePack = sessionState.sessionPreferencePack.value,
-                                            preferencePacks = preferencePacks.value
                                         )
                                     }
                                 }
@@ -314,7 +295,8 @@ fun SessionScreen(
                                 }
                             }else {
                                 ExceptionLayout(
-                                    response = generatingResponse.value
+                                    response = generatingResponse.value,
+                                    questionsCount = questions.value?.size ?: -1
                                 )
                             }
                         }
@@ -322,7 +304,8 @@ fun SessionScreen(
                 }
             }else {
                 ExceptionLayout(
-                    response = generatingResponse.value
+                    response = generatingResponse.value,
+                    questionsCount = questions.value?.size ?: -1
                 )
             }
         }
@@ -331,19 +314,20 @@ fun SessionScreen(
 
 @Composable
 private fun ExceptionLayout(
-    response: BaseResponse<*>?
+    response: BaseResponse<*>?,
+    questionsCount: Int,
 ) {
     when {
-        response?.responseCode == 204 -> {
+        response?.responseCode == 204 && questionsCount == 0 -> {
             EmptyLayout(
                 emptyText = stringResource(R.string.subject_generating_error_no_data)
             )
         }
-        response?.responseCode != 200 && response?.responseCode != null -> {
+        /*response?.responseCode != 200 && response?.responseCode != null && questionsCount != -1 -> {
             EmptyLayout(
                 emptyText = stringResource(R.string.subject_generating_error_generic)
             )
-        }
+        }*/
         // loading
         else -> {
             EmptyLayout(

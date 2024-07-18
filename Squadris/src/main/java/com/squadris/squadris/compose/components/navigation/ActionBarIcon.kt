@@ -29,6 +29,7 @@ import coil.compose.AsyncImage
 import com.squadris.squadris.compose.components.AutoResizeText
 import com.squadris.squadris.compose.components.FontSizeRange
 import com.squadris.squadris.compose.theme.LocalTheme
+import com.squadris.squadris.ext.scalingClickable
 
 @Composable
 fun ActionBarIcon(

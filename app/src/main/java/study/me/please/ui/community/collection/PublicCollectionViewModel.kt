@@ -47,8 +47,6 @@ class PublicCollectionViewModel @Inject constructor(
     /** Downloads the collection */
     fun downloadCollection(onSuccess: (uid: String) -> Unit = {}) {
         viewModelScope.launch {
-            //TODO move to some shared firebase repository
-            //TODO questions are not getting saved to firebase - fix
             collection.value?.newInstance(sharedDataManager.currentUser.value?.uid)?.let { newInstance ->
                 repository.insertCollection(newInstance)
                 repository.insertQuestions(newInstance.questions.map { it.value })

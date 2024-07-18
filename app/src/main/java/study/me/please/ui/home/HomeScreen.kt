@@ -5,14 +5,11 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -24,7 +21,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
@@ -47,12 +43,9 @@ import study.me.please.data.io.session.SessionIO
 import study.me.please.ui.components.BasicAlertDialog
 import study.me.please.ui.components.ButtonState
 import study.me.please.ui.components.CollectionCard
-import study.me.please.ui.components.ComponentHeaderButton
 import study.me.please.ui.components.ContentTile
 import study.me.please.ui.components.HorizontalBlock
-import study.me.please.ui.components.InteractiveCardState
 import study.me.please.ui.components.pull_refresh.PullRefreshScreen
-import study.me.please.ui.components.rememberInteractiveCardState
 import study.me.please.ui.components.session.SessionCard
 import study.me.please.ui.components.session.launcher.SessionLauncher
 import java.util.UUID
@@ -75,13 +68,6 @@ fun HomeScreen(
 
     var showLeaveDialog by remember { mutableStateOf(false) }
     val showSessionLauncher = remember { mutableStateOf<String?>(null) }
-
-    val interactiveCollectionStates = collections.value?.map {
-        rememberInteractiveCardState()
-    }
-    val interactiveSessionStates = sessions.value?.map {
-        rememberInteractiveCardState()
-    }
 
     BackHandler {
         showLeaveDialog = true
@@ -179,7 +165,6 @@ fun HomeScreen(
                 }
             )
             SessionsRow(
-                interactiveStates = interactiveSessionStates,
                 sessions = sessions.value,
                 configuration = configuration,
                 onNavigationToLobby = {
@@ -229,63 +214,46 @@ private fun CollectionsRow(
         onActionClicked = onNavigationToLobby,
         heading = stringResource(R.string.screen_collection_title)
     ) {
-        LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            item {
-                Spacer(modifier = Modifier.width(6.dp))
-            }
-            items(
-                collections ?: arrayOfNulls<CollectionIO?>(5).toList(),
-                key = { collection -> collection?.uid ?: UUID.randomUUID().toString() }
-            ) { collection ->
-                CollectionCard(
-                    modifier = Modifier
-                        .scalingClickable(
-                            onTap = {
-                                selectedUid.value = collection?.uid
-                            }
-                        )
-                        .width(
-                            configuration.screenWidthDp.div(if(LocalIsTablet.current) 4 else 2).dp
-                        ),
-                    data = collection,
-                    onNavigateToDetail = {
-                        collection?.let(onNavigationToDetail)
-                    },
-                    onNavigateToSession = {
-                        collection?.let(onNavigationToSession)
-                    },
-                    onCheckedChange = {
-                        selectedUid.value = null
-                    },
-                    isSelected = selectedUid.value == collection?.uid,
-                )
-            }
-            item {
-                ComponentHeaderButton(
-                    onClick = {
-                        onNavigationToLobby(true)
-                    }
-                )
-            }
-            item {
-                Spacer(modifier = Modifier.width(6.dp))
-            }
+        items(
+            collections ?: arrayOfNulls<CollectionIO?>(5).toList(),
+            key = { collection -> collection?.uid ?: UUID.randomUUID().toString() }
+        ) { collection ->
+            CollectionCard(
+                modifier = Modifier
+                    .scalingClickable(
+                        onTap = {
+                            selectedUid.value = collection?.uid
+                        }
+                    )
+                    .width(
+                        configuration.screenWidthDp.div(if(LocalIsTablet.current) 4 else 2).dp
+                    ),
+                data = collection,
+                onNavigateToDetail = {
+                    collection?.let(onNavigationToDetail)
+                },
+                onNavigateToSession = {
+                    collection?.let(onNavigationToSession)
+                },
+                onCheckedChange = {
+                    selectedUid.value = null
+                },
+                isSelected = selectedUid.value == collection?.uid,
+            )
         }
     }
 }
 
 @Composable
 private fun SessionsRow(
-    interactiveStates: List<InteractiveCardState>?,
     sessions: List<SessionIO>?,
     configuration: Configuration,
     onNavigationToLobby: () -> Unit,
     onNavigationToSession: (session: SessionIO) -> Unit,
     onNavigationToDetail: (session: SessionIO) -> Unit
 ) {
+    val selectedUid = remember { mutableStateOf<String?>(null) }
+
     HorizontalBlock(
         isEmpty = sessions?.isEmpty() == true,
         emptyTitle = stringResource(id = R.string.session_lobby_screen_empty_text),
@@ -295,34 +263,30 @@ private fun SessionsRow(
         },
         heading = stringResource(id = R.string.screen_session_lobby_title)
     ) {
-        LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(LocalTheme.current.shapes.betweenItemsSpace)
-        ) {
-            item {
-                Spacer(modifier = Modifier.width(6.dp))
-            }
-            itemsIndexed(
-                sessions ?: arrayOfNulls<SessionIO?>(5).toList(),
-                key = { _, session -> session?.uid ?: UUID.randomUUID().toString() }
-            ) { index, session ->
-                (interactiveStates?.getOrNull(index))?.let { state ->
-                    SessionCard(
-                        modifier = Modifier
-                            .requiredWidth(configuration.screenWidthDp.div(2).dp),
-                        session = session,
-                        state = state,
-                        onEditOptionPressed = {
-                            session?.let(onNavigationToDetail)
-                        },
-                        onPlayOptionPressed = {
-                            session?.let(onNavigationToSession)
+        items(
+            sessions ?: arrayOfNulls<SessionIO?>(5).toList(),
+            key = { session -> session?.uid ?: UUID.randomUUID().toString() }
+        ) { session ->
+            SessionCard(
+                modifier = Modifier
+                    .scalingClickable(
+                        onTap = {
+                            selectedUid.value = session?.uid
                         }
                     )
+                    .requiredWidth(configuration.screenWidthDp.div(2).dp),
+                session = session,
+                isSelected = selectedUid.value == session?.uid,
+                onEditOptionPressed = {
+                    session?.let(onNavigationToDetail)
+                },
+                onCheckedChange = {
+                    selectedUid.value = null
+                },
+                onPlayOptionPressed = {
+                    session?.let(onNavigationToSession)
                 }
-            }
-            item {
-                Spacer(modifier = Modifier.width(6.dp))
-            }
+            )
         }
     }
 }

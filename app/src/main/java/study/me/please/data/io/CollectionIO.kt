@@ -66,6 +66,7 @@ data class CollectionIO @JvmOverloads constructor(
 
     /** Checks whether object contains any non-default data */
     @get:Exclude
+    @get:Ignore
     val isNotEmpty: Boolean
         get() = (dateCreated != null
             || name.isNotEmpty()

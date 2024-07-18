@@ -6,12 +6,10 @@ import study.me.please.data.io.CollectionIO
 import study.me.please.data.io.QuestionIO
 import study.me.please.data.io.session.SessionIO
 import study.me.please.data.room.CollectionDao
-import study.me.please.data.room.PreferencesDao
 import study.me.please.data.room.QuestionDao
 import study.me.please.data.room.QuestionModuleDao
 import study.me.please.data.room.SessionDao
 import study.me.please.data.state.session.QuestionModule
-import study.me.please.ui.components.preference_chooser.PreferencePackRepository
 import javax.inject.Inject
 
 /** Proxy for calling network end points */
@@ -19,9 +17,8 @@ class SessionDetailRepository @Inject constructor(
     private val sessionDao: SessionDao,
     private val collectionDao: CollectionDao,
     private val questionModuleDao: QuestionModuleDao,
-    private val questionDao: QuestionDao,
-    override val preferencesDao: PreferencesDao
-): PreferencePackRepository {
+    private val questionDao: QuestionDao
+) {
 
     /** saves a session */
     suspend fun saveSession(session: SessionIO) {

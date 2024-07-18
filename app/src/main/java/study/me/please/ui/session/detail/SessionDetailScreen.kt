@@ -2,49 +2,40 @@ package study.me.please.ui.session.detail
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.PlayArrow
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.zIndex
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import com.squadris.squadris.compose.base.LocalNavController
@@ -55,31 +46,31 @@ import com.squadris.squadris.ext.brandShimmerEffect
 import com.squadris.squadris.ext.scalingClickable
 import com.squadris.squadris.utils.OnLifecycleEvent
 import com.squadris.squadris.utils.RefreshableViewModel.Companion.requestData
+import kotlinx.coroutines.cancelChildren
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import study.me.please.R
 import study.me.please.base.navigation.NavigationRoot
 import study.me.please.data.io.CollectionIO
 import study.me.please.data.io.QuestionIO
 import study.me.please.data.io.preferences.SessionPreferencePack
 import study.me.please.data.io.session.SessionIO
+import study.me.please.ui.collection.detail.questions.detail.INPUT_DELAYED_RESPONSE_MILLIS
 import study.me.please.ui.components.BasicAlertDialog
 import study.me.please.ui.components.ButtonState
 import study.me.please.ui.components.CollectionCard
+import study.me.please.ui.components.ComponentHeaderButton
 import study.me.please.ui.components.EditFieldInput
-import study.me.please.ui.components.InteractiveCardMode
+import study.me.please.ui.components.HorizontalBlock
 import study.me.please.ui.components.OptionsLayout
+import study.me.please.ui.components.OptionsLayoutAction
 import study.me.please.ui.components.QuestionCard
-import study.me.please.ui.components.TextHeader
+import study.me.please.ui.components.checkedOptionsItems
 import study.me.please.ui.components.preference_chooser.PreferenceChooser
-import study.me.please.ui.components.preference_chooser.PreferenceChooserController
 import study.me.please.ui.components.pull_refresh.PullRefreshScreen
-import study.me.please.ui.components.rememberInteractiveCardState
 import study.me.please.ui.components.session.StatisticsTable
 import java.util.UUID
 
-enum class DialogToShow {
-    DeleteCollections,
-    DeleteQuestions,
-}
 
 /**
  * Screen for creating a new collection
@@ -87,25 +78,24 @@ enum class DialogToShow {
  */
 @Composable
 fun SessionDetailScreen(
-    sessionUid: String? = null,
+    sessionUid: String,
+    title: String,
     collectionUidList: List<String>? = null,
     questionUidList: List<String>? = null,
-    title: String? = null,
-    viewModel: SessionDetailViewModel = hiltViewModel()
-) {
-    val sessionDetail = viewModel.session.collectAsState()
-    val navController = LocalNavController.current
-
-    LaunchedEffect(Unit) {
-        viewModel.requestPreferencePacks()
+    viewModel: SessionDetailViewModel = hiltViewModel<SessionDetailViewModel, SessionDetailViewModel.SessionDetailViewModelFactory> { factory ->
+        factory.create(
+            sessionUid = sessionUid,
+            defaultName = title,
+            collectionUidList = collectionUidList.orEmpty(),
+            questionUidList = questionUidList.orEmpty()
+        )
     }
+) {
+    val session = viewModel.session.collectAsState()
+    val navController = LocalNavController.current
 
     OnLifecycleEvent { event ->
         if(event == Lifecycle.Event.ON_CREATE) {
-            viewModel.defaultName = title ?: ""
-            viewModel.sessionUid = sessionUid
-            viewModel.collectionUidList = collectionUidList.orEmpty()
-            viewModel.questionUidList = questionUidList.orEmpty()
             viewModel.requestData(isSpecial = true)
         }
     }
@@ -121,8 +111,8 @@ fun SessionDetailScreen(
                     navController?.navigate(
                         NavigationRoot.SessionPlay.createRoute(
                             NavigationRoot.SessionPlay.SessionPlayArgument(
-                                sessionUid = sessionDetail.value?.uid ?: "",
-                                toolbarTitle = sessionDetail.value?.name ?: ""
+                                sessionUid = session.value?.uid ?: "",
+                                toolbarTitle = session.value?.name ?: ""
                             )
                         )
                     )
@@ -130,36 +120,20 @@ fun SessionDetailScreen(
             )
         }
     ) {
-        if(sessionDetail.value == null) {
-            ShimmerLayout()
-        }else {
-            ContentLayout(
-                session = sessionDetail.value,
-                viewModel = viewModel,
-                requestDataSave = {
-                    viewModel.saveSessionDetail()
-                },
-                navigateToCollection = { collection ->
-                    navController?.navigate(
-                        NavigationRoot.CollectionDetail.createRoute(
-                            NavigationRoot.CollectionDetail.CollectionDetailArgument(
-                                collectionUid = collection.uid,
-                                toolbarTitle = collection.name
-                            )
-                        )
+        Crossfade(
+            targetState = session.value == null,
+            label = "CrossfadeContentLoading"
+        ) { isLoading ->
+            if(isLoading) {
+                ShimmerLayout()
+            }else {
+                session.value?.let { safeSession ->
+                    ContentLayout(
+                        session = safeSession,
+                        viewModel = viewModel
                     )
-                },
-                onAddCollection = {
-                    navController?.navigate(NavigationRoot.CollectionLobby.route)
-                },
-                onPreferencePackChosen = { preferencePack ->
-                    sessionDetail.value?.apply {
-                        this.preferencePackUid = preferencePack.uid
-                        this.estimatedMode = preferencePack.estimatedMode
-                    }
-                    viewModel.saveSessionDetail()
                 }
-            )
+            }
         }
     }
 
@@ -170,265 +144,124 @@ fun SessionDetailScreen(
 @Composable
 private fun ContentLayout(
     modifier: Modifier = Modifier,
-    session: SessionIO?,
-    viewModel: SessionDetailViewModel,
-    requestDataSave: () -> Unit,
-    navigateToCollection: (collection: CollectionIO) -> Unit,
-    onPreferencePackChosen: (SessionPreferencePack) -> Unit = {},
-    onAddCollection: () -> Unit
+    session: SessionIO,
+    viewModel: SessionDetailViewModel
 ) {
-    val localFocusManager = LocalFocusManager.current
     val configuration = LocalConfiguration.current
     val navController = LocalNavController.current
+    val inputScope = rememberCoroutineScope()
 
     val questions = viewModel.questions.collectAsState()
-    val questionModule = viewModel.questionModule.collectAsState()
+    val questionModule = viewModel.sessionPreferenceModule.collectAsState()
     val collections = viewModel.collections.collectAsState()
-    val preferencePacks = viewModel.preferencePacks.collectAsState()
 
 
-    val showDialog = remember { mutableStateOf<DialogToShow?>(null) }
-    val selectedQuestionUids = remember { mutableStateListOf<String>() }
-    val selectedCollectionUids = remember { mutableStateListOf<String>() }
-    val interactiveCollectionStates = collections.value?.map {
-        rememberInteractiveCardState()
-    }
-    val stopChecking = {
-        interactiveCollectionStates?.forEach {
-            it.isChecked.value = false
-            it.mode.value = InteractiveCardMode.DATA_DISPLAY
-        }
-        selectedCollectionUids.clear()
-        selectedQuestionUids.clear()
-    }
-    BackHandler(selectedCollectionUids.size > 0 || selectedQuestionUids.size > 0) {
-        stopChecking()
+    val showDialog = remember { mutableStateOf(false) }
+    val checkedUidList = remember { mutableStateListOf<String>() }
+
+    BackHandler(checkedUidList.size > 0) {
+        checkedUidList.clear()
     }
 
-    if(showDialog.value != null) {
+    if(showDialog.value) {
         BasicAlertDialog(
-            title = stringResource(
-                id = if(showDialog.value == DialogToShow.DeleteCollections) {
-                    R.string.collection_delete_dialog_title
-                }else R.string.question_delete_dialog_title
-            ),
-            content = if(showDialog.value == DialogToShow.DeleteCollections) {
-                stringResource(
-                    id = R.string.collection_delete_dialog_description,
-                    selectedCollectionUids.size
-                )
-            }else stringResource(
-                id = R.string.question_delete_dialog_description,
-                selectedQuestionUids.size
-            ),
+            title = stringResource(R.string.collection_remove_dialog_title),
+            content = stringResource(R.string.collection_remove_dialog_description, checkedUidList.size),
             icon = Icons.Outlined.Delete,
             confirmButtonState = ButtonState(
                 text = stringResource(id = R.string.button_confirm)
             ) {
-                if(showDialog.value == DialogToShow.DeleteCollections) {
-                    session?.collectionUidList?.removeAll { selectedCollectionUids.contains(it) }
-                }else session?.questionUidList?.removeAll { selectedQuestionUids.contains(it) }
-                requestDataSave()
-                stopChecking()
+                viewModel.removeItems(checkedUidList.toSet())
+                checkedUidList.clear()
             },
             dismissButtonState = ButtonState(
                 text = stringResource(id = R.string.button_dismiss)
             ),
-            onDismissRequest = { showDialog.value = null }
+            onDismissRequest = {
+                showDialog.value = false
+            }
         )
     }
 
     Column(
         modifier = modifier
-            .pointerInput(Unit) {
-                detectTapGestures(onTap = {
-                    localFocusManager.clearFocus()
-                })
-            }
             .verticalScroll(rememberScrollState())
-            .padding(
-                top = 12.dp,
-                start = 4.dp,
-                end = 4.dp,
-                bottom = 0.dp
-            )
-            .shadow(
-                elevation = LocalTheme.current.styles.componentElevation,
-                shape = LocalTheme.current.shapes.componentShape,
-                clip = true
-            )
-            .background(
-                color = LocalTheme.current.colors.onBackgroundComponent,
-                shape = LocalTheme.current.shapes.componentShape
-            )
             .fillMaxWidth()
             .wrapContentHeight()
-            .padding(horizontal = 12.dp)
             .animateContentSize()
     ) {
-        val rowModifier = Modifier
-            .padding(vertical = 12.dp)
-            .clip(LocalTheme.current.shapes.componentShape)
-            .background(
-                color = LocalTheme.current.colors.onBackgroundComponentContrast,
-                shape = LocalTheme.current.shapes.componentShape
-            )
-
-        // name
-        EditFieldInput(
-            modifier = Modifier
-                .padding(top = 12.dp),
-            value = session?.name ?: "",
-            hint = stringResource(id = R.string.collection_detail_name_hint)
-        ) { output ->
-            session?.name = output
-            requestDataSave()
-        }
-
-        AnimatedVisibility(visible = questionModule.value != null) {
+        if((questionModule.value?.history?.size ?: 0) > 1) {
             questionModule.value?.let { module ->
                 StatisticsTable(
-                    modifier = rowModifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth(),
                     questionModule = module,
                     backgroundColor = LocalTheme.current.colors.onBackgroundComponentContrast
                 )
             }
         }
 
-        //preferences
-        PreferenceChooser(
+        // name
+        EditFieldInput(
             modifier = Modifier
-                .padding(vertical = 8.dp),
-            preferencePacks = preferencePacks.value,
-            controller = object: PreferenceChooserController {
-                override fun addPreferencePack(name: String): SessionPreferencePack {
-                    return viewModel.addNewPreferencePack(name = name)
-                }
-                override fun savePreference(preference: SessionPreferencePack) {
-                    viewModel.requestPreferencePackSave(preference)
-                }
-                override fun deletePreference(preferenceUid: String) {
-                    session?.preferencePackUid = ""
-                    session?.estimatedMode = null
-                    viewModel.requestPreferencePackDelete(preferenceUid)
-                }
-                override fun choosePreference(preference: SessionPreferencePack) {
-                    onPreferencePackChosen(preference)
-                }
-            },
-            defaultPreferencePack = preferencePacks.value?.find { it.uid == session?.preferencePackUid },
-            expandedByDefault = false
-        )
-
-        // collections
-        TextHeader(text = stringResource(id = R.string.screen_collection_title))
-        LazyRow(
-            modifier = rowModifier
-                .zIndex(1f),
-            state = rememberLazyListState(),
-            horizontalArrangement = Arrangement.spacedBy(
-                LocalTheme.current.shapes.betweenItemsSpace
-            ),
-            contentPadding = PaddingValues(vertical = 4.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            item {
-                ActionBarIcon(
-                    text = stringResource(id = R.string.button_add),
-                    imageVector = Icons.Outlined.Add
-                ) {
-                    onAddCollection()
-                }
-            }
-            itemsIndexed(
-                collections.value.orEmpty(),
-                key = { _, collection ->  collection.uid }
-            ) { index, collection ->
-                interactiveCollectionStates?.getOrNull(index)?.let { cardState ->
-                    LaunchedEffect(cardState.isChecked.value) {
-                        if(cardState.isChecked.value) {
-                            selectedCollectionUids.add(collection.uid)
-                        }else selectedCollectionUids.remove(collection.uid)
-                    }
-                    CollectionCard(
-                        modifier = Modifier
-                            .scalingClickable(
-                                onTap = {
-                                    navigateToCollection(collection)
-                                }
-                            )
-                            .width(configuration.screenWidthDp.times(0.4f).dp),
-                        data = collection
-                    )
-                }
-                session?.collectionUidList
-            }
-            item {
-                Spacer(modifier = Modifier.width(16.dp))
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp)
+                .padding(top = 24.dp),
+            value = session.name,
+            hint = stringResource(id = R.string.collection_detail_name_hint)
+        ) { output ->
+            inputScope.coroutineContext.cancelChildren()
+            inputScope.launch {
+                delay(INPUT_DELAYED_RESPONSE_MILLIS)
+                viewModel.updateSessionName(output)
             }
         }
 
-        OptionsLayout(
-            isEditMode = selectedCollectionUids.size > 0,
-            onDeleteRequest = { showDialog.value = DialogToShow.DeleteCollections },
-            onCopyRequest = {
-
-            },
-            onPasteRequest = {
-
-            },
-            onSelectAll = {
-                interactiveCollectionStates?.forEach {
-                    it.isChecked.value = true
-                }
-            },
-            onDeselectAll = {
-                selectedCollectionUids.clear()
-            },
-            onClipBoardRemoval = {  }
+        //preferences
+        Text(
+            modifier = Modifier.padding(start = 8.dp, top = 12.dp),
+            text = stringResource(R.string.session_detail_mode_title),
+            style = TextStyle(
+                color = LocalTheme.current.colors.secondary,
+                fontSize = 14.sp
+            )
+        )
+        PreferenceChooser(
+            modifier = Modifier
+                .padding(vertical = 8.dp),
+            preferencePack = session.preferencePack ?: SessionPreferencePack(),
+            onSaveRequest = { newPack ->
+                viewModel.updatePreferencePack(newPack)
+            }
         )
 
-        // questions
-        TextHeader(text = stringResource(id = R.string.collection_detail_questions_heading))
-        LazyRow(
-            modifier = rowModifier
-                .zIndex(1f),
-            state = rememberLazyListState(),
-            horizontalArrangement = Arrangement.spacedBy(
-                LocalTheme.current.shapes.betweenItemsSpace
-            ),
-            contentPadding = PaddingValues(vertical = 4.dp),
-            verticalAlignment = Alignment.CenterVertically
+        Spacer(Modifier.height(16.dp))
+
+        // collections
+        HorizontalBlock(
+            modifier = Modifier.animateContentSize(),
+            heading = stringResource(R.string.screen_collection_title)
         ) {
-            item {
-                ActionBarIcon(
-                    text = stringResource(id = R.string.button_add),
-                    imageVector = Icons.Outlined.Add
-                ) {
-                    onAddCollection()
-                }
-            }
             items(
-                questions.value ?: arrayOfNulls<QuestionIO>(6).toList(),
-                key = { question ->  question?.uid ?: UUID.randomUUID().toString() }
-            ) { question ->
-                QuestionCard(
+                items = collections.value ?: arrayOfNulls<CollectionIO>(2).toList(),
+                key = { collection ->  collection?.uid ?: UUID.randomUUID().toString() }
+            ) { collection ->
+                CollectionCard(
                     modifier = Modifier
                         .scalingClickable(
                             onTap = {
-                                if(question != null) {
-                                    if(selectedQuestionUids.size > 0) {
-                                        if(selectedQuestionUids.contains(question.uid)) {
-                                            selectedQuestionUids.remove(question.uid)
-                                        }else {
-                                            selectedQuestionUids.add(question.uid)
+                                if(collection != null) {
+                                    if (checkedUidList.size > 0) {
+                                        if (checkedUidList.contains(collection.uid)) {
+                                            checkedUidList.remove(collection.uid)
+                                        } else {
+                                            checkedUidList.add(collection.uid)
                                         }
-                                    }else {
+                                    } else {
                                         navController?.navigate(
-                                            NavigationRoot.QuestionDetail.createRoute(
-                                                NavigationRoot.QuestionDetail.QuestionDetailArgument(
-                                                    toolbarTitle = question.prompt,
-                                                    questionUid = question.uid
+                                            NavigationRoot.CollectionDetail.createRoute(
+                                                NavigationRoot.CollectionDetail.CollectionDetailArgument(
+                                                    collectionUid = collection.uid,
+                                                    toolbarTitle = collection.name
                                                 )
                                             )
                                         )
@@ -436,54 +269,101 @@ private fun ContentLayout(
                                 }
                             },
                             onLongPress = {
-                                if(selectedQuestionUids.size == 0) {
-                                    selectedQuestionUids.add(question?.uid ?: "")
+                                if (checkedUidList.size == 0) {
+                                    checkedUidList.add(collection?.uid ?: "")
                                 }
                             }
                         )
-                        .animateItemPlacement(
-                            tween(
-                                durationMillis = DEFAULT_ANIMATION_LENGTH_SHORT,
-                                easing = LinearOutSlowInEasing
-                            )
-                        ),
-                    data = question
+                        .width(configuration.screenWidthDp.times(0.4f).dp),
+                    isChecked = if(checkedUidList.size > 0) {
+                        checkedUidList.contains(collection?.uid)
+                    }else null,
+                    data = collection
+                )
+            }
+            item {
+                ComponentHeaderButton(
+                    onClick = {
+                        navController?.navigate(NavigationRoot.CollectionLobby.route)
+                    }
                 )
             }
         }
+
+        // questions
+        AnimatedVisibility(questions.value?.isEmpty() == false) {
+            HorizontalBlock(
+                modifier = Modifier.animateContentSize(),
+                heading = stringResource(R.string.collection_detail_questions_heading)
+            ) {
+                items(
+                    questions.value ?: arrayOfNulls<QuestionIO>(6).toList(),
+                    key = { question ->  question?.uid ?: UUID.randomUUID().toString() }
+                ) { question ->
+                    QuestionCard(
+                        modifier = Modifier
+                            .scalingClickable(
+                                onTap = {
+                                    if(question != null) {
+                                        if (checkedUidList.size > 0) {
+                                            if (checkedUidList.contains(question.uid)) {
+                                                checkedUidList.remove(question.uid)
+                                            } else {
+                                                checkedUidList.add(question.uid)
+                                            }
+                                        } else {
+                                            navController?.navigate(
+                                                NavigationRoot.QuestionDetail.createRoute(
+                                                    NavigationRoot.QuestionDetail.QuestionDetailArgument(
+                                                        toolbarTitle = question.prompt,
+                                                        questionUid = question.uid
+                                                    )
+                                                )
+                                            )
+                                        }
+                                    }
+                                },
+                                onLongPress = {
+                                    if (checkedUidList.size == 0) {
+                                        checkedUidList.add(question?.uid ?: "")
+                                    }
+                                }
+                            )
+                            .animateItemPlacement(
+                                tween(
+                                    durationMillis = DEFAULT_ANIMATION_LENGTH_SHORT,
+                                    easing = LinearOutSlowInEasing
+                                )
+                            ),
+                        isChecked = if(checkedUidList.size > 0) {
+                            checkedUidList.contains(question?.uid)
+                        }else null,
+                        data = question
+                    )
+                }
+            }
+        }
+
         OptionsLayout(
-            isEditMode = selectedQuestionUids.size > 0,
-            onDeleteRequest = {
-                showDialog.value = DialogToShow.DeleteQuestions
-            },
-            onCopyRequest = {
-
-            },
-            onPasteRequest = {
-
-            },
-            onSelectAll = {
-                selectedQuestionUids.addAll(questions.value.orEmpty().map { it.uid })
-            },
-            selectAllVisible = questions.value.orEmpty().size.minus(selectedQuestionUids.size) > 1,
-            deselectAllVisible = selectedQuestionUids.size > 1,
-            onDeselectAll = {
-                selectedQuestionUids.clear()
-            },
-            onClipBoardRemoval = {  }
+            actions = if(checkedUidList.size > 0) checkedOptionsItems else emptyList(),
+            onClick = { action ->
+                when(action) {
+                    is OptionsLayoutAction.SelectAll -> {
+                        checkedUidList.clear()
+                        checkedUidList.addAll(questions.value?.map { it.uid }.orEmpty())
+                        checkedUidList.addAll(collections.value?.map { it.uid }.orEmpty())
+                    }
+                    is OptionsLayoutAction.DeselectAll -> {
+                        checkedUidList.clear()
+                    }
+                    is OptionsLayoutAction.Delete -> {
+                        showDialog.value = true
+                    }
+                    else -> {}
+                }
+            }
         )
         Spacer(modifier = Modifier.height(32.dp))
-    }
-
-    LaunchedEffect(selectedCollectionUids.size) {
-        if(selectedCollectionUids.size > 0) {
-            interactiveCollectionStates?.forEach {
-                it.mode.value = InteractiveCardMode.CHECKING
-            }
-        }else {
-            stopChecking()
-            selectedCollectionUids.clear()
-        }
     }
 }
 

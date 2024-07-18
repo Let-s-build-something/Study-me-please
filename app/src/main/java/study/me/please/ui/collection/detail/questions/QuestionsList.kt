@@ -1,7 +1,6 @@
 package study.me.please.ui.collection.detail.questions
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.tween
@@ -22,7 +21,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -63,9 +61,10 @@ import study.me.please.ui.collection.detail.questions.detail.INPUT_DELAYED_RESPO
 import study.me.please.ui.components.BasicAlertDialog
 import study.me.please.ui.components.BrandHeaderButton
 import study.me.please.ui.components.ButtonState
-import study.me.please.ui.components.ImageAction
 import study.me.please.ui.components.OptionsLayout
+import study.me.please.ui.components.OptionsLayoutAction
 import study.me.please.ui.components.QuestionCard
+import study.me.please.ui.components.checkedOptionsItems
 import study.me.please.ui.components.session.launcher.SessionLauncher
 import java.util.UUID
 
@@ -91,7 +90,7 @@ fun QuestionsList(
 
     val showSessionLauncher = remember(questions.value) { mutableStateOf(false) }
     val showDeleteDialog = remember(questions.value) { mutableStateOf(false) }
-    val selectedUidList = remember { mutableStateListOf<String>() }
+    val checkedUidList = remember { mutableStateListOf<String>() }
     val chipGroupState = rememberCustomChipGroupState(
         onCheckedChipsChanged = { chipUids ->
             viewModel.questionsFilter.update { previousFilter ->
@@ -179,13 +178,13 @@ fun QuestionsList(
                     )
                 )
             )
-            selectedUidList.clear()
+            checkedUidList.clear()
         }
         override fun deleteQuestions() {
             viewModel.requestQuestionsDeletion(
-                uidList = selectedUidList.toSet()
+                uidList = checkedUidList.toSet()
             )
-            selectedUidList.clear()
+            checkedUidList.clear()
         }
         override fun openQuestion(question: QuestionIO) {
             navController?.navigate(
@@ -202,15 +201,15 @@ fun QuestionsList(
         override fun copyItems() {
             coroutineScope.launch(Dispatchers.Default) {
                 viewModel.clipBoard.questions.copyItems(
-                    questions.value?.filter { selectedUidList.contains(it.uid) }.orEmpty()
+                    questions.value?.filter { checkedUidList.contains(it.uid) }.orEmpty()
                 )
-                selectedUidList.clear()
+                checkedUidList.clear()
             }
         }
     }
 
-    BackHandler(selectedUidList.size > 0) {
-        selectedUidList.clear()
+    BackHandler(checkedUidList.size > 0) {
+        checkedUidList.clear()
     }
 
     if(showDeleteDialog.value) {
@@ -218,7 +217,7 @@ fun QuestionsList(
             title = stringResource(id = R.string.question_delete_dialog_title),
             content = stringResource(
                 id = R.string.question_delete_dialog_description,
-                selectedUidList.size
+                checkedUidList.size
             ),
             icon = Icons.Outlined.Delete,
             confirmButtonState = ButtonState(
@@ -237,7 +236,7 @@ fun QuestionsList(
 
     if(showSessionLauncher.value) {
         SessionLauncher(
-            questionUidList = selectedUidList,
+            questionUidList = checkedUidList,
             onDismissRequest = {
                 showSessionLauncher.value = false
             }
@@ -282,7 +281,6 @@ fun QuestionsList(
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(horizontal = 8.dp)
                         .imePadding(),
                     state = questionsScrollState,
                     verticalArrangement = Arrangement.Top,
@@ -306,6 +304,7 @@ fun QuestionsList(
                             BrandHeaderButton(
                                 modifier = Modifier
                                     .zIndex(10f)
+                                    .padding(horizontal = 8.dp)
                                     .fillMaxWidth(),
                                 text = stringResource(id = R.string.collection_detail_add_question)
                             ) {
@@ -313,31 +312,45 @@ fun QuestionsList(
                             }
 
                             OptionsLayout(
-                                onCopyRequest = { controller.copyItems() },
-                                onPasteRequest = {
-                                    viewModel.pasteQuestionsClipBoard()
-                                    selectedUidList.clear()
-                                },
-                                onDeleteRequest = { showDeleteDialog.value = true },
-                                onSelectAll = {
-                                    selectedUidList.clear()
-                                    selectedUidList.addAll(questions.value?.map { it.uid }.orEmpty())
-                                },
-                                onDeselectAll = { selectedUidList.clear() },
-                                isEditMode = selectedUidList.size > 0,
-                                hasPasteOption = viewModel.clipBoard.questions.isEmpty.value.not(),
-                                animateTopDown = true,
-                                onClipBoardRemoval = { viewModel.clipBoard.questions.clear() }
-                            ) {
-                                AnimatedVisibility(visible = selectedUidList.size > 0) {
-                                    ImageAction(
-                                        leadingImageVector = Icons.Outlined.PlayArrow,
-                                        text = stringResource(id = R.string.button_start_session)
-                                    ) {
-                                        showSessionLauncher.value = true
+                                actions = mutableListOf<OptionsLayoutAction>().apply {
+                                    if (viewModel.clipBoard.questions.isEmpty.value.not()) {
+                                        add(OptionsLayoutAction.Paste)
                                     }
+                                    if(checkedUidList.size > 0) {
+                                        add(OptionsLayoutAction.Copy)
+                                        add(OptionsLayoutAction.Play())
+
+                                        addAll(checkedOptionsItems)
+                                    }
+                                },
+                                onClick = { action ->
+                                    when(action) {
+                                        is OptionsLayoutAction.SelectAll -> {
+                                            checkedUidList.clear()
+                                            checkedUidList.addAll(questions.value?.map { it.uid }.orEmpty())
+                                        }
+                                        is OptionsLayoutAction.DeselectAll -> {
+                                            checkedUidList.clear()
+                                        }
+                                        is OptionsLayoutAction.Delete -> {
+                                            showDeleteDialog.value = true
+                                        }
+                                        is OptionsLayoutAction.Copy -> {
+                                            controller.copyItems()
+                                        }
+                                        is OptionsLayoutAction.Paste -> {
+                                            viewModel.pasteQuestionsClipBoard()
+                                            checkedUidList.clear()
+                                        }
+                                        is OptionsLayoutAction.Play -> {
+                                            showSessionLauncher.value = true
+                                        }
+                                    }
+                                },
+                                onClearClick = {
+                                    viewModel.clipBoard.questions.clear()
                                 }
-                            }
+                            )
                         }
                     }
                     items(
@@ -346,15 +359,16 @@ fun QuestionsList(
                     ) { question ->
                         QuestionCard(
                             modifier = Modifier
+                                .padding(horizontal = 8.dp)
                                 .fillMaxWidth()
                                 .scalingClickable(
                                     onTap = {
                                         if (question != null) {
-                                            if (selectedUidList.size > 0) {
-                                                if (selectedUidList.contains(question.uid)) {
-                                                    selectedUidList.remove(question.uid)
+                                            if (checkedUidList.size > 0) {
+                                                if (checkedUidList.contains(question.uid)) {
+                                                    checkedUidList.remove(question.uid)
                                                 } else {
-                                                    selectedUidList.add(question.uid)
+                                                    checkedUidList.add(question.uid)
                                                 }
                                             } else {
                                                 controller.openQuestion(question)
@@ -362,8 +376,8 @@ fun QuestionsList(
                                         }
                                     },
                                     onLongPress = {
-                                        if (selectedUidList.size == 0) {
-                                            selectedUidList.add(question?.uid ?: "")
+                                        if (checkedUidList.size == 0) {
+                                            checkedUidList.add(question?.uid ?: "")
                                         }
                                     }
                                 )
@@ -374,8 +388,8 @@ fun QuestionsList(
                                     )
                                 ),
                             data = question,
-                            isChecked = if(selectedUidList.size > 0) {
-                                selectedUidList.contains(question?.uid)
+                            isChecked = if(checkedUidList.size > 0) {
+                                checkedUidList.contains(question?.uid)
                             }else null
                         )
                         Spacer(modifier = Modifier.height(LocalTheme.current.shapes.betweenItemsSpace))

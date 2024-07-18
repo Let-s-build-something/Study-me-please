@@ -161,7 +161,10 @@ class CollectionDetailViewModel @Inject constructor(
             }?.let { collection ->
                 requestCollectionSave(
                     collection,
-                    updateMap = mapOf("questions" to clipBoard.map { it.uid to it }.plus(collection.questions))
+                    updateMap = mapOf("questions" to hashMapOf<String, QuestionIO>().apply {
+                        putAll(clipBoard.map { it.uid to it })
+                        putAll(collection.questions)
+                    })
                 )
             }
             dataManager.collectionQuestions.update {
