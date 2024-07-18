@@ -98,7 +98,7 @@ class QuestionGenerator @Inject constructor() {
 
                 // Questions within units
                 if(units.size > MINIMUM_RELATED_DATA_TO_GENERATE) {
-                    UnitGeneratingGoal.values().forEach { goal ->
+                    UnitGeneratingGoal.entries.forEach { goal ->
                         generateSubjectQuestion(
                             unit = unit,
                             units = allUnits,
@@ -186,7 +186,7 @@ class QuestionGenerator @Inject constructor() {
                 }
             }
             if(facts.size > MINIMUM_RELATED_DATA_TO_GENERATE) {
-                FactGeneratingGoal.values().forEach { goal ->
+                FactGeneratingGoal.entries.forEach { goal ->
                     questions.addAll(
                         generateFactQuestion(
                             context = context,

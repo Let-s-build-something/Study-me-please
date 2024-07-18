@@ -1,11 +1,11 @@
 package study.me.please.ui.components.session.launcher
 
 import androidx.lifecycle.viewModelScope
+import com.squadris.squadris.compose.base.BaseViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import com.squadris.squadris.compose.base.BaseViewModel
 import study.me.please.data.io.session.SessionIO
 import javax.inject.Inject
 
@@ -70,6 +70,7 @@ class SessionLauncherViewModel @Inject constructor(
                             questionUidList?.let { questionUidList ->
                                 this.questionUidList.addAll(questionUidList)
                             }
+                            isPlayable = true
                             repository.saveSession(this)
                         }
                     }

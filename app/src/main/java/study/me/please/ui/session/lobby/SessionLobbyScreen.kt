@@ -13,7 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Delete
@@ -22,7 +22,6 @@ import androidx.compose.material.icons.outlined.Deselect
 import androidx.compose.material.icons.outlined.SelectAll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.rememberBottomSheetScaffoldState
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.rememberStandardBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -42,38 +41,30 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
+import com.squadris.squadris.compose.base.LocalNavController
 import com.squadris.squadris.compose.components.chips.DEFAULT_ANIMATION_LENGTH_SHORT
 import com.squadris.squadris.compose.theme.LocalTheme
+import com.squadris.squadris.compose.theme.SharedColors
 import com.squadris.squadris.ext.brandShimmerEffect
+import com.squadris.squadris.ext.scalingClickable
 import com.squadris.squadris.utils.OnLifecycleEvent
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import study.me.please.R
-import com.squadris.squadris.compose.base.LocalNavController
-import com.squadris.squadris.compose.theme.SharedColors
 import study.me.please.base.navigation.NavigationRoot
-import study.me.please.base.navigation.SessionLobbyBarActions
-import study.me.please.data.io.preferences.SessionPreferencePack
 import study.me.please.ui.components.BasicAlertDialog
 import study.me.please.ui.components.ButtonState
 import study.me.please.ui.components.ComponentHeaderButton
 import study.me.please.ui.components.ImageAction
-import study.me.please.ui.components.InteractiveCardMode
 import study.me.please.ui.components.ListOptionsBottomSheet
-import com.squadris.squadris.compose.components.SimpleModalBottomSheet
-import study.me.please.ui.components.preference_chooser.PreferenceChooser
-import study.me.please.ui.components.preference_chooser.PreferenceChooserController
 import study.me.please.ui.components.pull_refresh.PullRefreshScreen
-import study.me.please.ui.components.rememberInteractiveCardState
 import study.me.please.ui.components.session.SessionCard
 
 /** communication bridge for controlling session lobby screen */
 interface SessionLobbyListener {
     fun onCreateNewItem()
-    fun onCheckingStarted()
 }
-//TODO SessionLobbyListener needs to be redone into a controller and big refactor needed,
-//TODO with OptionsLayout and some animations
+
 /**
  * Session lobby screen for management of sessions
  */
@@ -89,31 +80,22 @@ fun SessionLobbyScreen(
     val navController = LocalNavController.current
 
     val sessions = viewModel.sessions.collectAsState()
-    val preferencePacks = viewModel.preferencePacks.collectAsState()
     val sessionsFlow = viewModel.sessions.collectAsState()
 
     val optionsSheetState = rememberBottomSheetScaffoldState(
         bottomSheetState = rememberStandardBottomSheetState(skipHiddenState = false)
     )
-    val preferencesSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    val showPreferenceModal = remember { mutableStateOf(false) }
-    val selectedSessionUids = remember { mutableStateListOf<String>() }
+    val checkedUidList = remember { mutableStateListOf<String>() }
+    val selectedUid = remember { mutableStateOf<String?>(null) }
     val showDeleteDialog = remember { mutableStateOf(false) }
     val newItem = remember(createNewItem) { mutableStateOf(createNewItem) }
-    val interactiveStates = sessions.value?.map {
-        rememberInteractiveCardState()
-    }
     var optionsSheetHeight by remember { mutableStateOf(0.dp) }
 
     val stopChecking = {
-        interactiveStates?.forEach {
-            it.isChecked.value = false
-            it.mode.value = InteractiveCardMode.DATA_DISPLAY
-        }
         coroutineScope.launch {
             optionsSheetState.bottomSheetState.hide()
         }
-        selectedSessionUids.clear()
+        checkedUidList.clear()
     }
     val listener = remember(viewModel) {
         object: SessionLobbyListener {
@@ -121,32 +103,16 @@ fun SessionLobbyScreen(
                 viewModel.addNewSession()
                 stopChecking()
             }
-            override fun onCheckingStarted() {
-                interactiveStates?.forEach {
-                    it.mode.value = InteractiveCardMode.CHECKING
-                }
-            }
         }
     }
 
-    LaunchedEffect(Unit) {
-        viewModel.requestPreferencePacks()
-    }
-    LaunchedEffect(key1 = selectedSessionUids.size) {
+    LaunchedEffect(key1 = checkedUidList.size) {
         coroutineScope.launch {
-            if(selectedSessionUids.size > 0) {
-                interactiveStates?.forEach {
-                    it.mode.value = InteractiveCardMode.CHECKING
-                }
+            if(checkedUidList.size > 0) {
                 optionsSheetState.bottomSheetState.expand()
                 localFocusManager.clearFocus()
             }else stopChecking()
         }
-    }
-    LaunchedEffect(showPreferenceModal.value) {
-        if(showPreferenceModal.value) {
-            preferencesSheetState.expand()
-        }else preferencesSheetState.hide()
     }
     OnLifecycleEvent { event ->
         if(event == Lifecycle.Event.ON_RESUME) {
@@ -163,50 +129,19 @@ fun SessionLobbyScreen(
         }
     }
 
-    if(showPreferenceModal.value) {
-        SimpleModalBottomSheet(
-            onDismissRequest = {
-                showPreferenceModal.value = false
-            },
-            sheetState = preferencesSheetState,
-        ) {
-            PreferenceChooser(
-                modifier = Modifier
-                    .padding(8.dp)
-                    .padding(bottom = 32.dp),
-                controller = object: PreferenceChooserController {
-                    override fun addPreferencePack(name: String): SessionPreferencePack {
-                        return viewModel.addNewPreferencePack(name = name)
-                    }
-                    override fun savePreference(preference: SessionPreferencePack) {
-                        viewModel.requestPreferencePackSave(preference)
-                    }
-                    override fun deletePreference(preferenceUid: String) {
-                        viewModel.requestPreferencePackDelete(preferenceUid)
-                    }
-                    override fun choosePreference(preference: SessionPreferencePack) {
-                    }
-                },
-                defaultPreferencePack = preferencePacks.value?.firstOrNull(),
-                mustHaveSelection = false,
-                preferencePacks = preferencePacks.value
-            )
-        }
-    }
-
     if(showDeleteDialog.value) {
         BasicAlertDialog(
             title = stringResource(id = R.string.collection_delete_dialog_title),
             content = stringResource(
                 id = R.string.collection_delete_dialog_description,
-                selectedSessionUids.size
+                checkedUidList.size
             ),
             icon = Icons.Outlined.Delete,
             confirmButtonState = ButtonState(
                 text = stringResource(id = R.string.button_confirm)
             ) {
                 coroutineScope.launch(Dispatchers.Default) {
-                    viewModel.requestSessionsDeletion(uids = selectedSessionUids.toSet())
+                    viewModel.requestSessionsDeletion(uids = checkedUidList.toSet())
                     stopChecking()
                 }
             },
@@ -219,15 +154,6 @@ fun SessionLobbyScreen(
 
     PullRefreshScreen(
         viewModel = viewModel,
-        actionIcons = {
-            SessionLobbyBarActions(
-                onChangePreferences = {
-                    if(preferencePacks.value.isNullOrEmpty().not()) {
-                        showPreferenceModal.value = true
-                    }
-                }
-            )
-        },
         title = stringResource(id = R.string.screen_session_lobby_title)
     ) {
         if(sessionsFlow.value != null) {
@@ -257,21 +183,14 @@ fun SessionLobbyScreen(
                         leadingImageVector = Icons.Outlined.SelectAll,
                         text = stringResource(id = R.string.button_select_all)
                     ) {
-                        interactiveStates?.forEach {
-                            it.isChecked.value = true
-                        }
+                        checkedUidList.addAll(sessions.value?.map { it.uid }.orEmpty())
                     }
                     ImageAction(
                         leadingImageVector = Icons.Outlined.Deselect,
                         text = stringResource(id = R.string.button_deselect)
                     ) {
-                        selectedSessionUids.clear()
+                        checkedUidList.clear()
                     }
-                    /*TODO mix sessisons
-                    ImageAction(
-                        leadingImageVector = Icons.Outlined.PlayArrow,
-                        text = stringResource(id = R.string.button_start_session)
-                    ) {}*/
                 },
                 state = optionsSheetState
             ) { modalPaddingValues ->
@@ -296,39 +215,59 @@ fun SessionLobbyScreen(
                                 listener.onCreateNewItem()
                             }
                         }
-                        itemsIndexed(
+                        items(
                             sessions.value.orEmpty(),
-                            key = { _, item -> item.uid }
-                        ) { index, session ->
-                            interactiveStates?.getOrNull(index)?.let { state ->
-                                LaunchedEffect(state.isChecked.value) {
-                                    if(state.isChecked.value) {
-                                        selectedSessionUids.add(session.uid)
-                                    }else selectedSessionUids.remove(session.uid)
-                                }
-                                SessionCard(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .animateItemPlacement(
-                                            tween(
-                                                durationMillis = DEFAULT_ANIMATION_LENGTH_SHORT,
-                                                easing = LinearOutSlowInEasing
-                                            )
-                                        ),
-                                    session = session,
-                                    onEditOptionPressed = {
-                                        navController?.navigate(
-                                            NavigationRoot.SessionDetail.createRoute(
-                                                NavigationRoot.SessionDetail.SessionDetailArgument(
-                                                    sessionUid = session.uid,
-                                                    toolbarTitle = session.name
-                                                )
+                            key = { item -> item.uid }
+                        ) { session ->
+                            SessionCard(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .animateItemPlacement(
+                                        tween(
+                                            durationMillis = DEFAULT_ANIMATION_LENGTH_SHORT,
+                                            easing = LinearOutSlowInEasing
+                                        )
+                                    )
+                                    .scalingClickable(
+                                        onTap = {
+                                            if (checkedUidList.size > 0) {
+                                                if (checkedUidList.contains(session.uid)) {
+                                                    checkedUidList.remove(session.uid)
+                                                } else checkedUidList.add(session.uid)
+                                            } else {
+                                                selectedUid.value = session.uid
+                                            }
+                                        },
+                                        onLongPress = {
+                                            if(checkedUidList.size == 0) {
+                                                checkedUidList.add(session.uid)
+                                            }
+                                        }
+                                    ),
+                                session = session,
+                                onEditOptionPressed = {
+                                    navController?.navigate(
+                                        NavigationRoot.SessionDetail.createRoute(
+                                            NavigationRoot.SessionDetail.SessionDetailArgument(
+                                                sessionUid = session.uid,
+                                                toolbarTitle = session.name
                                             )
                                         )
-                                    },
-                                    state = state
-                                )
-                            }
+                                    )
+                                },
+                                onCheckedChange = {
+                                    if(it && checkedUidList.contains(session.uid).not()) {
+                                        checkedUidList.add(session.uid)
+                                    }else {
+                                        checkedUidList.remove(session.uid)
+                                    }
+                                    selectedUid.value = null
+                                },
+                                isSelected = selectedUid.value == session.uid,
+                                isChecked = if(checkedUidList.size > 0) {
+                                    checkedUidList.contains(session.uid)
+                                } else null
+                            )
                         }
                     }
                 }

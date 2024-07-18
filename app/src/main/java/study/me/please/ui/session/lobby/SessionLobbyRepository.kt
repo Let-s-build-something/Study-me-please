@@ -3,16 +3,13 @@ package study.me.please.ui.session.lobby
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import study.me.please.data.io.session.SessionIO
-import study.me.please.data.room.PreferencesDao
 import study.me.please.data.room.SessionDao
-import study.me.please.ui.components.preference_chooser.PreferencePackRepository
 import javax.inject.Inject
 
 /** Proxy for calling network end points */
 class SessionLobbyRepository @Inject constructor(
-    private val sessionDao: SessionDao,
-    override val preferencesDao: PreferencesDao
-): PreferencePackRepository {
+    private val sessionDao: SessionDao
+) {
 
     /** returns all sessions and calculates the amount of questions in each */
     suspend fun getAllSessions(): List<SessionIO>? {

@@ -4,11 +4,8 @@ import android.annotation.SuppressLint
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -18,7 +15,6 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
@@ -42,20 +38,20 @@ import com.squadris.squadris.compose.theme.LocalTheme
 import com.squadris.squadris.ext.brandShimmerEffect
 import study.me.please.data.io.QuestionMode
 import study.me.please.data.io.session.SessionIO
-import study.me.please.ui.components.InteractiveCardMode
-import study.me.please.ui.components.InteractiveCardState
 import study.me.please.ui.components.OptionsModeLayout
 
 /**
  * Card displaying a session
  */
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun SessionCard(
     modifier: Modifier = Modifier,
     session: SessionIO?,
     verticalAlignment: Alignment.Vertical = Alignment.Top,
-    state: InteractiveCardState,
+    isChecked: Boolean? = null,
+    isSelected: Boolean = false,
+    enabled: Boolean = true,
+    onCheckedChange: (Boolean) -> Unit = {},
     onEditOptionPressed: () -> Unit = {},
     onPlayOptionPressed: () -> Unit = {}
 ) {
@@ -72,24 +68,7 @@ fun SessionCard(
             Card(
                 modifier = modifier
                     .wrapContentHeight()
-                    .clip(LocalTheme.current.shapes.componentShape)
-                    .combinedClickable(
-                        interactionSource = remember {
-                            MutableInteractionSource()
-                        },
-                        indication = rememberRipple(bounded = true),
-                        onClick = {
-                            if (state.mode.value == InteractiveCardMode.CHECKING) {
-                                state.isChecked.value = state.isChecked.value.not()
-                            } else if (state.mode.value == InteractiveCardMode.DATA_DISPLAY) {
-                                state.mode.value = InteractiveCardMode.OPTIONS
-                            }
-                        },
-                        onLongClick = {
-                            state.isChecked.value = true
-                        },
-                        enabled = state.isEnabled.value
-                    ),
+                    .clip(LocalTheme.current.shapes.componentShape),
                 elevation = LocalTheme.current.styles.cardClickableElevation,
                 shape = LocalTheme.current.shapes.componentShape,
                 colors = CardDefaults.cardColors(
@@ -98,7 +77,7 @@ fun SessionCard(
                 )
             ) {
                 AnimatedContent(
-                    targetState = state.mode.value == InteractiveCardMode.OPTIONS,
+                    targetState = isSelected,
                     label = ""
                 ) { isOptions ->
                     if(isOptions) {
@@ -107,7 +86,7 @@ fun SessionCard(
                             onEditOptionPressed = onEditOptionPressed,
                             onPlayOptionPressed = onPlayOptionPressed,
                             onCancelClick = {
-                                state.mode.value = InteractiveCardMode.DATA_DISPLAY
+                                onCheckedChange(false)
                             }
                         )
                     }else if(session != null) {
@@ -115,9 +94,11 @@ fun SessionCard(
                             modifier = Modifier.onGloballyPositioned { coordinates ->
                                 cardHeight = with(localDensity) { coordinates.size.height.toDp() }
                             },
+                            enabled = enabled,
                             session = session,
                             verticalAlignment = verticalAlignment,
-                            state = state
+                            isChecked = isChecked,
+                            onCheckedChange = onCheckedChange
                         )
                     }
                 }
@@ -131,7 +112,9 @@ private fun ContentLayout(
     modifier: Modifier = Modifier,
     session: SessionIO,
     verticalAlignment: Alignment.Vertical = Alignment.Top,
-    state: InteractiveCardState
+    isChecked: Boolean?,
+    enabled: Boolean = true,
+    onCheckedChange: (Boolean) -> Unit
 ) {
     Column(
         modifier = modifier
@@ -140,16 +123,12 @@ private fun ContentLayout(
             .padding(vertical = 8.dp, horizontal = 12.dp)
     ) {
         Row(verticalAlignment = verticalAlignment) {
-            AnimatedVisibility(
-                visible = state.mode.value == InteractiveCardMode.CHECKING
-            ) {
+            AnimatedVisibility(visible = isChecked != null) {
                 Checkbox(
                     modifier = Modifier.offset(x = -(12).dp),
-                    checked = state.isChecked.value,
-                    enabled = state.isEnabled.value,
-                    onCheckedChange = { isChecked ->
-                        state.isChecked.value = isChecked
-                    },
+                    checked = isChecked == true,
+                    enabled = enabled,
+                    onCheckedChange = onCheckedChange,
                     colors = LocalTheme.current.styles.checkBoxColorsDefault
                 )
             }
@@ -161,8 +140,8 @@ private fun ContentLayout(
                         shape = LocalTheme.current.shapes.circularActionShape
                     )
                     .padding(8.dp),
-                imageVector = (session.estimatedMode ?: QuestionMode.LEARNING).icon,
-                contentDescription = (session.estimatedMode ?: QuestionMode.LEARNING).icon.name,
+                imageVector = (session.preferencePack?.estimatedMode ?: QuestionMode.LEARNING).icon,
+                contentDescription = (session.preferencePack?.estimatedMode ?: QuestionMode.LEARNING).icon.name,
                 colorFilter = ColorFilter.tint(color = LocalTheme.current.colors.tetrial)
             )
             Text(
@@ -210,15 +189,5 @@ private fun ShimmerLayout(
 @Preview
 @Composable
 private fun Preview() {
-    SessionCard(
-        session = SessionIO(
-            name = "Session name",
-            collectionUidList = mutableSetOf("asfdasdasdasd", "123412emsoiqjdwqaed")
-        ).apply {
-            questionCount = 13
-        },
-        state = InteractiveCardState(mode = mutableStateOf(InteractiveCardMode.CHECKING))
-    ) {
-
-    }
+    SessionCard(session = SessionIO(name = "Session name"))
 }

@@ -6,11 +6,10 @@ import study.me.please.data.io.QuestionIO
 import study.me.please.data.io.preferences.SessionPreferencePack
 import study.me.please.data.io.session.SessionIO
 import study.me.please.data.state.session.QuestionModule
-import study.me.please.ui.components.preference_chooser.PreferencePackDataManager
 import javax.inject.Inject
 
 /** Data storage */
-class SessionDataManager @Inject constructor(): PreferencePackDataManager {
+class SessionDataManager @Inject constructor() {
 
     /** Received collection from database */
     val collections: MutableStateFlow<List<CollectionIO>?> = MutableStateFlow(null)
@@ -26,7 +25,4 @@ class SessionDataManager @Inject constructor(): PreferencePackDataManager {
 
     /** full list of questions for the session screen */
     val questions: MutableStateFlow<List<QuestionIO>?> = MutableStateFlow(null)
-
-    /** all existing preferences to choose from if in testing mode */
-    override val preferencePacks: MutableStateFlow<List<SessionPreferencePack>?> = MutableStateFlow(null)
 }

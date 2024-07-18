@@ -117,6 +117,7 @@
     <string name="session_launcher_new">New examination. Play time!</string>
     <string name="session_launcher_action_confirm">Add</string>
     <string name="session_detail_default_toolbar">New examination</string>
+    <string name="session_detail_mode_title">Mode selection</string>
     <string name="session_lobby_screen_empty_text">No knowledge growth…yet!:(</string>
     <string name="session_play_repeated_snackbar">Well done! You will learn this one better soon. We will make sure:)</string>
     <string name="session_play_see_more">See more</string>
@@ -128,6 +129,10 @@
         \nJust make notes and then generate questions from them.
     </string>
     <string name="collection_empty_error">There are no collections…yet! But you can start right now:).</string>
+    <string name="collection_remove_dialog_title">Items removal</string>
+    <string name="collection_remove_dialog_description">
+        Are you use you want to remove the selected (%1$d) items from this exam?
+    </string>
     <string name="collection_delete_dialog_title">Collection deletion</string>
     <string name="collection_delete_dialog_description">
         You\'ve spent time on this, are you sure you want permanently delete the selected (%1$d) collections?
@@ -155,11 +160,11 @@
 
     <string name="preference_chooser_preferences_show">Edit preference</string>
     <string name="preference_chooser_preferences_hide">Close preference</string>
-    <string name="preference_chooser_field_name_hint">Preference name</string>
     <string name="preference_chooser_preferences_header">Your preferences</string>
     <string name="preference_chooser_studying_header">Studying</string>
     <string name="preference_chooser_practicing_header">Practicing</string>
     <string name="preference_chooser_examination_header">Examination</string>
+    <string name="preference_chooser_advanced_options">For pros</string>
     <string name="preference_chooser_add_new">Create</string>
     <string name="preference_wait_for_correct_answer_desc">
         Validate all answers until correct answer chosen
@@ -238,7 +243,7 @@
     <string name="button_add_image">Add an image</string>
     <string name="button_add_prompt_image">Add an image</string>
     <string name="button_add_explanation_image">Add an image</string>
-    <string name="button_start_session">Start examination</string>
+    <string name="button_start_session">To exam</string>
     <string name="button_copy">Copy</string>
     <string name="button_paste">Paste</string>
     <string name="button_dismiss">Dismiss</string>

@@ -145,7 +145,7 @@ class AppDatabaseConverter @Inject constructor(private val gson: Gson) {
         return gson.fromJson(
             value,
             TypeToken.getParameterized(SessionPreferencePack::class.java).type
-        )
+        ) ?: SessionPreferencePack()
     }
 
     /** Converts [LargePathAsset] object to string */

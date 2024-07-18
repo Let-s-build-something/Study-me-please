@@ -10,7 +10,6 @@ import study.me.please.data.io.FactIO
 import study.me.please.data.io.LargePathAsset
 import study.me.please.data.io.QuestionAnswerIO
 import study.me.please.data.io.QuestionIO
-import study.me.please.data.io.preferences.SessionPreferencePack
 import study.me.please.data.io.session.SessionIO
 import study.me.please.data.io.subjects.CategoryIO
 import study.me.please.data.io.subjects.ParagraphIO
@@ -23,7 +22,6 @@ import study.me.please.data.state.session.QuestionModule
         QuestionIO::class,
         QuestionAnswerIO::class,
         LargePathAsset::class,
-        SessionPreferencePack::class,
         SessionIO::class,
         QuestionModule::class,
         FactIO::class,
@@ -31,7 +29,7 @@ import study.me.please.data.state.session.QuestionModule
         CategoryIO::class,
         ParagraphIO::class
     ],
-    version = 14,
+    version = 16,
     exportSchema = true
 )
 @TypeConverters(AppDatabaseConverter::class)
@@ -51,9 +49,6 @@ abstract class AppRoomDatabase: RoomDatabase() {
 
     /** An interface for interacting with local database for homepage */
     abstract fun homeDbDao(): HomeDao
-
-    /** An interface for interacting with local database for preferences */
-    abstract fun preferencesDbDao(): PreferencesDao
 
     /** An interface for interacting with local database for facts */
     abstract fun factDbDao(): FactDao
@@ -88,7 +83,6 @@ abstract class AppRoomDatabase: RoomDatabase() {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE $ROOM_SESSION_TABLE ADD COLUMN questionModuleUid TEXT")
                 db.execSQL("ALTER TABLE $ROOM_SESSION_TABLE ADD COLUMN lastSnapshotHash INTEGER")
-                db.execSQL("ALTER TABLE $ROOM_SESSION_PREFERENCE_PACK_TABLE ADD COLUMN selectedUidList TEXT NOT NULL DEFAULT ''")
 
                 db.execSQL("ALTER TABLE $ROOM_SESSION_TABLE DROP COLUMN q_module_sessionUid")
                 db.execSQL("ALTER TABLE $ROOM_SESSION_TABLE DROP COLUMN q_module_questionsStack")
@@ -196,6 +190,54 @@ abstract class AppRoomDatabase: RoomDatabase() {
             }
         }
 
+        val MIGRATION_14_15 = object : Migration(14, 15) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // Create a new table with the correct schema
+                db.execSQL("""
+            CREATE TABLE new_ROOM_SESSION_TABLE (
+                name TEXT NOT NULL,
+                uid TEXT NOT NULL PRIMARY KEY,
+                preferencePack TEXT,
+                lastSnapshotHash TEXT,
+                questionModuleUid TEXT,
+                last_played INTEGER NOT NULL,
+                collectionUidList TEXT NOT NULL,
+                questionUidList TEXT NOT NULL,
+                questionCount INTEGER NOT NULL,
+                date_created INTEGER NOT NULL DEFAULT 0
+            )
+        """.trimIndent())
+
+                // Copy the data from the old table to the new one
+                db.execSQL("""
+            INSERT INTO new_ROOM_SESSION_TABLE SELECT
+                name,
+                uid,
+                '',
+                lastSnapshotHash,
+                questionModuleUid,
+                last_played,
+                collectionUidList,
+                questionUidList,
+                questionCount,
+                last_played
+            FROM ROOM_SESSION_TABLE
+        """.trimIndent())
+
+                // Remove the old table
+                db.execSQL("DROP TABLE ROOM_SESSION_TABLE")
+
+                // Rename the new table to the old table's name
+                db.execSQL("ALTER TABLE new_ROOM_SESSION_TABLE RENAME TO ROOM_SESSION_TABLE")
+            }
+        }
+
+        val MIGRATION_15_16 = object : Migration(15, 16) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE $ROOM_SESSION_TABLE DROP COLUMN questionCount")
+            }
+        }
+
 
         /** Identification of the main database */
         const val ROOM_DATABASE_NAME = "ROOM_DATABASE_NAME"
@@ -229,8 +271,5 @@ abstract class AppRoomDatabase: RoomDatabase() {
 
         /** Identification of table for [SessionIO] */
         const val ROOM_SESSION_TABLE = "ROOM_SESSION_TABLE"
-
-        /** Identification of table for [SessionPreferencePack] */
-        const val ROOM_SESSION_PREFERENCE_PACK_TABLE = "ROOM_SESSION_PREFERENCE_PACK_TABLE"
     }
 }

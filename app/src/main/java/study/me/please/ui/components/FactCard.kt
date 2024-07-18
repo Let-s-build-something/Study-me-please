@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -152,9 +153,9 @@ private fun DataCard(
     val selectedFactType = remember(data.type) { mutableStateOf(data.type) }
     val switchTypeState = TabSwitchState(
         selectedTabIndex = remember(data.type.ordinal) { mutableIntStateOf(data.type.ordinal) },
-        tabs = arrayOfNulls<String?>(FactType.values().size).map { "" }.toMutableList(),
+        tabs = arrayOfNulls<String?>(FactType.entries.size).map { "" }.toMutableList(),
         onSelectionChange = { index ->
-            FactType.values().getOrNull(index)?.let { factType ->
+            FactType.entries.getOrNull(index)?.let { factType ->
                 data.type = factType
                 selectedFactType.value = factType
             }
@@ -237,10 +238,15 @@ private fun DataCard(
                     textAlign = TextAlign.Left
                 )
                 MultiChoiceSwitch(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .background(
+                            color = LocalTheme.current.colors.tetrial,
+                            shape = CircleShape
+                        )
+                        .fillMaxWidth(),
                     state = switchTypeState,
                     onItemCreation = { modifier, index, animatedColor ->
-                        FactType.values().getOrNull(index)?.getIconImageVector()?.let { imageVector ->
+                        FactType.entries.getOrNull(index)?.getIconImageVector()?.let { imageVector ->
                             MinimalisticIcon(
                                 modifier = modifier,
                                 indication = null,

@@ -54,7 +54,7 @@ fun AccountDashboardScreen(
                     .fillMaxWidth()
                     .fillMaxHeight(0.4f),
                 model = R.drawable.i1_sign_in,
-                contentDescription = stringResource(R.string.accessibility_sign_in_illustration)
+                contentDescription = stringResource(R.string.accessibility_sign_up_illustration)
             )
             Column(
                 modifier = Modifier

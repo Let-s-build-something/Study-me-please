@@ -27,6 +27,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
@@ -39,19 +40,25 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import com.squadris.squadris.compose.components.chips.DEFAULT_ANIMATION_LENGTH_LONG
 import com.squadris.squadris.compose.components.chips.DEFAULT_ANIMATION_LENGTH_SHORT
-import study.me.please.base.theme.Colors
 import com.squadris.squadris.compose.theme.LocalTheme
 import study.me.please.base.theme.AppTheme
+import study.me.please.base.theme.Colors
 
 @Composable
 fun MultiChoiceSwitch(
     modifier: Modifier = Modifier,
     state: TabSwitchState = rememberTabSwitchState(scrollState = rememberScrollState()),
-    onItemCreation: (@Composable (Modifier, index: Int, animatedColor: Color) -> Unit)? = null
+    onItemCreation: (@Composable (Modifier, index: Int, animatedColor: Color) -> Unit)? = null,
+    shape: Shape = CircleShape
 ) {
-    val indicatorWidth = remember { mutableStateOf((-1).dp) }
     val localDensity = LocalDensity.current
-    val offsetX = remember { Animatable(0f) }
+
+    val indicatorWidth = remember { mutableStateOf((-1).dp) }
+    val offsetX = remember {
+        Animatable(indicatorWidth.value.times(state.selectedTabIndex.value).value)
+    }
+
+
     LaunchedEffect(state.selectedTabIndex.value) {
         offsetX.animateTo(
             targetValue = indicatorWidth.value.times(state.selectedTabIndex.value).value,
@@ -62,17 +69,9 @@ fun MultiChoiceSwitch(
         state.onSelectionChange(state.selectedTabIndex.value)
     }
 
-    val shape = CircleShape
-
     val unselectedTextColor = LocalTheme.current.colors.brandMain
     val selectedTextColor = LocalTheme.current.colors.tetrial
-    ConstraintLayout(
-        modifier = modifier
-            .background(
-                color = LocalTheme.current.colors.tetrial,
-                shape = shape
-            )
-    ) {
+    ConstraintLayout(modifier = modifier) {
         val (tabs, indicator) = createRefs()
         Box(
             modifier = Modifier

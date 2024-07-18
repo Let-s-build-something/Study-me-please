@@ -2,8 +2,6 @@ package study.me.please.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
@@ -13,11 +11,9 @@ import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -29,6 +25,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.squadris.squadris.compose.theme.LocalTheme
+import com.squadris.squadris.ext.scalingClickable
 
 /**
  * Outlined text with transparent background
@@ -49,18 +46,18 @@ fun OutlinedButton(
     val color = if (isActivated && enabled) activeColor else inactiveColor
     Row(
         modifier = modifier
+            .scalingClickable(
+                enabled = enabled,
+                onTap = {
+                    onClick()
+                }
+            )
             .border(
                 width = if (enabled) 1.dp else 0.dp,
                 shape = LocalTheme.current.shapes.componentShape,
                 color = color
             )
             .clip(LocalTheme.current.shapes.componentShape)
-            .clickable(
-                enabled = enabled,
-                indication = rememberRipple(bounded = false),
-                interactionSource = remember { MutableInteractionSource() },
-                onClick = onClick
-            )
             .padding(horizontal = 12.dp, vertical = 6.dp)
             .then(thenModifier),
         verticalAlignment = Alignment.CenterVertically,

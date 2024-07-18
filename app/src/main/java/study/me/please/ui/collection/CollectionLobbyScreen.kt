@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.DeleteSweep
 import androidx.compose.material.icons.outlined.Deselect
@@ -179,25 +178,10 @@ fun CollectionLobbyScreen(
                         checkedUidList.clear()
                     }
                     ImageAction(
-                        leadingImageVector = Icons.Outlined.Add,
-                        text = stringResource(id = R.string.button_add_to)
-                    ) {
-                        showSessionLauncher.value = true
-                    }
-                    val toolbarText = stringResource(id = R.string.session_detail_default_toolbar)
-                    ImageAction(
                         leadingImageVector = Icons.Outlined.PlayArrow,
                         text = stringResource(id = R.string.button_start_session)
                     ) {
-                        navController?.navigate(
-                            NavigationRoot.SessionDetail.createRoute(
-                                NavigationRoot.SessionDetail.SessionDetailArgument(
-                                    toolbarTitle = toolbarText,
-                                    collectionUidList = checkedUidList
-                                )
-                            )
-                        )
-                        stopChecking()
+                        showSessionLauncher.value = true
                     }
                 },
                 state = bottomSheetState
@@ -242,7 +226,9 @@ fun CollectionLobbyScreen(
                                             }
                                         },
                                         onLongPress = {
-                                            checkedUidList.add(collection.uid)
+                                            if(checkedUidList.size == 0) {
+                                                checkedUidList.add(collection.uid)
+                                            }
                                         }
                                     )
                                     .animateItemPlacement(),

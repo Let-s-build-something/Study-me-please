@@ -28,7 +28,7 @@ fun SwitchText(
 ) {
     Row(
         modifier = modifier
-            .padding(start = 8.dp, bottom = 6.dp),
+            .padding(start = 4.dp, bottom = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.End,
     ) {

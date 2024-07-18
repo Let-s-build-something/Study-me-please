@@ -7,7 +7,6 @@ import com.squadris.squadris.compose.base.BaseViewModel
 import com.squadris.squadris.utils.DateUtils
 import com.squadris.squadris.utils.RefreshableViewModel.Companion.MINIMUM_REFRESH_DELAY
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,9 +19,6 @@ import study.me.please.data.io.QuestionIO
 import study.me.please.data.io.preferences.SessionPreferencePack
 import study.me.please.data.io.subjects.UnitIO
 import study.me.please.data.state.session.QuestionModule
-import study.me.please.ui.components.preference_chooser.PreferencePackDataManager
-import study.me.please.ui.components.preference_chooser.PreferencePackRepository
-import study.me.please.ui.components.preference_chooser.PreferencePackViewModel
 import study.me.please.ui.units.utils.QuestionGenerator
 import study.me.please.ui.units.utils.UnitsUseCase
 import study.me.please.ui.units.utils.convertToSha256
@@ -34,23 +30,13 @@ class SessionViewModel @Inject constructor(
     private val dataManager: SessionDataManager,
     private val questionGenerator: QuestionGenerator,
     private val unitsUseCase: UnitsUseCase
-): BaseViewModel(), PreferencePackViewModel {
+): BaseViewModel() {
 
     /** time in millisecond of the last refresh */
     private var lastRefreshTimeMillis: Long = 0
 
-    override val coroutineScope: CoroutineScope = viewModelScope
-
-    override val preferencePackDataManager: PreferencePackDataManager = dataManager
-
-    override val preferencePackRepository: PreferencePackRepository = repository
-
     /** response from generating questions */
     private val _questionsGeneratingResponse = MutableStateFlow<BaseResponse<List<QuestionIO>>?>(null)
-
-
-    /** all existing preferences to choose from if in testing mode */
-    override val preferencePacks = dataManager.preferencePacks.asStateFlow()
 
     /** Received collection from database */
     val collections = dataManager.collections.asStateFlow()
@@ -78,13 +64,11 @@ class SessionViewModel @Inject constructor(
      * Any generation leads to local save of the questions paired by the session uid
      *
      * @param context required for generating questions - retrieving resources
-     * @param selectedUidList mixture of both collection uids and unit uids
      * @param excludedList list of elements to exclude from the generation, with specific reason - [Pair.second]
      */
     private suspend fun prepareQuestions(
         context: Context,
         sessionPreference: SessionPreferencePack,
-        selectedUidList: List<String>,
         excludedList: List<Pair<String?, String?>>,
         historyQuestionUidList: List<String> = emptyList()
     ): List<QuestionIO> {
@@ -98,13 +82,13 @@ class SessionViewModel @Inject constructor(
 
             val units = mutableListOf<UnitIO>()
             val selectedCollections = dataManager.collections.value?.filter { collection ->
-                selectedUidList.isEmpty() || selectedUidList.contains(collection.uid)
+                sessionPreference.selectedUidList.isEmpty() || sessionPreference.selectedUidList.contains(collection.uid)
             }
 
             selectedCollections?.map { it.uid }?.forEach { uid ->
                 units.addAll(
                     unitsUseCase.getUnitsByCollection(uid).filter { unit ->
-                        selectedUidList.isEmpty() || selectedUidList.contains(unit.uid)
+                        sessionPreference.selectedUidList.isEmpty() || sessionPreference.selectedUidList.contains(unit.uid)
                     }
                 )
             }
@@ -115,11 +99,11 @@ class SessionViewModel @Inject constructor(
             Log.d("Session_Play", "previousSnapshotHash: ${dataManager.session.value?.lastSnapshotHash}," +
                     " newSnapshotHash: $snapshotHash, string: ${units.sortedBy { it.uid }.joinToString(",")}")
             val isSnapshotDifferent = snapshotHash != dataManager.session.value?.lastSnapshotHash
-            val isSelectionDifferent = sessionPreference.selectedUidList.size != selectedUidList.size
-                    || sessionPreference.selectedUidList.sorted() != selectedUidList.sorted()
+            /*val isSelectionDifferent = sessionPreference.selectedUidList.size != selectedUidList.size
+                    || sessionPreference.selectedUidList.sorted() != selectedUidList.sorted()*/
 
             // generate new questions either due to different selection or different hash
-            (if(isSelectionDifferent || isSnapshotDifferent) {
+            (if(/*isSelectionDifferent || */isSnapshotDifferent) {
                 val response = questionGenerator.generateQuestions(
                     context = context,
                     units = units,
@@ -145,14 +129,6 @@ class SessionViewModel @Inject constructor(
 
                     // save the new questions
                     repository.saveQuestions(response.data)
-                    requestSessionSave(
-                        // if selection changed, we need to save it as well
-                        preferencePack = if(isSelectionDifferent) {
-                            sessionPreference.copy(
-                                selectedUidList = selectedUidList
-                            )
-                        }else null
-                    )
                 }
                 _questionsGeneratingResponse.emit(response.copy(
                     responseCode = response.responseCode
@@ -171,8 +147,7 @@ class SessionViewModel @Inject constructor(
         collectionUid: String?,
         questionUid: String?,
         questionUids: List<String>?,
-        sessionUid: String?,
-        preferencePackUid: String?
+        sessionUid: String?
     ) {
         viewModelScope.launch {
             lastRefreshTimeMillis = DateUtils.now.timeInMillis
@@ -201,8 +176,6 @@ class SessionViewModel @Inject constructor(
 
                 dataManager.questionModule.value = repository.getQuestionModuleByUid(session.questionModuleUid)
                     ?: QuestionModule()
-                dataManager.preferencePack.value = repository.getPreferencePackByUid(session.preferencePackUid)
-                    ?: SessionPreferencePack()
                 repository.getCollectionsByUidList(session.collectionUidList.toList())?.forEach { collection ->
                     collections.add(collection)
                     repository.getQuestionsByUid(collection.questionUidList.toList())?.let { questionsOut ->
@@ -210,28 +183,20 @@ class SessionViewModel @Inject constructor(
                         Log.d("Session_Play", "static questions: ${questionsOut.size}")
                     }
                 }
-            }
-            repository.getPreferencePackByUid(preferencePackUid)?.let { preferencePack ->
-                dataManager.preferencePack.value = preferencePack
+                dataManager.preferencePack.value = session.preferencePack ?: SessionPreferencePack()
             }
             if(isTestingMode) {
-                repository.getPreferencePacks().let { preferencePacks ->
-                    dataManager.preferencePacks.value = preferencePacks.toMutableList()
-                }
                 if(dataManager.questionModule.value == null) {
                     dataManager.questionModule.value = QuestionModule()
                 }
             }
 
             // in case there is no preference pack, happens only while testing modules
-            dataManager.preferencePack.value = if(dataManager.session.value == null
-                && (dataManager.preferencePack.value == null
-                        || dataManager.preferencePacks.value?.isEmpty() == true)
+            if(dataManager.session.value == null
+                && dataManager.preferencePack.value == null
             ) {
-                SessionPreferencePack()
-            }else if(dataManager.preferencePacks.value?.isNotEmpty() == true) {
-                dataManager.preferencePacks.value?.firstOrNull() ?: SessionPreferencePack()
-            }else SessionPreferencePack()
+                dataManager.preferencePack.value = SessionPreferencePack()
+            }
 
 
             // finalizing the data and generation of questions if needed
@@ -250,7 +215,6 @@ class SessionViewModel @Inject constructor(
                             prepareQuestions(
                                 context = context,
                                 sessionPreference = preferencePack,
-                                selectedUidList = preferencePack.selectedUidList,
                                 historyQuestionUidList = historyQuestionUidList,
                                 excludedList = dataManager.questionModule.value?.history?.mapNotNull {
                                     if(it.isRepetition.not()) {
@@ -286,10 +250,14 @@ class SessionViewModel @Inject constructor(
         }
     }
 
+    /** Updates the preference pack */
+    fun updatePreferencePack(preferencePack: SessionPreferencePack) {
+        dataManager.preferencePack.value = preferencePack
+    }
+
     /** Requests a save of the current session */
     fun requestSessionSave(
-        questionModule: QuestionModule? = null,
-        preferencePack: SessionPreferencePack? = null
+        questionModule: QuestionModule? = null
     ) {
         dataManager.session.value?.let { currentSession ->
             viewModelScope.launch {
@@ -299,12 +267,6 @@ class SessionViewModel @Inject constructor(
                             this.questionModuleUid = newModule.uid
                         }
                         repository.saveQuestionModule(newModule)
-                    }
-                    preferencePack?.let { newPreference ->
-                        if(currentSession.preferencePackUid.isEmpty()) {
-                            this.preferencePackUid = newPreference.uid
-                        }
-                        repository.savePreferencePack(newPreference)
                     }
                 })
             }

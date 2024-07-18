@@ -1,15 +1,22 @@
 package study.me.please.ui.components
 
 import androidx.compose.animation.Crossfade
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowForwardIos
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.squadris.squadris.compose.theme.LocalTheme
@@ -30,19 +37,33 @@ fun HorizontalBlock(
     heading: String,
     emptyTitle: String = "",
     emptyText: String = "",
-    onActionClicked: (Boolean) -> Unit,
-    content: @Composable () -> Unit
+    onActionClicked: ((Boolean) -> Unit)? = null,
+    content: LazyListScope.() -> Unit
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
-        OutlinedButton(
-            modifier = Modifier
-                .padding(top = 16.dp, start = 8.dp, bottom = 4.dp),
-            text = heading,
-            activeColor = LocalTheme.current.colors.secondary,
-            onClick = {
-                onActionClicked(false)
+        Box(modifier = Modifier.padding(
+            top = 16.dp,
+            start = 8.dp,
+            bottom = 6.dp
+        )) {
+            if(onActionClicked != null) {
+                OutlinedButton(
+                    text = heading,
+                    activeColor = LocalTheme.current.colors.secondary,
+                    onClick = {
+                        onActionClicked(false)
+                    }
+                )
+            }else {
+                Text(
+                    text = heading,
+                    style = TextStyle(
+                        color = LocalTheme.current.colors.secondary,
+                        fontSize = 14.sp
+                    )
+                )
             }
-        )
+        }
         Crossfade(
             modifier = modifier.fillMaxWidth(),
             targetState = isEmpty,
@@ -53,11 +74,22 @@ fun HorizontalBlock(
                     emptyText = emptyTitle,
                     actionText = emptyText,
                     onActionClicked = {
-                        onActionClicked(true)
+                        onActionClicked?.invoke(true)
                     }
                 )
             }else {
-                content()
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(LocalTheme.current.shapes.betweenItemsSpace),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    item {
+                        Spacer(modifier = Modifier.width(6.dp))
+                    }
+                    content()
+                    item {
+                        Spacer(modifier = Modifier.width(6.dp))
+                    }
+                }
             }
         }
     }

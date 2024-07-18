@@ -63,6 +63,7 @@ import study.me.please.data.io.ImportSourceType
 import study.me.please.data.io.LargePathAsset
 import study.me.please.data.io.QuestionAnswerIO
 import study.me.please.data.io.QuestionIO
+import study.me.please.data.io.preferences.PreferenceOption
 import study.me.please.data.io.preferences.SessionPreferencePack
 import study.me.please.data.io.session.SessionItem
 import study.me.please.data.state.session.QuestionModule
@@ -121,7 +122,7 @@ fun PromptLayout(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 val nextItem = state.module.getStepAt(index.plus(1))
 
-                if(sessionPreferencePack.repeatOnMistake.value) {
+                if(sessionPreferencePack.preferences[PreferenceOption.RepeatOnMistake] == true) {
                     val actualItem = state.module.getStepAt(index)
                     val isRepetition = remember(actualItem?.isRepetition) { mutableStateOf(actualItem?.isRepetition) }
 
@@ -339,7 +340,7 @@ fun PromptLayout(
             ) { answer ->
                 val validation = (sessionItem.historyItem?.answers ?: sessionItem.validations).find { it.uid == answer.uid }
                 val showResult = validation != null
-                val isListQuestion = answer.textList.any { it.isNotBlank() }
+                val isListQuestion = answer.textList.count { it.isNotBlank() } > 1
 
                 OutlinedButton(
                     modifier = (if(showResult) {
@@ -354,7 +355,9 @@ fun PromptLayout(
                         .fillMaxWidth()
                         .animateContentSize(),
                     thenModifier = Modifier.padding(horizontal = 6.dp, vertical = 6.dp),
-                    text = if(isListQuestion) null else answer.text,
+                    text = if(isListQuestion.not()) {
+                        answer.textList.firstOrNull() ?: answer.text
+                    }else null,
                     content = { textStyle ->
                         if(isListQuestion) {
                             Column(
@@ -383,9 +386,10 @@ fun PromptLayout(
                     }else if(sessionItem.selectedAnswers.contains(answer)) Icons.Outlined.Check else null,
                     // we don't want to validate again, it's pointless
                     enabled = (screenMode == SessionScreenMode.REGULAR || validation != null)
-                            && sessionItem.isHistory.not(),
+                            && sessionItem.isHistory.not()
+                            && showResult.not(),
                     onClick = {
-                        if(sessionPreferencePack.manualValidation.value) {
+                        if(sessionPreferencePack.preferences[PreferenceOption.ManualValidation] == true) {
                             if(sessionItem.selectedAnswers.contains(answer)) {
                                 sessionItem.selectedAnswers.remove(answer)
                             }else sessionItem.selectedAnswers.add(answer)

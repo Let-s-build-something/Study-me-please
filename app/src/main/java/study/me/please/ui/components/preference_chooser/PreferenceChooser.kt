@@ -1,429 +1,177 @@
 package study.me.please.ui.components.preference_chooser
 
-import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.LinearOutSlowInEasing
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Add
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.KeyboardArrowDown
-import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.zIndex
-import androidx.constraintlayout.compose.ConstraintLayout
-import androidx.constraintlayout.compose.Dimension
-import com.squadris.squadris.compose.components.chips.DEFAULT_ANIMATION_LENGTH_LONG
-import com.squadris.squadris.compose.components.chips.DEFAULT_ANIMATION_LENGTH_SHORT
-import study.me.please.ui.components.EditFieldInput
+import com.squadris.squadris.compose.components.AutoResizeText
+import com.squadris.squadris.compose.components.FontSizeRange
 import com.squadris.squadris.compose.components.MinimalisticIcon
-import study.me.please.base.theme.Colors
 import com.squadris.squadris.compose.theme.LocalTheme
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.cancelChildren
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import com.squadris.squadris.ext.scalingClickable
 import study.me.please.R
-import com.squadris.squadris.compose.components.navigation.ActionBarIcon
-import com.squadris.squadris.compose.theme.SharedColors
 import study.me.please.data.io.QuestionMode
 import study.me.please.data.io.preferences.SessionPreferencePack
-import study.me.please.ui.collection.detail.REQUEST_DATA_SAVE_DELAY
-import study.me.please.ui.components.ImageAction
+import study.me.please.ui.components.ExpandableContent
 import study.me.please.ui.components.SwitchText
-import study.me.please.ui.components.TextHeader
+import study.me.please.ui.components.tab_switch.MultiChoiceSwitch
+import study.me.please.ui.components.tab_switch.rememberTabSwitchState
 
 /**
  * Component for choosing and editing [SessionPreferencePack]
  */
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun PreferenceChooser(
     modifier: Modifier = Modifier,
-    preferencePacks: List<SessionPreferencePack>?,
-    controller: PreferenceChooserController,
-    defaultPreferencePack: SessionPreferencePack? = null,
-    mustHaveSelection: Boolean = true,
-    expandedByDefault: Boolean = true,
+    preferencePack: SessionPreferencePack?,
+    onSaveRequest: (SessionPreferencePack) -> Unit
 ) {
-    val preferencesShown = remember {
-        mutableStateOf((mustHaveSelection || defaultPreferencePack != null) && expandedByDefault)
-    }
-    val selectedPreferencePack = remember(defaultPreferencePack) { mutableStateOf(defaultPreferencePack) }
-
-    val expandRotationState by animateFloatAsState(
-        targetValue = if(preferencesShown.value) 180f else 0f,
-        label = "",
-        animationSpec = tween(DEFAULT_ANIMATION_LENGTH_LONG)
-    )
-
-    val localFocusManager = LocalFocusManager.current
-    val coroutineScope = rememberCoroutineScope()
-    val inputScope = rememberCoroutineScope()
-
-    val isSwitchOneChecked = remember(
-        selectedPreferencePack.value,
-        defaultPreferencePack,
-        preferencePacks,
-        selectedPreferencePack
-    ) {
-        mutableStateOf(selectedPreferencePack.value?.waitForCorrectAnswer?.value)
-    }
-    val isSwitchTwoChecked = remember(
-        selectedPreferencePack.value,
-        defaultPreferencePack,
-        preferencePacks,
-        selectedPreferencePack
-    ) {
-        mutableStateOf(selectedPreferencePack.value?.manualValidation?.value)
-    }
-    val isSwitchThreeChecked = remember(
-        selectedPreferencePack.value,
-        defaultPreferencePack,
-        preferencePacks,
-        selectedPreferencePack
-    ) {
-        mutableStateOf(selectedPreferencePack.value?.repeatOnMistake?.value)
+    val isAdvancedExpanded = rememberSaveable {
+        mutableStateOf(false)
     }
 
-    if(preferencePacks == null) {
+    if(preferencePack == null) {
         ShimmerLayout()
     }else {
-        LaunchedEffect(
-            isSwitchOneChecked.value,
-            isSwitchTwoChecked.value,
-            isSwitchThreeChecked.value
-        ) {
-            selectedPreferencePack.value?.let { controller.savePreference(it) }
-        }
-        val randomName = stringArrayResource(id = R.array.random_name).random()
-        LaunchedEffect(selectedPreferencePack.value) {
-            selectedPreferencePack.value?.let { controller.choosePreference(it) }
-            localFocusManager.clearFocus()
-            if(expandedByDefault) {
-                preferencesShown.value = selectedPreferencePack.value != null
-            }
-            if(mustHaveSelection && selectedPreferencePack.value == null) {
-                selectedPreferencePack.value = preferencePacks.firstOrNull()
-            }
-        }
-        LaunchedEffect(preferencePacks) {
-            if(preferencePacks.isEmpty() && mustHaveSelection) {
-                selectedPreferencePack.value = controller.addPreferencePack(randomName)
-            }
-        }
-        ConstraintLayout(
-            modifier = modifier
-                .pointerInput(Unit) {
-                    detectTapGestures(onTap = {
-                        localFocusManager.clearFocus()
-                    })
+        val switchTypeState = rememberTabSwitchState(
+            selectedTabIndex = rememberSaveable {
+                mutableIntStateOf(preferencePack.estimatedMode.ordinal)
+            },
+            tabs = arrayOfNulls<String?>(QuestionMode.entries.size).map { "" }.toMutableList(),
+            onSelectionChange = { index ->
+                QuestionMode.entries.getOrNull(index)?.let { newMode ->
+                    onSaveRequest(preferencePack.update(newMode))
                 }
-                .fillMaxWidth()
-                .animateContentSize(
-                    animationSpec = tween(
-                        durationMillis = DEFAULT_ANIMATION_LENGTH_LONG,
-                        easing = LinearOutSlowInEasing
-                    )
-                )
-                .padding(top = 4.dp, bottom = 4.dp),
-        ) {
-            val (txtPreferencesHeader,
-                rowPreferences,
-                txtShowPreferences,
-                imgShowPreferences,
-                preferencesList
-            ) = createRefs()
-            TextHeader(
+            }
+        )
+
+        Column(modifier = modifier) {
+            MultiChoiceSwitch(
                 modifier = Modifier
-                    .constrainAs(txtPreferencesHeader) {
-                        top.linkTo(parent.top)
-                        start.linkTo(parent.start)
-                        width = Dimension.fillToConstraints
-                    },
-                text = stringResource(id = R.string.preference_chooser_preferences_header)
-            )
-            LazyRow(
-                modifier = Modifier
-                    .constrainAs(rowPreferences) {
-                        top.linkTo(txtPreferencesHeader.bottom, 6.dp)
-                        linkTo(parent.start, parent.end)
-                        width = Dimension.fillToConstraints
-                    }
-                    .clip(LocalTheme.current.shapes.componentShape)
-                    .background(
-                        color = LocalTheme.current.colors.brandMain,
-                        shape = LocalTheme.current.shapes.componentShape
-                    ),
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                contentPadding = PaddingValues(4.dp)
-            ) {
-                item {
-                    val randomPackName = stringArrayResource(id = R.array.random_name).random()
-                    ActionBarIcon(
-                        text = stringResource(id = R.string.preference_chooser_add_new),
-                        imageVector = Icons.Outlined.Add
-                    ) {
-                        selectedPreferencePack.value = controller.addPreferencePack(randomPackName)
-                    }
-                }
-                itemsIndexed(
-                    preferencePacks,
-                    key = { _, item -> item.uid }
-                ) { _, preferencePack ->
-                    val modeIcon = remember { mutableStateOf(preferencePack.estimatedMode.icon) }
-                    // whenever we change setting, the mode changes
-                    LaunchedEffect(
-                        isSwitchOneChecked.value,
-                        isSwitchTwoChecked.value,
-                        isSwitchThreeChecked.value
-                    ) {
-                        modeIcon.value = preferencePack.estimatedMode.icon
-                    }
-                    ActionBarIcon(
-                        modifier = (if(selectedPreferencePack.value?.uid == preferencePack.uid) {
-                            Modifier
-                                .border(
-                                    width = 1.dp,
-                                    color = LocalTheme.current.colors.tetrial,
-                                    shape =  LocalTheme.current.shapes.rectangularActionShape
-                                )
-                        } else Modifier)
-                            .animateItemPlacement(
-                                tween(
-                                    durationMillis = DEFAULT_ANIMATION_LENGTH_SHORT,
-                                    easing = LinearOutSlowInEasing
-                                )
-                            ),
-                        text = preferencePack.name,
-                        imageVector = modeIcon.value
-                    ) {
-                        selectedPreferencePack.value = if(mustHaveSelection.not()
-                            && selectedPreferencePack.value?.uid == preferencePack.uid
-                        ) null else preferencePack
-                    }
-                }
-            }
-            if(selectedPreferencePack.value != null) {
-                Text(
-                    modifier = Modifier
-                        .constrainAs(txtShowPreferences) {
-                            linkTo(imgShowPreferences.top, imgShowPreferences.bottom)
-                            linkTo(parent.start, parent.end)
-                            width = Dimension.fillToConstraints
-                        }
-                        .zIndex(1f)
-                        .clip(LocalTheme.current.shapes.componentShape)
-                        .clickable(
-                            indication = rememberRipple(),
-                            interactionSource = remember { MutableInteractionSource() }
+                    .padding(bottom = 8.dp)
+                    .fillMaxWidth(),
+                state = switchTypeState,
+                shape = LocalTheme.current.shapes.componentShape,
+                onItemCreation = { modifier, index, animatedColor ->
+                    QuestionMode.entries.getOrNull(index)?.let { mode ->
+                        Column(
+                            modifier = modifier
+                                .padding(vertical = 8.dp)
+                                .scalingClickable(
+                                    onTap = {
+                                        switchTypeState.selectedTabIndex.value = index
+                                    },
+                                ),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
                         ) {
-                            preferencesShown.value = preferencesShown.value.not()
-                        }
-                        .padding(
-                            horizontal = 8.dp,
-                            vertical = 6.dp
-                        ),
-                    text = stringResource(
-                        id = if(preferencesShown.value) {
-                            R.string.preference_chooser_preferences_hide
-                        }else R.string.preference_chooser_preferences_show
-                    ),
-                    color = LocalTheme.current.colors.secondary,
-                    fontSize = 14.sp
-                )
-                Icon(
-                    modifier = Modifier
-                        .size(32.dp)
-                        .constrainAs(imgShowPreferences) {
-                            top.linkTo(rowPreferences.bottom, 6.dp)
-                            end.linkTo(txtShowPreferences.end, 8.dp)
-                        }
-                        .padding(4.dp)
-                        .rotate(expandRotationState),
-                    imageVector = Icons.Outlined.KeyboardArrowDown,
-                    tint = LocalTheme.current.colors.secondary,
-                    contentDescription = null
-                )
-                if(preferencesShown.value) {
-                    Column(
-                        modifier = Modifier
-                            .constrainAs(preferencesList) {
-                                top.linkTo(imgShowPreferences.bottom, 6.dp)
-                                linkTo(parent.start, parent.end)
-                                width = Dimension.fillToConstraints
-                            },
-                        verticalArrangement = Arrangement.Top
-                    ) {
-                        selectedPreferencePack.value?.let { preferencePack ->
-                            TextHeader(
-                                text = stringResource(id = R.string.preference_chooser_field_name_hint)
+                            Icon(
+                                modifier = Modifier.size(32.dp),
+                                imageVector = mode.icon,
+                                contentDescription = null,
+                                tint = animatedColor
                             )
-                            Row(
+                            AutoResizeText(
                                 modifier = Modifier
-                                    .fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                EditFieldInput(
-                                    modifier = Modifier
-                                        .fillMaxWidth(0.6f)
-                                        .padding(bottom = 6.dp),
-                                    value = preferencePack.name,
-                                    hint = stringResource(id = R.string.preference_chooser_field_name_hint),
-                                    minLines = 1,
-                                    maxLines = 1,
-                                    maxLength = 15,
-                                    clearable = true
-                                ) { output ->
-                                    preferencePack.name = output
-                                    inputScope.coroutineContext.cancelChildren()
-                                    inputScope.launch {
-                                        delay(REQUEST_DATA_SAVE_DELAY)
-                                        selectedPreferencePack.value?.let { controller.savePreference(it) }
-                                    }
+                                    .wrapContentHeight()
+                                    .padding(top = 2.dp),
+                                text = when(mode) {
+                                    QuestionMode.LEARNING -> stringResource(R.string.preference_chooser_studying_header)
+                                    QuestionMode.PRACTICING -> stringResource(R.string.preference_chooser_practicing_header)
+                                    QuestionMode.TEST -> stringResource(R.string.preference_chooser_examination_header)
+                                },
+                                color = animatedColor,
+                                fontWeight = FontWeight.Medium,
+                                textAlign = TextAlign.Center,
+                                maxLines = 1,
+                                fontSizeRange = FontSizeRange(
+                                    min = 9.5.sp,
+                                    max = 14.sp
+                                )
+                            )
+                        }
+                    }
+                }
+            )
+
+            ExpandableContent(
+                modifier = Modifier
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null
+                    ) {
+                        isAdvancedExpanded.value = !isAdvancedExpanded.value
+                    }
+                    .background(color = LocalTheme.current.colors.onBackgroundComponent)
+                    .padding(8.dp),
+                text = AnnotatedString(stringResource(R.string.preference_chooser_advanced_options)),
+                isExpanded = isAdvancedExpanded.value
+            ) {
+                Column(
+                    modifier = Modifier
+                        .clickable { }
+                        .padding(start = 16.dp, top = 8.dp, bottom = 8.dp)
+                ) {
+                    QuestionMode.entries.forEach { mode ->
+                        Column {
+                            mode.preferenceOptions.forEach { option ->
+                                val isChecked = remember(option) {
+                                    mutableStateOf(
+                                        preferencePack.preferences[option] == true
+                                    )
                                 }
-                                ImageAction(
-                                    leadingImageVector = Icons.Outlined.Delete,
-                                    containerColor = SharedColors.RED_ERROR
+
+                                LaunchedEffect(
+                                    preferencePack.preferences[option],
+                                    preferencePack
                                 ) {
-                                    coroutineScope.launch(Dispatchers.Default) {
-                                        val oldIndex = preferencePacks.indexOfFirst { it.uid == selectedPreferencePack.value?.uid }
-                                        selectedPreferencePack.value?.let { controller.deletePreference(it.uid) }
-                                        selectedPreferencePack.value = (preferencePacks.getOrNull(oldIndex -1)
-                                            ?: preferencePacks.getOrNull(oldIndex + 1) ?: preferencePacks.firstOrNull())?.also {
-                                            controller.choosePreference(it)
+                                    isChecked.value = preferencePack.preferences[option] == true
+                                }
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    MinimalisticIcon(
+                                        modifier = Modifier.wrapContentWidth(),
+                                        imageVector = mode.icon
+                                    )
+                                    SwitchText(
+                                        text = stringResource(option.stringRes),
+                                        isChecked = isChecked.value,
+                                        onCheckChanged = { value ->
+                                            isChecked.value = value
+                                            onSaveRequest(preferencePack.apply {
+                                                this.preferences[option] = value
+                                            })
                                         }
-                                    }
+                                    )
                                 }
                             }
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.Bottom
-                            ) {
-                                MinimalisticIcon(
-                                    modifier = Modifier.wrapContentWidth(),
-                                    imageVector = QuestionMode.LEARNING.icon,
-                                    onClick = {
-                                        preferencePack.clearPreferences()
-                                        preferencePack.waitForCorrectAnswer.value = true
-                                        isSwitchOneChecked.value = true
-                                        isSwitchThreeChecked.value = false
-                                        isSwitchTwoChecked.value = false
-                                    }
-                                )
-                                TextHeader(
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .fillMaxWidth(),
-                                    text = stringResource(id = R.string.preference_chooser_studying_header)
-                                )
-                            }
-                            SwitchText(
-                                text = stringResource(id = R.string.preference_wait_for_correct_answer_desc),
-                                isChecked = isSwitchOneChecked.value == true,
-                                onCheckChanged = { isChecked ->
-                                    preferencePack.waitForCorrectAnswer.value = isChecked
-                                    isSwitchOneChecked.value = isChecked
-                                }
-                            )
-
-
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.Bottom
-                            ) {
-                                MinimalisticIcon(
-                                    modifier = Modifier.wrapContentWidth(),
-                                    imageVector = QuestionMode.PRACTICING.icon,
-                                    onClick = {
-                                        preferencePack.clearPreferences()
-                                        preferencePack.repeatOnMistake.value = true
-                                        isSwitchThreeChecked.value = true
-                                        isSwitchOneChecked.value = false
-                                        isSwitchTwoChecked.value = false
-                                    }
-                                )
-                                TextHeader(
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .fillMaxWidth(),
-                                    text = stringResource(id = R.string.preference_chooser_practicing_header)
-                                )
-                            }
-                            SwitchText(
-                                text = stringResource(id = R.string.preference_repeat_on_mistake_desc),
-                                isChecked = isSwitchThreeChecked.value == true,
-                                onCheckChanged = { isChecked ->
-                                    preferencePack.repeatOnMistake.value = isChecked
-                                    isSwitchThreeChecked.value = isChecked
-                                }
-                            )
-
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.Bottom
-                            ) {
-                                MinimalisticIcon(
-                                    modifier = Modifier.wrapContentWidth(),
-                                    imageVector = QuestionMode.TEST.icon,
-                                    onClick = {
-                                        preferencePack.clearPreferences()
-                                        preferencePack.manualValidation.value = true
-                                        isSwitchTwoChecked.value = true
-                                        isSwitchOneChecked.value = false
-                                        isSwitchThreeChecked.value = false
-                                    }
-                                )
-                                TextHeader(
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .fillMaxWidth(),
-                                    text = stringResource(id = R.string.preference_chooser_examination_header)
-                                )
-                            }
-                            SwitchText(
-                                text = stringResource(id = R.string.preference_validate_manually_desc),
-                                isChecked = isSwitchTwoChecked.value == true,
-                                onCheckChanged = { isChecked ->
-                                    preferencePack.manualValidation.value = isChecked
-                                    isSwitchTwoChecked.value = isChecked
-                                }
-                            )
                         }
                     }
                 }
@@ -448,17 +196,7 @@ private fun Preview() {
                 color = LocalTheme.current.colors.onBackgroundComponent,
                 shape = RoundedCornerShape(8.dp)
             ),
-        preferencePacks = mutableListOf(),
-        controller = object: PreferenceChooserController {
-            override fun addPreferencePack(name: String): SessionPreferencePack {
-                return SessionPreferencePack()
-            }
-            override fun savePreference(preference: SessionPreferencePack) {
-            }
-            override fun deletePreference(preferenceUid: String) {
-            }
-            override fun choosePreference(preference: SessionPreferencePack) {
-            }
-        }
+        preferencePack = SessionPreferencePack(),
+        onSaveRequest = {}
     )
 }

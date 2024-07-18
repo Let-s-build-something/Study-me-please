@@ -51,7 +51,7 @@ fun ExpandableContent(
     arrowModifier: Modifier = Modifier,
     shape: Shape = RectangleShape,
     collapsedContent: (@Composable () -> Unit)? = null,
-    content: @Composable ColumnScope.() -> Unit
+    expandedContent: @Composable ColumnScope.() -> Unit
 ) {
     val arrowDegreeRotation = remember {
         Animatable(if(isExpanded) 270f else 90f)
@@ -79,7 +79,7 @@ fun ExpandableContent(
             text = text
         )
         if(isExpanded) {
-            content()
+            expandedContent()
         }
     }
 }
