@@ -22,12 +22,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.PlayArrow
-import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -203,7 +203,7 @@ fun OptionsModeLayout(
                     )
                 )
                 .clickable(
-                    indication = rememberRipple(bounded = true),
+                    indication = ripple(bounded = true),
                     interactionSource = remember { MutableInteractionSource() }
                 ) {
                     onCancelClick()
@@ -227,7 +227,7 @@ fun OptionsModeLayout(
                     color = LocalTheme.current.colors.tetrial.copy(alpha = 0.4f)
                 )
                 .clickable(
-                    indication = rememberRipple(bounded = true),
+                    indication = ripple(bounded = true),
                     interactionSource = remember { MutableInteractionSource() }
                 ) {
                     onEditOptionPressed()
@@ -255,7 +255,7 @@ fun OptionsModeLayout(
                     )
                 )
                 .clickable(
-                    indication = rememberRipple(bounded = true),
+                    indication = ripple(bounded = true),
                     interactionSource = remember { MutableInteractionSource() }
                 ) {
                     onPlayOptionPressed()

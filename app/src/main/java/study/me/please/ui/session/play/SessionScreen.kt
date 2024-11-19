@@ -276,7 +276,7 @@ fun SessionScreen(
                                     }
                                     HorizontalPager(
                                         state = pagerState,
-                                        beyondBoundsPageCount = 1
+                                        beyondViewportPageCount = 1
                                     ) { index ->
                                         sessionState.module.getStepAt(index)?.let { item ->
                                             PromptLayout(

@@ -12,8 +12,8 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Dashboard
-import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Icon
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -29,7 +29,6 @@ import coil.compose.AsyncImage
 import com.squadris.squadris.compose.components.AutoResizeText
 import com.squadris.squadris.compose.components.FontSizeRange
 import com.squadris.squadris.compose.theme.LocalTheme
-import com.squadris.squadris.ext.scalingClickable
 
 @Composable
 fun ActionBarIcon(
@@ -46,7 +45,7 @@ fun ActionBarIcon(
             .widthIn(min = 24.dp, max = 100.dp)
             .clip(LocalTheme.current.shapes.rectangularActionShape)
             .clickable(
-                indication = rememberRipple(
+                indication = ripple(
                     bounded = true,
                     color = LocalTheme.current.colors.contrastActionLight
                 ),

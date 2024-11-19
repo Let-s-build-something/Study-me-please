@@ -23,11 +23,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.DeleteSweep
-import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
@@ -257,7 +257,7 @@ fun CollectionDrawer(
                             .fillMaxWidth()
                             .combinedClickable(
                                 interactionSource = remember { MutableInteractionSource() },
-                                indication = rememberRipple(),
+                                indication = ripple(),
                                 onClick = {
                                     // checking mode vs regular click
                                     if (checkedUnits.size > 0) {
@@ -283,7 +283,7 @@ fun CollectionDrawer(
                                 } else expandedUnits.add(unit.uid)
                             },
                             interactionSource = remember { MutableInteractionSource() },
-                            indication = rememberRipple()
+                            indication = ripple()
                         ),
                         text = AnnotatedString(
                             unit.name.ifEmpty {
@@ -327,7 +327,7 @@ private fun DashboardChildParagraph(
                             openParagraph(uidPath.apply { add(nestedParagraph.uid) })
                         },
                         interactionSource = remember { MutableInteractionSource() },
-                        indication = rememberRipple()
+                        indication = ripple()
                     )
                     .padding(8.dp),
                 text = nestedParagraph.name,
@@ -347,14 +347,14 @@ private fun DashboardChildParagraph(
                             openParagraph(uidPath.apply { add(nestedParagraph.uid) })
                         },
                         interactionSource = remember(nestedParagraph.uid) { MutableInteractionSource() },
-                        indication = rememberRipple()
+                        indication = ripple()
                     ),
                 arrowModifier = Modifier.clickable(
                     onClick = {
                         isExpanded.value = !isExpanded.value
                     },
                     interactionSource = remember(nestedParagraph.uid) { MutableInteractionSource() },
-                    indication = rememberRipple()
+                    indication = ripple()
                 ),
                 text = AnnotatedString(
                     nestedParagraph.name.ifEmpty { stringResource(R.string.subject_add_paragraph) }

@@ -30,10 +30,21 @@
 
 # Gson specific classes
 -keep class sun.misc.Unsafe { *; }
-#-keep class com.google.gson.stream.** { *; }
 
 # Application classes that will be serialized/deserialized over Gson
 -keep class com.google.gson.examples.android.model.** { *; }
+-keep class com.google.common.collect.stream.** { *; }
+# Keep AutoValue Memoized classes
+-keep class com.google.auto.value.extension.memoized.** { *; }
+-dontwarn com.google.auto.value.extension.memoized.**
+# Keep Guava Streams classes
+-keep class com.google.common.collect.Streams { *; }
+-dontwarn com.google.common.collect.**
+# Keep KotlinPoet JavaPoet Interop classes
+-keep class com.squareup.kotlinpoet.javapoet.** { *; }
+-dontwarn com.squareup.kotlinpoet.javapoet.**
+
+
 
 -keep class study.me.please.data.** { *; }
 -keep class study.me.please.ui.units.** { *; }
@@ -52,6 +63,21 @@
 -keepclassmembers,allowobfuscation class * {
   @com.google.gson.annotations.SerializedName <fields>;
 }
+-keep @com.google.auto.service.AutoService class * { *; }
+-keepnames class com.google.auto.service.**
+-dontwarn com.google.auto.service.**
+
+# Keep javax.lang.model classes
+-keep class javax.lang.model.** { *; }
+-dontwarn javax.lang.model.**
+
+# Keep javax.tools for diagnostics and processing
+-keep class javax.tools.** { *; }
+-dontwarn javax.tools.**
+
+# Keep Annotation Processing utilities
+-keep class javax.annotation.processing.** { *; }
+-dontwarn javax.annotation.processing.**
 
 -keep class * extends androidx.room.RoomDatabase
 -keep @androidx.room.Entity class *

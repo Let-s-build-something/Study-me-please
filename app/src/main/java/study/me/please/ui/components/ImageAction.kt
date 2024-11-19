@@ -9,12 +9,12 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowForwardIos
 import androidx.compose.material.icons.outlined.Dashboard
-import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ButtonDefaults.elevatedButtonElevation
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -82,7 +82,7 @@ fun ImageAction(
                     .clip(CircleShape)
                     .then(if(onTrailingIconClick != null) {
                         Modifier.clickable(
-                            indication = rememberRipple(bounded = false),
+                            indication = ripple(bounded = false),
                             interactionSource = remember { MutableInteractionSource() },
                             onClick = onTrailingIconClick
                         )

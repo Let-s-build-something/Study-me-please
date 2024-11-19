@@ -8,11 +8,11 @@ plugins {
 
 android {
     namespace = "com.squadris.squadris"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         minSdk = 24
-        testOptions.targetSdk = 34
+        testOptions.targetSdk = 35
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {

@@ -32,10 +32,10 @@ import androidx.compose.material.icons.outlined.Inventory2
 import androidx.compose.material.icons.outlined.KeyboardArrowDown
 import androidx.compose.material.icons.outlined.KeyboardArrowUp
 import androidx.compose.material.icons.outlined.PlayArrow
-import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
@@ -311,7 +311,7 @@ private fun ContentLayout(
                             .size(42.dp)
                             .clip(LocalTheme.current.shapes.chipShape)
                             .clickable(
-                                indication = rememberRipple(
+                                indication = ripple(
                                     bounded = true,
                                     color = LocalTheme.current.colors.contrastActionLight
                                 ),
@@ -387,7 +387,7 @@ private fun ContentLayout(
                                     modifier = Modifier
                                         .size(with(density) { 38.sp.toDp() })
                                         .clickable(
-                                            indication = rememberRipple(
+                                            indication = ripple(
                                                 bounded = true,
                                                 color = Color.White
                                             ),
@@ -424,7 +424,7 @@ private fun ContentLayout(
                                     modifier = Modifier
                                         .size(with(density) { 38.sp.toDp() })
                                         .clickable(
-                                            indication = rememberRipple(
+                                            indication = ripple(
                                                 bounded = true,
                                                 color = Color.White
                                             ),
@@ -475,7 +475,7 @@ private fun ContentLayout(
                     })
                 },
             state = pagerState,
-            beyondBoundsPageCount = 1
+            beyondViewportPageCount = 1
         ) { index ->
             units.value?.getOrNull(index)?.let { unit ->
                 UnitContent(

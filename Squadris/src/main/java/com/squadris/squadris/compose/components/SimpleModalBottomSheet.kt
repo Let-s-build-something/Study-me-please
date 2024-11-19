@@ -2,8 +2,8 @@ package com.squadris.squadris.compose.components
 
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SheetState
@@ -28,7 +28,7 @@ fun SimpleModalBottomSheet(
     modifier: Modifier = Modifier,
     onDismissRequest: () -> Unit = {},
     sheetState: SheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-    windowInsets: WindowInsets = WindowInsets.systemBars,
+    contentWindowInsets: @Composable () -> WindowInsets = { BottomSheetDefaults.windowInsets },
     content: @Composable ColumnScope.() -> Unit = {}
 ) {
     // hotfix, native onDismissRequest doesn't work when collapsing by drag
@@ -51,6 +51,6 @@ fun SimpleModalBottomSheet(
         ),
         tonalElevation = LocalTheme.current.styles.actionElevation,
         dragHandle = {  },
-        windowInsets = windowInsets
+        contentWindowInsets = contentWindowInsets
     )
 }

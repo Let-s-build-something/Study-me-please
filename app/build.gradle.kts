@@ -15,7 +15,7 @@ ksp {
 
 android {
     namespace = "study.me.please"
-    compileSdk = 34
+    compileSdk = 35
 
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.6"
@@ -49,7 +49,7 @@ android {
     defaultConfig {
         applicationId = "study.me.please"
         minSdk = 26
-        targetSdk = 34
+        targetSdk = 35
         versionCode = 5
         versionName = "0.2.0"
         multiDexEnabled = true
@@ -72,7 +72,7 @@ android {
             applicationIdSuffix = ".test"
         }
         release {
-        /*Enables code shrinking, obfuscation, and optimization for only
+            /*Enables code shrinking, obfuscation, and optimization for only
             your project"s release build type.*/
             isMinifyEnabled = true
 

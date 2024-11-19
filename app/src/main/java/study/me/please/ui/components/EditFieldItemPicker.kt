@@ -21,10 +21,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
-import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -182,7 +182,7 @@ fun EditFieldItemPicker(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clickable(
-                                    indication = rememberRipple(bounded = true),
+                                    indication = ripple(bounded = true),
                                     interactionSource = remember { MutableInteractionSource() }
                                 ) {
                                     inputValue = AnnotatedString(name)
@@ -218,7 +218,7 @@ private fun AddMoreRow(onClick: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .clickable(
-                indication = rememberRipple(),
+                indication = ripple(),
                 interactionSource = remember { MutableInteractionSource() },
                 onClick = {
                     onClick()
