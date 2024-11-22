@@ -413,6 +413,14 @@ class QuestionGenerator @Inject constructor() {
                 if(generatingGoal == FactGeneratingGoal.SHORT_INFORMATION) {
                     // [Pair.first] - item, [Pair.second] - fact short key information
                     val relatedItems = relatedFacts
+                        .take(10)
+                        .filter { filteredItem ->
+                            promptFact.data.textList.none { prompt ->
+                                filteredItem.data.textList.any { filtered ->
+                                    filtered.equals(prompt, true)
+                                }
+                            }
+                        }
                         .take((MINIMUM_RELATED_ITEMS_TO_GENERATE_LIST..MAXIMUM_RELATED_ITEMS_TO_GENERATE_LIST).random())
 
                     QuestionIO(
@@ -425,10 +433,11 @@ class QuestionGenerator @Inject constructor() {
                                             it.equals(filteredItem, true)
                                         }
                                     }
-                                    .random()
-                                    .ifBlank {
+                                    .takeIf { it.isNotEmpty() }
+                                    ?.random()
+                                    ?.ifBlank {
                                         mappingItem.data.longInformation
-                                    },
+                                    } ?: mappingItem.data.longInformation,
                                 explanationMessage = mappingItem.data.shortKeyInformation,
                                 isCorrect = false,
                                 importedSource = mappingItem.makeImportedSourceRoute(null)
