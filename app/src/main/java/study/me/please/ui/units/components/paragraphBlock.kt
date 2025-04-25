@@ -160,7 +160,7 @@ fun LazyGridScope.paragraphBlock(
                     )
 
                     DropTargetContainer(
-                        modifier = Modifier.animateItemPlacement(),
+                        modifier = Modifier.animateItem(),
                         type = ElementType.PARAGRAPH,
                         enterModifier = Modifier.drawSegmentedBorder(
                             borderOrder = if (paragraph.paragraphs.isNotEmpty()) {
@@ -357,206 +357,203 @@ fun LazyGridScope.paragraphBlock(
                         }else element.data.uid
                     }
                 }
+                val fact = element.data
 
-                element.data.let { fact ->
-                    Column(
-                        modifier = Modifier
-                            .padding(
-                                start = if (isLandscape) {
-                                    if (element.innerIndex % 2 == 0) paddingStart.div(2) else 0.dp
-                                } else paddingStart,
-                                end = if (isLandscape && element.innerIndex % 2 != 0) paddingStart.div(
-                                    2
-                                ) else 0.dp
-                            )
-                            .offset(
-                                x = if (isLandscape) paddingStart.div(2) else 0.dp
-                            )
-                            .then(
-                                if (isLandscape.not() || element.innerIndex % 2 == 0) {
-                                    Modifier.drawSegmentedBorder(
-                                        borderOrder = if (element.isLastParagraph) {
-                                            BorderOrder.None
-                                        } else BorderOrder.Center,
-                                        screenWidthDp = screenWidthDp,
-                                        notLastLayers = element.notLastLayers,
-                                        parentLayer = element.layer
-                                    )
-                                } else Modifier
-                            )
+                Column(
+                    modifier = Modifier
+                        .padding(
+                            start = if (isLandscape) {
+                                if (element.innerIndex % 2 == 0) paddingStart.div(2) else 0.dp
+                            } else paddingStart,
+                            end = if (isLandscape && element.innerIndex % 2 != 0) paddingStart.div(
+                                2
+                            ) else 0.dp
+                        )
+                        .offset(
+                            x = if (isLandscape) paddingStart.div(2) else 0.dp
+                        )
+                        .then(
+                            if (isLandscape.not() || element.innerIndex % 2 == 0) {
+                                Modifier.drawSegmentedBorder(
+                                    borderOrder = if (element.isLastParagraph) {
+                                        BorderOrder.None
+                                    } else BorderOrder.Center,
+                                    screenWidthDp = screenWidthDp,
+                                    notLastLayers = element.notLastLayers,
+                                    parentLayer = element.layer
+                                )
+                            } else Modifier
+                        )
+                ) {
+                    var cardHeight by remember { mutableStateOf(0.dp) }
+
+                    Box(
+                        modifier = Modifier.padding(
+                            start = 8.dp,
+                            bottom = if(element.isLast) 8.dp else 0.dp
+                        )
                     ) {
-                        var cardHeight by remember { mutableStateOf(0.dp) }
-
                         Box(
-                            modifier = Modifier.padding(
-                                start = 8.dp,
-                                bottom = if(element.isLast) 8.dp else 0.dp
-                            )
-                        ) {
-                            if(selectedFact.value != fact.uid) {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(cardHeight * 0.7f)
-                                        .dragTarget(
-                                            isEnabled = isReadOnly.not() && element.isNested.not(),
-                                            type = ElementType.FACT,
-                                            identifier = fact.uid,
-                                            onDropped = {
-                                                bridge?.onItemDropped(
-                                                    targetElement = element,
-                                                    index = index,
-                                                    nestUnder = true
-                                                )
-                                            },
-                                            dragAndDropTarget = dragAndDropTarget,
-                                            onCanceled = {
-                                                bridge?.invalidate()
-                                            }
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(cardHeight * 0.7f)
+                                .dragTarget(
+                                    isEnabled = isReadOnly.not() && element.isNested.not(),
+                                    type = ElementType.FACT,
+                                    identifier = element.data.uid,
+                                    onDropped = {
+                                        bridge?.onItemDropped(
+                                            targetElement = element,
+                                            index = index,
+                                            nestUnder = true
                                         )
+                                    },
+                                    dragAndDropTarget = dragAndDropTarget,
+                                    onCanceled = {
+                                        bridge?.invalidate()
+                                    }
                                 )
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .align(Alignment.BottomCenter)
-                                        .height(cardHeight * 0.3f)
-                                        .dragTarget(
-                                            isEnabled = isReadOnly.not(),
-                                            type = ElementType.FACT,
-                                            identifier = "${fact.uid}_bottom",
-                                            onDropped = {
-                                                bridge?.onItemDropped(
-                                                    targetElement = element,
-                                                    index = index,
-                                                    nestUnder = (element.isNested && element.isLast.not())
-                                                            || fact.facts.isNotEmpty()
-                                                )
-                                            },
-                                            dragAndDropTarget = dragAndDropTarget,
-                                            onCanceled = {
-                                                bridge?.invalidate()
-                                            }
+                        )
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .align(Alignment.BottomCenter)
+                                .height(cardHeight * 0.3f)
+                                .dragTarget(
+                                    isEnabled = isReadOnly.not(),
+                                    type = ElementType.FACT,
+                                    identifier = "${fact.uid}_bottom",
+                                    onDropped = {
+                                        bridge?.onItemDropped(
+                                            targetElement = element,
+                                            index = index,
+                                            nestUnder = (element.isNested && element.isLast.not())
+                                                    || fact.facts.isNotEmpty()
                                         )
+                                    },
+                                    dragAndDropTarget = dragAndDropTarget,
+                                    onCanceled = {
+                                        bridge?.invalidate()
+                                    }
                                 )
-                            }
-                            FactCard(
-                                modifier = Modifier
-                                    .animateItemPlacement()
-                                    .fillMaxWidth()
-                                    .onGloballyPositioned { coordinates ->
-                                        cardHeight = with(density) { coordinates.size.height.toDp() }
-                                    }
-                                    .then(
-                                        if (isReadOnly.not() && selectedFact.value != fact.uid) {
-                                            Modifier.dragSource(
-                                                onClick = {
-                                                    refocus()
-                                                    if (selectedFact.value != fact.uid) {
-                                                        selectedFact.value = fact.uid
-                                                    }
-                                                },
-                                                elementType = if (element.data.facts.isEmpty()) {
-                                                    ElementType.FACT
-                                                }else ElementType.FACT_MOTHER,
-                                                uid = fact.uid,
-                                                onStarted = {
-                                                    viewModel.localStateElement.value = element to index
-                                                    viewModel.removeElement(
-                                                        element,
-                                                        onSelectionRequest = {
-                                                            activatedParent.value = it
-                                                        }
-                                                    )
-                                                }
-                                            )
-                                        } else Modifier
-                                    )
-                                    .fillMaxWidth()
-                                    // background for indication of nested Facts
-                                    .then(
-                                        when {
-                                            element.data.facts.size > 0 -> {
-                                                Modifier.background(
-                                                    color = LocalTheme.current.colors.onBackgroundComponent,
-                                                    shape = RoundedCornerShape(
-                                                        topStart = LocalTheme.current.shapes.componentCornerRadius,
-                                                        topEnd = LocalTheme.current.shapes.componentCornerRadius
-                                                    )
-                                                )
-                                            }
-                                            element.isNested -> {
-                                                Modifier.background(
-                                                    color = LocalTheme.current.colors.onBackgroundComponent,
-                                                    shape = if(element.isLast) {
-                                                        RoundedCornerShape(
-                                                            bottomStart = LocalTheme.current.shapes.componentCornerRadius,
-                                                            bottomEnd = LocalTheme.current.shapes.componentCornerRadius
-                                                        )
-                                                    }else RectangleShape
-                                                )
-                                            }
-                                            else -> Modifier.padding(bottom = 8.dp)
-                                        }
-                                    )
-                                    // if this is a nested Fact, it should be offset from the parent one
-                                    .padding(start = if(element.isNested) screenWidthDp.dp * 2 / 30 else 0.dp)
-                                    // indication of this Fact being focused as a last parent
-                                    .then(
-                                        if(fact.facts.isNotEmpty()) {
-                                            Modifier.border(
-                                                width = if (activatedParent.value == fact.uid) {
-                                                    0.75.dp
-                                                } else 0.1.dp,
-                                                color = if (activatedParent.value == fact.uid) {
-                                                    LocalTheme.current.colors.brandMain
-                                                } else LocalTheme.current.colors.secondary,
-                                                shape = LocalTheme.current.shapes.componentShape
-                                            )
-                                        }else Modifier
-                                    )
-                                    // drag and drop target for nesting a Fact
-                                    .then(
-                                        if (dragAndDropTarget.value == fact.uid) {
-                                            Modifier.border(
-                                                width = 2.dp,
-                                                color = LocalTheme.current.colors.brandMain,
-                                                shape = LocalTheme.current.shapes.componentShape
-                                            )
-                                        } else Modifier
-                                    ),
-                                data = fact,
-                                showBackground = fact.isEmpty || fact.facts.isNotEmpty(),
-                                isReadOnly = isReadOnly,
-                                requestDataSave = { newFact ->
-                                    refocus()
-                                    saveScope.coroutineContext.cancelChildren()
-                                    saveScope.launch {
-                                        delay(REQUEST_DATA_SAVE_DELAY * 2)
-                                        bridge?.updateFact(newFact)
-                                    }
-                                },
-                                highlight = filter?.value?.textFilter,
-                                onClick = {
-                                    refocus()
-                                    selectedFact.value = if(selectedFact.value == fact.uid) null else fact.uid
-                                },
-                                mode = when {
-                                    selectedFact.value == fact.uid -> InteractiveCardMode.EDIT
-                                    else -> InteractiveCardMode.DATA_DISPLAY
+                        )
+                        FactCard(
+                            modifier = Modifier
+                                .animateItem()
+                                .fillMaxWidth()
+                                .onGloballyPositioned { coordinates ->
+                                    cardHeight = with(density) { coordinates.size.height.toDp() }
                                 }
-                            )
-                        }
-                        // indication of dropping an element behind this Fact
-                        AnimatedVisibility(visible = dragAndDropTarget.value == "${fact.uid}_bottom") {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(64.dp)
-                                    .background(
-                                        color = LocalTheme.current.colors.brandMain,
-                                    )
-                            )
-                        }
+                                .then(
+                                    if (isReadOnly.not() && selectedFact.value != fact.uid) {
+                                        Modifier.dragSource(
+                                            onClick = {
+                                                refocus()
+                                                if (selectedFact.value != fact.uid) {
+                                                    selectedFact.value = fact.uid
+                                                }
+                                            },
+                                            elementType = if (element.data.facts.isEmpty()) {
+                                                ElementType.FACT
+                                            }else ElementType.FACT_MOTHER,
+                                            uid = fact.uid,
+                                            onStarted = {
+                                                viewModel.localStateElement.value = element to index
+                                                viewModel.removeElement(
+                                                    element,
+                                                    onSelectionRequest = {
+                                                        activatedParent.value = it
+                                                    }
+                                                )
+                                            }
+                                        )
+                                    } else Modifier
+                                )
+                                .fillMaxWidth()
+                                // background for indication of nested Facts
+                                .then(
+                                    when {
+                                        element.data.facts.size > 0 -> {
+                                            Modifier.background(
+                                                color = LocalTheme.current.colors.onBackgroundComponent,
+                                                shape = RoundedCornerShape(
+                                                    topStart = LocalTheme.current.shapes.componentCornerRadius,
+                                                    topEnd = LocalTheme.current.shapes.componentCornerRadius
+                                                )
+                                            )
+                                        }
+                                        element.isNested -> {
+                                            Modifier.background(
+                                                color = LocalTheme.current.colors.onBackgroundComponent,
+                                                shape = if(element.isLast) {
+                                                    RoundedCornerShape(
+                                                        bottomStart = LocalTheme.current.shapes.componentCornerRadius,
+                                                        bottomEnd = LocalTheme.current.shapes.componentCornerRadius
+                                                    )
+                                                }else RectangleShape
+                                            )
+                                        }
+                                        else -> Modifier.padding(bottom = 8.dp)
+                                    }
+                                )
+                                // if this is a nested Fact, it should be offset from the parent one
+                                .padding(start = if(element.isNested) screenWidthDp.dp * 2 / 30 else 0.dp)
+                                // indication of this Fact being focused as a last parent
+                                .then(
+                                    if(fact.facts.isNotEmpty()) {
+                                        Modifier.border(
+                                            width = if (activatedParent.value == fact.uid) {
+                                                0.75.dp
+                                            } else 0.1.dp,
+                                            color = if (activatedParent.value == fact.uid) {
+                                                LocalTheme.current.colors.brandMain
+                                            } else LocalTheme.current.colors.secondary,
+                                            shape = LocalTheme.current.shapes.componentShape
+                                        )
+                                    }else Modifier
+                                )
+                                // drag and drop target for nesting a Fact
+                                .then(
+                                    if (dragAndDropTarget.value == fact.uid) {
+                                        Modifier.border(
+                                            width = 2.dp,
+                                            color = LocalTheme.current.colors.brandMain,
+                                            shape = LocalTheme.current.shapes.componentShape
+                                        )
+                                    } else Modifier
+                                ),
+                            data = fact,
+                            showBackground = fact.isEmpty || fact.facts.isNotEmpty(),
+                            isReadOnly = isReadOnly,
+                            requestDataSave = { newFact ->
+                                refocus()
+                                saveScope.coroutineContext.cancelChildren()
+                                saveScope.launch {
+                                    delay(REQUEST_DATA_SAVE_DELAY * 2)
+                                    bridge?.updateFact(newFact)
+                                }
+                            },
+                            highlight = filter?.value?.textFilter,
+                            onClick = {
+                                refocus()
+                                selectedFact.value = if(selectedFact.value == fact.uid) null else fact.uid
+                            },
+                            mode = when {
+                                selectedFact.value == fact.uid -> InteractiveCardMode.EDIT
+                                else -> InteractiveCardMode.DATA_DISPLAY
+                            }
+                        )
+                    }
+                    // indication of dropping an element behind this Fact
+                    AnimatedVisibility(visible = dragAndDropTarget.value == "${fact.uid}_bottom") {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(64.dp)
+                                .background(
+                                    color = LocalTheme.current.colors.brandMain,
+                                )
+                        )
                     }
                 }
             }

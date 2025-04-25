@@ -15,8 +15,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
@@ -34,6 +36,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.squadris.squadris.compose.theme.LocalTheme
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -67,7 +70,7 @@ fun DropTargetContainer(
     content: @Composable ColumnScope.() -> Unit = {}
 ) {
     val cancelableScope = rememberCoroutineScope()
-    if(type == ElementType.PARAGRAPH && collapsedParagraphs.contains(identifier)) {
+    /*if(type == ElementType.PARAGRAPH && collapsedParagraphs.contains(identifier)) {
         LaunchedEffect(dragAndDropTarget.value == identifier) {
             cancelableScope.coroutineContext.cancelChildren()
 
@@ -77,12 +80,12 @@ fun DropTargetContainer(
                 cancelableScope.launch {
                     delay(1000)
                     if(collapsedParagraphs.contains(identifier)) {
-                        //TODO collapsedParagraphs.remove(identifier)
+                        collapsedParagraphs.remove(identifier)
                     }
                 }
             }
         }
-    }
+    }*/
 
     val dragDropModifier = if(isEnabled) {
         modifier.dragAndDropTarget(
@@ -91,36 +94,40 @@ fun DropTargetContainer(
                     .mimeTypes()
                     .contains(type.name)
             },
-            target = object : DragAndDropTarget {
-                override fun onDrop(event: DragAndDropEvent): Boolean {
-                    val isValid = event.mimeTypes().contains(type.name)
-                    if(isValid) {
-                        onDropped()
-                        dragAndDropTarget.value = ""
+            target = remember(identifier) {
+                object : DragAndDropTarget {
+                    override fun onDrop(event: DragAndDropEvent): Boolean {
+                        val isValid = event.mimeTypes().contains(type.name)
+                        if(isValid) {
+                            onDropped()
+                            dragAndDropTarget.value = ""
+                        }
+                        return isValid
                     }
-                    return isValid
-                }
 
-                override fun onEnded(event: DragAndDropEvent) {
-                    super.onEnded(event)
-                    onStarted(false)
+                    override fun onEnded(event: DragAndDropEvent) {
+                        super.onEnded(event)
+                        onStarted(false)
 
-                    if(event.toAndroidDragEvent().result.not()) {
-                        onCanceled()
+                        if(event.toAndroidDragEvent().result.not()) {
+                            onCanceled()
+                        }
                     }
-                }
-                override fun onEntered(event: DragAndDropEvent) {
-                    super.onEntered(event)
-                    dragAndDropTarget.value = identifier
-                }
-                override fun onStarted(event: DragAndDropEvent) {
-                    super.onStarted(event)
-                    onStarted(true)
-                }
-                override fun onExited(event: DragAndDropEvent) {
-                    super.onExited(event)
-                    if(dragAndDropTarget.value == identifier) {
-                        dragAndDropTarget.value = ""
+                    override fun onEntered(event: DragAndDropEvent) {
+                        super.onEntered(event)
+                        cancelableScope.launch(Dispatchers.Main) {
+                            dragAndDropTarget.value = identifier
+                        }
+                    }
+                    override fun onStarted(event: DragAndDropEvent) {
+                        super.onStarted(event)
+                        onStarted(true)
+                    }
+                    override fun onExited(event: DragAndDropEvent) {
+                        super.onExited(event)
+                        if(dragAndDropTarget.value == identifier) {
+                            dragAndDropTarget.value = ""
+                        }
                     }
                 }
             }
@@ -161,49 +168,51 @@ fun Modifier.dragTarget(
     onCanceled: () -> Unit,
     identifier: String,
     onStarted: (isStarted: Boolean) -> Unit = {}
-): Modifier {
-    return if(isEnabled) {
+): Modifier = composed {
+    this.then(if(isEnabled) {
         this.dragAndDropTarget(
             shouldStartDragAndDrop = { startEvent ->
                 startEvent
                     .mimeTypes()
                     .contains(type.name)
             },
-            target = object : DragAndDropTarget {
-                override fun onDrop(event: DragAndDropEvent): Boolean {
-                    val isValid = event.mimeTypes().contains(type.name)
-                    if(isValid) {
-                        onDropped()
-                        dragAndDropTarget.value = ""
+            target = remember(identifier) {
+                object : DragAndDropTarget {
+                    override fun onDrop(event: DragAndDropEvent): Boolean {
+                        val isValid = event.mimeTypes().contains(type.name)
+                        if(isValid) {
+                            onDropped()
+                            dragAndDropTarget.value = ""
+                        }
+                        return isValid
                     }
-                    return isValid
-                }
 
-                override fun onEnded(event: DragAndDropEvent) {
-                    super.onEnded(event)
-                    onStarted(false)
+                    override fun onEnded(event: DragAndDropEvent) {
+                        super.onEnded(event)
+                        onStarted(false)
 
-                    if(event.toAndroidDragEvent().result.not()) {
-                        onCanceled()
+                        if(event.toAndroidDragEvent().result.not()) {
+                            onCanceled()
+                        }
                     }
-                }
-                override fun onEntered(event: DragAndDropEvent) {
-                    super.onEntered(event)
-                    dragAndDropTarget.value = identifier
-                }
-                override fun onStarted(event: DragAndDropEvent) {
-                    super.onStarted(event)
-                    onStarted(true)
-                }
-                override fun onExited(event: DragAndDropEvent) {
-                    super.onExited(event)
-                    if(dragAndDropTarget.value == identifier) {
-                        dragAndDropTarget.value = ""
+                    override fun onEntered(event: DragAndDropEvent) {
+                        super.onEntered(event)
+                        dragAndDropTarget.value = identifier
+                    }
+                    override fun onStarted(event: DragAndDropEvent) {
+                        super.onStarted(event)
+                        onStarted(true)
+                    }
+                    override fun onExited(event: DragAndDropEvent) {
+                        super.onExited(event)
+                        if(dragAndDropTarget.value == identifier) {
+                            dragAndDropTarget.value = ""
+                        }
                     }
                 }
             }
         )
-    }else this
+    }else Modifier)
 }
 
 /** Source for dragging element to some action/place */
