@@ -254,6 +254,7 @@
     <string name="button_preferences">Preferences</string>
     <string name="button_repeat">Repeat this question</string>
     <string name="button_skip_to_front">Skip to front</string>
+    <string name="button_skip">Skip</string>
     <string name="button_delete">Delete</string>
     <string name="button_archive">Archive</string>
     <string name="button_select_all">Select all</string>

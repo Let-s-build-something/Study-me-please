@@ -74,9 +74,9 @@ import study.me.please.ui.components.ComponentHeaderButton
 import study.me.please.ui.components.EditableImageAsset
 import study.me.please.ui.components.OutlinedButton
 import study.me.please.ui.units.detail.ParagraphLayoutContainer
+import androidx.core.net.toUri
 
 /** Screen for the Session play prompt */
-@OptIn(ExperimentalFoundationApi::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun PromptLayout(
@@ -149,10 +149,12 @@ fun PromptLayout(
 
                 Spacer(modifier = Modifier.width(16.dp))
 
+                // current item is locked, yet next one isn't
+                val finished = (nextItem?.isHistory == false && nextItem.mode.value != SessionScreenMode.LOCKED)
+                        && (sessionItem.isHistory || sessionItem.mode.value == SessionScreenMode.LOCKED)
+
                 AnimatedVisibility(
-                    // current item is locked, yet next one isn't
-                    visible = (nextItem?.isHistory == false && nextItem.mode.value != SessionScreenMode.LOCKED)
-                            && (sessionItem.isHistory || sessionItem.mode.value == SessionScreenMode.LOCKED),
+                    visible = finished,
                     enter = slideInHorizontally (initialOffsetX = { it }),
                     exit = slideOutHorizontally (targetOffsetX = { -it.times(4) }),
                 ) {
@@ -172,6 +174,41 @@ fun PromptLayout(
                                 imageVector = icon.first,
                                 contentDescription = icon.second
                             )
+                        }
+                    }
+                }
+
+                AnimatedVisibility(sessionItem.isRepetition && !finished) {
+                    FloatingActionButton(
+                        modifier = Modifier.padding(bottom = 8.dp),
+                        containerColor = LocalTheme.current.colors.tetrial,
+                        contentColor = LocalTheme.current.colors.brandMain,
+                        onClick = {
+                            coroutineScope.launch {
+                                state.skipQuestion(sessionItem)
+                            }
+                            stepForward()
+                        }
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = stringResource(R.string.button_skip),
+                                style = LocalTheme.current.styles.category.copy(
+                                    color = LocalTheme.current.colors.brandMain
+                                )
+                            )
+                            NavIconType.BACK.imageVector?.let { icon ->
+                                Icon(
+                                    modifier = Modifier
+                                        .size(32.dp)
+                                        .rotate(180f),
+                                    imageVector = icon.first,
+                                    contentDescription = icon.second
+                                )
+                            }
                         }
                     }
                 }
@@ -200,7 +237,7 @@ fun PromptLayout(
                         item {
                             BulletPoint(
                                 modifier = Modifier
-                                    .animateItemPlacement()
+                                    .animateItem()
                                     .fillMaxWidth()
                                     .wrapContentHeight()
                                     .padding(
@@ -246,7 +283,7 @@ fun PromptLayout(
                         onLinkClick = { uri ->
                             if(isFinished.value) {
                                 navController?.handleDeepLink(
-                                    Intent(Intent.ACTION_VIEW, Uri.parse(uri))
+                                    Intent(Intent.ACTION_VIEW, uri.toUri())
                                 )
                             }
                         }

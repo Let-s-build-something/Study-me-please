@@ -51,9 +51,25 @@ data class SessionScreenState(
 
     private var timeOfStart: Calendar? = null
 
+    suspend fun skipQuestion(item: SessionItem) {
+        module.onQuestionAnswered(
+            SessionHistoryItem(
+                importedSource = ImportedSource(
+                    sourceUid = item.data?.uid,
+                    type = ImportSourceType.QUESTION,
+                    parent = item.data?.importedSource
+                ),
+                index = liveIndex.value.minus(module.history.size.minus(1)),
+                answers = item.validations.toSet().toList(),
+                timeOfStart = timeOfStart?.timeInMillis,
+                isRepetition = item.isRepetition
+            )
+        )
+    }
+
     /** Validates answer */
     suspend fun validateAnswer(item: SessionItem, answer: QuestionAnswerIO) {
-        withContext(Dispatchers.Main) {
+        withContext(Dispatchers.Default) {
             // we don't accept duplicate validations
             if(item.validations.any { it.uid == answer.uid }) return@withContext
             item.validations.add(

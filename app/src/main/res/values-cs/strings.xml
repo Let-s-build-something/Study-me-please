@@ -243,6 +243,7 @@
     <string name="button_preferences">Nastavení</string>
     <string name="button_repeat">Opakovat tuhle otázku</string>
     <string name="button_skip_to_front">Zpátky dopředu</string>
+    <string name="button_skip">Přeskočit</string>
     <string name="button_delete">Smazat</string>
     <string name="button_archive">Archivovat</string>
     <string name="button_select_all">Vybrat vše</string>
